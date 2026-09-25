@@ -32,8 +32,37 @@ class DocumentoPersonaRepositorio
     }
 
     /**
+     * Busca un documento por su tipo, país emisor efectivo y número normalizado.
+     * Considera la jurisdicción internacional para permitir que distintos países
+     * emitan el mismo número bajo el tipo genérico Pasaporte.
+     *
+     * @param int $tipoDocumentoId
+     * @param int|null $paisEmisorId
+     * @param string $numeroDocumento
+     * @return DocumentoPersona|null
+     */
+    public function buscarPorTipoPaisYNumero(int $tipoDocumentoId, ?int $paisEmisorId, string $numeroDocumento): ?DocumentoPersona
+    {
+        $paisEfectivo = $paisEmisorId ?? 0;
+
+        $sql = "SELECT * FROM personas_documentos
+                WHERE tipo_documento_id = :tipo_id
+                  AND pais_emisor_efectivo = :pais_efectivo
+                  AND numero_documento = :numero
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':tipo_id', $tipoDocumentoId, PDO::PARAM_INT);
+        $stmt->bindValue(':pais_efectivo', $paisEfectivo, PDO::PARAM_INT);
+        $stmt->bindValue(':numero', strtoupper(trim($numeroDocumento)), PDO::PARAM_STR);
+        $stmt->execute();
+
+        $fila = $stmt->fetch();
+        return $fila ? DocumentoPersona::desdeArreglo($fila) : null;
+    }
+
+    /**
      * Busca un documento por su tipo y número normalizado.
-     * Esencial para detección y prevención de duplicados documentales.
      *
      * @param int $tipoDocumentoId
      * @param string $numeroDocumento
@@ -53,6 +82,7 @@ class DocumentoPersonaRepositorio
         $fila = $stmt->fetch();
         return $fila ? DocumentoPersona::desdeArreglo($fila) : null;
     }
+
 
     /**
      * Lista los documentos pertenecientes a una persona.

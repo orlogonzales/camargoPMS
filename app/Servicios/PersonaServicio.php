@@ -107,7 +107,10 @@ class PersonaServicio
             $this->pdo->rollBack();
 
             if ($errorSql->getCode() === '23000') {
-                if (str_contains($errorSql->getMessage(), 'uq_documentos_tipo_numero')) {
+                if (
+                    str_contains($errorSql->getMessage(), 'uq_documentos_tipo_emisor_numero') ||
+                    str_contains($errorSql->getMessage(), 'uq_documentos_tipo_numero')
+                ) {
                     $tipoId = (int) ($datosDocumentoPrincipal['tipo_documento_id'] ?? 0);
                     $tipoDoc = $this->tipoDocumentoRepo->buscarPorId($tipoId);
                     $codigo = $tipoDoc ? $tipoDoc->obtenerCodigo() : 'DOCUMENTO';
@@ -122,6 +125,7 @@ class PersonaServicio
             $this->pdo->rollBack();
             throw $error;
         }
+
     }
 
     /**
@@ -162,7 +166,12 @@ class PersonaServicio
         } catch (PDOException $errorSql) {
             $this->pdo->rollBack();
 
-            if ($errorSql->getCode() === '23000' && str_contains($errorSql->getMessage(), 'uq_documentos_tipo_numero')) {
+            if (
+                $errorSql->getCode() === '23000' && (
+                    str_contains($errorSql->getMessage(), 'uq_documentos_tipo_emisor_numero') ||
+                    str_contains($errorSql->getMessage(), 'uq_documentos_tipo_numero')
+                )
+            ) {
                 $tipoDoc = $this->tipoDocumentoRepo->buscarPorId((int) $datosNormalizados['tipo_documento_id']);
                 $codigo = $tipoDoc ? $tipoDoc->obtenerCodigo() : 'DOCUMENTO';
                 throw new DocumentoDuplicadoExcepcion($codigo, $datosNormalizados['numero_documento']);
@@ -170,6 +179,7 @@ class PersonaServicio
 
             throw $errorSql;
         } catch (Throwable $error) {
+
             $this->pdo->rollBack();
             throw $error;
         }
@@ -345,10 +355,6 @@ class PersonaServicio
             ? trim((string) $datos['apellido_materno'])
             : null;
 
-        if ($paterno === null && $materno === null) {
-            $errores['apellidos'] = 'Debe indicar al menos un apellido (paterno o materno).';
-        }
-
         $fechaNac = null;
         if (isset($datos['fecha_nacimiento']) && trim((string) $datos['fecha_nacimiento']) !== '') {
             $fechaTexto = trim((string) $datos['fecha_nacimiento']);
@@ -413,19 +419,33 @@ class PersonaServicio
             $errores["{$prefijoCampo}.numero_documento"] = 'El número de documento es obligatorio.';
         } else {
             $codigo = $tipoDoc->obtenerCodigo();
+            $paisEmisorId = isset($datos['pais_emisor_id']) && $datos['pais_emisor_id'] !== null && $datos['pais_emisor_id'] !== ''
+                ? (int) $datos['pais_emisor_id']
+                : null;
 
-            if ($codigo === 'DNI') {
-                if (!preg_match('/^[0-9]{8}$/', $numero)) {
+            if ($codigo === 'DNI' || $codigo === 'CE') {
+                if ($paisEmisorId === null) {
+                    $peru = $this->paisRepo->buscarPorIso2('PE');
+                    $paisEmisorId = $peru ? $peru->obtenerId() : null;
+                }
+
+                if ($codigo === 'DNI' && !preg_match('/^[0-9]{8}$/', $numero)) {
                     $errores["{$prefijoCampo}.numero_documento"] = 'El DNI debe contener exactamente 8 dígitos numéricos.';
                 }
-            } elseif ($tipoDoc->obtenerFormatoRegex() !== null) {
+            } elseif ($codigo === 'PASAPORTE') {
+                if ($paisEmisorId === null) {
+                    $errores["{$prefijoCampo}.pais_emisor_id"] = 'El país emisor es obligatorio para documentos tipo Pasaporte.';
+                }
+            }
+
+            if ($tipoDoc->obtenerFormatoRegex() !== null && $codigo !== 'DNI') {
                 if (!preg_match('/' . $tipoDoc->obtenerFormatoRegex() . '/', $numero)) {
                     $errores["{$prefijoCampo}.numero_documento"] = "El número no cumple con el formato requerido para {$tipoDoc->obtenerNombre()}.";
                 }
             }
 
-            // Comprobación preventiva de duplicados
-            $existente = $this->documentoRepo->buscarPorTipoYNumero($tipoId, $numero);
+            // Comprobación preventiva de duplicados considerando la jurisdicción del país emisor efectivo
+            $existente = $this->documentoRepo->buscarPorTipoPaisYNumero($tipoId, $paisEmisorId, $numero);
             if ($existente !== null) {
                 $personaActualId = isset($datos['persona_id']) ? (int) $datos['persona_id'] : null;
                 if ($personaActualId === null || $existente->obtenerPersonaId() !== $personaActualId) {
@@ -445,10 +465,20 @@ class PersonaServicio
      */
     private function normalizarDocumento(array $datos): array
     {
+        $paisEmisorId = isset($datos['pais_emisor_id']) && $datos['pais_emisor_id'] !== null && $datos['pais_emisor_id'] !== ''
+            ? (int) $datos['pais_emisor_id']
+            : null;
+
+        $tipoDoc = $this->tipoDocumentoRepo->buscarPorId((int) $datos['tipo_documento_id']);
+        if ($tipoDoc !== null && in_array($tipoDoc->obtenerCodigo(), ['DNI', 'CE'], true) && $paisEmisorId === null) {
+            $peru = $this->paisRepo->buscarPorIso2('PE');
+            $paisEmisorId = $peru ? $peru->obtenerId() : null;
+        }
+
         return [
             'tipo_documento_id' => (int) $datos['tipo_documento_id'],
             'numero_documento' => strtoupper(trim((string) $datos['numero_documento'])),
-            'pais_emisor_id' => isset($datos['pais_emisor_id']) && $datos['pais_emisor_id'] !== null ? (int) $datos['pais_emisor_id'] : null,
+            'pais_emisor_id' => $paisEmisorId,
             'es_principal' => (bool) ($datos['es_principal'] ?? false),
             'fecha_emision' => isset($datos['fecha_emision']) && trim((string) $datos['fecha_emision']) !== '' ? trim((string) $datos['fecha_emision']) : null,
             'fecha_vencimiento' => isset($datos['fecha_vencimiento']) && trim((string) $datos['fecha_vencimiento']) !== '' ? trim((string) $datos['fecha_vencimiento']) : null,
@@ -457,6 +487,7 @@ class PersonaServicio
     }
 
     /**
+
      * @param array<string, mixed> $datos
      * @param string $prefijoCampo
      * @return void

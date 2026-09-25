@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase PERSONAL-1 — Colaboradores, Cargos, Episodios Laborales y Ajuste Evolutivo de Identidad
+
+- Consolidado el Principio de Separación Integral: `PERSONA ≠ COLABORADOR ≠ EPISODIO LABORAL ≠ CARGO ≠ USUARIO ≠ ROL` (D-026).
+- Implementado el ajuste evolutivo no destructivo de Identidad mediante la migración `SQL/migraciones/003_personal_colaboradores.sql`:
+  - Eliminada la restricción que exigía al menos un apellido (`chk_personas_al_menos_un_apellido`), habilitando soporte para monónimos legales y personas extranjeras.
+  - Evolucionada la unicidad documental incorporando la jurisdicción de emisión mediante la columna virtual generada `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` y la restricción `UNIQUE (tipo_documento_id, pais_emisor_efectivo, numero_documento)`, resolviendo colisiones entre pasaportes de distintos países con igual número y previniendo duplicados dentro del mismo país emisor (D-030).
+- Creada la entidad y tabla `cargos` como catálogo administrable de funciones laborales (`ADMINISTRADOR`, `RECEPCIONISTA`, `RESERVAS`, `LIMPIEZA`, `MANTENIMIENTO`), totalmente desacoplado de permisos de seguridad de software.
+- Creada la entidad y tabla `colaboradores` con código interno estable secuencial (`COL-XXXX`), estado (`ACTIVO`, `INACTIVO`) y restricción `UNIQUE (persona_id)` para garantizar la cardinalidad 1:1 lógica estricta (D-027).
+- Creada la entidad y tabla `episodios_laborales` para registrar la vinculación laboral continua, con columna virtual generada `uq_colaborador_abierto` y restricción `UNIQUE` para forzar a nivel de base de datos a lo sumo un episodio abierto activo por colaborador (D-028).
+- Creada la entidad y tabla `episodios_laborales_cargos` para registrar el historial inmutable de funciones por episodio, con columna virtual generada `uq_episodio_cargo_abierto` y restricción `UNIQUE` para forzar a lo sumo un cargo vigente por episodio.
+- Implementada la convención temporal de continuidad en transiciones de cargo: cierre de la asignación previa en $D-1$ y apertura de la nueva asignación en $D$, con prohibición de solapamiento de fechas (D-029).
+- Implementados los modelos puros de dominio: `Cargo`, `Colaborador`, `EpisodioLaboral` y `AsignacionCargo` en `app/Modelos/`.
+- Implementados los repositorios con PDO parametrizado: `CargoRepositorio`, `ColaboradorRepositorio`, `EpisodioLaboralRepositorio` y `AsignacionCargoRepositorio` en `app/Repositorios/`.
+- Implementadas las excepciones de dominio: `ColaboradorDuplicadoExcepcion`, `EpisodioLaboralActivoExcepcion` y `SolapamientoLaboralExcepcion` en `app/Excepciones/`.
+- Implementado el servicio de dominio `app/Servicios/ColaboradorServicio.php` con métodos atómicos transaccionales: `crearColaborador`, `reingresarColaborador`, `cambiarCargo`, `cesarColaborador`, `obtenerSituacionActual` y bloqueos pesimistas `SELECT ... FOR UPDATE`.
+- Sincronizado el archivo consolidado oficial `SQL/camargo_pms.sql` conteniendo las 10 tablas del sistema y finalizando explícitamente con `SET FOREIGN_KEY_CHECKS = 1;`.
+- Verificada la reconstrucción estructural limpia desde cero en base de datos temporal aislada `camargo_pms_prueba_personal` con 100% de paridad con `camargo_pms`.
+- Ejecutada la suite completa de 14 pruebas automatizadas (14 PASS / 0 FAIL), incluyendo monónimos, pasaportes internacionales con igual número, unicidad 1:1 Persona-Colaborador, transiciones de cargo, cese sin borrado físico, reingreso sin duplicar colaborador, rechazo de solapamiento temporal, atomicidad transaccional y regresión completa del núcleo de identidad.
+- Verificada la intangibilidad total del catálogo `admin-dashboard/` (0 archivos modificados).
+
 ### Fase IDENTIDAD-1 — Núcleo de Identidad Humana (Personas Naturales)
 
 - Diseñado e implementado el modelo relacional del maestro de Personas Naturales bajo el principio `PERSONA ≠ COLABORADOR ≠ USUARIO ≠ CARGO ≠ ROL` y la separación de entidades normalizadas `Persona`, `DocumentoPersona` y `ContactoPersona`.

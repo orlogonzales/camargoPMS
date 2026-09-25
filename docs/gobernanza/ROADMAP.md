@@ -38,18 +38,17 @@ Construcción del maestro humano central de Personas Naturales, separación de e
 
 Estado: completada.
 
-## Personal y Colaboradores
+## PERSONAL-1 — Colaboradores, Cargos, Episodios Laborales y Ajuste Evolutivo de Identidad
 
-Gestión de colaboradores vinculados a Personas, catálogo administrable de Cargos laborales e Historial Laboral inmutable por episodios cronológicos.
+Ajuste evolutivo a Identidad (monónimos internacionales y unicidad documental parametrizada por `pais_emisor_efectivo` en migración `003`), entidad `Colaborador` con código interno estable (`COL-XXXX`) y cardinalidad 1:1 lógica con `personas`, catálogo administrable de `cargos` (semillas: ADMINISTRADOR, RECEPCIONISTA, RESERVAS, LIMPIEZA, MANTENIMIENTO), historial laboral inmutable por `episodios_laborales` y `episodios_laborales_cargos` con columnas virtuales generadas para unicidad de episodios y cargos abiertos, transiciones de cargo con continuidad temporal estricta ($D-1$ / $D$), servicio de dominio `ColaboradorServicio` con bloqueos pesimistas (`FOR UPDATE`), repositorios y suite de pruebas completas.
+
+Estado: completada.
+
+## AUTH-1 — Autenticación y Cuentas de Usuario
+
+Gestión de Usuarios humanos vinculados a Personas, hashing seguro de contraseñas (`password_hash`), control de sesiones activas, expiración, revocación forzada y protección de cuenta Superadministrador.
 
 Estado: siguiente fase recomendada.
-
-
-## Autenticación y Cuentas
-
-Gestión de Usuarios humanos, hashing seguro de contraseñas (`password_hash`), control de sesiones activas, expiración, revocación forzada y protección de cuenta Superadministrador.
-
-Estado: pendiente.
 
 ## Roles, Permisos y Autorización
 

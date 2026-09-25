@@ -32,49 +32,68 @@ Esta separación es vinculante y rige toda la arquitectura:
 Entidad central reutilizable que consolida los datos de identificación y contacto de individuos naturales, normalizada en tres estructuras para evitar redundancia y columnas planas:
 
 1. **Persona Natural (`personas`):**
-   - Atributos ontológicos: nombres (obligatorio), apellido paterno, apellido materno (nulabilidad defensiva para extranjeros o personas con un solo apellido), fecha de nacimiento (nullable, sin fechas futuras), país de nacionalidad (`paises`) y dirección residencial básica.
+   - Atributos ontológicos: nombres (obligatorio), apellido paterno, apellido materno (nulabilidad defensiva para extranjeros o personas con un solo apellido/monónimos legales), fecha de nacimiento (nullable, sin fechas futuras), país de nacionalidad (`paises`) y dirección residencial básica.
    - Estado de operación (`ACTIVO`, `INACTIVO`) para soft delete.
    - El nombre completo no se persiste; se computa dinámicamente en capa de aplicación.
 
 2. **Documentos Personales (`personas_documentos`):**
    - Relación 1:N con `tipos_documento` (DNI, Pasaporte, Carné de Extranjería).
-   - Unicidad estricta `(tipo_documento_id, numero_documento)` para evitar colisiones entre distintas personas.
-   - Regla de dominio e integridad DB: exactamente un documento principal activo por persona.
+   - Unicidad documental internacional: `(tipo_documento_id, pais_emisor_efectivo, numero_documento)` donde `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` como columna virtual generada. Permite que dos personas porten el mismo número si fueron emitidos por países distintos (ej. pasaportes), previniendo duplicados dentro de la misma jurisdicción emisora.
+   - Regla de dominio e integridad DB: exactamente un documento principal activo por persona (`uq_persona_principal`).
    - **Regla vinculante:** El RUC **no** forma parte del catálogo de documentos personales de personas naturales; pertenece al modelado de identidad fiscal y personas jurídicas.
 
 3. **Medios de Contacto (`personas_contactos`):**
    - Relación 1:N con medios normalizados (`TELEFONO`, `EMAIL`).
    - Teléfono móvil con indicador booleano `es_whatsapp` para evitar duplicar el mismo número físico.
-   - Regla de dominio e integridad DB: un contacto principal activo por tipo y persona.
+   - Regla de dominio e integridad DB: un contacto principal activo por tipo y persona (`uq_contacto_tipo_principal`).
    - Normalización de emails en minúsculas y teléfonos limpios.
-
 
 ### Personal y Colaboradores
 
-Representa la vinculación laboral de una Persona con Camargo Hostelería:
+Representa la identidad laboral estable de una Persona con Camargo Hostelería:
 
-- Estado laboral (ej. Activo, Cesado, Licencia).
-- Cargo asignado.
-- Fecha de ingreso.
-- Fecha de salida y motivo de cese cuando corresponda.
-- Observaciones laborales y datos de auditoría.
+- Cardinalidad estricta 1:1 lógica con `personas` (`uq_colaboradores_persona`). Una persona física nunca tiene más de un registro de colaborador.
+- Código interno único secuencial e inmutable (`COL-XXXX`).
+- Estado (`ACTIVO`, `INACTIVO`).
+- Desacoplado de usuarios de software y roles.
 
-### Historial Laboral por Episodios
+### Historial Laboral por Episodios y Asignaciones de Cargo
 
-El historial laboral es inmutable y no se sobreescribe cuando un colaborador se reincorpora o cambia de puesto. Registra episodios laborales cronológicos independientes:
+El historial laboral es inmutable y no se sobreescribe cuando un colaborador se reincorpora o cambia de función. Se organiza jerárquicamente en dos niveles relacionales:
+
+1. **Episodios Laborales (`episodios_laborales`):**
+   - Representa un período continuo de vinculación laboral desde el ingreso hasta el cese.
+   - Atributos: `fecha_inicio`, `fecha_fin` (NULL si está activo), `motivo_cese` (RENUNCIA, DESPIDO, MUTUO_ACUERDO, FIN_CONTRATO, JUBILACION, OTRO), `observaciones`, `estado` (`ACTIVO`, `INACTIVO`).
+   - Integridad DB: Columna virtual generada `uq_colaborador_abierto` para forzar a lo sumo un episodio abierto activo por colaborador.
+   - Reingreso: Un colaborador cesado reingresa mediante la creación de un nuevo episodio laboral con nueva fecha de inicio, sin crear un nuevo registro en `colaboradores` y reactivando su estado general.
+   - Regla temporal: Prohibición estricta de solapamiento de fechas con episodios anteriores.
+
+2. **Asignaciones de Cargo (`episodios_laborales_cargos`):**
+   - Mantiene la trazabilidad histórica de los puestos o funciones ocupados dentro de un episodio laboral específico.
+   - Atributos: `episodio_laboral_id`, `cargo_id`, `fecha_inicio`, `fecha_fin` (NULL si es el cargo vigente), `observaciones`.
+   - Integridad DB: Columna virtual generada `uq_episodio_cargo_abierto` para forzar a lo sumo un cargo vigente activo por episodio.
+   - Transición de cargo (ascenso o cambio funcional): La asignación anterior se cierra en $D-1$ y la nueva se abre en $D$, garantizando continuidad temporal sin solapamiento.
 
 ```text
-Persona X
-├── Periodo 1: 01/02/2026 - 30/06/2026 | Cargo: Reservas | Cese: Fin de contrato temporal
-├── Periodo 2: 15/10/2026 - 31/12/2027 | Cargo: Reservas | Cese: Renuncia voluntaria
-└── Periodo 3: 01/01/2028 - Vigente    | Cargo: Jefe de Reservas (Reincorporación / Ascenso)
+Persona X (ID 1)
+└── Colaborador (ID 1, COL-0001, ACTIVO)
+    ├── Episodio Laboral 1 (01/02/2026 - 30/06/2026 | INACTIVO | Cese: FIN_CONTRATO)
+    │   └── Asignación Cargo 1 (01/02/2026 - 30/06/2026 | Cargo: RECEPCIONISTA)
+    └── Episodio Laboral 2 (01/08/2026 - Abierto | ACTIVO) [Reingreso]
+        ├── Asignación Cargo 2 (01/08/2026 - 30/09/2026 | Cargo: RECEPCIONISTA)
+        └── Asignación Cargo 3 (01/10/2026 - Abierto | Cargo: ADMINISTRADOR) [Ascenso]
 ```
-
-Cada periodo conserva fecha de ingreso, cese, motivo, observaciones, cargo ejercido y trazabilidad de auditoría.
 
 ### Catálogo de Cargos
 
-Catálogo administrable y dinámico de puestos laborales en la organización (ej. Administrador, Reservas, Sistemas, Limpieza, Mantenimiento). No se modela como un `ENUM` estático para permitir agregar cargos futuros sin alterar la base de datos o el código fuente.
+Catálogo dinámico y administrable de funciones laborales (`cargos`). Semillas estructurales iniciales:
+- `ADMINISTRADOR`: Gestión general operativa del establecimiento.
+- `RECEPCIONISTA`: Atención al huésped, check-in, check-out y soporte en mostrador.
+- `RESERVAS`: Gestión comercial de reservas y asignaciones.
+- `LIMPIEZA`: Aseo, desinfección y preparación de unidades.
+- `MANTENIMIENTO`: Reparaciones técnicas e infraestructura.
+
+Los cargos laborales no confieren permisos en el software; describen exclusivamente funciones dentro de la organización.
 
 ### Gestión de Usuarios
 

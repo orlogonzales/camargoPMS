@@ -26,13 +26,20 @@ La gestión estructural del esquema sigue el principio de doble representación 
 
 **Regla vinculante:** Todo cambio estructural de base de datos debe nacer de una migración versionada y reflejarse simultáneamente en `SQL/camargo_pms.sql`. Nunca se aplican cambios manuales en producción como sustituto de una migración.
 
-## Esquema del Núcleo de Identidad (IDENTIDAD-1)
+## Esquema del Núcleo de Identidad (IDENTIDAD-1 y ajuste evolutivo en 003)
 
 - `paises`: Catálogo normalizado (`id`, `codigo_iso2`, `codigo_iso3`, `nombre`, `nacionalidad`, `activo`). Restricciones UNIQUE en códigos ISO. Semilla base: Perú ('PE', 'PER').
 - `tipos_documento`: Catálogo extensible para personas naturales (`id`, `codigo`, `nombre`, `descripcion`, `longitud_exacta`, `longitud_minima`, `longitud_maxima`, `formato_regex`, `activo`). Semillas base: DNI (8 dígitos exactos), Pasaporte y Carné de Extranjería (CE). Sin RUC (reservado a personas jurídicas / fiscalidad).
-- `personas`: Maestro de personas naturales (`id` BIGINT, `nombres`, `apellido_paterno`, `apellido_materno`, `fecha_nacimiento`, `pais_nacionalidad_id`, `direccion`, `estado`). Restricciones CHECK para nombres no vacíos, al menos un apellido y estados válidos.
-- `personas_documentos`: Colección de documentos (`id` BIGINT, `persona_id`, `tipo_documento_id`, `numero_documento`, `pais_emisor_id`, `es_principal`, `fecha_emision`, `fecha_vencimiento`, `estado`). Restricción `UNIQUE (tipo_documento_id, numero_documento)` y columna virtual generada `uq_persona_principal` para garantizar máximo un principal activo.
-- `personas_contactos`: Colección de medios de contacto (`id` BIGINT, `persona_id`, `tipo_contacto`, `valor`, `es_whatsapp`, `es_principal`, `estado`). Columna virtual generada `uq_contacto_tipo_principal` para garantizar un único principal por tipo y persona. Indicador `es_whatsapp` para vincular WhatsApp a un número telefónico sin duplicación física de registros.
+- `personas`: Maestro de personas naturales (`id` BIGINT, `nombres`, `apellido_paterno`, `apellido_materno`, `fecha_nacimiento`, `pais_nacionalidad_id`, `direccion`, `estado`). Nombres obligatorios; apellidos con nulabilidad para monónimos legales y personas extranjeras (evolución migración 003). Restricción CHECK de estado (`ACTIVO`, `INACTIVO`).
+- `personas_documentos`: Colección de documentos (`id` BIGINT, `persona_id`, `tipo_documento_id`, `numero_documento`, `pais_emisor_id`, `pais_emisor_efectivo`, `es_principal`, `fecha_emision`, `fecha_vencimiento`, `estado`). Columna virtual `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` con restricción `UNIQUE (tipo_documento_id, pais_emisor_efectivo, numero_documento)` para permitir coincidencia de números entre países distintos y prevenir duplicados dentro de la misma jurisdicción. Columna virtual `uq_persona_principal` para garantizar a lo sumo un principal activo por persona.
+- `personas_contactos`: Colección de medios de contacto (`id` BIGINT, `persona_id`, `tipo_contacto`, `valor`, `es_whatsapp`, `es_principal`, `estado`). Columna virtual `uq_contacto_tipo_principal` para garantizar un único principal por tipo y persona. Indicador `es_whatsapp` para vincular WhatsApp a un número telefónico sin duplicación física de registros.
+
+## Esquema del Núcleo de Personal y Colaboradores (PERSONAL-1)
+
+- `cargos`: Catálogo administrable de puestos laborales (`id` INT, `codigo`, `nombre`, `descripcion`, `activo`). Restricción `UNIQUE (codigo)`. Semillas: ADMINISTRADOR, RECEPCIONISTA, RESERVAS, LIMPIEZA, MANTENIMIENTO.
+- `colaboradores`: Identidad laboral estable vinculada a personas (`id` BIGINT, `persona_id`, `codigo`, `estado`, `creado_en`, `actualizado_en`). Restricción `UNIQUE (persona_id)` para cardinalidad 1:1 lógica estricta y `UNIQUE (codigo)` para código interno estable (`COL-XXXX`). Estado: `'ACTIVO'`, `'INACTIVO'`.
+- `episodios_laborales`: Períodos continuos de relación laboral (`id` BIGINT, `colaborador_id`, `fecha_inicio`, `fecha_fin`, `motivo_cese`, `observaciones`, `estado`). Columna virtual generada `uq_colaborador_abierto = IF(fecha_fin IS NULL AND estado = 'ACTIVO', colaborador_id, NULL)` con restricción `UNIQUE` para forzar a nivel de motor máximo un episodio abierto activo por colaborador. `CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio)` y `CHECK (estado IN ('ACTIVO', 'INACTIVO'))`.
+- `episodios_laborales_cargos`: Historial inmutable de funciones ocupadas por episodio (`id` BIGINT, `episodio_laboral_id`, `cargo_id`, `fecha_inicio`, `fecha_fin`, `observaciones`). Columna virtual generada `uq_episodio_cargo_abierto = IF(fecha_fin IS NULL, episodio_laboral_id, NULL)` con restricción `UNIQUE` para forzar máximo una asignación de cargo vigente por episodio. `CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio)`. Transición temporal continua en $D-1$ / $D$.
 
 
 ## Reglas

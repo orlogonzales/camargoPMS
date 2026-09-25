@@ -103,6 +103,35 @@ Se asegura la unicidad documental a nivel de base de datos mediante la restricci
 
 Se prohíbe el borrado físico (`DELETE`) en las operaciones ordinarias de personas, documentos y contactos. Se adopta la desactivación lógica mediante el campo `estado` (`'ACTIVO'`, `'INACTIVO'`) para preservar relaciones contractuales, de reservas y auditoría futura. Las claves foráneas hacia personas y catálogos aplican `ON DELETE RESTRICT ON UPDATE CASCADE`. La clave primaria adopta `BIGINT UNSIGNED AUTO_INCREMENT` para personas y colecciones de alto volumen e `INT UNSIGNED` para catálogos.
 
+### D-026 — Principio de Separación Integral: PERSONA ≠ COLABORADOR ≠ EPISODIO LABORAL ≠ CARGO ≠ USUARIO ≠ ROL
+
+Se formaliza la separación conceptual y técnica estricta de las entidades del dominio humano y organizacional:
+1. `Persona`: Ser humano ontológico (identidad biométrica/civil).
+2. `Colaborador`: Identidad laboral estable dentro de la organización.
+3. `EpisodioLaboral`: Período cronológico continuo de vinculación laboral (ingreso hasta cese).
+4. `Cargo`: Catálogo administrable de funciones/puestos de trabajo (no otorga permisos de software).
+5. `Usuario`: Cuenta de acceso técnico autenticado a la plataforma.
+6. `Rol`: Conjunto de permisos de seguridad de software para autorización granular.
+Ninguna entidad se mezcla ni sustituye a otra.
+
+### D-027 — Cardinalidad 1:1 lógica Persona-Colaborador con inmutabilidad de identidad interna
+
+Una Persona natural puede tener como máximo un registro en la tabla `colaboradores` (`uq_colaboradores_persona`). La identidad del colaborador se identifica externamente mediante un código secuencial estable (`COL-XXXX`) que permanece inmutable ante ceses y reingresos. Se prohíbe terminantemente crear múltiples filas de colaboradores para la misma persona en recontrataciones o retornos futuros.
+
+### D-028 — Historial laboral inmutable por Episodios y Asignaciones de Cargo con columnas virtuales generadas
+
+El historial laboral no se sobreescribe ni se destruye. Cada período de contratación genera un registro en `episodios_laborales` y cada cambio o ascenso funcional dentro de un episodio genera un registro en `episodios_laborales_cargos`. Para garantizar a nivel de base de datos la invariante de "a lo sumo un episodio abierto activo por colaborador" y "a lo sumo una asignación de cargo vigente por episodio", se implementan columnas virtuales generadas (`uq_colaborador_abierto` y `uq_episodio_cargo_abierto`) con restricciones `UNIQUE` sobre valores no nulos.
+
+### D-029 — Convención temporal de continuidad en transiciones de cargo y prohibición de solapamiento
+
+En un cambio de cargo en fecha $D$, la asignación de cargo anterior se cierra con `fecha_fin = D - 1 día` y la nueva asignación se abre con `fecha_inicio = D` y `fecha_fin = NULL`, garantizando continuidad cronológica estricta sin solapamiento ni días vacíos. Se prohíbe el solapamiento temporal tanto a nivel de episodios laborales como de cargos dentro de un episodio. Toda operación de transición y cese se ejecuta con bloqueos pesimistas (`SELECT ... FOR UPDATE`) dentro de transacciones ACID.
+
+### D-030 — Ajuste evolutivo de identidad: monónimos y unicidad documental internacional parametrizada
+
+Se adopta un ajuste evolutivo no destructivo en la migración `003` para dos aspectos de la identidad:
+1. Nombres internacionales y monónimos: Se elimina la restricción que exigía al menos un apellido (`chk_personas_al_menos_un_apellido`), manteniendo `nombres` como obligatorio y permitiendo apellidos nulos para individuos extranjeros o monónimos legales.
+2. Unicidad documental internacional: La unicidad documental de `personas_documentos` evoluciona incorporando el país emisor mediante la columna virtual generada `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` y la restricción `UNIQUE (tipo_documento_id, pais_emisor_efectivo, numero_documento)`. Esto previene colisiones erróneas entre pasaportes de distintos países que comparten número, preservando la unicidad estricta para documentos emitidos por una misma jurisdicción.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

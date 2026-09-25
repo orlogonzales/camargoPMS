@@ -97,6 +97,11 @@ final class DocumentoPersona
         return $this->paisEmisorId;
     }
 
+    public function obtenerPaisEmisorEfectivo(): int
+    {
+        return $this->paisEmisorId ?? 0;
+    }
+
     public function esPrincipal(): bool
     {
         return $this->esPrincipal;
