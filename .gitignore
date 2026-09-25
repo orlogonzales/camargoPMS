@@ -41,6 +41,8 @@ sess_*
 
 # Bases de datos y volcados locales
 *.sql
+!SQL/**/*.sql
+!SQL/*.sql
 *.sqlite
 *.sqlite3
 *.db

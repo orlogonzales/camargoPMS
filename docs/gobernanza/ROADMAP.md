@@ -26,17 +26,17 @@ Probar bajo Apache real (`https://app.camargo-pms.test/` y subcarpeta), responsi
 
 Estado: completada.
 
-## Infraestructura
+## INFRA-1 — Infraestructura de configuración, base de datos, PDO y migraciones
 
-Resolver decisiones P-001 (MySQL vs MariaDB), P-002 (Composer, autoload definitivo y routing), P-003 (pruebas), variables de entorno (.env), conexión PDO centralizada, contenedor de dependencias/fábrica y framework de migraciones versionadas.
+Resueltas decisiones P-001 (MySQL 8.4.3 LTS oficial) y P-002 (Composer PSR-4 con router nativo preservado), variables de entorno (.env y .env.example), conexión centralizada PDO (`BaseDatos.php`), esquema consolidado oficial `SQL/camargo_pms.sql` y runner CLI de migraciones versionadas (`migrar.php` con tabla técnica `migraciones`).
 
-Estado: siguiente fase recomendada.
+Estado: completada.
 
 ## Identidad y Personas
 
 Maestro central de Personas, normalización de documentos (DNI, Pasaporte), datos de contacto, nacionalidad por defecto Perú e integración externa desacoplada mediante `ServicioConsultaIdentidad` con adaptador APIsPERU (DNI y RUC).
 
-Estado: pendiente.
+Estado: siguiente fase recomendada.
 
 ## Personal y Colaboradores
 

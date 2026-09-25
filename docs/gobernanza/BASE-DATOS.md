@@ -1,8 +1,27 @@
 # Base de datos
 
-## Enfoque
+## Enfoque y Motor Confirmado
 
-MySQL/MariaDB será la persistencia relacional mediante PDO. No se define todavía el esquema físico. El modelo debe favorecer integridad, trazabilidad e históricos frente a atajos de interfaz.
+- **Motor oficial:** **MySQL Community Server 8.4.3 LTS** (GPL).
+- **Engine predeterminado:** `InnoDB` con soporte pleno de transacciones ACID y restricciones de integridad foránea.
+- **Codificación:** Charset `utf8mb4` con collation `utf8mb4_0900_ai_ci`.
+- **Modo SQL:** Estricto (`ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION`).
+- **Persistencia en aplicación:** Acceso centralizado vía PDO nativo (`app/Nucleo/BaseDatos.php`) con opciones estrictas: `ATTR_ERRMODE => ERRMODE_EXCEPTION`, `ATTR_DEFAULT_FETCH_MODE => FETCH_ASSOC`, y `ATTR_EMULATE_PREPARES => false`.
+
+## Esquema Consolidado y Migraciones
+
+La gestión estructural del esquema sigue el principio de doble representación sincronizada:
+
+1. **`SQL/camargo_pms.sql` (Esquema Consolidado Oficial):**
+   - Representación íntegra, canónica y versionada del esquema vigente.
+   - Permite recrear la base de datos estructuralmente desde cero en entornos limpios.
+   - Libre de datos operativos, datos personales, contraseñas o volcados de producción.
+2. **`SQL/migraciones/` (Evolución Incremental):**
+   - Scripts secuenciales numerados deterministas (ej. `001_infraestructura.sql`).
+   - Registrados y controlados mediante la tabla técnica `migraciones` (`id`, `migracion`, `lote`, `ejecutado_en`).
+   - Ejecutados exclusivamente vía CLI mediante `php migrar.php`.
+
+**Regla vinculante:** Todo cambio estructural de base de datos debe nacer de una migración versionada y reflejarse simultáneamente en `SQL/camargo_pms.sql`. Nunca se aplican cambios manuales en producción como sustituto de una migración.
 
 ## Reglas
 

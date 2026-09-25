@@ -18,10 +18,9 @@ app/
     ├── componentes/
     ├── errores/
     └── panel/
-config/
-database/
-├── migraciones/
-└── semillas/
+SQL/
+├── camargo_pms.sql
+└── migraciones/
 docs/
 └── gobernanza/
 public/
@@ -31,33 +30,34 @@ public/
     ├── js/
     ├── imagenes/
     └── vendor/
-routes/
 storage/
 ├── cache/
 ├── logs/
 └── privados/
 tests/
-├── Unitarias/
-├── Integracion/
-└── Funcionales/
 .skills/
 admin-dashboard/
+.env.example
+composer.json
+composer.lock
+migrar.php
 ```
 
 ## Responsabilidades
 
 - `public/`: único document root; no contiene secretos ni archivos privados.
 - `app/`: código propio de aplicación.
-- `config/`: configuración versionable sin credenciales; secretos llegan por entorno.
-- `database/`: migraciones y datos mínimos reproducibles, nunca volcados productivos.
+- `SQL/`: `camargo_pms.sql` como esquema consolidado oficial y `migraciones/` para cambios incrementales versionados.
+- `migrar.php`: ejecutor CLI para aplicar migraciones en la base de datos `camargo_pms`.
+- `.env.example`: plantilla versionada de variables de entorno sin credenciales reales.
 - `storage/`: archivos generados y logs fuera de exposición pública.
-- `tests/`: pruebas alineadas con las capas.
+- `tests/`: pruebas automatizadas de infraestructura y dominio.
 - `.skills/`: procedimientos especializados para agentes; no duplica gobernanza.
 - `admin-dashboard/`: fuente original inmutable de Alina, documentación y demos.
 
 ## Autoload
 
-Composer administrará PSR-4 cuando se inicialice PHP. El namespace raíz exacto se decidirá en la microfase de infraestructura y se registrará antes de crear clases.
+Composer administra el autocargador PSR-4 bajo el espacio de nombres raíz `CamargoPMS\` mapeado directamente al directorio `app/`.
 
 ## Exposición web
 

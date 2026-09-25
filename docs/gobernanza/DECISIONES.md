@@ -71,13 +71,23 @@ Se formaliza el principio arquitectónico vinculante `PERSONA ≠ COLABORADOR �
 
 Se aprueba la integración con APIsPERU para la consulta y autocompletado ágil de datos de identidad en Perú mediante dos endpoints desacoplados: `GET /api/v1/dni/{dni}` (8 dígitos) y `GET /api/v1/ruc/{ruc}` (11 dígitos, reutilizable para proveedores y empresas). La integración debe orquestarse mediante una capa de abstracción en el dominio (`ServicioConsultaIdentidad` e interfaces de proveedor) que impida el acoplamiento directo y permita cambiar de proveedor en el futuro. Es vinculante no asumir campos no documentados en contrato y permitir la edición o complemento manual en la interfaz. El token técnico se administra exclusivamente en el entorno del servidor, fuera de Git y del cliente.
 
+### D-018 — Motor de base de datos oficial: MySQL 8.4.3 LTS
+
+Se resuelve formalmente **P-001** con base en la evidencia de la auditoría del entorno local. Se adopta oficialmente **MySQL Community Server 8.4.3 LTS (GPL)** con almacenamiento transaccional `InnoDB`, codificación `utf8mb4`, collation `utf8mb4_0900_ai_ci` y `sql_mode` estricto estándar.
+
+### D-019 — Adopción pragmática de Composer y preservación del router nativo
+
+Se resuelve formalmente **P-002**. Se adopta Composer para la gestión de dependencias mínimas justificadas (`vlucas/phpdotenv` para entorno) y el autoloading PSR-4 asignando el espacio de nombres raíz `CamargoPMS\` al directorio `app/`. Se preserva el enrutador nativo `app/Nucleo/Enrutador.php` tras validar su óptimo funcionamiento en UI-0 y UI-1, evitando el reemplazo innecesario de infraestructura funcional.
+
+### D-020 — Esquema consolidado oficial y migraciones incrementales
+
+Se formaliza el contrato de persistencia: `SQL/camargo_pms.sql` es la representación consolidada oficial y versionada del esquema vigente de Camargo PMS, libre de datos operativos y credenciales. `SQL/migraciones/` contiene la secuencia cronológica de cambios estructurales controlados mediante la tabla técnica `migraciones` y el runner CLI `php migrar.php`. Todo cambio estructural futuro debe reflejarse simultáneamente en una migración y en el SQL consolidado.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |
 |---|---|---|
-| P-001 | MySQL o MariaDB y versión | Antes de primera migración |
-| P-002 | Namespace Composer y librería de routing | Fase de infraestructura |
-| P-003 | Framework de pruebas PHP/JS | Fase de infraestructura |
+| P-003 | Framework de pruebas PHP/JS | Antes de pruebas automatizadas de dominio |
 | P-004 | Estrategia de zona horaria y fecha hotelera | Antes de disponibilidad |
 | P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja |
 | P-006 | Estrategia de concurrencia para disponibilidad | Antes de reservas |

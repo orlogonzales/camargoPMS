@@ -19,14 +19,20 @@ define('RUTA_PUBLIC', __DIR__);
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
-// Carga y registro del autocargador PSR-4 propio
-require_once RUTA_APP . '/Nucleo/Autocargador.php';
-$autocargador = new \CamargoPMS\Nucleo\Autocargador(RUTA_APP);
-$autocargador->registrar();
+// Carga del autocargador PSR-4 (Composer con fallback nativo)
+$archivoAutoload = RUTA_RAIZ . '/vendor/autoload.php';
+if (file_exists($archivoAutoload)) {
+    require_once $archivoAutoload;
+} else {
+    require_once RUTA_APP . '/Nucleo/Autocargador.php';
+    $autocargador = new \CamargoPMS\Nucleo\Autocargador(RUTA_APP);
+    $autocargador->registrar();
+    require_once RUTA_APP . '/Nucleo/Ayudante.php';
+    require_once RUTA_APP . '/Nucleo/Funciones.php';
+}
 
-// Carga de utilidades y funciones auxiliares globales
-require_once RUTA_APP . '/Nucleo/Ayudante.php';
-require_once RUTA_APP . '/Nucleo/Funciones.php';
+// Carga centralizada de variables de entorno y configuración
+\CamargoPMS\Nucleo\Configuracion::cargar(RUTA_RAIZ);
 
 // Detección dinámica y robusta de la URL base
 $uriPeticion = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
