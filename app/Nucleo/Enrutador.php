@@ -19,30 +19,48 @@ final class Enrutador
     private $manejador404 = null;
 
     /**
-     * Registra una ruta para el método HTTP GET.
+     * Registra una ruta para el método HTTP GET con intermediarios opcionales.
      *
      * @param string $ruta Ruta relativa normalizada (ej. "/").
      * @param array|callable $manejador Definición del manejador [Controlador::class, 'metodo'].
+     * @param array<int, class-string|object> $intermediarios Lista de intermediarios a ejecutar.
      * @return void
      */
-    public function get(string $ruta, array|callable $manejador): void
+    public function get(string $ruta, array|callable $manejador, array $intermediarios = []): void
     {
-        $this->agregarRuta('GET', $ruta, $manejador);
+        $this->agregarRuta('GET', $ruta, $manejador, $intermediarios);
     }
 
     /**
-     * Registra una ruta genérica indicando el método HTTP.
+     * Registra una ruta para el método HTTP POST con intermediarios opcionales.
+     *
+     * @param string $ruta Ruta relativa normalizada (ej. "/login").
+     * @param array|callable $manejador Definición del manejador [Controlador::class, 'metodo'].
+     * @param array<int, class-string|object> $intermediarios Lista de intermediarios a ejecutar.
+     * @return void
+     */
+    public function post(string $ruta, array|callable $manejador, array $intermediarios = []): void
+    {
+        $this->agregarRuta('POST', $ruta, $manejador, $intermediarios);
+    }
+
+    /**
+     * Registra una ruta genérica indicando el método HTTP e intermediarios opcionales.
      *
      * @param string $metodo Método HTTP (GET, POST, etc.).
      * @param string $ruta Ruta asociada.
      * @param array|callable $manejador Manejador ejecutable.
+     * @param array<int, class-string|object> $intermediarios Lista de intermediarios a ejecutar.
      * @return void
      */
-    public function agregarRuta(string $metodo, string $ruta, array|callable $manejador): void
+    public function agregarRuta(string $metodo, string $ruta, array|callable $manejador, array $intermediarios = []): void
     {
         $metodoNormalizado = strtoupper($metodo);
         $rutaNormalizada = $this->normalizarRuta($ruta);
-        $this->rutas[$metodoNormalizado][$rutaNormalizada] = $manejador;
+        $this->rutas[$metodoNormalizado][$rutaNormalizada] = [
+            'manejador' => $manejador,
+            'intermediarios' => $intermediarios,
+        ];
     }
 
     /**
@@ -57,7 +75,7 @@ final class Enrutador
     }
 
     /**
-     * Despacha la petición HTTP entrante hacia el controlador correspondiente.
+     * Despacha la petición HTTP entrante hacia los intermediarios y controlador correspondiente.
      *
      * @param string $metodo Método HTTP recibido ($_SERVER['REQUEST_METHOD']).
      * @param string $uri URI completa recibida ($_SERVER['REQUEST_URI']).
@@ -66,12 +84,31 @@ final class Enrutador
     public function despachar(string $metodo, string $uri): Respuesta
     {
         $metodoNormalizado = strtoupper($metodo);
+        $metodoBusqueda = $metodoNormalizado === 'HEAD' ? 'GET' : $metodoNormalizado;
         $rutaSolicitada = $this->extraerRutaLimpia($uri);
 
-        $manejador = $this->rutas[$metodoNormalizado][$rutaSolicitada] ?? null;
+        $registro = $this->rutas[$metodoBusqueda][$rutaSolicitada] ?? null;
 
-        if ($manejador !== null) {
-            return $this->ejecutarManejador($manejador);
+        if ($registro !== null) {
+            $manejador = is_array($registro) && isset($registro['manejador']) ? $registro['manejador'] : $registro;
+            $intermediarios = is_array($registro) && isset($registro['intermediarios']) ? $registro['intermediarios'] : [];
+
+            // Ejecución secuencial del pipeline de intermediarios
+            foreach ($intermediarios as $intermediario) {
+                $instancia = is_string($intermediario) ? new $intermediario() : $intermediario;
+                if (method_exists($instancia, 'manejar')) {
+                    $respuestaIntermediario = $instancia->manejar($rutaSolicitada);
+                    if ($respuestaIntermediario instanceof Respuesta) {
+                        return $respuestaIntermediario;
+                    }
+                }
+            }
+
+            $respuesta = $this->ejecutarManejador($manejador);
+            if ($metodoNormalizado === 'HEAD') {
+                return new Respuesta('', $respuesta->obtenerCodigo(), $respuesta->obtenerCabeceras());
+            }
+            return $respuesta;
         }
 
         // Manejo controlado de ruta no encontrada (404)

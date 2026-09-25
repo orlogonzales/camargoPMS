@@ -101,17 +101,39 @@ Catálogo dinámico y administrable de funciones laborales (`cargos`). Semillas 
 
 Los cargos laborales no confieren permisos en el software; describen exclusivamente funciones dentro de la organización.
 
-### Gestión de Usuarios
+### Gestión de Usuarios y Sesiones (AUTH-1)
 
-Cuentas humanas de acceso al PMS:
+Cuentas humanas de acceso al software Camargo PMS:
 
-- Identidad humana asociada (`Persona`).
-- Nombre de usuario único.
-- Hash de contraseña mediante algoritmos criptográficos robustos de PHP (`password_hash`).
-- Estado de la cuenta (activo, bloqueado, suspendido).
-- Roles asignados.
-- Control de sesiones activas y último acceso registrado.
-- Auditoría de modificaciones y autenticación.
+- **Vinculación 1:1 con Persona Humana (`usuarios.persona_id UNIQUE NOT NULL REFERENCES personas(id)`):**
+  - Un usuario representa la credencial de acceso de un individuo humano.
+  - Totalmente desacoplado de `colaboradores`; la condición laboral es un rol de dominio que emana de `personas`, no una identidad de acceso técnico.
+  - Prohibición de `colaborador_id` en usuarios.
+- **Nombres de Usuario Canónicos y Normalizados:**
+  - `nombre_usuario VARCHAR(50)`: Nombre con formato de presentación visual.
+  - `nombre_usuario_normalizado VARCHAR(50) UNIQUE`: Normalizado estrictamente en minúsculas y sin espacios para evitar colisiones y suplantación insensible a mayúsculas.
+- **Contraseñas Criptográficamente Seguras:**
+  - Almacenadas exclusivamente como hash en `contrasena_hash CHAR(60) NOT NULL` (algoritmo `PASSWORD_BCRYPT` con costo 12).
+  - Política de longitud: mínimo 10 caracteres, máximo 128 caracteres.
+  - Mecanismo transparente de rehash automático (`password_needs_rehash()`) en inicios de sesión exitosos.
+  - Mitigación contra ataques de temporización (timing attacks) y enumeración de usuarios mediante verificación con hash bcrypt dummy (`password_verify()`) y mensajes genéricos uniformes.
+- **Estados de Cuenta:**
+  - `ACTIVO`: Cuenta habilitada para autenticarse.
+  - `INACTIVO`: Cuenta deshabilitada administrativamente (invalida sesiones inmediatamente).
+  - `BLOQUEADO`: Cuenta bloqueada por seguridad.
+- **Gestión de Sesiones de Usuario (`sesiones_usuario`):**
+  - Tokens opacos de 64 caracteres hexadecimales (32 bytes criptográficamente seguros con CSPRNG).
+  - En base de datos se almacena únicamente el hash unidireccional `token_hash CHAR(64) UNIQUE` (SHA-256).
+  - Política de expiración dual: inactividad (> 30 minutos desde `ultimo_acceso_en`) y vencimiento absoluto (> 12 horas desde `creado_en`).
+  - Revocación concurrente: al cambiar de contraseña, se revocan todas las demás sesiones activas en base de datos preservando únicamente la actual.
+- **Rate Limiting y Control de Fuerza Bruta (`intentos_autenticacion`):**
+  - Registro de intentos fallidos con IP, identificador, timestamp y resultado.
+  - Throttling a partir de 5 intentos fallidos en una ventana móvil de 15 minutos, sin alterar el estado del usuario (`usuarios.estado` permanece `ACTIVO`).
+- **Seguridad Web:**
+  - Protección CSRF obligatoria en peticiones sensibles mediante tokens vinculados a la sesión validados con `hash_equals()`.
+  - Regeneración de identificador de sesión PHP (`session_regenerate_id(true)`) al autenticar para mitigar fijación de sesión.
+  - Sanitización estricta de rutas de retorno para mitigar redirección abierta (Open Redirect).
+  - Cookies configuradas con `HttpOnly = true`, `SameSite = Lax` y `Secure` condicional a HTTPS.
 
 ### Catálogo de Roles y Permisos
 

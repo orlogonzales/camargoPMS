@@ -8,15 +8,18 @@
 - Proteger secretos fuera del repositorio y rotarlos.
 - Registrar eventos relevantes sin exponer datos sensibles.
 
-## Sesiones y autenticación
+## Sesiones y autenticación (AUTH-1)
 
-- Cookies `Secure`, `HttpOnly` y `SameSite` apropiado en HTTPS.
-- Regenerar el identificador al iniciar sesión o cambiar privilegios.
-- Expiración por inactividad y duración máxima configurables.
-- Cierre y revocación administrativa forzada de sesiones activas ante incidentes o cambios de credenciales.
-- Contraseñas con las funciones modernas de hash de PHP (`password_hash` con algoritmo seguro); nunca cifrado reversible ni hash propio.
-- Login, logout, fallos, bloqueos y recuperación quedan auditados.
-- La recuperación no revela si una cuenta existe.
+- Cookies de sesión configuradas con `HttpOnly = true`, `SameSite = Lax` (o `Strict`), y `Secure = true` en HTTPS.
+- Mitigación contra fijación de sesión: `session_regenerate_id(true)` obligatorio tras autenticación exitosa.
+- Expiración dual estricta: inactividad máxima de 30 minutos y duración absoluta de 12 horas desde la creación de la sesión.
+- Tokens opacos de sesión: cadenas de 64 caracteres hex (32 bytes CSPRNG); la base de datos almacena exclusivamente el hash SHA-256 (`token_hash`), impidiendo el uso de sesiones si la base de datos es vulnerada.
+- Revocación forzada y concurrente de sesiones activas ante cambio de contraseña o desactivación de la cuenta/persona.
+- Contraseñas con `PASSWORD_BCRYPT` (factor de costo 12) y migración automática transparente vía `password_needs_rehash()`. Longitud mínima de 10 caracteres (máximo 128). Prohibición estricta de texto claro en base de datos (`contrasena_hash CHAR(60)`).
+- Mitigación contra ataques de temporización (timing attacks) y enumeración de usuarios: hash bcrypt dummy precalculado ante usuarios inexistentes y mensajes genéricos uniformes (`'Credenciales de acceso inválidas.'`).
+- Mitigación contra redirección abierta (Open Redirect): sanitización estricta de rutas de retorno (`return`) forzando esquemas relativos locales.
+- Rate limiting y defensa contra fuerza bruta: registro de intentos en `intentos_autenticacion`; bloqueo temporal tras 5 fallos en 15 minutos sin alterar el estado permanente del usuario (`usuarios.estado`).
+- Bootstrap CLI defensivo: utilidades administrativas iniciales (`bin/crear-usuario-inicial.php`) restringidas a CLI (`PHP_SAPI === 'cli'`), idempotentes y sin exposición de credenciales en consola o logs.
 
 ## Autorización
 

@@ -55,8 +55,16 @@ $urlBase = rtrim($urlBase, '/');
 // Inicialización del Enrutador
 $enrutador = new \CamargoPMS\Nucleo\Enrutador();
 
-// Registro de rutas mínimas de UI-0
-$enrutador->get('/', [\CamargoPMS\Controladores\PanelControlador::class, 'inicio']);
+// Registro de rutas del sistema
+$enrutador->get('/login', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'mostrarLogin']);
+$enrutador->post('/login', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'procesarLogin']);
+$enrutador->post('/logout', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'cerrarSesion']);
+
+// Rutas protegidas por autenticación
+$enrutador->get('/', [\CamargoPMS\Controladores\PanelControlador::class, 'inicio'], [
+    \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

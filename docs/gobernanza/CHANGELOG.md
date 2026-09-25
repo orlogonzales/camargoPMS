@@ -4,6 +4,39 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase AUTH-1 — Autenticación, Cuentas Humanas y Sesiones
+
+- Implementada la migración evolutiva `SQL/migraciones/005_auth_usuarios_sesiones.sql` (lote 5):
+  - Creación de la tabla `usuarios`: vinculación directa 1:1 con `personas` (`persona_id UNIQUE NOT NULL`), clave foránea `fk_usuarios_persona` con restricción de borrado `ON DELETE RESTRICT`. Prohibición absoluta de relación con `colaboradores` (`colaborador_id`).
+  - Nombres de usuario canónicos y normalizados: `nombre_usuario` para presentación y `nombre_usuario_normalizado` con restricción `UNIQUE` para colisión insensible a mayúsculas (D-035).
+  - Almacenamiento seguro de credenciales: `contrasena_hash CHAR(60) NOT NULL` con algoritmo `PASSWORD_BCRYPT` (factor de costo 12).
+  - Creación de la tabla `sesiones_usuario`: gestión de sesiones con tokens opacos (32 bytes CSPRNG / 64 caracteres hex) persistiendo exclusivamente su hash SHA-256 (`token_hash UNIQUE`) (D-038).
+  - Creación de la tabla `intentos_autenticacion`: auditoría de intentos de acceso para control de fuerza bruta y rate limiting por IP e identificador (D-045).
+- Sincronizado el archivo consolidado oficial `SQL/camargo_pms.sql` conteniendo las 13 tablas del sistema y finalizando explícitamente con `SET FOREIGN_KEY_CHECKS = 1;`. Paridad 100% verificada entre migración y consolidado.
+- Implementados los modelos de dominio puros: `Usuario` y `SesionUsuario` en `app/Modelos/`.
+- Implementadas las excepciones de dominio especializadas en `app/Excepciones/`: `CredencialesInvalidasExcepcion`, `UsuarioDuplicadoExcepcion`, `UsuarioBloqueadoExcepcion`, `SesionInvalidaExcepcion`, `CsrfInvalidoExcepcion` y `DemasiadosIntentosExcepcion`.
+- Implementados los repositorios con PDO parametrizado: `UsuarioRepositorio`, `SesionUsuarioRepositorio` e `IntentoAutenticacionRepositorio` en `app/Repositorios/`.
+- Implementados los servicios de dominio en `app/Servicios/`:
+  - `UsuarioServicio`: creación de usuario para persona activa, validación de contraseñas (10-128 chars), normalización de username, cambio de contraseña con revocación concurrente de sesiones previas (D-040).
+  - `AutenticacionServicio`: autenticación segura con timing-attack dummy hash (D-037), migración automática de costo bcrypt con `password_needs_rehash()`, respuestas genéricas indistinguibles (`'Credenciales de acceso inválidas.'`), rate limiting de 5 intentos en 15 minutos sin alterar el estado del usuario.
+  - `SesionServicio`: creación de sesiones en base de datos con expiración dual (30 min inactividad, 12 h absoluta), validación con verificación de vigencia de usuario/persona, revocación forzada y destrucción de cookies.
+  - `CsrfServicio`: generación de tokens por sesión y verificación de tiempo constante mediante `hash_equals()` (D-041).
+- Implementado el pipeline web de autenticación:
+  - `AutenticacionIntermediario`: intermediario de protección de rutas privadas, redirección a `/login` con sanitización estricta del parámetro `return` contra Open Redirect (D-044).
+  - `AutenticacionControlador`: controlador web siguiendo el patrón PRG (Post-Redirect-Get) para `GET /login`, `POST /login` y `POST /logout`.
+  - Integración en `public/index.php`: ruta protegida `GET /` mediante `AutenticacionIntermediario`, soporte transparente del método HTTP `HEAD` en `Enrutador`, y métodos de consulta en `Respuesta`.
+  - Ayudantes globales `usuario_autenticado()` y `csrf_campo()` en `app/Nucleo/Funciones.php`.
+- Interfaz y vistas:
+  - Creada la vista de autenticación `app/Vistas/auth/login.php` adaptada al diseño Alina (`sign-in.html` / `sign-in-2.html`) con campos flotantes, mensajes flash de error y token CSRF.
+  - Añadido el asset visual oficial `public/assets/images/login/01.jpg`.
+  - Actualizado el componente `cabecera.php` para renderizar el perfil del usuario autenticado y el formulario POST de cierre de sesión seguro con CSRF.
+- Script de utilidad administrativa CLI:
+  - Desarrollado `bin/crear-usuario-inicial.php` para inicialización idempotente del sistema, con restricción estricta a entornos de terminal (`PHP_SAPI === 'cli'`), creación atómica de persona si no existe, y sin exposición de contraseñas en consola ni logs (D-046).
+- Suite integral de pruebas automatizadas:
+  - Desarrollada y ejecutada la suite de 47 pruebas exhaustivas (47 PASS / 0 FAIL) cubriendo creación de usuarios, validaciones de dominio, ciclo de vida de sesiones, expiración por inactividad y absoluta, revocación concurrente, timing attacks, mitigación de session fixation, open redirect, cookies seguras, CSRF, rate limiting, restricción CLI y regresión de Identidad y Personal.
+  - Verificada la limpieza completa de la base de datos (0 registros residuales en tablas operativas).
+- Confirmada la intangibilidad total del catálogo `admin-dashboard/` (0 archivos modificados).
+
 ### Micro-lote PERSONAL-1A — Cierre de Invariantes Documentales y Temporales
 
 - Implementada la migración evolutiva no destructiva `SQL/migraciones/004_ajustes_identidad_personal.sql` (lote 4):

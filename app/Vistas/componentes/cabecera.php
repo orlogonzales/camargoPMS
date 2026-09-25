@@ -37,6 +37,38 @@ declare(strict_types=1);
                             <i id="theme-icon" class="ti ti-moon-stars"></i>
                         </div>
                     </li>
+
+                    <?php
+                    $usuarioActual = usuario_autenticado();
+                    if ($usuarioActual !== null):
+                    ?>
+                    <!-- Perfil y Cierre de Sesión -->
+                    <li class="head-profile dropdown">
+                        <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle p-1 rounded" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="h-35 w-35 d-flex-center b-r-50 bg-primary text-white">
+                                <i class="ti ti-user f-s-18"></i>
+                            </span>
+                            <span class="d-none d-md-inline-block text-dark f-s-14 f-w-500">
+                                <?= e($usuarioActual['nombre_usuario']) ?>
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow p-2">
+                            <li class="px-3 py-2 border-bottom mb-2">
+                                <div class="f-w-600 f-s-14 text-dark"><?= e($usuarioActual['nombre_usuario']) ?></div>
+                                <div class="f-s-12 text-secondary">Usuario autenticado</div>
+                            </li>
+                            <li>
+                                <form action="<?= url_ruta('/logout') ?>" method="POST" class="m-0 p-0">
+                                    <?= csrf_campo() ?>
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger rounded py-2">
+                                        <i class="ti ti-logout f-s-18"></i>
+                                        <span>Cerrar sesión</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

@@ -148,6 +148,96 @@ Se formaliza la verificación estricta de no solapamiento temporal para todas la
 3. Se mantiene la convención $D-1$ / $D$ en transiciones de cargo con `cambiarCargo()`.
 4. La verificación se centraliza en `ColaboradorServicio::validarSolapamientoAsignacionCargo()` y se protege concurrentemente mediante transacciones y bloqueos pesimistas (`SELECT ... FOR UPDATE`).
 
+### D-033 — Vinculación directa 1:1 entre Usuario y Persona (AUTH-1)
+
+Se establece formalmente que la cuenta de usuario humano (`usuarios`) se vincula de manera directa, unívoca y obligatoria con el núcleo humano (`personas`), mediante la clave foránea `usuarios.persona_id UNIQUE NOT NULL REFERENCES personas(id)`.
+1. Una persona puede tener a lo sumo una cuenta de usuario en el sistema.
+2. Queda tajantemente prohibido vincular usuarios a colaboradores (`colaborador_id`), cargos, clientes o huéspedes; la condición laboral es un rol de dominio que emana de `personas` a través de `colaboradores` y sus episodios, no una identidad de acceso.
+3. Se garantiza la reutilización futura del modelo de autenticación para cualquier persona que requiera acceso al sistema sin inventar colaboradores ficticios.
+
+### D-034 — Separación de actores en autenticación y auditoría (AUTH-1)
+
+Se ratifica la frontera arquitectónica de actores técnicos:
+1. `USER`: Cuenta humana autenticada (`usuarios`), vinculada 1:1 a una `persona`.
+2. `SYSTEM`: Procesos batch, scripts de mantenimiento por CLI y cron jobs internos sin intervención interactiva humana.
+3. `INTEGRATION`: Clientes técnicos y APIs externas (WordPress, aplicaciones móviles, pasarelas) autenticados mediante tokens de máquina o credenciales API rotables, nunca mediante cuentas humanas.
+4. `PAYMENT_PROVIDER`: Proveedores de pago y webhooks externos.
+
+### D-035 — Nombres de usuario canónicos y unicidad insensible a mayúsculas (AUTH-1)
+
+Se define un doble almacenamiento canónico para el identificador de inicio de sesión:
+1. `nombre_usuario VARCHAR(50) NOT NULL`: Almacena el nombre de usuario con el formato de presentación provisto.
+2. `nombre_usuario_normalizado VARCHAR(50) NOT NULL UNIQUE`: Almacena el identificador transformado estrictamente a minúsculas y sin espacios mediante `UsuarioServicio::normalizarNombreUsuario()`.
+3. Esto garantiza que nombres como `Admin.Bootstrap` y `admin.bootstrap` colisionen a nivel de base de datos impidiendo suplantaciones y ambigüedades.
+
+### D-036 — Política de contraseñas robusta y hashing bcrypt con rehash (AUTH-1)
+
+1. Longitud mínima de contraseña obligatoria de 10 caracteres, sin límites máximos arbitrariamente bajos (máximo 128 caracteres para mitigar denegación de servicio en hashing).
+2. Hashing criptográfico unidireccional obligatorio con `PASSWORD_BCRYPT` y factor de costo fijado en 12 (`['cost' => 12]`).
+3. Detección y migración transparente de costo (`password_needs_rehash()`) durante inicios de sesión exitosos si la política o configuración del sistema evoluciona.
+4. Prohibición absoluta de almacenar o loguear contraseñas en texto claro. La columna en base de datos se denomina estrictamente `contrasena_hash CHAR(60) NOT NULL`.
+
+### D-037 — Mitigación de timing attacks y enumeración de usuarios (AUTH-1)
+
+1. En caso de que un usuario no exista en el sistema durante el intento de inicio de sesión, el servicio ejecuta una verificación matemática ficticia (`password_verify()`) contra un hash bcrypt dummy precalculado (`$2y$10$abcdefghijklmnopqrstuu...`), equiparando el tiempo de respuesta con el de un usuario existente.
+2. El mensaje devuelto ante credenciales erróneas o cuentas inactivas es siempre indistinguible y uniforme: `'Credenciales de acceso inválidas.'`, impidiendo la enumeración de nombres de usuario.
+
+### D-038 — Sesiones de usuario persistidas con tokens opacos en base de datos (AUTH-1)
+
+1. Las sesiones de usuario web se gestionan en base de datos mediante la tabla `sesiones_usuario`.
+2. El token de sesión emitido al cliente es una cadena opaca de 64 caracteres hexadecimales (32 bytes criptográficamente seguros generados con `random_bytes(32)`).
+3. En la base de datos únicamente se almacena el hash criptográfico `token_hash CHAR(64) NOT NULL UNIQUE` computado mediante `hash('sha256', $token)`. Si la base de datos es comprometida, los tokens activos no pueden ser reconstruidos ni utilizados.
+
+### D-039 — Política de expiración dual de sesiones: inactividad y duración máxima (AUTH-1)
+
+Las sesiones de usuario están sujetas a dos ventanas de vencimiento no prorrogables:
+1. Vencimiento por inactividad: Sesiones inactivas durante más de 30 minutos (`SESION_INACTIVIDAD_MINUTOS=30`, controlado por `ultimo_acceso_en`) son rechazadas y revocadas automáticamente.
+2. Vencimiento por duración absoluta: Sesiones con una vida mayor a 12 horas desde su creación (`SESION_DURACION_MAXIMA_HORAS=12`, controlado por `creado_en`) expiran de forma inapelable y son revocadas.
+
+### D-040 — Revocación concurrente de sesiones ante eventos de seguridad (AUTH-1)
+
+1. Al realizar un cambio exitoso de contraseña, todas las demás sesiones activas del usuario son revocadas en base de datos (`revocada_en = NOW()`), preservando únicamente la sesión actual que ejecutó el cambio.
+2. La desactivación o bloqueo de un usuario o de su persona asociada invalida de inmediato la validez de todas sus sesiones activas en el middleware de autenticación.
+
+### D-041 — Protección CSRF estricta en operaciones mutables de autenticación (AUTH-1)
+
+1. Todos los formularios con métodos HTTP sensibles (`POST`, `PUT`, `DELETE`) deben incluir un campo oculto `_csrf_token`.
+2. Los tokens CSRF se almacenan en la sesión PHP del usuario y son validados mediante comparación de tiempo constante con `hash_equals()`.
+3. Peticiones sin token o con token alterado se rechazan inmediatamente mediante `CsrfInvalidoExcepcion`.
+
+### D-042 — Configuración de cookies de sesión defensivas (AUTH-1)
+
+La cookie de sesión PHP se configura obligatoriamente con atributos de seguridad:
+1. `HttpOnly = true`: Impide el acceso a la cookie desde scripts del lado del cliente (mitigación XSS).
+2. `SameSite = 'Lax'` (o `'Strict'` según contexto): Mitiga ataques de falsificación de peticiones en sitios cruzados (CSRF).
+3. `Secure = true` en entornos donde HTTPS está habilitado.
+4. `use_strict_mode = 1` y `use_only_cookies = 1`.
+
+### D-043 — Mitigación contra fijación de sesión (AUTH-1)
+
+Al completarse una autenticación exitosa, el sistema ejecuta obligatoriamente `session_regenerate_id(true)`, destruyendo el identificador de sesión PHP anterior y asignando uno nuevo antes de registrar la identidad del usuario en la sesión.
+
+### D-044 — Mitigación de redirección abierta (Open Redirect) (AUTH-1)
+
+El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se sanitiza de forma defensiva mediante `AutenticacionIntermediario::sanitizarRutaRetorno()`:
+1. Se rechazan o neutralizan esquemas absolutos (ej. `http://`, `https://`, `javascript:`).
+2. Se neutralizan URLs relativas al protocolo que comiencen con doble barra (`//`).
+3. Se neutralizan rutas que contengan caracteres de control o saltos de línea (CR/LF).
+4. Si la ruta no comienza con una única barra `/` o es insegura, se redirecciona de manera predeterminada a `/`.
+
+### D-045 — Rate limiting y control de fuerza bruta mediante intentos de autenticación (AUTH-1)
+
+1. Los intentos de inicio de sesión fallidos se registran en la tabla `intentos_autenticacion` almacenando la IP del cliente, el identificador normalizado, la fecha y el resultado.
+2. Si se registran 5 o más intentos fallidos en una ventana móvil de 15 minutos para una misma IP o identificador, el servicio deniega temporalmente el intento con `DemasiadosIntentosExcepcion`.
+3. El throttling temporal no modifica el estado permanente del usuario (`usuarios.estado` permanece `ACTIVO`), evitando ataques de denegación de servicio distribuidos dirigidos a bloquear cuentas legítimas.
+
+### D-046 — Bootstrap CLI seguro e idempotente para usuario inicial (AUTH-1)
+
+1. Se provee la utilidad de línea de comandos `bin/crear-usuario-inicial.php` restringida estrictamente a entornos CLI (`PHP_SAPI === 'cli'`).
+2. Si el sistema ya cuenta con al menos un usuario registrado en base de datos, el script rechaza la ejecución a menos que se invoque con el flag explícito `--forzar`.
+3. Si la persona asociada no existe, el script la crea de forma atómica en el núcleo de personas con su correspondiente documento de identidad.
+4. Por motivos de seguridad y auditoría, el script jamás imprime la contraseña generada o asignada en la salida de la consola ni en archivos de log.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

@@ -57,6 +57,38 @@ final class Respuesta
     }
 
     /**
+     * Obtiene el código de estado HTTP actual.
+     *
+     * @return int
+     */
+    public function obtenerCodigo(): int
+    {
+        return $this->codigoEstado;
+    }
+
+    /**
+     * Obtiene la lista de cabeceras HTTP configuradas.
+     *
+     * @return array<string, string>
+     */
+    public function obtenerCabeceras(): array
+    {
+        return $this->cabeceras;
+    }
+
+    /**
+     * Crea una respuesta de redirección HTTP inmediata.
+     *
+     * @param string $url URL de destino
+     * @param int $codigo Código de estado HTTP (por defecto 302)
+     * @return self
+     */
+    public static function redirigir(string $url, int $codigo = 302): self
+    {
+        return new self('', $codigo, ['Location' => $url]);
+    }
+
+    /**
      * Emite los encabezados y el cuerpo de la respuesta HTTP al cliente.
      *
      * @return void
