@@ -4,9 +4,9 @@
 
 Alina y Bootstrap 5 constituyen el lenguaje visual. Se reutilizan sus clases y componentes sin rediseño innecesario. Las vistas son pasivas y reciben datos preparados. JavaScript propio mejora interacción pero no decide permisos ni reglas definitivas.
 
-## Layout
+## Layouts y Plantillas
 
-La estructura objetivo usa `Vistas/plantillas/principal.php` y componentes españoles como:
+1. `Vistas/plantillas/principal.php`: Layout general autenticado (`.app-wrapper`) estructurado en componentes modulares:
 
 ```text
 head.php
@@ -20,7 +20,10 @@ pie.php
 scripts.php
 ```
 
-La vista de un módulo aporta solo su contenido y assets particulares. El layout conserva `.app-wrapper`, `.app-navbar`, `.app-content`, `<main>` y los puntos de integración requeridos.
+2. `Vistas/plantillas/error.php`: Layout aislado y centrado para respuestas de error HTTP (`.error-container`), desacoplado de barras de navegación.
+3. `Vistas/plantillas/autenticacion.php` *(previsto)*: Layout para acceso y login (`.sign-bg-wrapper`).
+
+La vista de un módulo aporta solo su contenido y assets particulares. El layout autenticado conserva `.app-wrapper`, `.app-navbar`, `.app-content`, `<main>` y los puntos de integración requeridos.
 
 ## Contrato de navegación Alina
 

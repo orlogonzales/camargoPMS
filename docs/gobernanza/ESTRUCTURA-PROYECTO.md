@@ -16,6 +16,7 @@ app/
 └── Vistas/
     ├── plantillas/
     ├── componentes/
+    ├── errores/
     └── panel/
 config/
 database/

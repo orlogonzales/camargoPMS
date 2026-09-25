@@ -61,15 +61,25 @@ try {
     $respuesta = $enrutador->despachar($metodo, $uri);
     $respuesta->enviar();
 } catch (\Throwable $error) {
+    // Manejo defensivo de error 500 separando vista segura de diagnóstico técnico
     http_response_code(500);
-    echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Error del Servidor — Camargo PMS</title></head><body>';
-    echo '<div style="font-family:sans-serif;padding:2rem;text-align:center;">';
-    echo '<h2>Error del Servidor</h2>';
-    echo '<p>Ha ocurrido un problema al procesar la solicitud en Camargo PMS.</p>';
-    if (ini_get('display_errors')) {
-        echo '<pre style="text-align:left;background:#f8f9fa;padding:1rem;border-radius:4px;border:1px solid #ddd;max-width:800px;margin:1rem auto;overflow:auto;">';
-        echo htmlspecialchars((string) $error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        echo '</pre>';
+
+    try {
+        $controlador = new \CamargoPMS\Controladores\PanelControlador();
+        $respuesta500 = $controlador->error(500);
+        $respuesta500->enviar();
+    } catch (\Throwable $errorVista) {
+        echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Error 500 — Camargo PMS</title></head><body>';
+        echo '<div style="font-family:sans-serif;padding:3rem;text-align:center;">';
+        echo '<h2>Error del Servidor (500)</h2>';
+        echo '<p>Ha ocurrido una falla inesperada en Camargo PMS.</p>';
+        echo '</div></body></html>';
     }
-    echo '</div></body></html>';
+
+    if (ini_get('display_errors')) {
+        echo '<div style="max-width:850px;margin:2rem auto;padding:1rem;background:#fff3cd;border:1px solid #ffeeba;border-radius:6px;font-family:monospace;font-size:13px;color:#856404;">';
+        echo '<strong>Detalle de diagnóstico (visible solo en desarrollo local):</strong><br>';
+        echo htmlspecialchars((string) $error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        echo '</div>';
+    }
 }

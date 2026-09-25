@@ -1,13 +1,35 @@
 # Plantilla Alina
 
-## Fuente oficial
+## Fuente oficial y referencias visuales
 
-- Base obligatoria: `admin-dashboard/alina/template/blank.html`.
-- Assets originales: `admin-dashboard/alina/assets/`.
-- Documentación: `admin-dashboard/documentation/`.
-- Las 147 páginas HTML son catálogo de componentes, no páginas para copiar completas.
+Los archivos bajo `admin-dashboard/` son referencias originales e inmutables: no deben editarse, trasladarse ni convertirse directamente en archivos productivos.
 
-Todo `admin-dashboard/` se conserva intacto como referencia. La aplicación copiará selectivamente assets aprobados a `public/assets/`.
+| Recurso Alina | Archivo Original | Uso en Camargo PMS |
+|---|---|---|
+| Layout general | `admin-dashboard/alina/template/blank.html` | Estructura principal autenticada |
+| Login / Acceso | `admin-dashboard/alina/template/sign_in.html` | Referencia visual de autenticación |
+| Dashboard / Home | `admin-dashboard/alina/template/index.html` | Referencia visual de dashboard |
+| Error HTTP 400 | `admin-dashboard/alina/template/error_400.html` | Bad Request |
+| Error HTTP 403 | `admin-dashboard/alina/template/error_403.html` | Forbidden / Acceso denegado |
+| Error HTTP 404 | `admin-dashboard/alina/template/error_404.html` | Not Found / Recurso no encontrado |
+| Error HTTP 500 | `admin-dashboard/alina/template/error_500.html` | Internal Server Error |
+| Error HTTP 503 | `admin-dashboard/alina/template/error_503.html` | Service Unavailable |
+
+Todo `admin-dashboard/` se conserva intacto. La aplicación utiliza copias selectivas de los recursos aprobados en `public/assets/`.
+
+## Clasificación de Assets
+
+- **GLOBAL:** Fuentes Lexend Deca, Tabler Icons, Bootstrap CSS/JS base, CSS propio `camargo.css`.
+- **LAYOUT:** Simplebar, `style.css`, `responsive.css`, `camargo-layout.js`, avatares y logos.
+- **AUTENTICACIÓN:** Estilos de formulario flotante y recursos visuales específicos de `sign_in.html` (previstos para fase de autenticación).
+- **DASHBOARD:** Librerías gráficas (ej. Apexcharts) o widgets específicos de `index.html` (previstos para fase de dashboard con datos reales).
+- **ERRORES:** Ilustraciones `images/error/error-*.png` y plantilla aislada `.error-container`.
+
+## Jerarquía de Plantillas
+
+1. `plantillas/principal.php`: Layout general autenticado (`.app-wrapper`, navegación, cabecera, contenido, pie).
+2. `plantillas/error.php`: Layout aislado y centrado para respuestas de error HTTP (`.error-container`).
+3. `plantillas/autenticacion.php` *(previsto)*: Layout para login y registro (`.sign-bg-wrapper`).
 
 ## DOM verificado
 
@@ -76,4 +98,6 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
 2. Componentes extraídos en `app/Vistas/componentes/`: `head`, `cargador`, `navegacion`, `menu-principal`, `menu-secundario`, `cabecera`, `migas-pan`, `pie` y `scripts`.
 3. Controlador JS `public/assets/js/camargo-layout.js` sustituye la dependencia de `script.js`, `theme_customizer.js` y jQuery, ejecutando operaciones defensivas sobre el DOM.
 4. Assets mínimos aislados en `public/assets/` con resolución dinámica de URL absoluta para prevenir roturas en rutas profundas.
-5. `admin-dashboard/` permanece 100% inmutable.
+5. Arquitectura de errores implementada con plantilla aislada `plantillas/error.php` e ilustración oficial `images/error/error-*.png`.
+6. Vista genérica `errores/error.php` lista para 400, 403, 404, 500 y 503 sin duplicación de código.
+7. `admin-dashboard/` permanece 100% inmutable.

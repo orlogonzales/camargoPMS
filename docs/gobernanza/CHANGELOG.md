@@ -9,11 +9,13 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 - Creado el Front Controller en `public/index.php` con manejo defensivo de errores y resolución dinámica de URL base.
 - Implementado el motor de renderizado seguro `Vista` y la clase `Respuesta` con cabeceras de seguridad.
 - Implementado el `Autocargador` PSR-4 propio para el espacio de nombres `CamargoPMS\` y `Enrutador` mínimo reversible.
+- Formalizadas las referencias visuales oficiales de Alina: `blank.html` (layout general), `sign_in.html` (login), `index.html` (dashboard) y `error_*.html` (errores HTTP).
 - Adaptada la plantilla principal `principal.php` preservando el árbol DOM de `blank.html`.
 - Extraídos 9 componentes reutilizables: `head`, `cargador`, `navegacion`, `menu-principal`, `menu-secundario`, `cabecera`, `migas-pan`, `pie` y `scripts`.
 - Desarrollado el script propio de layout `camargo-layout.js` en JavaScript moderno nativo (sin jQuery ni scripts demo) asegurando el contrato `data-target` ↔ `id`, responsive, tema claro/oscuro y scroll.
-- Copiados selectivamente los assets esenciales de Bootstrap 5, Tabler Icons, Simplebar y CSS de Alina; eliminadas rutas relativas frágiles mediante ayudantes de URL absoluta.
-- Creada la vista neutra de comprobación en `app/Vistas/panel/inicio.php` y manejo controlado de error 404 en `app/Vistas/errores/404.php`.
+- Copiados selectivamente los assets esenciales de Bootstrap 5, Tabler Icons, Simplebar, CSS de Alina e ilustraciones de error; eliminadas rutas relativas frágiles mediante ayudantes de URL absoluta.
+- Creada la vista neutra de comprobación en `app/Vistas/panel/inicio.php`.
+- Implementada la arquitectura de errores con plantilla aislada `plantillas/error.php` (.error-container) y vista reutilizable `errores/error.php` para 400, 403, 404, 500 y 503.
 - Creado `camargo.css` para estilos propios sin alterar los originales de Alina.
 - Verificada la inmutabilidad íntegra de `admin-dashboard/`.
 

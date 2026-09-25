@@ -51,25 +51,61 @@ final class PanelControlador
     }
 
     /**
+     * Muestra una vista controlada para errores HTTP reutilizando la plantilla aislada de Alina.
+     *
+     * @param int $codigo Código de estado HTTP (400, 403, 404, 500, 503).
+     * @param string|null $mensaje Mensaje contextual seguro para el usuario.
+     * @return Respuesta
+     */
+    public function error(int $codigo = 404, ?string $mensaje = null): Respuesta
+    {
+        $mensajesDefecto = [
+            400 => [
+                'titulo' => 'Solicitud Incorrecta',
+                'mensaje' => 'La solicitud no pudo ser procesada debido a una sintaxis o formato no válido.'
+            ],
+            403 => [
+                'titulo' => 'Acceso Denegado',
+                'mensaje' => 'No cuentas con autorización suficiente para visualizar o manipular este recurso.'
+            ],
+            404 => [
+                'titulo' => 'Página No Encontrada',
+                'mensaje' => 'El enlace o recurso solicitado no existe, ha cambiado de ruta o no se encuentra disponible.'
+            ],
+            500 => [
+                'titulo' => 'Error del Servidor',
+                'mensaje' => 'Ocurrió una condición inesperada al procesar la solicitud. El equipo técnico ha sido notificado.'
+            ],
+            503 => [
+                'titulo' => 'Servicio No Disponible',
+                'mensaje' => 'El sistema se encuentra temporalmente fuera de servicio por mantenimiento o capacidad.'
+            ],
+        ];
+
+        $info = $mensajesDefecto[$codigo] ?? $mensajesDefecto[404];
+
+        $datos = [
+            'codigo' => $codigo,
+            'titulo' => $info['titulo'] . ' — Camargo PMS',
+            'mensaje' => $mensaje ?? $info['mensaje'],
+            'accion' => 'Volver al Inicio',
+            'urlRetorno' => url_ruta('/'),
+            'imagen' => url_asset("images/error/error-{$codigo}.png"),
+        ];
+
+        $html = $this->vista->renderizar('errores/error', $datos, 'error');
+
+        return new Respuesta($html, $codigo);
+    }
+
+    /**
      * Muestra la vista controlada para páginas o rutas no encontradas (404).
      *
      * @return Respuesta
      */
     public function paginaNoEncontrada(): Respuesta
     {
-        $datos = [
-            'titulo' => 'Página No Encontrada — Camargo PMS',
-            'categoriaActiva' => 'inicio',
-            'migasPan' => [
-                ['etiqueta' => 'Inicio', 'url' => url_ruta('/'), 'activo' => false],
-                ['etiqueta' => 'Error 404', 'url' => '', 'activo' => true],
-            ],
-            'menuEstatico' => $this->obtenerMenuEstaticoPrueba(),
-        ];
-
-        $html = $this->vista->renderizar('errores/404', $datos, 'principal');
-
-        return new Respuesta($html, 404);
+        return $this->error(404);
     }
 
     /**
