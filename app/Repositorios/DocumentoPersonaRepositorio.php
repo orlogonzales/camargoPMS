@@ -32,28 +32,26 @@ class DocumentoPersonaRepositorio
     }
 
     /**
-     * Busca un documento por su tipo, país emisor efectivo y número normalizado.
+     * Busca un documento por su tipo, país emisor real y número normalizado.
      * Considera la jurisdicción internacional para permitir que distintos países
      * emitan el mismo número bajo el tipo genérico Pasaporte.
      *
      * @param int $tipoDocumentoId
-     * @param int|null $paisEmisorId
+     * @param int $paisEmisorId
      * @param string $numeroDocumento
      * @return DocumentoPersona|null
      */
-    public function buscarPorTipoPaisYNumero(int $tipoDocumentoId, ?int $paisEmisorId, string $numeroDocumento): ?DocumentoPersona
+    public function buscarPorTipoPaisYNumero(int $tipoDocumentoId, int $paisEmisorId, string $numeroDocumento): ?DocumentoPersona
     {
-        $paisEfectivo = $paisEmisorId ?? 0;
-
         $sql = "SELECT * FROM personas_documentos
                 WHERE tipo_documento_id = :tipo_id
-                  AND pais_emisor_efectivo = :pais_efectivo
+                  AND pais_emisor_id = :pais_emisor_id
                   AND numero_documento = :numero
                 LIMIT 1";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':tipo_id', $tipoDocumentoId, PDO::PARAM_INT);
-        $stmt->bindValue(':pais_efectivo', $paisEfectivo, PDO::PARAM_INT);
+        $stmt->bindValue(':pais_emisor_id', $paisEmisorId, PDO::PARAM_INT);
         $stmt->bindValue(':numero', strtoupper(trim($numeroDocumento)), PDO::PARAM_STR);
         $stmt->execute();
 
@@ -133,7 +131,7 @@ class DocumentoPersonaRepositorio
         $stmt->bindValue(':persona_id', $doc->obtenerPersonaId(), PDO::PARAM_INT);
         $stmt->bindValue(':tipo_id', $doc->obtenerTipoDocumentoId(), PDO::PARAM_INT);
         $stmt->bindValue(':numero', $doc->obtenerNumeroDocumento(), PDO::PARAM_STR);
-        $stmt->bindValue(':pais_emisor_id', $doc->obtenerPaisEmisorId(), $doc->obtenerPaisEmisorId() ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':pais_emisor_id', $doc->obtenerPaisEmisorId(), PDO::PARAM_INT);
         $stmt->bindValue(':es_principal', $doc->esPrincipal() ? 1 : 0, PDO::PARAM_INT);
         $stmt->bindValue(':fecha_emision', $doc->obtenerFechaEmision(), $doc->obtenerFechaEmision() ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':fecha_vencimiento', $doc->obtenerFechaVencimiento(), $doc->obtenerFechaVencimiento() ? PDO::PARAM_STR : PDO::PARAM_NULL);

@@ -38,7 +38,11 @@ Entidad central reutilizable que consolida los datos de identificación y contac
 
 2. **Documentos Personales (`personas_documentos`):**
    - Relación 1:N con `tipos_documento` (DNI, Pasaporte, Carné de Extranjería).
-   - Unicidad documental internacional: `(tipo_documento_id, pais_emisor_efectivo, numero_documento)` donde `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` como columna virtual generada. Permite que dos personas porten el mismo número si fueron emitidos por países distintos (ej. pasaportes), previniendo duplicados dentro de la misma jurisdicción emisora.
+   - **Jurisdicción Documental Estructural (PERSONAL-1A):** Modelada mediante atributos ontológicos en `tipos_documento`:
+     - `pais_fijo_id`: Documentos de jurisdicción exclusiva fija (DNI y CE fijados a Perú). Si no se provee país emisor, el servicio resuelve automáticamente a dicho país fijo; cualquier intento de asociar otro país es rechazado.
+     - `pais_emisor_obligatorio`: Documentos internacionales donde el país emisor es mandatorio (ej. PASAPORTE).
+   - `pais_emisor_id` es estrictamente `NOT NULL` con clave foránea referencial íntegra (`fk_documentos_pais_emisor`) hacia `paises(id)`. Se prohíbe el uso de centinelas técnicos artificiales (`COALESCE(pais_emisor_id, 0)`).
+   - Unicidad documental natural: `UNIQUE (tipo_documento_id, pais_emisor_id, numero_documento)`. Permite que personas distintas porten el mismo número si fueron emitidos por países diferentes (ej. pasaportes de Chile y Argentina), impidiendo duplicados en una misma jurisdicción.
    - Regla de dominio e integridad DB: exactamente un documento principal activo por persona (`uq_persona_principal`).
    - **Regla vinculante:** El RUC **no** forma parte del catálogo de documentos personales de personas naturales; pertenece al modelado de identidad fiscal y personas jurídicas.
 
@@ -72,7 +76,9 @@ El historial laboral es inmutable y no se sobreescribe cuando un colaborador se 
    - Mantiene la trazabilidad histórica de los puestos o funciones ocupados dentro de un episodio laboral específico.
    - Atributos: `episodio_laboral_id`, `cargo_id`, `fecha_inicio`, `fecha_fin` (NULL si es el cargo vigente), `observaciones`.
    - Integridad DB: Columna virtual generada `uq_episodio_cargo_abierto` para forzar a lo sumo un cargo vigente activo por episodio.
-   - Transición de cargo (ascenso o cambio funcional): La asignación anterior se cierra en $D-1$ y la nueva se abre en $D$, garantizando continuidad temporal sin solapamiento.
+   - **Invariante Temporal de No Solapamiento (PERSONAL-1A):** Ninguna asignación de cargo puede solaparse cronológicamente con otra dentro del mismo episodio, aplicable tanto a intervalos abiertos como cerrados (ej. Cargo A: 01/01 a 30/06 y Cargo B: 01/04 a 31/05 es rechazado tajantemente).
+   - **Límites con el Episodio:** Toda asignación debe iniciar en o después del inicio del episodio y finalizar en o antes del cese del episodio; un episodio cerrado no admite cargos abiertos o indefinidos.
+   - Transición de cargo (ascenso o cambio funcional): La asignación anterior se cierra en $D-1$ y la nueva se abre en $D$, garantizando continuidad temporal estricta validada por `ColaboradorServicio::validarSolapamientoAsignacionCargo()`.
 
 ```text
 Persona X (ID 1)

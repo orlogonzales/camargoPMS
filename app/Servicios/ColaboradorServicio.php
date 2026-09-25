@@ -398,6 +398,9 @@ class ColaboradorServicio
             $obsCierre = "Transición al cargo '{$nuevoCargo->obtenerNombre()}'.";
             $this->asignacionRepo->cerrarAsignacion((int) $asignacionVigente->obtenerId(), $fechaFinPrevia, $obsCierre);
 
+            // Validar solapamiento e integridad temporal con el historial del episodio
+            $this->validarSolapamientoAsignacionCargo($episodioId, $fechaCambio, null);
+
             // 2. Abrir nueva asignación de cargo
             $nuevaAsignacion = new AsignacionCargo(
                 null,
@@ -417,6 +420,219 @@ class ColaboradorServicio
                 $this->pdo->rollBack();
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Asigna un cargo a un episodio laboral específico, validando existencia,
+     * estado del cargo y ausencia total de solapamiento temporal.
+     *
+     * @param int $episodioLaboralId
+     * @param int $cargoId
+     * @param string $fechaInicio Formato 'Y-m-d'
+     * @param string|null $fechaFin Formato 'Y-m-d' o null si es indefinida
+     * @param string|null $observaciones
+     * @return AsignacionCargo
+     * @throws EntidadNoEncontradaExcepcion
+     * @throws ValidacionExcepcion
+     * @throws SolapamientoLaboralExcepcion
+     * @throws Throwable
+     */
+    public function asignarCargoAEpisodio(
+        int $episodioLaboralId,
+        int $cargoId,
+        string $fechaInicio,
+        ?string $fechaFin = null,
+        ?string $observaciones = null
+    ): AsignacionCargo {
+        if ($episodioLaboralId <= 0) {
+            throw new ValidacionExcepcion('Se requiere un identificador de episodio laboral válido.');
+        }
+
+        if ($cargoId <= 0) {
+            throw new ValidacionExcepcion('Se requiere un identificador de cargo válido.');
+        }
+
+        $cargo = $this->cargoRepo->buscarPorId($cargoId);
+        if (!$cargo || !$cargo->esActivo()) {
+            throw new ValidacionExcepcion(
+                'El cargo seleccionado no existe o no se encuentra activo.',
+                ['cargo_id' => 'Cargo inexistente o inactivo']
+            );
+        }
+
+        $iniciaTransaccionInterna = !$this->pdo->inTransaction();
+        if ($iniciaTransaccionInterna) {
+            $this->pdo->beginTransaction();
+        }
+
+        try {
+            // Bloqueo pesimista del episodio laboral
+            $stmtEp = $this->pdo->prepare('SELECT id, colaborador_id, estado, fecha_inicio, fecha_fin FROM episodios_laborales WHERE id = :id FOR UPDATE');
+            $stmtEp->bindValue(':id', $episodioLaboralId, PDO::PARAM_INT);
+            $stmtEp->execute();
+            $filaEp = $stmtEp->fetch();
+
+            if (!$filaEp) {
+                throw new EntidadNoEncontradaExcepcion('EpisodioLaboral', $episodioLaboralId);
+            }
+
+            // Validar solapamiento temporal y límites del episodio
+            $this->validarSolapamientoAsignacionCargo($episodioLaboralId, $fechaInicio, $fechaFin);
+
+            $nuevaAsignacion = new AsignacionCargo(
+                null,
+                $episodioLaboralId,
+                $cargoId,
+                $fechaInicio,
+                $fechaFin,
+                $observaciones !== null && trim($observaciones) !== '' ? trim($observaciones) : null
+            );
+
+            $asignacionPersistida = $this->asignacionRepo->insertar($nuevaAsignacion);
+
+            if ($iniciaTransaccionInterna) {
+                $this->pdo->commit();
+            }
+
+            return $asignacionPersistida;
+        } catch (Throwable $e) {
+            if ($iniciaTransaccionInterna && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Valida que un rango de fechas para una asignación de cargo no se solape con otras asignaciones
+     * del mismo episodio ni viole los límites temporales del episodio laboral.
+     *
+     * @param int $episodioLaboralId
+     * @param string $fechaInicio Formato 'Y-m-d'
+     * @param string|null $fechaFin Formato 'Y-m-d' o null si la asignación es abierta
+     * @param int|null $excluirAsignacionId ID de asignación a excluir de la validación
+     * @return void
+     * @throws EntidadNoEncontradaExcepcion
+     * @throws ValidacionExcepcion
+     * @throws SolapamientoLaboralExcepcion
+     */
+    public function validarSolapamientoAsignacionCargo(
+        int $episodioLaboralId,
+        string $fechaInicio,
+        ?string $fechaFin = null,
+        ?int $excluirAsignacionId = null
+    ): void {
+        if ($episodioLaboralId <= 0) {
+            throw new ValidacionExcepcion('Se requiere un identificador de episodio laboral válido.');
+        }
+
+        $fechaInicio = trim($fechaInicio);
+        $this->validarFecha($fechaInicio, 'fecha_inicio');
+
+        if ($fechaFin !== null) {
+            $fechaFin = trim($fechaFin);
+            $this->validarFecha($fechaFin, 'fecha_fin');
+
+            if ($fechaFin < $fechaInicio) {
+                throw new ValidacionExcepcion(
+                    "La fecha de fin ({$fechaFin}) no puede ser anterior a la fecha de inicio ({$fechaInicio}).",
+                    ['fecha_fin' => 'Fecha de fin anterior a fecha de inicio']
+                );
+            }
+        }
+
+        // Obtener episodio laboral para verificar sus límites temporales
+        $episodio = $this->episodioRepo->buscarPorId($episodioLaboralId, false);
+        if ($episodio === null) {
+            throw new EntidadNoEncontradaExcepcion('EpisodioLaboral', $episodioLaboralId);
+        }
+
+        $inicioEpisodio = $episodio->obtenerFechaInicio();
+        $finEpisodio = $episodio->obtenerFechaFin();
+
+        if ($fechaInicio < $inicioEpisodio) {
+            throw new SolapamientoLaboralExcepcion(
+                $fechaInicio,
+                $fechaFin,
+                "La asignación de cargo no puede iniciar ({$fechaInicio}) antes del inicio del episodio laboral ({$inicioEpisodio})."
+            );
+        }
+
+        if ($finEpisodio !== null) {
+            if ($fechaInicio > $finEpisodio) {
+                throw new SolapamientoLaboralExcepcion(
+                    $fechaInicio,
+                    $fechaFin,
+                    "La asignación de cargo no puede iniciar ({$fechaInicio}) después de la finalización del episodio laboral ({$finEpisodio})."
+                );
+            }
+
+            if ($fechaFin === null) {
+                throw new SolapamientoLaboralExcepcion(
+                    $fechaInicio,
+                    null,
+                    "No se puede registrar una asignación abierta o indefinida en un episodio laboral ya concluido ({$finEpisodio})."
+                );
+            }
+
+            if ($fechaFin > $finEpisodio) {
+                throw new SolapamientoLaboralExcepcion(
+                    $fechaInicio,
+                    $fechaFin,
+                    "La asignación de cargo no puede finalizar ({$fechaFin}) después del cese del episodio laboral ({$finEpisodio})."
+                );
+            }
+        }
+
+        // Consultar asignaciones existentes del episodio para verificar no solapamiento
+        $sql = "SELECT id, cargo_id, fecha_inicio, fecha_fin"
+            . " FROM episodios_laborales_cargos"
+            . " WHERE episodio_laboral_id = :episodio_id";
+        if ($this->pdo->inTransaction()) {
+            $sql .= " FOR UPDATE";
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':episodio_id', $episodioLaboralId, PDO::PARAM_INT);
+        $stmt->execute();
+        $asignaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($asignaciones as $asig) {
+            $asigId = (int) $asig['id'];
+            if ($excluirAsignacionId !== null && $asigId === $excluirAsignacionId) {
+                continue;
+            }
+
+            $asigInicio = (string) $asig['fecha_inicio'];
+            $asigFin = $asig['fecha_fin'] !== null ? (string) $asig['fecha_fin'] : null;
+
+            $haySolapamiento = false;
+
+            if ($fechaFin === null && $asigFin === null) {
+                // Ambas abiertas
+                $haySolapamiento = true;
+            } elseif ($fechaFin === null && $asigFin !== null) {
+                // Nueva abierta, existente cerrada
+                $haySolapamiento = ($asigFin >= $fechaInicio);
+            } elseif ($fechaFin !== null && $asigFin === null) {
+                // Nueva cerrada, existente abierta
+                $haySolapamiento = ($fechaFin >= $asigInicio);
+            } else {
+                // Ambas cerradas
+                /** @var string $asigFin */
+                $haySolapamiento = ($fechaInicio <= $asigFin && $asigInicio <= $fechaFin);
+            }
+
+            if ($haySolapamiento) {
+                $rangoExistente = $asigFin !== null ? "{$asigInicio} al {$asigFin}" : "desde {$asigInicio} (abierta)";
+                $rangoNuevo = $fechaFin !== null ? "{$fechaInicio} al {$fechaFin}" : "desde {$fechaInicio} (abierta)";
+                throw new SolapamientoLaboralExcepcion(
+                    $fechaInicio,
+                    $fechaFin,
+                    "La asignación ({$rangoNuevo}) entra en solapamiento temporal con la asignación ID {$asigId} ({$rangoExistente}) del mismo episodio laboral."
+                );
+            }
         }
     }
 

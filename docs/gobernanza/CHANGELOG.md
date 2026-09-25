@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Micro-lote PERSONAL-1A — Cierre de Invariantes Documentales y Temporales
+
+- Implementada la migración evolutiva no destructiva `SQL/migraciones/004_ajustes_identidad_personal.sql` (lote 4):
+  - Modelado estructural de jurisdicción en `tipos_documento`: incorporación de `pais_fijo_id` (FK a `paises`) y `pais_emisor_obligatorio`. DNI y Carné de Extranjería configurados con `pais_fijo_id = 1` (Perú) y `pais_emisor_obligatorio = 0`; Pasaporte configurado con `pais_fijo_id = NULL` y `pais_emisor_obligatorio = 1` (D-031).
+  - Eliminación definitiva del centinela técnico `COALESCE(pais_emisor_id, 0)` y de la columna virtual `pais_emisor_efectivo` en `personas_documentos`.
+  - `personas_documentos.pais_emisor_id` pasa a ser estrictamente `INT UNSIGNED NOT NULL`, respaldado por la clave foránea íntegra `fk_documentos_pais_emisor` e indexado con `UNIQUE (tipo_documento_id, pais_emisor_id, numero_documento)` (`uq_documentos_tipo_pais_numero`).
+- Actualizados los modelos de dominio, repositorios y servicios de identidad:
+  - `TipoDocumento` incorpora `paisFijoId`, `paisEmisorObligatorio` y métodos semánticos (`tienePaisFijo()`, `requierePaisEmisor()`).
+  - `DocumentoPersonaRepositorio` y `PersonaServicio` consultan y validan directamente la jurisdicción real sin centinelas: resolución automática al país fijo cuando se omite, rechazo tajante de países no autorizados en documentos fijos y exigencia obligatoria de país emisor en pasaportes.
+- Implementado el blindaje exhaustivo de la invariante temporal de no solapamiento de asignaciones de cargo dentro de un episodio laboral (D-032):
+  - Métodos incorporados en `ColaboradorServicio`: `validarSolapamientoAsignacionCargo()` y `asignarCargoAEpisodio()`.
+  - Rechazo de solapamiento cronológico entre asignaciones del mismo episodio, cubriendo tanto intervalos abiertos como cerrados (ej. Cargo A 01/01 a 30/06 y Cargo B 01/04 a 31/05 rechazado por `SolapamientoLaboralExcepcion`).
+  - Verificación estricta de límites temporales respecto al episodio laboral padre (prohibición de iniciar antes de la contratación o iniciar/finalizar después del cese).
+  - Protección de concurrencia mediante transacciones y bloqueos pesimistas (`SELECT ... FOR UPDATE`).
+  - Integración de la validación en `cambiarCargo()`, preservando la contigüidad matemática estricta $D-1$ / $D$.
+- Sincronizado el archivo consolidado oficial `SQL/camargo_pms.sql` con el nuevo esquema limpio de 10 tablas, finalizando con `SET FOREIGN_KEY_CHECKS = 1;`.
+- Validada la paridad 100% de columnas e índices entre `SQL/camargo_pms.sql` y la base de datos `camargo_pms` mediante recreación aislada en base de datos temporal `camargo_pms_prueba_p1a`.
+- Ampliada la suite automatizada a 26 pruebas (26 PASS / 0 FAIL), reteniendo las 14 pruebas de PERSONAL-1 e incorporando 7 pruebas de invariante documental estructural (T-DOC-A a T-DOC-G) y 5 pruebas de invariante temporal de cargos (T-CARGO-A a T-CARGO-E).
+- Confirmada la intangibilidad total del catálogo `admin-dashboard/` (0 cambios).
+
 ### Fase PERSONAL-1 — Colaboradores, Cargos, Episodios Laborales y Ajuste Evolutivo de Identidad
 
 - Consolidado el Principio de Separación Integral: `PERSONA ≠ COLABORADOR ≠ EPISODIO LABORAL ≠ CARGO ≠ USUARIO ≠ ROL` (D-026).

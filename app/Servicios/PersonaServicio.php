@@ -418,38 +418,45 @@ class PersonaServicio
         if ($numero === '') {
             $errores["{$prefijoCampo}.numero_documento"] = 'El número de documento es obligatorio.';
         } else {
-            $codigo = $tipoDoc->obtenerCodigo();
             $paisEmisorId = isset($datos['pais_emisor_id']) && $datos['pais_emisor_id'] !== null && $datos['pais_emisor_id'] !== ''
                 ? (int) $datos['pais_emisor_id']
                 : null;
 
-            if ($codigo === 'DNI' || $codigo === 'CE') {
+            if ($tipoDoc->tienePaisFijo()) {
+                $paisFijoId = $tipoDoc->obtenerPaisFijoId();
                 if ($paisEmisorId === null) {
-                    $peru = $this->paisRepo->buscarPorIso2('PE');
-                    $paisEmisorId = $peru ? $peru->obtenerId() : null;
+                    // Resuelve automáticamente al país fijo de emisión del documento (ej. DNI/CE -> Perú)
+                    $paisEmisorId = $paisFijoId;
+                } elseif ($paisEmisorId !== $paisFijoId) {
+                    $paisFijo = $this->paisRepo->buscarPorId($paisFijoId);
+                    $nombrePais = $paisFijo ? $paisFijo->obtenerNombre() : 'el país autorizado';
+                    $errores["{$prefijoCampo}.pais_emisor_id"] = "El tipo de documento {$tipoDoc->obtenerCodigo()} únicamente puede ser emitido por {$nombrePais}.";
                 }
-
-                if ($codigo === 'DNI' && !preg_match('/^[0-9]{8}$/', $numero)) {
-                    $errores["{$prefijoCampo}.numero_documento"] = 'El DNI debe contener exactamente 8 dígitos numéricos.';
-                }
-            } elseif ($codigo === 'PASAPORTE') {
-                if ($paisEmisorId === null) {
-                    $errores["{$prefijoCampo}.pais_emisor_id"] = 'El país emisor es obligatorio para documentos tipo Pasaporte.';
+            } elseif ($tipoDoc->requierePaisEmisor()) {
+                if ($paisEmisorId === null || $paisEmisorId <= 0) {
+                    $errores["{$prefijoCampo}.pais_emisor_id"] = "El tipo de documento {$tipoDoc->obtenerCodigo()} requiere especificar obligatoriamente un país emisor válido.";
+                } else {
+                    $paisValido = $this->paisRepo->buscarPorId($paisEmisorId);
+                    if (!$paisValido || !$paisValido->esActivo()) {
+                        $errores["{$prefijoCampo}.pais_emisor_id"] = 'El país emisor especificado no es válido o está inactivo.';
+                    }
                 }
             }
 
-            if ($tipoDoc->obtenerFormatoRegex() !== null && $codigo !== 'DNI') {
+            if ($tipoDoc->obtenerFormatoRegex() !== null) {
                 if (!preg_match('/' . $tipoDoc->obtenerFormatoRegex() . '/', $numero)) {
                     $errores["{$prefijoCampo}.numero_documento"] = "El número no cumple con el formato requerido para {$tipoDoc->obtenerNombre()}.";
                 }
             }
 
-            // Comprobación preventiva de duplicados considerando la jurisdicción del país emisor efectivo
-            $existente = $this->documentoRepo->buscarPorTipoPaisYNumero($tipoId, $paisEmisorId, $numero);
-            if ($existente !== null) {
-                $personaActualId = isset($datos['persona_id']) ? (int) $datos['persona_id'] : null;
-                if ($personaActualId === null || $existente->obtenerPersonaId() !== $personaActualId) {
-                    throw new DocumentoDuplicadoExcepcion($codigo, $numero);
+            // Comprobación preventiva de duplicados considerando la jurisdicción real obligatoria
+            if ($paisEmisorId !== null && empty($errores)) {
+                $existente = $this->documentoRepo->buscarPorTipoPaisYNumero($tipoId, $paisEmisorId, $numero);
+                if ($existente !== null) {
+                    $personaActualId = isset($datos['persona_id']) ? (int) $datos['persona_id'] : null;
+                    if ($personaActualId === null || $existente->obtenerPersonaId() !== $personaActualId) {
+                        throw new DocumentoDuplicadoExcepcion($tipoDoc->obtenerCodigo(), $numero);
+                    }
                 }
             }
         }
@@ -470,15 +477,14 @@ class PersonaServicio
             : null;
 
         $tipoDoc = $this->tipoDocumentoRepo->buscarPorId((int) $datos['tipo_documento_id']);
-        if ($tipoDoc !== null && in_array($tipoDoc->obtenerCodigo(), ['DNI', 'CE'], true) && $paisEmisorId === null) {
-            $peru = $this->paisRepo->buscarPorIso2('PE');
-            $paisEmisorId = $peru ? $peru->obtenerId() : null;
+        if ($tipoDoc !== null && $tipoDoc->tienePaisFijo() && $paisEmisorId === null) {
+            $paisEmisorId = $tipoDoc->obtenerPaisFijoId();
         }
 
         return [
             'tipo_documento_id' => (int) $datos['tipo_documento_id'],
             'numero_documento' => strtoupper(trim((string) $datos['numero_documento'])),
-            'pais_emisor_id' => $paisEmisorId,
+            'pais_emisor_id' => (int) $paisEmisorId,
             'es_principal' => (bool) ($datos['es_principal'] ?? false),
             'fecha_emision' => isset($datos['fecha_emision']) && trim((string) $datos['fecha_emision']) !== '' ? trim((string) $datos['fecha_emision']) : null,
             'fecha_vencimiento' => isset($datos['fecha_vencimiento']) && trim((string) $datos['fecha_vencimiento']) !== '' ? trim((string) $datos['fecha_vencimiento']) : null,

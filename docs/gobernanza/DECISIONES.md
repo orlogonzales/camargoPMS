@@ -126,11 +126,27 @@ El historial laboral no se sobreescribe ni se destruye. Cada período de contrat
 
 En un cambio de cargo en fecha $D$, la asignación de cargo anterior se cierra con `fecha_fin = D - 1 día` y la nueva asignación se abre con `fecha_inicio = D` y `fecha_fin = NULL`, garantizando continuidad cronológica estricta sin solapamiento ni días vacíos. Se prohíbe el solapamiento temporal tanto a nivel de episodios laborales como de cargos dentro de un episodio. Toda operación de transición y cese se ejecuta con bloqueos pesimistas (`SELECT ... FOR UPDATE`) dentro de transacciones ACID.
 
-### D-030 — Ajuste evolutivo de identidad: monónimos y unicidad documental internacional parametrizada
+### D-030 — Ajuste evolutivo de identidad: monónimos y unicidad documental internacional inicial
 
-Se adopta un ajuste evolutivo no destructivo en la migración `003` para dos aspectos de la identidad:
-1. Nombres internacionales y monónimos: Se elimina la restricción que exigía al menos un apellido (`chk_personas_al_menos_un_apellido`), manteniendo `nombres` como obligatorio y permitiendo apellidos nulos para individuos extranjeros o monónimos legales.
-2. Unicidad documental internacional: La unicidad documental de `personas_documentos` evoluciona incorporando el país emisor mediante la columna virtual generada `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` y la restricción `UNIQUE (tipo_documento_id, pais_emisor_efectivo, numero_documento)`. Esto previene colisiones erróneas entre pasaportes de distintos países que comparten número, preservando la unicidad estricta para documentos emitidos por una misma jurisdicción.
+Se adoptó un ajuste evolutivo no destructivo en la migración `003` para dos aspectos de la identidad:
+1. Nombres internacionales y monónimos: Se eliminó la restricción que exigía al menos un apellido (`chk_personas_al_menos_un_apellido`), manteniendo `nombres` como obligatorio y permitiendo apellidos nulos para individuos extranjeros o monónimos legales.
+2. Unicidad documental internacional: La unicidad documental de `personas_documentos` incorporó inicialmente el país emisor mediante la columna virtual generada `pais_emisor_efectivo = COALESCE(pais_emisor_id, 0)` y la restricción `UNIQUE (tipo_documento_id, pais_emisor_efectivo, numero_documento)`. Esta solución fue superada estructuralmente en la migración `004` (ver D-031).
+
+### D-031 — Jurisdicción documental estructural sin centinelas (Migración 004 / PERSONAL-1A)
+
+Se elimina formalmente el centinela técnico `COALESCE(pais_emisor_id, 0)` y la columna virtual `pais_emisor_efectivo` mediante la migración `004`. La jurisdicción se modela estructuralmente en el catálogo `tipos_documento` mediante dos atributos canónicos:
+1. `pais_fijo_id`: Clave foránea nullable hacia `paises(id)`. Si está definido, el tipo de documento posee jurisdicción fija no configurable (ej. DNI y CE fijados a Perú, ID 1). El servicio de dominio asigna automáticamente el país fijo si se omite y rechaza tajantemente cualquier emisión en otro país.
+2. `pais_emisor_obligatorio`: Indicador booleano que señala si el tipo de documento requiere obligatoriamente indicar el país emisor (ej. PASAPORTE fijado en 1).
+
+En consecuencia, `personas_documentos.pais_emisor_id` se define estrictamente como `INT UNSIGNED NOT NULL`, respaldado por la clave foránea íntegra `fk_documentos_pais_emisor` e indexado bajo la restricción única natural `UNIQUE (tipo_documento_id, pais_emisor_id, numero_documento)`. Queda prohibido el almacenamiento de jurisdicciones nulas o ficticias en la base de datos.
+
+### D-032 — Invariante de solapamiento temporal de cargos en episodio (PERSONAL-1A)
+
+Se formaliza la verificación estricta de no solapamiento temporal para todas las asignaciones de cargo dentro de un episodio laboral:
+1. Ninguna asignación de cargo puede solaparse cronológicamente con otra del mismo episodio, aplicable tanto a intervalos abiertos como a intervalos cerrados (ej. Cargo A: 01/01 a 30/06 y Cargo B: 01/04 a 31/05 se rechaza tajantemente mediante `SolapamientoLaboralExcepcion`).
+2. Las asignaciones de cargo están circunscritas a los límites del episodio laboral padre: no pueden iniciar antes de la apertura del episodio ni iniciar/finalizar después de su cese.
+3. Se mantiene la convención $D-1$ / $D$ en transiciones de cargo con `cambiarCargo()`.
+4. La verificación se centraliza en `ColaboradorServicio::validarSolapamientoAsignacionCargo()` y se protege concurrentemente mediante transacciones y bloqueos pesimistas (`SELECT ... FOR UPDATE`).
 
 ## Pendientes de decisión
 

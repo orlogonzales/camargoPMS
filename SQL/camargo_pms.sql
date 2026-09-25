@@ -66,19 +66,26 @@ CREATE TABLE IF NOT EXISTS `tipos_documento` (
     `longitud_minima` SMALLINT UNSIGNED NULL,
     `longitud_maxima` SMALLINT UNSIGNED NULL,
     `formato_regex` VARCHAR(100) NULL,
+    `pais_fijo_id` INT UNSIGNED NULL,
+    `pais_emisor_obligatorio` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     `activo` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
     `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_tipos_documento_pais_fijo` FOREIGN KEY (`pais_fijo_id`) REFERENCES `paises` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     UNIQUE KEY `uq_tipos_documento_codigo` (`codigo`),
-    INDEX `idx_tipos_documento_activo` (`activo`)
+    INDEX `idx_tipos_documento_activo` (`activo`),
+    INDEX `idx_tipos_documento_pais_fijo` (`pais_fijo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Catálogo dinámico de tipos de documento de identidad para personas naturales';
 
--- Semilla estructural: Tipos de documento base para personas naturales
-INSERT INTO `tipos_documento` (`codigo`, `nombre`, `descripcion`, `longitud_exacta`, `longitud_minima`, `longitud_maxima`, `formato_regex`, `activo`) VALUES
-('DNI', 'Documento Nacional de Identidad', 'Documento nacional de identidad peruano para personas naturales', 8, 8, 8, '^[0-9]{8}$', 1),
-('PASAPORTE', 'Pasaporte', 'Documento de identidad internacional para viajes', NULL, 6, 20, '^[A-Z0-9]{6,20}$', 1),
-('CE', 'Carné de Extranjería', 'Documento oficial para extranjeros residentes en Perú', NULL, 6, 15, '^[A-Z0-9]{6,15}$', 1)
-ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
+-- Semilla estructural: Tipos de documento base para personas naturales con su alcance jurisdiccional
+INSERT INTO `tipos_documento` (`codigo`, `nombre`, `descripcion`, `longitud_exacta`, `longitud_minima`, `longitud_maxima`, `formato_regex`, `pais_fijo_id`, `pais_emisor_obligatorio`, `activo`) VALUES
+('DNI', 'Documento Nacional de Identidad', 'Documento nacional de identidad peruano para personas naturales', 8, 8, 8, '^[0-9]{8}$', 1, 0, 1),
+('PASAPORTE', 'Pasaporte', 'Documento de identidad internacional para viajes', NULL, 6, 20, '^[A-Z0-9]{6,20}$', NULL, 1, 1),
+('CE', 'Carné de Extranjería', 'Documento oficial para extranjeros residentes en Perú', NULL, 6, 15, '^[A-Z0-9]{6,15}$', 1, 0, 1)
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `pais_fijo_id` = VALUES(`pais_fijo_id`),
+    `pais_emisor_obligatorio` = VALUES(`pais_emisor_obligatorio`);
 
 -- ----------------------------------------------------------------------------
 -- 3. Maestro de personas naturales (Soporta monónimos y nombres internacionales)
@@ -103,15 +110,14 @@ CREATE TABLE IF NOT EXISTS `personas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Maestro central de personas naturales';
 
 -- ----------------------------------------------------------------------------
--- 4. Documentos de identificación personal (Con ámbito de país emisor efectivo)
+-- 4. Documentos de identificación personal (Con jurisdicción real obligatoria)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `personas_documentos` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `persona_id` BIGINT UNSIGNED NOT NULL,
     `tipo_documento_id` INT UNSIGNED NOT NULL,
     `numero_documento` VARCHAR(30) NOT NULL,
-    `pais_emisor_id` INT UNSIGNED NULL,
-    `pais_emisor_efectivo` INT UNSIGNED GENERATED ALWAYS AS (COALESCE(`pais_emisor_id`, 0)) VIRTUAL,
+    `pais_emisor_id` INT UNSIGNED NOT NULL,
     `es_principal` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     `fecha_emision` DATE NULL,
     `fecha_vencimiento` DATE NULL,
@@ -125,11 +131,12 @@ CREATE TABLE IF NOT EXISTS `personas_documentos` (
     CONSTRAINT `fk_documentos_pais_emisor` FOREIGN KEY (`pais_emisor_id`) REFERENCES `paises` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `chk_documentos_estado` CHECK (`estado` IN ('ACTIVO', 'INACTIVO')),
     CONSTRAINT `chk_documentos_numero_no_vacio` CHECK (`numero_documento` <> ''),
-    -- Unicidad documental internacional: distingue por tipo, país emisor efectivo y número
-    UNIQUE KEY `uq_documentos_tipo_emisor_numero` (`tipo_documento_id`, `pais_emisor_efectivo`, `numero_documento`),
+    -- Unicidad documental internacional: distingue por tipo, país emisor real y número
+    UNIQUE KEY `uq_documentos_tipo_pais_numero` (`tipo_documento_id`, `pais_emisor_id`, `numero_documento`),
     UNIQUE KEY `uq_documentos_persona_principal` (`uq_persona_principal`),
     INDEX `idx_documentos_persona` (`persona_id`),
     INDEX `idx_documentos_tipo` (`tipo_documento_id`),
+    INDEX `idx_documentos_pais_emisor` (`pais_emisor_id`),
     INDEX `idx_documentos_estado` (`estado`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Documentos de identidad asociados a personas naturales';
 
