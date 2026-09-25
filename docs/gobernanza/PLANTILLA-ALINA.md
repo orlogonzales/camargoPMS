@@ -69,3 +69,11 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
 - Sidebar, categorías, submenús, estado activo, breadcrumbs, tema y loader probados.
 - HTML dinámico escapado y menús filtrados por backend.
 - Originales Alina sin cambios.
+
+## Materialización en UI-0
+
+1. Plantilla base creada en `app/Vistas/plantillas/principal.php` encapsulando `.app-wrapper`.
+2. Componentes extraídos en `app/Vistas/componentes/`: `head`, `cargador`, `navegacion`, `menu-principal`, `menu-secundario`, `cabecera`, `migas-pan`, `pie` y `scripts`.
+3. Controlador JS `public/assets/js/camargo-layout.js` sustituye la dependencia de `script.js`, `theme_customizer.js` y jQuery, ejecutando operaciones defensivas sobre el DOM.
+4. Assets mínimos aislados en `public/assets/` con resolución dinámica de URL absoluta para prevenir roturas en rutas profundas.
+5. `admin-dashboard/` permanece 100% inmutable.

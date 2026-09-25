@@ -12,15 +12,19 @@ Estado: completada.
 
 Revisar exclusiones, definir tratamiento de assets grandes, inicializar Git y crear baseline autorizada.
 
-Estado: en cierre; debe verificarse commit, push y sincronía `main`/`origin/main` antes de declararla completada.
+Estado: completada.
 
 ## UI-0 — Conversión controlada de Alina
 
 Front Controller mínimo, assets seleccionados, layout y componentes PHP, vista neutra, menús de prueba y `camargo-layout.js`. Sin módulos funcionales ni BD.
 
+Estado: completada.
+
 ## UI-1 — Validación técnica y visual
 
 Probar `https://app.camargo-pms.test/`, responsive, consola, navegación, rutas y equivalencia con `blank.html`. Cerrar micro-baseline de interfaz.
+
+Estado: pendiente.
 
 ## Infraestructura
 

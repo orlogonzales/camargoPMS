@@ -4,6 +4,19 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase UI-0 — Esqueleto MVC y plantilla Alina reutilizable
+
+- Creado el Front Controller en `public/index.php` con manejo defensivo de errores y resolución dinámica de URL base.
+- Implementado el motor de renderizado seguro `Vista` y la clase `Respuesta` con cabeceras de seguridad.
+- Implementado el `Autocargador` PSR-4 propio para el espacio de nombres `CamargoPMS\` y `Enrutador` mínimo reversible.
+- Adaptada la plantilla principal `principal.php` preservando el árbol DOM de `blank.html`.
+- Extraídos 9 componentes reutilizables: `head`, `cargador`, `navegacion`, `menu-principal`, `menu-secundario`, `cabecera`, `migas-pan`, `pie` y `scripts`.
+- Desarrollado el script propio de layout `camargo-layout.js` en JavaScript moderno nativo (sin jQuery ni scripts demo) asegurando el contrato `data-target` ↔ `id`, responsive, tema claro/oscuro y scroll.
+- Copiados selectivamente los assets esenciales de Bootstrap 5, Tabler Icons, Simplebar y CSS de Alina; eliminadas rutas relativas frágiles mediante ayudantes de URL absoluta.
+- Creada la vista neutra de comprobación en `app/Vistas/panel/inicio.php` y manejo controlado de error 404 en `app/Vistas/errores/404.php`.
+- Creado `camargo.css` para estilos propios sin alterar los originales de Alina.
+- Verificada la inmutabilidad íntegra de `admin-dashboard/`.
+
 ### Fase G-1 — Git y baseline documental
 
 - Definida `main` como rama oficial y el repositorio GitHub de Camargo PMS como `origin`.

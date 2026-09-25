@@ -1,0 +1,64 @@
+/**
+ * Camargo PMS — Estilos específicos del layout
+ * Complementa style.css y responsive.css originales sin modificarlos.
+ */
+
+/* Transición suave para el cargador neutro */
+.loader-wrapper {
+    transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+}
+
+.loader-wrapper.desvanecer {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Indicador de marca en el panel lateral */
+.camargo-brand-text {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--bs-primary, #0d6efd);
+}
+
+/* Estado activo visible en menú secundario */
+.main-side-menu .main-menu li a.active {
+    font-weight: 600;
+    color: var(--bs-primary, #0d6efd);
+}
+
+/* Estilo para botón volver arriba (go-top) */
+.go-top {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    cursor: pointer;
+}
+
+.go-top:not(.active) {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.go-top.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Ajustes de tarjetas neutras de comprobación */
+.tarjeta-comprobacion {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tarjeta-comprobacion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Badges de estado en UI-0 */
+.badge-estado-pms {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    border-radius: 0.5rem;
+}
