@@ -81,7 +81,27 @@ Se resuelve formalmente **P-002**. Se adopta Composer para la gestión de depend
 
 ### D-020 — Esquema consolidado oficial y migraciones incrementales
 
-Se formaliza el contrato de persistencia: `SQL/camargo_pms.sql` es la representación consolidada oficial y versionada del esquema vigente de Camargo PMS, libre de datos operativos y credenciales. `SQL/migraciones/` contiene la secuencia cronológica de cambios estructurales controlados mediante la tabla técnica `migraciones` y el runner CLI `php migrar.php`. Todo cambio estructural futuro debe reflejarse simultáneamente en una migración y en el SQL consolidado.
+Se formaliza el contrato de persistencia: `SQL/camargo_pms.sql` es la representación consolidada oficial y versionada del esquema vigente de Camargo PMS, libre de datos operativos y credenciales. `SQL/migraciones/` contiene la secuencia cronológica de cambios estructurales controlados mediante la tabla técnica `migraciones` y el runner CLI `php migrar.php`. Todo cambio estructural futuro debe reflejarse simultáneamente en una migración y en el SQL consolidado. El campo `lote` (`batch`) representa estrictamente metadatos de trazabilidad y agrupación cronológica, sin asumir reversibilidad automática.
+
+### D-021 — Núcleo de Identidad Humana y separación Persona / Documento / Contacto
+
+Se establece el modelo relacional del maestro humano central separando estrictamente la entidad `personas` de sus colecciones dependientes `personas_documentos` y `personas_contactos`. La tabla `personas` contiene exclusivamente atributos ontológicos del individuo (nombres obligatorios, apellidos paterno/materno con nulabilidad defensiva para extranjeros, fecha de nacimiento nullable sin fechas futuras, país de nacionalidad y dirección básica). Los documentos y medios de contacto se modelan como entidades normalizadas 1:N sin columnas repetibles planas (`telefono_1`, `email_1`, etc.).
+
+### D-022 — Exclusión estricta de RUC como documento personal
+
+Se prohíbe modelar el RUC como un tipo de documento personal equivalente a DNI o Pasaporte en el maestro de personas naturales. APIsPERU provee consultas independientes de DNI y RUC, pero conceptualmente el RUC corresponde a la identidad tributaria/fiscal de personas con negocio o entidades jurídicas (empresas/proveedores). Las personas jurídicas y sus números de RUC serán abordados en su módulo específico sin degradar el maestro de personas naturales.
+
+### D-023 — Catálogos normalizados de Países y Tipos de Documento
+
+Se formalizan los catálogos relacionales `paises` (códigos ISO-3166-1 alpha-2 y alpha-3 únicos, nombre, nacionalidad y estado activo) y `tipos_documento` (código único, nombre, descripción, restricciones de longitud y expresiones regulares de formato). Se definen como datos estructurales iniciales: Perú ('PE', 'PER') como país base disponible, y DNI (8 dígitos numéricos exactos), Pasaporte y Carné de Extranjería (CE) como tipos de documento personales.
+
+### D-024 — Unicidad documental y garantía de principales activos vía columnas virtuales generadas
+
+Se asegura la unicidad documental a nivel de base de datos mediante la restricción `UNIQUE (tipo_documento_id, numero_documento)`, impidiendo que dos personas compartan el mismo documento. Para garantizar la invariante de dominio de "máximo un documento principal activo por persona" y "máximo un contacto principal activo por tipo y persona", se adoptan en MySQL 8.4 columnas virtuales generadas (`uq_persona_principal` y `uq_contacto_tipo_principal`) con índices únicos condicionales sobre valores no nulos, complementados por la coordinación transaccional en `PersonaServicio`. La relación teléfono/WhatsApp se resuelve mediante un indicador booleano `es_whatsapp` en el mismo registro de contacto telefónico, evitando la duplicación ciega de números.
+
+### D-025 — Gestión de estados, soft delete y preservación histórica
+
+Se prohíbe el borrado físico (`DELETE`) en las operaciones ordinarias de personas, documentos y contactos. Se adopta la desactivación lógica mediante el campo `estado` (`'ACTIVO'`, `'INACTIVO'`) para preservar relaciones contractuales, de reservas y auditoría futura. Las claves foráneas hacia personas y catálogos aplican `ON DELETE RESTRICT ON UPDATE CASCADE`. La clave primaria adopta `BIGINT UNSIGNED AUTO_INCREMENT` para personas y colecciones de alto volumen e `INT UNSIGNED` para catálogos.
 
 ## Pendientes de decisión
 

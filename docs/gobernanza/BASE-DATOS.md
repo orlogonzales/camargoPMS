@@ -16,12 +16,24 @@ La gestión estructural del esquema sigue el principio de doble representación 
    - Representación íntegra, canónica y versionada del esquema vigente.
    - Permite recrear la base de datos estructuralmente desde cero en entornos limpios.
    - Libre de datos operativos, datos personales, contraseñas o volcados de producción.
+   - Debe iniciar con `SET NAMES utf8mb4; SET FOREIGN_KEY_CHECKS = 0;` y finalizar obligatoriamente con `SET FOREIGN_KEY_CHECKS = 1;`.
 2. **`SQL/migraciones/` (Evolución Incremental):**
-   - Scripts secuenciales numerados deterministas (ej. `001_infraestructura.sql`).
+   - Scripts secuenciales numerados deterministas (ej. `001_infraestructura.sql`, `002_identidad_personas.sql`).
    - Registrados y controlados mediante la tabla técnica `migraciones` (`id`, `migracion`, `lote`, `ejecutado_en`).
+   - El campo `lote` representa exclusivamente metadatos de trazabilidad y agrupación cronológica por microfase (no asume reversibilidad automática hasta que se implemente una estrategia down/compensatoria formal).
+   - Las migraciones ordinarias respetan el orden de dependencias relacionales y no desactivan `FOREIGN_KEY_CHECKS` de forma indiscriminada.
    - Ejecutados exclusivamente vía CLI mediante `php migrar.php`.
 
 **Regla vinculante:** Todo cambio estructural de base de datos debe nacer de una migración versionada y reflejarse simultáneamente en `SQL/camargo_pms.sql`. Nunca se aplican cambios manuales en producción como sustituto de una migración.
+
+## Esquema del Núcleo de Identidad (IDENTIDAD-1)
+
+- `paises`: Catálogo normalizado (`id`, `codigo_iso2`, `codigo_iso3`, `nombre`, `nacionalidad`, `activo`). Restricciones UNIQUE en códigos ISO. Semilla base: Perú ('PE', 'PER').
+- `tipos_documento`: Catálogo extensible para personas naturales (`id`, `codigo`, `nombre`, `descripcion`, `longitud_exacta`, `longitud_minima`, `longitud_maxima`, `formato_regex`, `activo`). Semillas base: DNI (8 dígitos exactos), Pasaporte y Carné de Extranjería (CE). Sin RUC (reservado a personas jurídicas / fiscalidad).
+- `personas`: Maestro de personas naturales (`id` BIGINT, `nombres`, `apellido_paterno`, `apellido_materno`, `fecha_nacimiento`, `pais_nacionalidad_id`, `direccion`, `estado`). Restricciones CHECK para nombres no vacíos, al menos un apellido y estados válidos.
+- `personas_documentos`: Colección de documentos (`id` BIGINT, `persona_id`, `tipo_documento_id`, `numero_documento`, `pais_emisor_id`, `es_principal`, `fecha_emision`, `fecha_vencimiento`, `estado`). Restricción `UNIQUE (tipo_documento_id, numero_documento)` y columna virtual generada `uq_persona_principal` para garantizar máximo un principal activo.
+- `personas_contactos`: Colección de medios de contacto (`id` BIGINT, `persona_id`, `tipo_contacto`, `valor`, `es_whatsapp`, `es_principal`, `estado`). Columna virtual generada `uq_contacto_tipo_principal` para garantizar un único principal por tipo y persona. Indicador `es_whatsapp` para vincular WhatsApp a un número telefónico sin duplicación física de registros.
+
 
 ## Reglas
 

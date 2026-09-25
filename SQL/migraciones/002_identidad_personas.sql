@@ -1,40 +1,8 @@
 -- ============================================================================
--- CAMARGO PMS
--- Esquema consolidado oficial
--- Base de datos: camargo_pms
--- Motor: MySQL 8.4.3 LTS
--- Collation: utf8mb4_0900_ai_ci
--- ============================================================================
---
--- Este archivo representa el esquema estructural oficial vigente.
---
--- REGLAS:
--- - Mantener sincronizado con las migraciones oficiales.
--- - No almacenar credenciales ni secretos.
--- - No almacenar datos operativos reales.
--- - Todo cambio estructural debe realizarse mediante una migración
---   controlada cuando corresponda.
--- - Aplicar las convenciones de gobernanza de Camargo PMS.
---
+-- Camargo PMS — Migración 002: Núcleo de Identidad y Personas Naturales
 -- ============================================================================
 
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
--- ----------------------------------------------------------------------------
--- Tabla técnica: migraciones
--- Control de versiones e historial de migraciones estructurales ejecutadas.
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `migraciones` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `migracion` VARCHAR(255) NOT NULL UNIQUE,
-    `lote` INT UNSIGNED NOT NULL DEFAULT 1,
-    `ejecutado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Control técnico de migraciones aplicadas en Camargo PMS';
-
--- ----------------------------------------------------------------------------
 -- 1. Catálogo normalizado de países y nacionalidades
--- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paises` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `codigo_iso2` CHAR(2) NOT NULL,
@@ -51,12 +19,9 @@ CREATE TABLE IF NOT EXISTS `paises` (
 
 -- Semilla estructural: Perú como país base predeterminado
 INSERT INTO `paises` (`codigo_iso2`, `codigo_iso3`, `nombre`, `nacionalidad`, `activo`)
-VALUES ('PE', 'PER', 'Perú', 'Peruana', 1)
-ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
+VALUES ('PE', 'PER', 'Perú', 'Peruana', 1);
 
--- ----------------------------------------------------------------------------
 -- 2. Catálogo de tipos de documento de identidad personal (sin RUC)
--- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `tipos_documento` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `codigo` VARCHAR(20) NOT NULL,
@@ -77,12 +42,9 @@ CREATE TABLE IF NOT EXISTS `tipos_documento` (
 INSERT INTO `tipos_documento` (`codigo`, `nombre`, `descripcion`, `longitud_exacta`, `longitud_minima`, `longitud_maxima`, `formato_regex`, `activo`) VALUES
 ('DNI', 'Documento Nacional de Identidad', 'Documento nacional de identidad peruano para personas naturales', 8, 8, 8, '^[0-9]{8}$', 1),
 ('PASAPORTE', 'Pasaporte', 'Documento de identidad internacional para viajes', NULL, 6, 20, '^[A-Z0-9]{6,20}$', 1),
-('CE', 'Carné de Extranjería', 'Documento oficial para extranjeros residentes en Perú', NULL, 6, 15, '^[A-Z0-9]{6,15}$', 1)
-ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
+('CE', 'Carné de Extranjería', 'Documento oficial para extranjeros residentes en Perú', NULL, 6, 15, '^[A-Z0-9]{6,15}$', 1);
 
--- ----------------------------------------------------------------------------
 -- 3. Maestro de personas naturales
--- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `personas` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `nombres` VARCHAR(100) NOT NULL,
@@ -103,9 +65,7 @@ CREATE TABLE IF NOT EXISTS `personas` (
     INDEX `idx_personas_apellidos_nombres` (`apellido_paterno`, `apellido_materno`, `nombres`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Maestro central de personas naturales';
 
--- ----------------------------------------------------------------------------
 -- 4. Documentos de identificación personal
--- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `personas_documentos` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `persona_id` BIGINT UNSIGNED NOT NULL,
@@ -132,9 +92,7 @@ CREATE TABLE IF NOT EXISTS `personas_documentos` (
     INDEX `idx_documentos_estado` (`estado`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Documentos de identidad asociados a personas naturales';
 
--- ----------------------------------------------------------------------------
 -- 5. Medios de contacto de personas naturales
--- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `personas_contactos` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `persona_id` BIGINT UNSIGNED NOT NULL,
@@ -159,5 +117,3 @@ CREATE TABLE IF NOT EXISTS `personas_contactos` (
     INDEX `idx_contactos_valor` (`valor`),
     INDEX `idx_contactos_estado` (`estado`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Medios de contacto para personas naturales';
-
-SET FOREIGN_KEY_CHECKS = 1;

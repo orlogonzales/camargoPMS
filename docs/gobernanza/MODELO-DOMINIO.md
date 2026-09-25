@@ -27,15 +27,27 @@ Esta separación es vinculante y rige toda la arquitectura:
   - **Cargo:** Define el puesto o función laboral que desempeña un colaborador en la empresa (ej. Recepcionista, Limpieza, Administrador). No confiere permisos de software automáticamente.
   - **Rol:** Agrupa permisos de seguridad para operar funciones dentro de Camargo PMS (ej. Ventas, Operaciones, Superadministrador). Nunca se infieren permisos a partir del cargo.
 
-### Maestro de Personas
+### Maestro de Personas Naturales (Separación Persona / Documento / Contacto)
 
-Entidad central reutilizable que consolida los datos de identificación y contacto de individuos naturales:
+Entidad central reutilizable que consolida los datos de identificación y contacto de individuos naturales, normalizada en tres estructuras para evitar redundancia y columnas planas:
 
-- Nombres, apellido paterno, apellido materno.
-- Fecha de nacimiento y nacionalidad (para la interfaz, **Perú** es la opción preseleccionada por defecto, permitiendo cualquier otra nacionalidad sin restricción).
-- Tipo de documento (inicialmente **DNI** y **Pasaporte**, con arquitectura extensible para carné de extranjería u otros) y número de documento.
-- Datos de contacto: dirección, correo electrónico, teléfono/celular y WhatsApp.
-- Estado y metadatos de auditoría transversal.
+1. **Persona Natural (`personas`):**
+   - Atributos ontológicos: nombres (obligatorio), apellido paterno, apellido materno (nulabilidad defensiva para extranjeros o personas con un solo apellido), fecha de nacimiento (nullable, sin fechas futuras), país de nacionalidad (`paises`) y dirección residencial básica.
+   - Estado de operación (`ACTIVO`, `INACTIVO`) para soft delete.
+   - El nombre completo no se persiste; se computa dinámicamente en capa de aplicación.
+
+2. **Documentos Personales (`personas_documentos`):**
+   - Relación 1:N con `tipos_documento` (DNI, Pasaporte, Carné de Extranjería).
+   - Unicidad estricta `(tipo_documento_id, numero_documento)` para evitar colisiones entre distintas personas.
+   - Regla de dominio e integridad DB: exactamente un documento principal activo por persona.
+   - **Regla vinculante:** El RUC **no** forma parte del catálogo de documentos personales de personas naturales; pertenece al modelado de identidad fiscal y personas jurídicas.
+
+3. **Medios de Contacto (`personas_contactos`):**
+   - Relación 1:N con medios normalizados (`TELEFONO`, `EMAIL`).
+   - Teléfono móvil con indicador booleano `es_whatsapp` para evitar duplicar el mismo número físico.
+   - Regla de dominio e integridad DB: un contacto principal activo por tipo y persona.
+   - Normalización de emails en minúsculas y teléfonos limpios.
+
 
 ### Personal y Colaboradores
 

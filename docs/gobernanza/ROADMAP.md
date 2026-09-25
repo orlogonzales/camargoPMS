@@ -32,17 +32,18 @@ Resueltas decisiones P-001 (MySQL 8.4.3 LTS oficial) y P-002 (Composer PSR-4 con
 
 Estado: completada.
 
-## Identidad y Personas
+## IDENTIDAD-1 — Núcleo de Identidad y Personas Naturales
 
-Maestro central de Personas, normalización de documentos (DNI, Pasaporte), datos de contacto, nacionalidad por defecto Perú e integración externa desacoplada mediante `ServicioConsultaIdentidad` con adaptador APIsPERU (DNI y RUC).
+Construcción del maestro humano central de Personas Naturales, separación de entidades (`Persona`, `DocumentoPersona`, `ContactoPersona`), catálogos normalizados de `paises` (ISO-3166-1) y `tipos_documento` (DNI 8 dígitos, Pasaporte, CE; exclusión de RUC), reglas de unicidad documental y de contactos principales en base de datos vía columnas virtuales, soft delete, DDL + migración `002_identidad_personas.sql` sincronizada con `SQL/camargo_pms.sql`, repositorios, excepciones y servicio de dominio `PersonaServicio` con transaccionalidad atómica y pruebas completas.
 
-Estado: siguiente fase recomendada.
+Estado: completada.
 
 ## Personal y Colaboradores
 
 Gestión de colaboradores vinculados a Personas, catálogo administrable de Cargos laborales e Historial Laboral inmutable por episodios cronológicos.
 
-Estado: pendiente.
+Estado: siguiente fase recomendada.
+
 
 ## Autenticación y Cuentas
 
