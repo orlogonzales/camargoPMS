@@ -33,14 +33,15 @@ La IP y user-agent pueden registrarse cuando exista base y utilidad; deben somet
 
 ## Eventos prioritarios
 
-- inicio/cierre de sesión, fallos y cambios de acceso;
-- reservas, disponibilidad, estadías y arrendamientos;
-- contratos, plantillas y versiones;
-- precios, tarifas y configuración;
-- cobros, pagos, caja, gastos, retiros e impuestos;
-- inventario, incidencias y mantenimiento;
-- usuarios, roles, permisos e integraciones;
-- recepción y procesamiento de webhooks.
+- **Identidad y Personas:** Alta, edición de datos personales, actualización de documentos y cambio de estado.
+- **Personal y Colaboradores:** Vinculación laboral, cese, reingreso, asignación o cambio de cargo y registro de observaciones laborales.
+- **Acceso y Autenticación:** Inicio de sesión (login exitoso y fallido), cierre de sesión (logout), expiración, bloqueo preventivo y revocación forzada administrativa de sesiones activas.
+- **Usuarios y Seguridad:** Creación de cuenta, suspensión, reactivación, cambio de contraseña, asignación o desasignación de roles y modificación de permisos granulares.
+- **Gestión de Menú:** Creación, edición, activación/desactivación, reordenamiento jerárquico y asociación de permisos a opciones.
+- **Operaciones:** Reservas, disponibilidad, estadías, arrendamientos, bloqueos y contratos.
+- **Finanzas y Caja:** Cobros, pagos, egresos, anticipos, rendiciones a personal, gastos, retiros e impuestos.
+- **Mantenimiento e Inventario:** Movimientos de activos, incidencias y estados de servicio.
+- **Integraciones:** Consumo de APIs externas (APIsPERU DNI/RUC), clientes técnicos y recepción/procesamiento de webhooks.
 
 ## Integridad y acceso
 

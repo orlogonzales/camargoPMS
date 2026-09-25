@@ -10,18 +10,96 @@ Propiedad → Nivel/Piso → Unidad
 
 Una propiedad agrupa unidades. Un nivel permite representar edificios, pero el modelo deberá admitir propiedades donde no resulte necesario mostrarlo. Cada unidad conserva configuración, características, precio base, disponibilidad, inventario y servicios aplicables.
 
-## Personas y actores
+## Identidad, Personas y Personal
 
-`Persona` representa una identidad reutilizable que puede actuar como huésped, arrendatario, contacto o proveedor. Una cuenta de acceso es una responsabilidad distinta y no debe duplicar los datos personales sin necesidad.
+El modelo de Camargo PMS establece el **Principio de Separación de Identidad**:
+
+```text
+PERSONA ≠ COLABORADOR ≠ USUARIO ≠ CARGO ≠ ROL
+```
+
+Esta separación es vinculante y rige toda la arquitectura:
+
+- Una **Persona** puede existir en el sistema sin ser colaborador ni tener usuario (ej. huéspedes, contactos, clientes).
+- Un **Colaborador** siempre se vincula a una Persona humana preexistente, pero puede existir sin una cuenta de Usuario.
+- Un **Usuario** representa una cuenta de acceso a la plataforma vinculada a una Persona humana; no todo colaborador requiere acceso al sistema.
+- **Cargo** y **Rol** son conceptos radicalmente distintos:
+  - **Cargo:** Define el puesto o función laboral que desempeña un colaborador en la empresa (ej. Recepcionista, Limpieza, Administrador). No confiere permisos de software automáticamente.
+  - **Rol:** Agrupa permisos de seguridad para operar funciones dentro de Camargo PMS (ej. Ventas, Operaciones, Superadministrador). Nunca se infieren permisos a partir del cargo.
+
+### Maestro de Personas
+
+Entidad central reutilizable que consolida los datos de identificación y contacto de individuos naturales:
+
+- Nombres, apellido paterno, apellido materno.
+- Fecha de nacimiento y nacionalidad (para la interfaz, **Perú** es la opción preseleccionada por defecto, permitiendo cualquier otra nacionalidad sin restricción).
+- Tipo de documento (inicialmente **DNI** y **Pasaporte**, con arquitectura extensible para carné de extranjería u otros) y número de documento.
+- Datos de contacto: dirección, correo electrónico, teléfono/celular y WhatsApp.
+- Estado y metadatos de auditoría transversal.
+
+### Personal y Colaboradores
+
+Representa la vinculación laboral de una Persona con Camargo Hostelería:
+
+- Estado laboral (ej. Activo, Cesado, Licencia).
+- Cargo asignado.
+- Fecha de ingreso.
+- Fecha de salida y motivo de cese cuando corresponda.
+- Observaciones laborales y datos de auditoría.
+
+### Historial Laboral por Episodios
+
+El historial laboral es inmutable y no se sobreescribe cuando un colaborador se reincorpora o cambia de puesto. Registra episodios laborales cronológicos independientes:
+
+```text
+Persona X
+├── Periodo 1: 01/02/2026 - 30/06/2026 | Cargo: Reservas | Cese: Fin de contrato temporal
+├── Periodo 2: 15/10/2026 - 31/12/2027 | Cargo: Reservas | Cese: Renuncia voluntaria
+└── Periodo 3: 01/01/2028 - Vigente    | Cargo: Jefe de Reservas (Reincorporación / Ascenso)
+```
+
+Cada periodo conserva fecha de ingreso, cese, motivo, observaciones, cargo ejercido y trazabilidad de auditoría.
+
+### Catálogo de Cargos
+
+Catálogo administrable y dinámico de puestos laborales en la organización (ej. Administrador, Reservas, Sistemas, Limpieza, Mantenimiento). No se modela como un `ENUM` estático para permitir agregar cargos futuros sin alterar la base de datos o el código fuente.
+
+### Gestión de Usuarios
+
+Cuentas humanas de acceso al PMS:
+
+- Identidad humana asociada (`Persona`).
+- Nombre de usuario único.
+- Hash de contraseña mediante algoritmos criptográficos robustos de PHP (`password_hash`).
+- Estado de la cuenta (activo, bloqueado, suspendido).
+- Roles asignados.
+- Control de sesiones activas y último acceso registrado.
+- Auditoría de modificaciones y autenticación.
+
+### Catálogo de Roles y Permisos
+
+- **Roles:** Catálogo administrable que agrupa permisos funcionales (ej. Superadministrador, Administrador, Ventas, Operaciones, Solo Consulta). Un usuario puede soportar uno o múltiples roles.
+- **Permisos:** Capacidades atómicas expresadas en formato `recurso.accion` (ej. `personal.ver`, `personal.crear`, `personal.editar`, `personal.desactivar`, `usuarios.ver`, `usuarios.crear`, `usuarios.editar`, `usuarios.bloquear`, `reservas.cancelar`, `caja.registrar_ingreso`, `caja.anular`, `configuracion.roles`, `configuracion.menu`).
+
+### Relación entre Personal y Caja
+
+Un colaborador puede ser contraparte, beneficiario o responsable de transacciones financieras:
+
+- Fondos por rendir y dinero entregado para compras operativas.
+- Rendiciones de gastos, devoluciones y reembolsos.
+- Pago de honorarios, sueldos o remuneraciones.
+
+**Regla de diseño:** Personal **no** es un subsistema financiero. El módulo de Finanzas/Caja mantiene sus propias entidades, saldos y comprobantes, limitándose a referenciar al colaborador/persona correspondiente en cada movimiento.
+### Actores Auditados del Sistema
 
 Un actor auditado puede ser:
 
-- `USER`: persona autenticada.
-- `SYSTEM`: proceso interno.
-- `INTEGRATION`: WordPress, aplicación u otro cliente técnico.
-- `PAYMENT_PROVIDER`: webhook o proceso del proveedor de pago.
+- `USER`: Persona humana autenticada en el sistema mediante su cuenta de usuario.
+- `SYSTEM`: Tareas en segundo plano, cron jobs o procesos internos del PMS.
+- `INTEGRATION`: Clientes técnicos autorizados (WordPress, aplicación móvil u otros consumidores de API).
+- `PAYMENT_PROVIDER`: Proveedores de pasarelas de pago a través de webhooks seguros.
 
-No se crean usuarios humanos ficticios para integraciones.
+Nunca se crean usuarios humanos ficticios para representar procesos de integración técnica.
 
 ## Ocupación y disponibilidad
 

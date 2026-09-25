@@ -39,6 +39,36 @@ Consultar disponibilidad no reserva inventario. La creación o confirmación vue
 5. responder de forma compatible con reintentos;
 6. auditar resultado sin almacenar secretos o datos innecesarios.
 
+## Integración Externa con APIsPERU (DNI y RUC)
+
+Para la verificación y autocompletado ágil de datos de identidad en Perú, Camargo PMS aprueba la integración con el servicio externo **APIsPERU** ([documentación oficial](https://dniruc.apisperu.com/doc)):
+
+### Endpoints de Consulta
+
+- `GET /api/v1/dni/{dni}`: Consulta de personas naturales mediante documento DNI (8 dígitos).
+- `GET /api/v1/ruc/{ruc}`: Consulta de entidades jurídicas, empresas y personas con negocio mediante RUC (11 dígitos).
+
+### Capa de Abstracción Desacoplada
+
+El código de dominio, personas y proveedores **nunca** se acopla directamente a la API de APIsPERU. Se establece un patrón de adaptadores:
+
+```text
+ServicioConsultaIdentidad (Dominio)
+    ├── ProveedorConsultaDni (Interfaz)
+    │       └── AdaptadorApisPeruDni
+    └── ProveedorConsultaRuc (Interfaz)
+            └── AdaptadorApisPeruRuc
+```
+
+Esta arquitectura permite reemplazar el proveedor tecnológico en el futuro (ej. migrar a RENIEC directo, SUNAT directo u otro proveedor) sin modificar la lógica de Personas, Proveedores u Operaciones.
+
+### Reglas Vinculantes de Consumo
+
+1. **Fidelidad al contrato de API:** No asumir que la API retorna campos no documentados en su contrato oficial. Se mapean exclusivamente los atributos reales devueltos por el proveedor.
+2. **Complemento manual:** La interfaz debe permitir al usuario completar o editar libremente datos no suministrados por la consulta externa (ej. dirección, email, teléfonos o fecha de nacimiento si la API no los incluye).
+3. **Reutilización de RUC:** La consulta RUC es reutilizable en todo el sistema para entidades fiscales y comerciales (proveedores de servicios, clientes corporativos, empresas asociadas y contratistas).
+4. **Seguridad y tokens:** El token técnico de APIsPERU se gestiona exclusivamente como secreto de entorno rotativo, fuera de Git y del frontend del navegador. Las consultas se orquestan mediante backend para proteger las credenciales técnicas.
+
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.

@@ -59,10 +59,17 @@ La rama oficial es `main` y el remoto oficial es `origin` en `https://github.com
 ### D-014 — Autocargador PSR-4 y Enrutador Reversible para UI-0
 
 Se implementan `Autocargador` PSR-4 propio para el espacio de nombres `CamargoPMS\` y un `Enrutador` mínimo en `app/Nucleo/` para soportar la fase de interfaz sin incorporar dependencias externas tempranas. La decisión P-002 (adopción del motor definitivo de enrutamiento y dependencias vía Composer) se mantiene formalmente abierta para la fase de infraestructura.
-
 ### D-015 — Asignación de referencias visuales Alina y arquitectura de errores
 
 Se formalizan las páginas de Alina como referencias inmutables oficiales: `blank.html` (layout general autenticado), `sign_in.html` (referencia visual de login sin implementar autenticación funcional en UI-0), `index.html` (referencia visual de dashboard sin datos simulados en UI-0) y las cinco páginas `error_*.html` (400, 403, 404, 500 y 503). Se implementa una plantilla aislada `plantillas/error.php` (`.error-container`) y la vista reutilizable `errores/error.php` que desacopla el diagnóstico técnico interno de la visualización segura del usuario.
+
+### D-016 — Separación de Identidad, Personal, Usuarios, Roles y Permisos
+
+Se formaliza el principio arquitectónico vinculante `PERSONA ≠ COLABORADOR ≠ USUARIO ≠ CARGO ≠ ROL`. Un Colaborador es la vinculación laboral de una Persona y mantiene un historial de episodios laborales inmutable; un Cargo describe la función laboral y no confiere privilegios de software; un Usuario es una cuenta de acceso humano con contraseñas seguras y roles dinámicos; y los Permisos son capacidades atómicas `recurso.accion` evaluadas estrictamente en backend. La ocultación de menús es solo cosmética y nunca sustituye la autorización del servidor (devolviendo HTTP 403 real ante accesos no autorizados). Personal no es un subsistema financiero; Caja gestiona sus movimientos referenciando a personas. El menú dinámico preserva el contrato Alina `data-target` ↔ `id`.
+
+### D-017 — Integración Externa con APIsPERU (DNI y RUC) mediante Abstracción
+
+Se aprueba la integración con APIsPERU para la consulta y autocompletado ágil de datos de identidad en Perú mediante dos endpoints desacoplados: `GET /api/v1/dni/{dni}` (8 dígitos) y `GET /api/v1/ruc/{ruc}` (11 dígitos, reutilizable para proveedores y empresas). La integración debe orquestarse mediante una capa de abstracción en el dominio (`ServicioConsultaIdentidad` e interfaces de proveedor) que impida el acoplamiento directo y permita cambiar de proveedor en el futuro. Es vinculante no asumir campos no documentados en contrato y permitir la edición o complemento manual en la interfaz. El token técnico se administra exclusivamente en el entorno del servidor, fuera de Git y del cliente.
 
 ## Pendientes de decisión
 

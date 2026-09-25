@@ -13,15 +13,23 @@
 - Cookies `Secure`, `HttpOnly` y `SameSite` apropiado en HTTPS.
 - Regenerar el identificador al iniciar sesión o cambiar privilegios.
 - Expiración por inactividad y duración máxima configurables.
-- Contraseñas con las funciones modernas de hash de PHP; nunca cifrado reversible ni hash propio.
+- Cierre y revocación administrativa forzada de sesiones activas ante incidentes o cambios de credenciales.
+- Contraseñas con las funciones modernas de hash de PHP (`password_hash` con algoritmo seguro); nunca cifrado reversible ni hash propio.
 - Login, logout, fallos, bloqueos y recuperación quedan auditados.
 - La recuperación no revela si una cuenta existe.
 
 ## Autorización
 
-Cada ruta y caso de uso comprueba permiso en backend. El filtrado de menús es solo presentación. Las consultas deben respetar el alcance permitido del actor; conocer un ID no concede acceso.
+### Regla Vinculante: OCULTAR EL MENÚ NO ES AUTORIZACIÓN
 
-Los permisos se modelarán como capacidades estables. Roles agrupan capacidades, pero el código crítico comprueba la capacidad requerida.
+El filtrado visual u ocultamiento de opciones en la interfaz es un control exclusivo de ergonomía y presentación; **no constituye bajo ninguna circunstancia un control de seguridad**.
+
+1. **Validación obligatoria en servidor:** Cada endpoint, ruta HTTP y caso de uso debe verificar la capacidad del actor en backend mediante intermediarios (*middleware*) de autorización.
+2. **Respuesta ante violación de acceso:** Si un usuario sin privilegios intenta invocar una ruta directamente (ej. escribiendo la URL manual en el navegador o mediante petición Fetch/API), el sistema emitirá invariablemente una respuesta **HTTP 403 Forbidden real** utilizando la plantilla de error correspondiente.
+3. **Principio MENÚ ≠ PERMISO:** Una opción de menú define su visibilidad en el cliente en función de un permiso requerido; la autorización real valida el permiso en el controlador o servicio del backend.
+4. **Protección de la cuenta Superadministrador:** El sistema debe incorporar salvaguardas arquitectónicas para impedir que una modificación accidental de roles o permisos despoje a la plataforma de su cuenta administrativa raíz.
+
+Los permisos se modelan como capacidades atómicas (`recurso.accion`). Los roles agrupan capacidades, pero la lógica de negocio y las capas intermediarias comprueban siempre el permiso granular exigido.
 
 ## Aplicación web
 

@@ -1,25 +1,39 @@
 # Módulos
 
-## Plataforma
+## Plataforma, Identidad y Configuración
 
-- Identidad y acceso: personas, cuentas, sesiones, roles, capacidades y clientes técnicos.
-- Configuración: empresa, documentos, parámetros, tarifas y catálogos.
-- Auditoría: actores, eventos, correlación y consulta autorizada.
-- Menús: áreas, opciones, jerarquía, orden, permisos y estado.
+- **Identidad:**
+  - **Personas:** Maestro central de individuos (huéspedes, contactos, colaboradores), documentos de identidad (DNI, Pasaporte) y datos de contacto normalizados.
+  - **Personal / Colaboradores:** Vinculación laboral, estados de vinculación, asignación de cargos e historial laboral inmutable estructurado por episodios.
+  - **Cargos:** Catálogo administrable de puestos o funciones laborales (no rígido).
+- **Acceso y Seguridad:**
+  - **Usuarios:** Cuentas de acceso humano ligadas a personas, contraseñas criptográficamente seguras (`password_hash`), suspensión y activación.
+  - **Roles y Permisos:** Catálogo dinámico de roles, capacidades atómicas (`recurso.accion`) independientes de los cargos laborales y autorización estricta en servidor.
+  - **Superadministrador:** Definición y protección de la cuenta raíz para evitar pérdida accidental de administración.
+  - **Sesiones Activas:** Monitoreo de actividad, duración máxima, expiración por inactividad y revocación forzada administrativa.
+- **Gestión de Menú Dinámico:**
+  - Administración visual de opciones de navegación: jerarquía, creación, edición, activación, iconos Tabler, rutas internas, anidamiento y reordenamiento interactivo (drag & drop).
+  - Asociación directa de cada opción con el permiso requerido para visibilidad, preservando el contrato biunívoco de Alina (`data-target` ↔ `id`).
+- **Configuración:** Empresa, documentos, parámetros operacionales, membretes, márgenes y tarifas.
+- **Auditoría:** Registro transversal append-only de actores (`USER`, `SYSTEM`, `INTEGRATION`, `PAYMENT_PROVIDER`), eventos, correlación y consulta autorizada.
 
-## Inmuebles
+## Organización Conceptual de Menús Futuros
 
-- Propiedades: datos generales y configuración.
-- Niveles: organización física cuando aplique.
-- Unidades: características, modalidades, precio base y estado.
-- Inventario: activos, amenities, asignación y movimientos.
-- Mantenimiento: incidencias, trabajos e impacto en disponibilidad.
+- **PERSONAS:**
+  - Directorio de Personas
+  - Gestión de Personal (Colaboradores, Cargos, Historial)
+- **ADMINISTRACIÓN Y CONFIGURACIÓN:**
+  - Usuarios del Sistema
+  - Roles y Permisos
+  - Gestión de Menú
+  - Sesiones Activas
+  - Parámetros Generales de Empresa
 
-## Personas y terceros
+## Personas y Terceros
 
-- Personas: identidad reutilizable y datos de contacto.
-- Proveedores: categorías y servicios que presta.
-- Huéspedes/arrendatarios: roles de una persona en operaciones.
+- Personas: Identidad reutilizable e histórica.
+- Proveedores: Catálogo de terceros (naturales o jurídicos mediante RUC) y servicios que prestan.
+- Huéspedes / Arrendatarios: Roles funcionales asumidos por una Persona en el ciclo operativo.
 
 ## Operaciones
 

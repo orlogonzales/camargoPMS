@@ -20,19 +20,47 @@ Front Controller mínimo, assets seleccionados, layout y componentes PHP, vista 
 
 Estado: completada.
 
-## UI-1 — Validación técnica y visual
+## UI-1 — Validación técnica y visual + Consolidación documental
 
-Probar `https://app.camargo-pms.test/`, responsive, consola, navegación, rutas y equivalencia con `blank.html`. Cerrar micro-baseline de interfaz.
+Probar bajo Apache real (`https://app.camargo-pms.test/` y subcarpeta), responsive, consola de navegador, navegación, contratos Alina, rutas y códigos HTTP reales (404/500). Consolidar en gobernanza el diseño de Identidad (`PERSONA ≠ COLABORADOR ≠ USUARIO ≠ CARGO ≠ ROL`), Personal, Cargos, Historial, Usuarios, Roles, Permisos, Menú Dinámico e integración con APIsPERU (DNI/RUC).
 
-Estado: pendiente.
+Estado: completada.
 
 ## Infraestructura
 
-Composer, autoload, configuración por entorno, routing, contenedor o fábrica mínima, errores, logging, conexión PDO, migraciones y pruebas.
+Resolver decisiones P-001 (MySQL vs MariaDB), P-002 (Composer, autoload definitivo y routing), P-003 (pruebas), variables de entorno (.env), conexión PDO centralizada, contenedor de dependencias/fábrica y framework de migraciones versionadas.
 
-## Identidad y seguridad
+Estado: siguiente fase recomendada.
 
-Personas base, cuentas, sesiones, roles/capacidades, actores, auditoría y clientes técnicos.
+## Identidad y Personas
+
+Maestro central de Personas, normalización de documentos (DNI, Pasaporte), datos de contacto, nacionalidad por defecto Perú e integración externa desacoplada mediante `ServicioConsultaIdentidad` con adaptador APIsPERU (DNI y RUC).
+
+Estado: pendiente.
+
+## Personal y Colaboradores
+
+Gestión de colaboradores vinculados a Personas, catálogo administrable de Cargos laborales e Historial Laboral inmutable por episodios cronológicos.
+
+Estado: pendiente.
+
+## Autenticación y Cuentas
+
+Gestión de Usuarios humanos, hashing seguro de contraseñas (`password_hash`), control de sesiones activas, expiración, revocación forzada y protección de cuenta Superadministrador.
+
+Estado: pendiente.
+
+## Roles, Permisos y Autorización
+
+Catálogo administrable de Roles, permisos atómicos granulares (`recurso.accion`) independientes de los cargos, intermediarios de backend para autorización estricta (HTTP 403 real) bajo la regla vinculante `OCULTAR EL MENÚ NO ES AUTORIZACIÓN`.
+
+Estado: pendiente.
+
+## Menú Dinámico
+
+Módulo de administración visual de menú en Configuración (jerarquía, rutas, iconos Tabler, drag & drop, activación y asociación opción ↔ permiso), preservando el contrato visual Alina (`data-target` ↔ `id`).
+
+Estado: pendiente.
 
 ## Configuración
 
