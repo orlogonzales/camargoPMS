@@ -1,0 +1,7 @@
+* text=auto
+*.md text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Preservar byte por byte la referencia original de Alina
+admin-dashboard/** -text whitespace=-trailing-space,-space-before-tab

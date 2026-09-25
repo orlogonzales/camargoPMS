@@ -1,0 +1,58 @@
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencias instaladas
+/vendor/
+**/node_modules/
+
+# Runtime de la aplicación
+storage/cache/*
+storage/logs/*
+storage/privados/*
+storage/uploads/*
+!storage/cache/.gitkeep
+!storage/logs/.gitkeep
+!storage/privados/.gitkeep
+!storage/uploads/.gitkeep
+*.log
+sess_*
+
+# Artefactos generados
+/build/
+/dist/
+/coverage/
+/exports/
+/backups/
+/tmp/
+/.cache/
+*.bak
+*.backup
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Bases de datos y volcados locales
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+
+# IDE y sistema operativo
+.idea/
+**/.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Material de diseño local pesado; no eliminar del equipo
+/admin-dashboard/alina-figma-version.fig
