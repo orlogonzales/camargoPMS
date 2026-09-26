@@ -9,6 +9,7 @@ use CamargoPMS\Excepciones\EntidadNoEncontradaExcepcion;
 use CamargoPMS\Excepciones\UltimoSuperadministradorExcepcion;
 use CamargoPMS\Excepciones\UsuarioDuplicadoExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
+use CamargoPMS\Modelos\AccionAuditoria;
 use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
 use CamargoPMS\Repositorios\AutorizacionRepositorio;
@@ -39,17 +40,20 @@ class UsuarioServicio
     private UsuarioRepositorio $usuarioRepo;
     private PersonaRepositorio $personaRepo;
     private SesionServicio $sesionServicio;
+    private AuditoriaServicio $auditoriaServicio;
 
     public function __construct(
         ?PDO $pdo = null,
         ?UsuarioRepositorio $usuarioRepo = null,
         ?PersonaRepositorio $personaRepo = null,
-        ?SesionServicio $sesionServicio = null
+        ?SesionServicio $sesionServicio = null,
+        ?AuditoriaServicio $auditoriaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->usuarioRepo = $usuarioRepo ?? new UsuarioRepositorio($this->pdo);
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
         $this->sesionServicio = $sesionServicio ?? new SesionServicio($this->pdo);
+        $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
     }
 
     /**
@@ -141,6 +145,22 @@ class UsuarioServicio
 
             $usuarioPersistido = $this->usuarioRepo->insertar($nuevoUsuario);
 
+            // Registrar auditoría atómicamente dentro de la misma transacción (contrasena_hash es sanitizada)
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CREAR,
+                'usuarios',
+                'usuario',
+                (string) $usuarioPersistido->obtenerId(),
+                "Creación de la cuenta de usuario '{$usuarioPersistido->obtenerNombreUsuario()}'",
+                null,
+                $usuarioPersistido->aArreglo(false),
+                null,
+                null,
+                (int) $usuarioPersistido->obtenerId(),
+                null,
+                $this->pdo
+            );
+
             if ($transaccionPropia && $this->pdo->inTransaction()) {
                 $this->pdo->commit();
             }
@@ -206,6 +226,28 @@ class UsuarioServicio
                 $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'CAMBIO_ESTADO_USUARIO');
             }
 
+            // Registrar auditoría atómicamente dentro de la misma transacción
+            $accion = match ($nuevoEstado) {
+                'ACTIVO' => AccionAuditoria::ACTIVAR,
+                'BLOQUEADO' => AccionAuditoria::BLOQUEAR,
+                'INACTIVO' => AccionAuditoria::DESACTIVAR,
+                default => AccionAuditoria::EDITAR,
+            };
+            $this->auditoriaServicio->registrar(
+                $accion,
+                'usuarios',
+                'usuario',
+                (string) $usuarioId,
+                "Cambio de estado administrativo a {$nuevoEstado} para el usuario ID {$usuarioId}",
+                ['estado' => (string) $fila['estado']],
+                ['estado' => $nuevoEstado],
+                null,
+                null,
+                $usuarioId,
+                null,
+                $this->pdo
+            );
+
             $this->pdo->commit();
             return true;
         } catch (Throwable $e) {
@@ -263,6 +305,22 @@ class UsuarioServicio
 
             // Revocar las demás sesiones activas por seguridad
             $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'CAMBIO_CONTRASENA', $sesionActualId);
+
+            // Registrar auditoría atómicamente (NUNCA registrar contraseñas ni hashes)
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CAMBIAR_CLAVE,
+                'usuarios',
+                'usuario',
+                (string) $usuarioId,
+                "Actualización exitosa de contraseña para el usuario ID {$usuarioId}",
+                null,
+                null,
+                null,
+                null,
+                $usuarioId,
+                null,
+                $this->pdo
+            );
 
             $this->pdo->commit();
             return true;

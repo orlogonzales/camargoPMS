@@ -179,16 +179,25 @@ Un colaborador puede ser contraparte, beneficiario o responsable de transaccione
 - Pago de honorarios, sueldos o remuneraciones.
 
 **Regla de diseño:** Personal **no** es un subsistema financiero. El módulo de Finanzas/Caja mantiene sus propias entidades, saldos y comprobantes, limitándose a referenciar al colaborador/persona correspondiente en cada movimiento.
-### Actores Auditados del Sistema
+### Actores y Núcleo Transversal de Auditoría (AUDITORÍA-1)
 
-Un actor auditado puede ser:
+El modelo de Camargo PMS formaliza el principio:
 
-- `USER`: Persona humana autenticada en el sistema mediante su cuenta de usuario.
-- `SYSTEM`: Tareas en segundo plano, cron jobs o procesos internos del PMS.
-- `INTEGRATION`: Clientes técnicos autorizados (WordPress, aplicación móvil u otros consumidores de API).
-- `PAYMENT_PROVIDER`: Proveedores de pasarelas de pago a través de webhooks seguros.
+```text
+ACTOR ≠ USUARIO
+```
 
-Nunca se crean usuarios humanos ficticios para representar procesos de integración técnica.
+1. **Entidad `ActorAuditoria` (`actores`):**
+   - Representa el sujeto o componente que origina una acción en el sistema.
+   - Atributos: `id`, `tipo` (`TipoActor`: `USUARIO`, `SISTEMA`, `INTEGRACION`, `PROVEEDOR_PAGO`), `codigo` único de referencia, `nombre` descriptivo, `usuario_id` nullable (para actores humanos), `metadatos` en JSON, `creado_en`.
+   - Semilla estructural protegida: `CAMARGO_PMS` (`id = 1`, `tipo = SISTEMA`).
+   - Los usuarios humanos tienen un actor sincronizado 1:1 (`tipo = USUARIO`, `codigo = USR_{id}`).
+
+2. **Entidad `RegistroAuditoria` (`auditoria`):**
+   - Mantiene la bitácora inmutable de eventos operacionales y de seguridad.
+   - Atributos: `id`, `actor_id` (RESTRICT), `usuario_id` nullable (SET NULL), `accion` (`AccionAuditoria`: `LOGIN`, `LOGOUT`, `CREAR`, `EDITAR`, `ACTIVAR`, `DESACTIVAR`, `ASIGNAR`, `REVOCAR`, `REORDENAR`, `ELIMINAR`), `modulo`, `entidad`, `entidad_id` nullable, `valores_anteriores` (JSON sanitizado), `valores_nuevos` (JSON sanitizado), `metadatos` (JSON sanitizado), `ip`, `user_agent`, `metodo_http`, `ruta`, `correlacion_id`, `creado_en`.
+   - **Invariante de Inmutabilidad:** Registro append-only sin operaciones de actualización ni borrado en tiempo de ejecución.
+   - **Invariante de Privacidad y Seguridad:** Prohibición estricta de contraseñas, hashes, tokens CSRF, cabeceras de autorización o claves API mediante desinfección obligatoria en `SanitizadorAuditoria`.
 
 ## Ocupación y disponibilidad
 

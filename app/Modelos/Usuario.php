@@ -185,4 +185,14 @@ class Usuario
 
         return $datos;
     }
+
+    /**
+     * Alias de aArreglo() sin hash para compatibilidad uniforme.
+     *
+     * @return array<string, mixed>
+     */
+    public function aArray(): array
+    {
+        return $this->aArreglo(false);
+    }
 }

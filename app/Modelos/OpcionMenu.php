@@ -256,4 +256,14 @@ class OpcionMenu
             'hijos' => array_map(static fn(self $hijo) => $hijo->haciaArreglo(), $this->hijos)
         ];
     }
+
+    /**
+     * Alias de haciaArreglo() para interoperabilidad uniforme.
+     *
+     * @return array<string, mixed>
+     */
+    public function aArray(): array
+    {
+        return $this->haciaArreglo();
+    }
 }

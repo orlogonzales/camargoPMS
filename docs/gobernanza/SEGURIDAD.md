@@ -70,6 +70,20 @@ El servidor filtra las áreas y opciones visibles según permisos RBAC y el esta
 4. **Reordenamiento atómico transaccional:** La actualización del orden se ejecuta bajo transacciones con validación previa de jerarquía, rechazando mezclas de padres o de niveles para prevenir estados inconsistentes en la navegación.
 5. **Regla vinculante:** Una opción oculta o deshabilitada jamás sustituye el control de autorización de su endpoint en backend.
 
+## Auditoría y Trazabilidad Transversal (AUDITORÍA-1)
+
+1. **Inmutabilidad Absoluta del Registro:** La tabla `auditoria` no permite actualizaciones ni eliminaciones. El repositorio `AuditoriaRepositorio` es de solo anexado (`insertar()`, `buscarPorId()`, `listar()`, `contar()`). La clave foránea con `actores` aplica `ON DELETE RESTRICT`.
+2. **Purga Recursiva de Secretos:** `SanitizadorAuditoria` desinfecta todo payload antes de persistirlo. Queda terminantemente prohibido almacenar contraseñas planas, hashes criptográficos, tokens CSRF, cabeceras de autorización o tokens opacos en campos de auditoría.
+3. **Principio ACTOR ≠ USUARIO:** Desacopla la identidad del ejecutor técnico del usuario humano, impidiendo la falsificación de credenciales humanas para tareas del sistema o webhooks.
+4. **Trazabilidad y Correlación Segura:** Registro de `correlacion_id`, método HTTP, ruta, IP y User-Agent para detección temprana de anomalías y auditoría forense sin comprometer la privacidad.
+
+## Auditoría y Trazabilidad Transversal (AUDITORÍA-1)
+
+1. **Inmutabilidad Absoluta del Registro:** La tabla `auditoria` no permite actualizaciones ni eliminaciones. El repositorio `AuditoriaRepositorio` es de solo anexado (`insertar()`, `buscarPorId()`, `listar()`, `contar()`). La clave foránea con `actores` aplica `ON DELETE RESTRICT`.
+2. **Purga Recursiva de Secretos:** `SanitizadorAuditoria` desinfecta todo payload antes de persistirlo. Queda terminantemente prohibido almacenar contraseñas planas, hashes criptográficos, tokens CSRF, cabeceras de autorización o tokens opacos en campos de auditoría.
+3. **Principio ACTOR ≠ USUARIO:** Desacopla la identidad del ejecutor técnico del usuario humano, impidiendo la falsificación de credenciales humanas para tareas del sistema o webhooks.
+4. **Trazabilidad y Correlación Segura:** Registro de `correlacion_id`, método HTTP, ruta, IP y User-Agent para detección temprana de anomalías y auditoría forense sin comprometer la privacidad.
+
 ## Revisión obligatoria
 
 Cambios de autenticación, permisos, pagos, webhooks, subida de archivos, contratos, caja o datos personales requieren pruebas negativas y revisión específica de amenazas antes del micro-baseline.

@@ -68,6 +68,32 @@ La gestión estructural del esquema sigue el principio de doble representación 
     - Nivel 1 (Principales): `inicio` (Icono `ti ti-home`), `configuracion` (Icono `ti ti-settings`).
     - Nivel 2 (Secundarias): `inicio_panel` (bajo `inicio`, ruta `/`), `config_menu` (bajo `configuracion`, ruta `/configuracion/menu`, permiso `menu.ver`, estructural `es_sistema = 1`), `config_usuarios` (bajo `configuracion`, ruta `/usuarios`, permiso `usuarios.ver`).
 
+## Esquema del Núcleo Transversal de Auditoría y Actores (AUDITORÍA-1 y Migración 009)
+
+- `actores`: Catálogo polimórfico de sujetos de acción (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `tipo` ENUM('USUARIO','SISTEMA','INTEGRACION','PROVEEDOR_PAGO') NOT NULL, `codigo` VARCHAR(50) NOT NULL UNIQUE, `nombre` VARCHAR(150) NOT NULL, `usuario_id` BIGINT UNSIGNED NULL UNIQUE, `metadatos` JSON NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+  - Restricciones CHECK para cadenas no vacías en `codigo` y `nombre`.
+  - Clave foránea `fk_actores_usuario` hacia `usuarios(id)` con `ON DELETE CASCADE ON UPDATE CASCADE`.
+  - Semilla base estructural: `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`, `codigo = 'CAMARGO_PMS'`, `nombre = 'Camargo PMS — Sistema Central'`).
+- `auditoria`: Registro histórico inmutable de trazabilidad y operaciones (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `actor_id` BIGINT UNSIGNED NOT NULL, `usuario_id` BIGINT UNSIGNED NULL, `accion` VARCHAR(50) NOT NULL, `modulo` VARCHAR(50) NOT NULL, `entidad` VARCHAR(50) NOT NULL, `entidad_id` VARCHAR(100) NULL, `valores_anteriores` JSON NULL, `valores_nuevos` JSON NULL, `metadatos` JSON NULL, `ip` VARCHAR(45) NULL, `user_agent` VARCHAR(255) NULL, `metodo_http` VARCHAR(10) NULL, `ruta` VARCHAR(255) NULL, `correlacion_id` VARCHAR(64) NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP).
+  - Restricciones e Integridad:
+    - Clave foránea `fk_auditoria_actor` hacia `actores(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE` (impide borrar actores con historial de auditoría).
+    - Clave foránea `fk_auditoria_usuario` hacia `usuarios(id)` con `ON DELETE SET NULL ON UPDATE CASCADE` (desacopla auditoría del ciclo de vida del usuario).
+    - Restricciones CHECK: `chk_auditoria_accion_no_vacia`, `chk_auditoria_modulo_no_vacio`, `chk_auditoria_entidad_no_vacia`.
+    - Índices: `idx_auditoria_actor_id`, `idx_auditoria_usuario_id`, `idx_auditoria_accion`, `idx_auditoria_modulo`, `idx_auditoria_entidad`, `idx_auditoria_correlacion_id`, `idx_auditoria_creado_en`.
+
+## Esquema del Núcleo Transversal de Auditoría y Actores (AUDITORÍA-1 y Migración 009)
+
+- `actores`: Catálogo polimórfico de sujetos de acción (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `tipo` ENUM('USUARIO','SISTEMA','INTEGRACION','PROVEEDOR_PAGO') NOT NULL, `codigo` VARCHAR(50) NOT NULL UNIQUE, `nombre` VARCHAR(150) NOT NULL, `usuario_id` BIGINT UNSIGNED NULL UNIQUE, `metadatos` JSON NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+  - Restricciones CHECK para cadenas no vacías en `codigo` y `nombre`.
+  - Clave foránea `fk_actores_usuario` hacia `usuarios(id)` con `ON DELETE CASCADE ON UPDATE CASCADE`.
+  - Semilla base estructural: `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`, `codigo = 'CAMARGO_PMS'`, `nombre = 'Camargo PMS — Sistema Central'`).
+- `auditoria`: Registro histórico inmutable de trazabilidad y operaciones (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `actor_id` BIGINT UNSIGNED NOT NULL, `usuario_id` BIGINT UNSIGNED NULL, `accion` VARCHAR(50) NOT NULL, `modulo` VARCHAR(50) NOT NULL, `entidad` VARCHAR(50) NOT NULL, `entidad_id` VARCHAR(100) NULL, `valores_anteriores` JSON NULL, `valores_nuevos` JSON NULL, `metadatos` JSON NULL, `ip` VARCHAR(45) NULL, `user_agent` VARCHAR(255) NULL, `metodo_http` VARCHAR(10) NULL, `ruta` VARCHAR(255) NULL, `correlacion_id` VARCHAR(64) NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP).
+  - Restricciones e Integridad:
+    - Clave foránea `fk_auditoria_actor` hacia `actores(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE` (impide borrar actores con historial de auditoría).
+    - Clave foránea `fk_auditoria_usuario` hacia `usuarios(id)` con `ON DELETE SET NULL ON UPDATE CASCADE` (desacopla auditoría del ciclo de vida del usuario).
+    - Restricciones CHECK: `chk_auditoria_accion_no_vacia`, `chk_auditoria_modulo_no_vacio`, `chk_auditoria_entidad_no_vacia`.
+    - Índices: `idx_auditoria_actor_id`, `idx_auditoria_usuario_id`, `idx_auditoria_accion`, `idx_auditoria_modulo`, `idx_auditoria_entidad`, `idx_auditoria_correlacion_id`, `idx_auditoria_creado_en`.
+
 ## Reglas
 
 - Claves primarias estables y claves foráneas explícitas.

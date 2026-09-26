@@ -10,6 +10,7 @@ use CamargoPMS\Excepciones\OpcionMenuNoEncontradaExcepcion;
 use CamargoPMS\Excepciones\OpcionMenuProtegidaExcepcion;
 use CamargoPMS\Excepciones\PermisoNoEncontradoExcepcion;
 use CamargoPMS\Excepciones\RutaInvalidaExcepcion;
+use CamargoPMS\Modelos\AccionAuditoria;
 use CamargoPMS\Modelos\OpcionMenu;
 use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
@@ -32,6 +33,7 @@ class MenuServicio
     private OpcionMenuRepositorio $opcionRepo;
     private PermisoRepositorio $permisoRepo;
     private AutorizacionServicio $autorizacionServicio;
+    private AuditoriaServicio $auditoriaServicio;
 
     /**
      * Claves técnicas protegidas que no pueden eliminarse ni deshabilitarse si comprometen la administración.
@@ -42,12 +44,14 @@ class MenuServicio
         ?PDO $pdo = null,
         ?OpcionMenuRepositorio $opcionRepo = null,
         ?PermisoRepositorio $permisoRepo = null,
-        ?AutorizacionServicio $autorizacionServicio = null
+        ?AutorizacionServicio $autorizacionServicio = null,
+        ?AuditoriaServicio $auditoriaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->opcionRepo = $opcionRepo ?? new OpcionMenuRepositorio($this->pdo);
         $this->permisoRepo = $permisoRepo ?? new PermisoRepositorio($this->pdo);
         $this->autorizacionServicio = $autorizacionServicio ?? new AutorizacionServicio($this->pdo);
+        $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
     }
 
     /**
@@ -231,7 +235,28 @@ class MenuServicio
             false // Nuevas opciones nunca son de sistema
         );
 
-        return $this->opcionRepo->insertar($nuevaOpcion);
+        $opcionCreada = $this->opcionRepo->insertar($nuevaOpcion);
+
+        try {
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CREAR,
+                'menu',
+                'opcion_menu',
+                (string) $opcionCreada->obtenerId(),
+                "Creación de la opción de menú '{$opcionCreada->obtenerNombre()}'",
+                null,
+                $opcionCreada->aArray(),
+                null,
+                null,
+                null,
+                null,
+                $this->pdo->inTransaction() ? $this->pdo : null
+            );
+        } catch (Throwable) {
+            // Prevenir fallo de creación si auditoría secundaria falla
+        }
+
+        return $opcionCreada;
     }
 
     /**
@@ -319,6 +344,25 @@ class MenuServicio
 
         $this->opcionRepo->actualizar($opcionActualizada);
 
+        try {
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::EDITAR,
+                'menu',
+                'opcion_menu',
+                (string) $id,
+                "Modificación de la opción de menú '{$opcionActualizada->obtenerNombre()}'",
+                $opcion->aArray(),
+                $opcionActualizada->aArray(),
+                null,
+                null,
+                null,
+                null,
+                $this->pdo->inTransaction() ? $this->pdo : null
+            );
+        } catch (Throwable) {
+            // Prevenir fallo de actualización si auditoría secundaria falla
+        }
+
         return $this->opcionRepo->buscarPorId($id, true) ?? $opcionActualizada;
     }
 
@@ -345,6 +389,26 @@ class MenuServicio
         }
 
         $this->opcionRepo->cambiarEstado($id, $estadoFinal);
+
+        try {
+            $accion = $estadoFinal === 'ACTIVO' ? AccionAuditoria::ACTIVAR : AccionAuditoria::DESACTIVAR;
+            $this->auditoriaServicio->registrar(
+                $accion,
+                'menu',
+                'opcion_menu',
+                (string) $id,
+                "Cambio de estado a {$estadoFinal} de la opción de menú '{$opcion->obtenerNombre()}'",
+                ['estado' => $opcion->obtenerEstado()],
+                ['estado' => $estadoFinal],
+                null,
+                null,
+                null,
+                null,
+                $this->pdo->inTransaction() ? $this->pdo : null
+            );
+        } catch (Throwable) {
+            // Prevenir fallo de cambio de estado si auditoría secundaria falla
+        }
 
         return $estadoFinal;
     }
@@ -403,6 +467,23 @@ class MenuServicio
             foreach ($opcionesValidadas as $item) {
                 $this->opcionRepo->actualizarOrden($item['id'], $item['orden']);
             }
+
+            // Registrar auditoría atómicamente dentro de la misma transacción
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::REORDENAR,
+                'menu',
+                'opciones_menu',
+                $padreId !== null ? (string) $padreId : 'raiz',
+                'Reordenamiento de opciones de menú',
+                null,
+                ['elementos' => $elementos, 'padre_id' => $padreId],
+                null,
+                null,
+                null,
+                null,
+                $this->pdo
+            );
+
             $this->pdo->commit();
             return true;
         } catch (Throwable $error) {
@@ -434,7 +515,31 @@ class MenuServicio
             throw new OpcionMenuProtegidaExcepcion("No se puede eliminar la categoría '{$opcion->obtenerNombre()}' porque aún posee opciones secundarias asignadas. Reubíquelas o elimínelas primero.");
         }
 
-        return $this->opcionRepo->eliminar($id);
+        $datosPrevios = $opcion->aArray();
+        $resultado = $this->opcionRepo->eliminar($id);
+
+        if ($resultado) {
+            try {
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::ELIMINAR,
+                    'menu',
+                    'opcion_menu',
+                    (string) $id,
+                    "Eliminación de la opción de menú '{$opcion->obtenerNombre()}'",
+                    $datosPrevios,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    $this->pdo->inTransaction() ? $this->pdo : null
+                );
+            } catch (Throwable) {
+                // Prevenir fallo de eliminación si auditoría secundaria falla
+            }
+        }
+
+        return $resultado;
     }
 
     /**

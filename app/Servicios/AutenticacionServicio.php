@@ -7,6 +7,7 @@ namespace CamargoPMS\Servicios;
 use CamargoPMS\Excepciones\CredencialesInvalidasExcepcion;
 use CamargoPMS\Excepciones\DemasiadosIntentosExcepcion;
 use CamargoPMS\Excepciones\UsuarioBloqueadoExcepcion;
+use CamargoPMS\Modelos\AccionAuditoria;
 use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
 use CamargoPMS\Nucleo\Configuracion;
@@ -39,6 +40,7 @@ class AutenticacionServicio
     private PersonaRepositorio $personaRepo;
     private SesionServicio $sesionServicio;
     private IntentoAutenticacionRepositorio $intentoRepo;
+    private AuditoriaServicio $auditoriaServicio;
 
     private int $maxIntentosFallidos;
     private int $ventanaBloqueoSegundos;
@@ -48,13 +50,15 @@ class AutenticacionServicio
         ?UsuarioRepositorio $usuarioRepo = null,
         ?PersonaRepositorio $personaRepo = null,
         ?SesionServicio $sesionServicio = null,
-        ?IntentoAutenticacionRepositorio $intentoRepo = null
+        ?IntentoAutenticacionRepositorio $intentoRepo = null,
+        ?AuditoriaServicio $auditoriaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->usuarioRepo = $usuarioRepo ?? new UsuarioRepositorio($this->pdo);
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
         $this->sesionServicio = $sesionServicio ?? new SesionServicio($this->pdo);
         $this->intentoRepo = $intentoRepo ?? new IntentoAutenticacionRepositorio($this->pdo);
+        $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
 
         $this->maxIntentosFallidos = (int) Configuracion::obtener('AUTH_MAX_INTENTOS_FALLIDOS', 5);
         $this->ventanaBloqueoSegundos = (int) Configuracion::obtener('AUTH_VENTANA_BLOQUEO_SEGUNDOS', 900); // 15 minutos
@@ -141,6 +145,26 @@ class AutenticacionServicio
         // 9. Crear sesión persistente de aplicación y fijar variables seguras
         $infoSesion = $this->sesionServicio->crearSesion($usuario, $ipFinal, $userAgent);
 
+        // 10. Registrar evento de auditoría para inicio de sesión exitoso
+        try {
+            $actorHumano = $this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuario);
+            $this->auditoriaServicio->establecerActorActual($actorHumano);
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::LOGIN,
+                'autenticacion',
+                'usuario',
+                (string) $usuario->obtenerId(),
+                "Inicio de sesión exitoso para el usuario '{$usuario->obtenerNombreUsuario()}'",
+                null,
+                null,
+                ['ip' => $ipFinal, 'user_agent' => $userAgent],
+                $actorHumano,
+                (int) $usuario->obtenerId()
+            );
+        } catch (Throwable) {
+            // No interrumpir la sesión si la auditoría informativa de login falla
+        }
+
         return [
             'usuario' => $usuario,
             'sesion' => $infoSesion['sesion'],
@@ -155,7 +179,30 @@ class AutenticacionServicio
      */
     public function cerrarSesion(): bool
     {
-        return $this->sesionServicio->cerrarSesionActual();
+        $usuario = $this->sesionServicio->validarSesionActual();
+        $resultado = $this->sesionServicio->cerrarSesionActual();
+
+        if ($usuario !== null) {
+            try {
+                $actorHumano = $this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuario);
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::LOGOUT,
+                    'autenticacion',
+                    'sesion',
+                    (string) $usuario->obtenerId(),
+                    "Cierre de sesión para el usuario '{$usuario->obtenerNombreUsuario()}'",
+                    null,
+                    null,
+                    null,
+                    $actorHumano,
+                    (int) $usuario->obtenerId()
+                );
+            } catch (Throwable) {
+                // Prevenir interrupción del flujo de logout ante fallo de registro secundario
+            }
+        }
+
+        return $resultado;
     }
 
     /**

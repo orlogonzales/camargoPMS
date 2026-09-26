@@ -47,6 +47,58 @@ La IP y user-agent pueden registrarse cuando exista base y utilidad; deben somet
 
 La auditoría es append-only para usuarios ordinarios. Una corrección genera otro evento. El acceso requiere permiso específico y queda auditado. No registrar contraseñas, tokens, CVV, números completos de tarjeta, documentos completos ni payloads sensibles sin necesidad demostrada.
 
+## Arquitectura del Núcleo Transversal (AUDITORÍA-1)
+
+### Principio ACTOR ≠ USUARIO
+- Todo evento es atribuido a un `ActorAuditoria` (`actores`).
+- Los actores pueden ser de cuatro tipos (`TipoActor`): `USUARIO` (humano con credenciales), `SISTEMA` (procesos automáticos, seed `CAMARGO_PMS`), `INTEGRACION` (clientes técnicos API) o `PROVEEDOR_PAGO` (webhooks).
+- Si el actor es humano, se vincula mediante `usuario_id`; la auditoría conserva `actor_id` (`ON DELETE RESTRICT`) y `usuario_id` (`ON DELETE SET NULL`), preservando la inmutabilidad histórica aún si la cuenta de usuario se elimina.
+
+### Sanitización Recursiva de Secretos
+- Implementada por `SanitizadorAuditoria`: inspecciona y purga recursivamente estructuras JSON y arreglos para `valores_anteriores`, `valores_nuevos` y `metadatos`.
+- Campos redactados automáticamente: `contrasena`, `contrasena_hash`, `password`, `clave`, `token`, `_csrf_token`, `authorization`, `api_key`, `secret`, `tarjeta`, `cvv`, etc.
+
+### Contexto y Correlación
+- Captura de forma no invasiva: `ip`, `user_agent`, `metodo_http`, `ruta` y `correlacion_id`.
+- Permite vincular múltiples eventos de auditoría a una única transacción HTTP o ciclo de vida de petición.
+
+### Persistencia y Repositorios
+- `AuditoriaRepositorio` es estrictamente append-only: carece de métodos de edición o borrado.
+- Operaciones críticas ejecutan la auditoría dentro de la transacción de dominio (`COMMIT` conjunto o `ROLLBACK` total).
+- Operaciones no críticas aplican persistencia defensiva tolerante a fallos secundarios.
+
+### Integraciones de Dominio Activas
+- `AutenticacionServicio`: `LOGIN`, `LOGOUT`.
+- `RolServicio`: `ASIGNAR`, `REVOCAR`.
+- `MenuServicio`: `CREAR`, `EDITAR`, `ACTIVAR`, `DESACTIVAR`, `REORDENAR`, `ELIMINAR`.
+- `UsuarioServicio`: `CREAR`, `CAMBIAR_ESTADO`, `CAMBIAR_CLAVE`.
+
+## Arquitectura del Núcleo Transversal (AUDITORÍA-1)
+
+### Principio ACTOR ≠ USUARIO
+- Todo evento es atribuido a un `ActorAuditoria` (`actores`).
+- Los actores pueden ser de cuatro tipos (`TipoActor`): `USUARIO` (humano con credenciales), `SISTEMA` (procesos automáticos, seed `CAMARGO_PMS`), `INTEGRACION` (clientes técnicos API) o `PROVEEDOR_PAGO` (webhooks).
+- Si el actor es humano, se vincula mediante `usuario_id`; la auditoría conserva `actor_id` (`ON DELETE RESTRICT`) y `usuario_id` (`ON DELETE SET NULL`), preservando la inmutabilidad histórica aún si la cuenta de usuario se elimina.
+
+### Sanitización Recursiva de Secretos
+- Implementada por `SanitizadorAuditoria`: inspecciona y purga recursivamente estructuras JSON y arreglos para `valores_anteriores`, `valores_nuevos` y `metadatos`.
+- Campos redactados automáticamente: `contrasena`, `contrasena_hash`, `password`, `clave`, `token`, `_csrf_token`, `authorization`, `api_key`, `secret`, `tarjeta`, `cvv`, etc.
+
+### Contexto y Correlación
+- Captura de forma no invasiva: `ip`, `user_agent`, `metodo_http`, `ruta` y `correlacion_id`.
+- Permite vincular múltiples eventos de auditoría a una única transacción HTTP o ciclo de vida de petición.
+
+### Persistencia y Repositorios
+- `AuditoriaRepositorio` es estrictamente append-only: carece de métodos de edición o borrado.
+- Operaciones críticas ejecutan la auditoría dentro de la transacción de dominio (`COMMIT` conjunto o `ROLLBACK` total).
+- Operaciones no críticas aplican persistencia defensiva tolerante a fallos secundarios.
+
+### Integraciones de Dominio Activas
+- `AutenticacionServicio`: `LOGIN`, `LOGOUT`.
+- `RolServicio`: `ASIGNAR`, `REVOCAR`.
+- `MenuServicio`: `CREAR`, `EDITAR`, `ACTIVAR`, `DESACTIVAR`, `REORDENAR`, `ELIMINAR`.
+- `UsuarioServicio`: `CREAR`, `CAMBIAR_ESTADO`, `CAMBIAR_CLAVE`.
+
 ## Relación con logs
 
 Los logs técnicos sirven para diagnóstico; la auditoría sirve para trazabilidad de negocio y seguridad. Pueden compartir correlación, pero tienen políticas y consumidores diferentes.

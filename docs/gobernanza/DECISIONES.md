@@ -286,6 +286,45 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - El reordenamiento de opciones dentro de una misma categoría o entre categorías principales se ejecuta de forma atómica y transaccional mediante arrays de pares `[id, orden]`, rechazando mezclas de padres o niveles con rollback total ante fallos.
    - Las rutas configuradas deben ser rutas internas relativas; se prohíben URLs externas o esquemas maliciosos (`javascript:`, `data:`, `vbscript:`).
 
+### D-053 — Modelo relacional y principio ACTOR ≠ USUARIO en Auditoría (AUDITORÍA-1)
+
+1. Se establece el principio arquitectónico vinculante `ACTOR ≠ USUARIO`:
+   - Un **Actor** representa el sujeto o entidad que ejecuta una operación en el sistema. Soporta cuatro tipos ontológicos estrictos (`TipoActor`): `USUARIO` (humano autenticado), `SISTEMA` (tareas en segundo plano, cron jobs o rutinas internas del PMS), `INTEGRACION` (clientes técnicos de API, ej. WordPress o app móvil) y `PROVEEDOR_PAGO` (webhooks seguros de pasarelas de pago).
+   - Un **Usuario** representa exclusivamente una cuenta de acceso humano con contraseñas seguras y sesiones. Se prohíbe crear usuarios humanos ficticios para representar procesos de sistema o clientes técnicos de API.
+2. La tabla `actores` desacopla la autoría del concepto exclusivo de usuario:
+   - Contiene `tipo`, `codigo` único, `nombre`, `usuario_id` nullable y `metadatos` en JSON.
+   - Todo usuario humano registrado posee un actor asociado de tipo `USUARIO` mediante `usuario_id` único (`fk_actores_usuario` con `ON DELETE CASCADE`), generado deterministamente (`USR_{id}`).
+   - La tabla `auditoria` referencia obligatoriamente `actor_id` (`ON DELETE RESTRICT`) y opcionalmente `usuario_id` (`ON DELETE SET NULL`), garantizando que la eliminación o desactivación de un usuario jamás destruya ni degrade la autoría histórica de los registros de auditoría.
+3. Se siembra el actor estructural protegido `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`, `codigo = 'CAMARGO_PMS'`).
+
+### D-054 — Inmutabilidad estricta del registro de auditoría y persistencia defensiva (AUDITORÍA-1)
+
+1. El registro de auditoría es estrictamente inmutable y de solo anexado (append-only):
+   - `AuditoriaRepositorio` expone exclusivamente métodos de inserción (`insertar()`) y lectura (`buscarPorId()`, `listar()`, `contar()`), careciendo deliberadamente de métodos `actualizar()` o `eliminar()`.
+   - Se prohíben modificaciones o eliminaciones físicas de filas en `auditoria` en tiempo de ejecución.
+2. Persistencia en operaciones críticas vs. no críticas:
+   - En mutaciones críticas de dominio (ej. asignación/revocación de roles, reordenamiento o mutación de menú, creación de usuarios), el registro de auditoría se ejecuta dentro de la misma transacción de base de datos (`COMMIT` conjunto o `ROLLBACK` total ante fallos).
+   - En eventos de infraestructura o no críticos (ej. login, logout), el servicio aplica persistencia defensiva de forma que un fallo secundario de auditoría no bloquee el flujo principal del usuario, pero se registre con severidad.
+
+### D-055 — Sanitización recursiva de secretos y sanitizador transversal (AUDITORÍA-1)
+
+1. Se prohíbe terminantemente la presencia de credenciales, tokens, secretos o datos financieros en el registro de auditoría.
+2. Se implementa el servicio transversal `SanitizadorAuditoria`:
+   - Aplica purga recursiva sobre cualquier estructura de datos (`valores_anteriores`, `valores_nuevos`, `metadatos`).
+   - Elimina o redacta (`[REDACTADO]`) campos sensibles: `contrasena`, `contrasena_hash`, `password`, `clave`, `token`, `_csrf_token`, `authorization`, `api_key`, `secret`, `tarjeta`, `cvv`, `pin`, etc., independientemente del nivel de anidamiento en estructuras JSON o arreglos.
+3. La base de datos de auditoría no debe contener contraseñas planas ni hashes de contraseñas de usuarios.
+
+### D-056 — Trazabilidad contextual y correlación de peticiones (AUDITORÍA-1)
+
+1. Cada registro de auditoría captura metadatos contextuales estandarizados:
+   - `metodo_http`, `ruta`, `ip` del cliente y `user_agent`.
+   - `correlacion_id`: identificador único de trazabilidad de la petición (UUIDv4 o token CSPRNG de 32 hex chars), preservado a lo largo del ciclo de vida de la solicitud.
+2. Integración nativa en los servicios de dominio existentes:
+   - `AutenticacionServicio`: audita eventos de `LOGIN` y `LOGOUT`.
+   - `RolServicio`: audita asignación (`ASIGNAR`) y revocación (`REVOCAR`) atómica de roles.
+   - `MenuServicio`: audita `CREAR`, `EDITAR`, `ACTIVAR`, `DESACTIVAR`, `REORDENAR` y `ELIMINAR` de opciones de menú.
+   - `UsuarioServicio`: audita `CREAR`, `CAMBIAR_ESTADO` y `CAMBIAR_CLAVE` de cuentas de usuario.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

@@ -11,6 +11,7 @@ use CamargoPMS\Excepciones\RolNoEncontradoExcepcion;
 use CamargoPMS\Excepciones\RolProtegidoExcepcion;
 use CamargoPMS\Excepciones\UltimoSuperadministradorExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
+use CamargoPMS\Modelos\AccionAuditoria;
 use CamargoPMS\Modelos\Permiso;
 use CamargoPMS\Modelos\Rol;
 use CamargoPMS\Nucleo\BaseDatos;
@@ -35,19 +36,22 @@ class RolServicio
     private PermisoRepositorio $permisoRepo;
     private AutorizacionRepositorio $autorizacionRepo;
     private UsuarioRepositorio $usuarioRepo;
+    private AuditoriaServicio $auditoriaServicio;
 
     public function __construct(
         ?PDO $pdo = null,
         ?RolRepositorio $rolRepo = null,
         ?PermisoRepositorio $permisoRepo = null,
         ?AutorizacionRepositorio $autorizacionRepo = null,
-        ?UsuarioRepositorio $usuarioRepo = null
+        ?UsuarioRepositorio $usuarioRepo = null,
+        ?AuditoriaServicio $auditoriaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->rolRepo = $rolRepo ?? new RolRepositorio($this->pdo);
         $this->permisoRepo = $permisoRepo ?? new PermisoRepositorio($this->pdo);
         $this->autorizacionRepo = $autorizacionRepo ?? new AutorizacionRepositorio($this->pdo);
         $this->usuarioRepo = $usuarioRepo ?? new UsuarioRepositorio($this->pdo);
+        $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
     }
 
     /**
@@ -288,7 +292,36 @@ class RolServicio
             throw new ValidacionExcepcion('No se puede asignar un rol inactivo.');
         }
 
-        return $this->autorizacionRepo->asignarRolUsuario($usuarioId, $rolId, $asignadoPor);
+        $resultado = $this->autorizacionRepo->asignarRolUsuario($usuarioId, $rolId, $asignadoPor);
+
+        if ($resultado) {
+            try {
+                $actor = $asignadoPor !== null ? $this->auditoriaServicio->obtenerOAsegurarActorUsuario($asignadoPor) : null;
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::ASIGNAR,
+                    'seguridad',
+                    'usuario_rol',
+                    "{$usuarioId}:{$rolId}",
+                    "Asignación de rol '{$rol->obtenerCodigo()}' al usuario '{$usuario->obtenerNombreUsuario()}'",
+                    null,
+                    [
+                        'usuario_id' => $usuarioId,
+                        'nombre_usuario' => $usuario->obtenerNombreUsuario(),
+                        'rol_id' => $rolId,
+                        'rol_codigo' => $rol->obtenerCodigo(),
+                        'rol_nombre' => $rol->obtenerNombre(),
+                        'asignado_por' => $asignadoPor,
+                    ],
+                    null,
+                    $actor,
+                    $usuarioId
+                );
+            } catch (Throwable) {
+                // Prevenir interrupción de asignación si la auditoría informativa falla
+            }
+        }
+
+        return $resultado;
     }
 
     /**
@@ -329,6 +362,30 @@ class RolServicio
             }
 
             $resultado = $this->autorizacionRepo->revocarRolUsuario($usuarioId, $rolId);
+
+            if ($resultado) {
+                // Registrar auditoría atómicamente dentro de la misma transacción
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::REVOCAR,
+                    'seguridad',
+                    'usuario_rol',
+                    "{$usuarioId}:{$rolId}",
+                    "Revocación de rol '{$rol->obtenerCodigo()}' al usuario '{$usuario->obtenerNombreUsuario()}'",
+                    [
+                        'usuario_id' => $usuarioId,
+                        'nombre_usuario' => $usuario->obtenerNombreUsuario(),
+                        'rol_id' => $rolId,
+                        'rol_codigo' => $rol->obtenerCodigo(),
+                        'rol_nombre' => $rol->obtenerNombre(),
+                    ],
+                    null,
+                    null,
+                    null,
+                    $usuarioId,
+                    null,
+                    $this->pdo
+                );
+            }
 
             $this->pdo->commit();
             return $resultado;

@@ -52,6 +52,13 @@ Renderizan datos ya preparados por los controladores o componentes de layout (`n
 
 Mejora la experiencia, valida de forma complementaria y consume JSON (ej. `gestion-menu.js` con Vanilla JS, Fetch API y SweetAlert2). La autoridad y validación residen incondicionalmente en el servidor.
 
+### Núcleo Transversal de Auditoría (AUDITORÍA-1)
+
+Capa de persistencia y trazabilidad de negocio transversal:
+- **`AuditoriaServicio`:** Orquesta la captura de eventos, resuelve el actor en ejecución (`ACTOR ≠ USUARIO`), extrae el contexto HTTP (`ip`, `user_agent`, `metodo_http`, `ruta`, `correlacion_id`), coordina la transacción y delega la desinfección a `SanitizadorAuditoria`.
+- **`SanitizadorAuditoria`:** Purga recursivamente secretos, contraseñas, tokens y claves de API de los valores auditados.
+- **`AuditoriaRepositorio` & `ActorAuditoriaRepositorio`:** Repositorios append-only con inmutabilidad estricta.
+
 ## Dependencias permitidas
 
 ```text

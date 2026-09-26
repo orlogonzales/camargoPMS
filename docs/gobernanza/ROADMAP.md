@@ -56,11 +56,23 @@ Infraestructura de control de acceso basado en roles (RBAC) puro en backend: mod
 
 Estado: completada.
 
-## MENÚ-1 — Menú Dinámico, Navegación Autorizada y Gestión de Menú
+## MENÚ-1 / MENÚ-1A — Menú Dinámico, Navegación Autorizada y Validación PristineJS
 
-Navegación dinámica autorizada de 2 niveles persistida en tabla `opciones_menu`, preservando el contrato visual Alina (`navbar-menu-list` con `data-target="clave"` <-> `main-side-menu` con `id="clave"`). Filtro de visibilidad aditiva gobernado por RBAC (`menu.ver`, `menu.gestionar`), eliminación de categorías principales vacías, módulo interactivo bajo `/configuracion/menu` (CRUD, alternancia de estado y reordenamiento transaccional atómico sin jQuery), protección de opciones del sistema (`es_sistema = 1`), sanitización estricta de rutas internas y suites formales de prueba (MENU-01..40 y E2E-MENU-01..10).
+Navegación dinámica autorizada de 2 niveles persistida en tabla `opciones_menu`, preservando el contrato visual Alina (`navbar-menu-list` con `data-target="clave"` <-> `main-side-menu` con `id="clave"`). Filtro de visibilidad aditiva gobernado por RBAC (`menu.ver`, `menu.gestionar`), eliminación de categorías principales vacías, módulo interactivo bajo `/configuracion/menu` (CRUD, alternancia de estado y reordenamiento transaccional atómico sin jQuery), protección de opciones del sistema (`es_sistema = 1`), sanitización estricta de rutas internas, integración local de PristineJS (v1.1.0) y suites formales de prueba (MENU-01..40, PRISTINE-01..12 y E2E-MENU-01..10).
 
-Estado: completada (candidata a micro-baseline).
+Estado: completada (baseline oficial `cdd3427`).
+
+## AUDITORÍA-1 — Núcleo Transversal de Auditoría y Trazabilidad
+
+Establecimiento del núcleo inmutable de auditoría y trazabilidad del sistema bajo el principio vinculante `ACTOR ≠ USUARIO`. Modelo polimórfico de actores (`actores`) soportando `USUARIO`, `SISTEMA`, `INTEGRACION` y `PROVEEDOR_PAGO`, con semilla protegida `CAMARGO_PMS`. Bitácora persistida (`auditoria`) append-only con integridad referencial (`ON DELETE RESTRICT`), sanitización recursiva de secretos (`SanitizadorAuditoria`), correlación contextual HTTP (`correlacion_id`), persistencia atómica en operaciones críticas y defensiva en eventos auxiliares, e integración transversal en Autenticación (Login/Logout), Roles (Asignar/Revocar), Menú (CRUD/Reordenar) y Usuarios (Crear/Estado/Clave). DDL migración `009_auditoria_actores.sql` y paridad 100% en `SQL/camargo_pms.sql`.
+
+Estado: completada (candidata a micro-baseline post AUDITORÍA-1).
+
+## USUARIOS-1 — Administración Visual de Usuarios y Asignación de Roles
+
+Administración completa de usuarios del sistema desde la interfaz Alina bajo `/usuarios`: listado paginado, búsqueda, creación vinculando a Personas del maestro central, alternancia de estados (`ACTIVO`, `INACTIVO`, `BLOQUEADO`), asignación interactiva de roles RBAC, reseteo seguro de contraseñas y consumo nativo de auditoría transversal.
+
+Estado: planificada (siguiente fase).
 
 ## Configuración
 
