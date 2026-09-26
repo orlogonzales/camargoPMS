@@ -77,12 +77,14 @@ El servidor filtra las áreas y opciones visibles según permisos RBAC y el esta
 3. **Principio ACTOR ≠ USUARIO:** Desacopla la identidad del ejecutor técnico del usuario humano, impidiendo la falsificación de credenciales humanas para tareas del sistema o webhooks.
 4. **Trazabilidad y Correlación Segura:** Registro de `correlacion_id`, método HTTP, ruta, IP y User-Agent para detección temprana de anomalías y auditoría forense sin comprometer la privacidad.
 
-## Auditoría y Trazabilidad Transversal (AUDITORÍA-1)
+## Administración Integral de Usuarios (USUARIOS-1)
 
-1. **Inmutabilidad Absoluta del Registro:** La tabla `auditoria` no permite actualizaciones ni eliminaciones. El repositorio `AuditoriaRepositorio` es de solo anexado (`insertar()`, `buscarPorId()`, `listar()`, `contar()`). La clave foránea con `actores` aplica `ON DELETE RESTRICT`.
-2. **Purga Recursiva de Secretos:** `SanitizadorAuditoria` desinfecta todo payload antes de persistirlo. Queda terminantemente prohibido almacenar contraseñas planas, hashes criptográficos, tokens CSRF, cabeceras de autorización o tokens opacos en campos de auditoría.
-3. **Principio ACTOR ≠ USUARIO:** Desacopla la identidad del ejecutor técnico del usuario humano, impidiendo la falsificación de credenciales humanas para tareas del sistema o webhooks.
-4. **Trazabilidad y Correlación Segura:** Registro de `correlacion_id`, método HTTP, ruta, IP y User-Agent para detección temprana de anomalías y auditoría forense sin comprometer la privacidad.
+1. **Principio PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL:** Se prohíbe crear usuarios no vinculados a una Persona humana real. Cero cuentas genéricas o sintéticas para procesos automáticos.
+2. **Prohibición Estricta de Eliminación Física (Zero Physical Delete):** No existe `DELETE` de usuarios en tiempo de ejecución. La desactivación o suspensión se opera exclusivamente mediante transiciones de estado (`ACTIVO`, `INACTIVO`, `BLOQUEADO`).
+3. **Invariante Concurrente del Último Superadministrador Activo:** Imposibilidad matemática y transaccional de dejar el sistema sin al menos un superadministrador activo con persona activa, verificado bajo transacción con bloqueo pesimista (`FOR UPDATE`).
+4. **Restablecimiento Seguro de Contraseñas:** Algoritmo estándar `PASSWORD_DEFAULT`, longitud de 12 a 1024 caracteres evaluada antes del hash, soporte íntegro de espacios y Unicode. Revocación concurrente obligatoria de todas las demás sesiones activas en `sesiones_usuario`.
+5. **Protección CSRF y Verificación de Permisos:** Todas las rutas administrativas bajo `/usuarios` exigen autorización RBAC atómica (`usuarios.ver`, `usuarios.crear`, `usuarios.editar`, `usuarios.bloquear`, `usuarios.clave`, `usuarios.sesiones`) y token CSRF válido en toda mutación por `POST`, `PATCH`, `DELETE`.
+6. **Desinfección de Secretos en Auditoría:** Cada mutación de usuario (`CREAR`, `CAMBIAR_ESTADO`, `CAMBIAR_CLAVE`) se audita transversalmente con `AuditoriaServicio`, garantizando cero fugas de contraseñas o hashes gracias a `SanitizadorAuditoria`.
 
 ## Revisión obligatoria
 

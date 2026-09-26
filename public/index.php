@@ -65,8 +65,54 @@ $enrutador->get('/', [\CamargoPMS\Controladores\PanelControlador::class, 'inicio
     \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
 ]);
 
-$enrutador->get('/usuarios', [\CamargoPMS\Controladores\PanelControlador::class, 'usuarios'], [
+// Rutas de Gestión de Usuarios (USUARIOS-1)
+$enrutador->get('/usuarios', [\CamargoPMS\Controladores\UsuarioControlador::class, 'index'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),
+]);
+$enrutador->get('/usuarios/datos', [\CamargoPMS\Controladores\UsuarioControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),
+]);
+$enrutador->get('/usuarios/personas-disponibles', [\CamargoPMS\Controladores\UsuarioControlador::class, 'personasDisponibles'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.crear'),
+]);
+$enrutador->post('/usuarios', [\CamargoPMS\Controladores\UsuarioControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.crear'),
+]);
+$enrutador->get('/usuarios/{id}', [\CamargoPMS\Controladores\UsuarioControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),
+]);
+$enrutador->patch('/usuarios/{id}/estado', [\CamargoPMS\Controladores\UsuarioControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.bloquear'),
+]);
+$enrutador->post('/usuarios/{id}/estado', [\CamargoPMS\Controladores\UsuarioControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.bloquear'),
+]);
+$enrutador->post('/usuarios/{id}/restablecer-clave', [\CamargoPMS\Controladores\UsuarioControlador::class, 'restablecerClave'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.editar'),
+]);
+$enrutador->post('/usuarios/{id}/roles', [\CamargoPMS\Controladores\UsuarioControlador::class, 'asignarRol'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.asignar'),
+]);
+$enrutador->delete('/usuarios/{id}/roles/{rolId}', [\CamargoPMS\Controladores\UsuarioControlador::class, 'revocarRol'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.revocar'),
+]);
+$enrutador->post('/usuarios/{id}/roles/{rolId}/eliminar', [\CamargoPMS\Controladores\UsuarioControlador::class, 'revocarRol'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.revocar'),
+]);
+$enrutador->post('/usuarios/{id}/roles/revocar', [\CamargoPMS\Controladores\UsuarioControlador::class, 'revocarRol'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.revocar'),
+]);
+$enrutador->get('/usuarios/{id}/sesiones', [\CamargoPMS\Controladores\UsuarioControlador::class, 'listarSesiones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),
+]);
+$enrutador->delete('/usuarios/{id}/sesiones/{sesionId}', [\CamargoPMS\Controladores\UsuarioControlador::class, 'cerrarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.editar'),
+]);
+$enrutador->post('/usuarios/{id}/sesiones/{sesionId}/cerrar', [\CamargoPMS\Controladores\UsuarioControlador::class, 'cerrarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.editar'),
+]);
+$enrutador->post('/usuarios/{id}/sesiones/cerrar-todas', [\CamargoPMS\Controladores\UsuarioControlador::class, 'cerrarTodasSesiones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.editar'),
 ]);
 
 // Rutas de Gestión de Menú (MENÚ-1)

@@ -62,15 +62,21 @@ Navegación dinámica autorizada de 2 niveles persistida en tabla `opciones_menu
 
 Estado: completada (baseline oficial `cdd3427`).
 
-## AUDITORÍA-1 — Núcleo Transversal de Auditoría y Trazabilidad
+## AUDITORÍA-1 / AUDITORÍA-1A — Núcleo Transversal de Auditoría y Trazabilidad
 
 Establecimiento del núcleo inmutable de auditoría y trazabilidad del sistema bajo el principio vinculante `ACTOR ≠ USUARIO`. Modelo polimórfico de actores (`actores`) soportando `USUARIO`, `SISTEMA`, `INTEGRACION` y `PROVEEDOR_PAGO`, con semilla protegida `CAMARGO_PMS`. Bitácora persistida (`auditoria`) append-only con integridad referencial (`ON DELETE RESTRICT`), sanitización recursiva de secretos (`SanitizadorAuditoria`), correlación contextual HTTP (`correlacion_id`), persistencia atómica en operaciones críticas y defensiva en eventos auxiliares, e integración transversal en Autenticación (Login/Logout), Roles (Asignar/Revocar), Menú (CRUD/Reordenar) y Usuarios (Crear/Estado/Clave). DDL migración `009_auditoria_actores.sql` y paridad 100% en `SQL/camargo_pms.sql`.
 
-Estado: completada (candidata a micro-baseline post AUDITORÍA-1).
+Estado: completada (baseline oficial `da672ba`).
 
-## USUARIOS-1 — Administración Visual de Usuarios y Asignación de Roles
+## USUARIOS-1 — Administración Integral de Cuentas Humanas
 
-Administración completa de usuarios del sistema desde la interfaz Alina bajo `/usuarios`: listado paginado, búsqueda, creación vinculando a Personas del maestro central, alternancia de estados (`ACTIVO`, `INACTIVO`, `BLOQUEADO`), asignación interactiva de roles RBAC, reseteo seguro de contraseñas y consumo nativo de auditoría transversal.
+Administración completa de cuentas humanas de acceso al sistema desde la interfaz Alina bajo `/usuarios`: listado paginado, búsqueda multicriterio, filtros dinámicos por rol y estado, vinculación exclusiva 1:1 a Personas humanas del maestro central (`PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL`), asignación de rol inicial RBAC, transiciones de estado operacionales (`ACTIVO`, `INACTIVO`, `BLOQUEADO`), prohibición estricta de eliminación física (`DELETE` = 0), preservación del invariante del último Superadministrador activo mediante bloqueo pesimista (`FOR UPDATE`), restablecimiento seguro de contraseñas (`PASSWORD_DEFAULT`, min 12, max 1024, Unicode/espacios), inspección de perfil con listado y revocación puntual o masiva de sesiones concurrentes (`sesiones_usuario`), protección CSRF estricta, validación frontend modular con PristineJS v1.1.0 y SweetAlert2, y auditoría transversal nativa con desinfección total de credenciales. Suites formales USR-01..40 y E2E-USR-01..10 (100% PASS).
+
+Estado: completada (candidata a micro-baseline post USUARIOS-1).
+
+## ROLES-2 — Administración Visual de Roles y Permisos RBAC
+
+Administración interactiva de roles y permisos del sistema desde la interfaz Alina bajo `/configuracion/roles`: listado, creación y edición de roles, asignación visual de permisos atómicos agrupados por módulo, protección estructural del rol `SUPERADMINISTRADOR` y de roles de sistema (`es_sistema = 1`), y auditoría transversal.
 
 Estado: planificada (siguiente fase).
 

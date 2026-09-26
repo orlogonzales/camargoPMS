@@ -288,6 +288,18 @@ class SesionServicio
     }
 
     /**
+     * Busca una sesión por su identificador primario.
+     *
+     * @param int $id
+     * @param bool $cargarUsuario
+     * @return SesionUsuario|null
+     */
+    public function buscarPorId(int $id, bool $cargarUsuario = true): ?SesionUsuario
+    {
+        return $this->sesionRepo->buscarPorId($id, $cargarUsuario);
+    }
+
+    /**
      * Limpia completamente el estado de la sesión local en el navegador y memoria PHP.
      *
      * @return void

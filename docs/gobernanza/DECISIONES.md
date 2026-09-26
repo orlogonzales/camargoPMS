@@ -329,6 +329,49 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - `MenuServicio`: audita `CREAR`, `EDITAR`, `ACTIVAR`, `DESACTIVAR`, `REORDENAR` y `ELIMINAR` de opciones de menú.
    - `UsuarioServicio`: audita `CREAR`, `CAMBIAR_ESTADO` y `CAMBIAR_CLAVE` de cuentas de usuario.
 
+### D-057 — Administración de cuentas humanas y segregación conceptual (USUARIOS-1)
+
+1. Principio rector de identidad y acceso:
+   - Se mantiene la estricta separación ontológica: `PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL` y `ACTOR ≠ USUARIO`.
+   - Las cuentas de usuario en `usuarios` representan exclusivamente identidades humanas interactivas vinculadas a una persona natural real existente y activa en la tabla `personas`.
+   - Se prohíbe tajantemente la creación de cuentas de usuario para procesos desatendidos, WordPress, APIs externas, webhooks, aplicaciones móviles o proveedores de pago; dichos entes se modelan exclusivamente como actores técnicos independientes en la tabla `actores`.
+2. Cardinalidad y vinculación:
+   - Se impone unicidad 1:1 estricta entre `Persona` y `Usuario`: una persona natural puede poseer a lo sumo una cuenta de usuario en el software.
+   - El formulario de alta requiere la selección de una persona existente no vinculada previamente; no se permite la creación anónima de cuentas.
+
+### D-058 — Ciclo de vida de usuarios, no-eliminación física e invariante de Superadministrador (USUARIOS-1)
+
+1. Transición de estados de cuenta:
+   - Los únicos estados válidos son `ACTIVO`, `INACTIVO` y `BLOQUEADO`.
+   - Se prohíbe categóricamente el `DELETE` físico de usuarios en la capa de negocio; la revocación de acceso se materializa exclusivamente mediante desactivación o bloqueo.
+   - Toda transición a un estado no activo (`INACTIVO` o `BLOQUEADO`) revoca de forma atómica e inmediata todas las sesiones abiertas del usuario en la tabla `sesiones_usuario` fijando `revocada_en = NOW()` y `motivo_cierre = 'CAMBIO_ESTADO_USUARIO'`.
+2. Invariante estructural del último Superadministrador activo:
+   - El sistema garantiza que siempre debe existir al menos un Superadministrador activo (`≥ 1 SUPERADMINISTRADOR activo`).
+   - Se prohíbe expresamente que el último Superadministrador activo restante pase a estado `INACTIVO`, pase a estado `BLOQUEADO` o sea despojado de su rol de Superadministrador.
+   - Dicha verificación se ejecuta a nivel de servicio mediante consultas transaccionales con bloqueo pesimista (`FOR UPDATE`), previniendo condiciones de carrera concurrentes y lanzando `UltimoSuperadministradorExcepcion` ante cualquier intento.
+
+### D-059 — Restablecimiento administrativo de contraseñas y gestión de sesiones (USUARIOS-1)
+
+1. Restablecimiento administrativo de credenciales:
+   - La funcionalidad administrativa permite asignar una nueva contraseña sin requerir la contraseña actual del usuario auditado.
+   - Se valida rigurosamente la política canónica de contraseñas: longitud mínima de 12 caracteres, máxima de 1024 caracteres, preservación de espacios y caracteres Unicode sin trim ni transformaciones destructivas.
+   - Se genera el hash criptográfico mediante `PASSWORD_DEFAULT`.
+   - La operación revoca todas las sesiones activas del usuario con motivo `CAMBIO_CONTRASENA`.
+   - El registro de auditoría (`CAMBIAR_CLAVE`) es sometido a purga recursiva, garantizando que ni la contraseña en claro ni el hash criptográfico queden registrados en `auditoria`.
+2. Gestión administrativa de sesiones:
+   - Se provee la consulta y revocación controlada de sesiones activas (individual o masiva) a través de `SesionServicio` y `UsuarioServicio`.
+   - Las respuestas de la API hacia la interfaz jamás exponen tokens en texto plano, identificadores de cookies ni hashes SHA-256 de las sesiones.
+   - La revocación administrativa se registra con motivo `REVOCACION_ADMINISTRATIVA` y audita el evento `CERRAR_SESION`.
+
+### D-060 — Interfaz administrativa Alina, validación client-side con PristineJS y backend canónico (USUARIOS-1)
+
+1. Experiencia de usuario e interfaz:
+   - La gestión de usuarios se integra fluidamente en el diseño Alina bajo la ruta `/usuarios`, conservando la estructura de maquetación, paleta de colores y componentes visuales estándar.
+   - La comunicación asíncrona se ejecuta mediante la API nativa Fetch y contratos JSON uniformes (`ok`, `mensaje`, `datos`, `errores`), utilizando SweetAlert2 para diálogos y notificaciones de éxito/error. Cero dependencias de jQuery.
+2. Validación desacoplada:
+   - Los formularios interactivos en modales (`modal-crear-usuario`, `modal-restablecer-clave`) implementan validación en el cliente mediante PristineJS local v1.1.0, bloqueando envíos HTTP inválidos y limpiando errores en eventos `hidden.bs.modal`.
+   - El backend opera como autoridad canónica estricta: todos los datos son revalidados en los controladores y servicios, retornando códigos HTTP semánticos (400, 403, 404, 409, 422, 500) y validando obligatoriamente tokens CSRF en todas las operaciones de mutación.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

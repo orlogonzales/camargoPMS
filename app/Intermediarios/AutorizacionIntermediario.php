@@ -14,7 +14,7 @@ use CamargoPMS\Servicios\SesionServicio;
  * Intermediario (Middleware) que protege rutas exigiendo un permiso de autorización RBAC específico.
  *
  * "¿Tienes permiso para acceder a este recurso?"
- * 
+ *
  * Flujo:
  * 1. Si no hay sesión válida, redirige a /login con parámetro de retorno.
  * 2. Si hay sesión pero el usuario carece del permiso, retorna HTTP 403 Forbidden seguro.
@@ -63,6 +63,18 @@ class AutorizacionIntermediario
 
         // Si está autenticado, validar permiso de autorización RBAC
         if (!$this->autorizacionServicio->puede($usuario->obtenerId(), $this->permisoRequerido)) {
+            $esperaJson = (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))
+                || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string) $_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+                || (isset($_SERVER['CONTENT_TYPE']) && str_contains($_SERVER['CONTENT_TYPE'], 'application/json'));
+
+            if ($esperaJson) {
+                return Respuesta::json([
+                    'ok' => false,
+                    'exito' => false,
+                    'error' => 'Acceso denegado: no cuentas con el permiso requerido (' . $this->permisoRequerido . ').'
+                ], 403);
+            }
+
             return $this->panelControlador->error(403);
         }
 

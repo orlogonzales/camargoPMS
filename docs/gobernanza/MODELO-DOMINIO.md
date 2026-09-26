@@ -199,6 +199,27 @@ ACTOR ≠ USUARIO
    - **Invariante de Inmutabilidad:** Registro append-only sin operaciones de actualización ni borrado en tiempo de ejecución.
    - **Invariante de Privacidad y Seguridad:** Prohibición estricta de contraseñas, hashes, tokens CSRF, cabeceras de autorización o claves API mediante desinfección obligatoria en `SanitizadorAuditoria`.
 
+### Administración Integral de Cuentas Humanas (USUARIOS-1)
+
+- **Principio Vinculante `PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL`:**
+  - El Usuario representa exclusivamente la credencial humana de acceso a Camargo PMS vinculada 1:1 de forma unívoca a una Persona natural del maestro central (`usuarios.persona_id UNIQUE NOT NULL REFERENCES personas(id)`).
+  - Queda categóricamente prohibida la creación de usuarios sintéticos, cuentas de servicio o usuarios comodín para procesos automáticos, cron, WordPress o integraciones externas (los cuales se modelan bajo el principio `ACTOR ≠ USUARIO` como actores de tipo `SISTEMA` o `INTEGRACION`).
+- **Política de Ciclo de Vida y Prohibición de Eliminación Física:**
+  - Las cuentas de usuario no admiten borrado físico (`DELETE FROM usuarios` está prohibido en servicio y repositorio).
+  - El ciclo de vida operacional se administra exclusivamente mediante transiciones de estado explícitas:
+    - `ACTIVO`: Cuenta habilitada para autenticarse y operar en la plataforma.
+    - `INACTIVO`: Cuenta deshabilitada administrativamente (invalida sus sesiones activas de inmediato).
+    - `BLOQUEADO`: Cuenta suspendida por motivos de seguridad o prevención operativa.
+- **Invariante del Último Superadministrador Activo:**
+  - El sistema garantiza que siempre exista al menos un Superadministrador humano en estado `ACTIVO` con persona en estado `ACTIVO`.
+  - Queda prohibido bloquear o desactivar la cuenta del último superadministrador activo (`UltimoSuperadministradorExcepcion`), con verificación protegida mediante bloqueos pesimistas (`FOR UPDATE`) en base de datos.
+- **Gestión Segura de Credenciales y Sesiones:**
+  - Restablecimiento administrativo de contraseñas gobernado por las políticas criptográficas consolidadas: algoritmo estándar `PASSWORD_DEFAULT`, longitud de 12 a 1024 caracteres, preservación de espacios y caracteres Unicode sin normalizaciones destructivas ni truncamiento.
+  - La alteración de credenciales revoca de inmediato todas las sesiones activas concurrentes del usuario en `sesiones_usuario` fijando `revocada_en = NOW()`.
+  - Soporte de revocación selectiva de sesiones activas o revocación masiva total.
+- **Auditoría Transversal Nativa:**
+  - Todas las mutaciones de cuentas (`CREAR`, `CAMBIAR_ESTADO`, `CAMBIAR_CLAVE`) emiten eventos de auditoría a través de `AuditoriaServicio`, garantizando trazabilidad contextual (`ip`, `user_agent`, `ruta`, `correlacion_id`) y desinfección total de contraseñas mediante `SanitizadorAuditoria`.
+
 ## Ocupación y disponibilidad
 
 - Reserva: intención o bloqueo temporal.

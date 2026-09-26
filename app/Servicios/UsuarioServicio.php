@@ -41,33 +41,48 @@ class UsuarioServicio
     private PersonaRepositorio $personaRepo;
     private SesionServicio $sesionServicio;
     private AuditoriaServicio $auditoriaServicio;
+    private RolServicio $rolServicio;
 
     public function __construct(
         ?PDO $pdo = null,
         ?UsuarioRepositorio $usuarioRepo = null,
         ?PersonaRepositorio $personaRepo = null,
         ?SesionServicio $sesionServicio = null,
-        ?AuditoriaServicio $auditoriaServicio = null
+        ?AuditoriaServicio $auditoriaServicio = null,
+        ?RolServicio $rolServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->usuarioRepo = $usuarioRepo ?? new UsuarioRepositorio($this->pdo);
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
         $this->sesionServicio = $sesionServicio ?? new SesionServicio($this->pdo);
         $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
+        $this->rolServicio = $rolServicio ?? new RolServicio(
+            $this->pdo,
+            null,
+            null,
+            null,
+            $this->usuarioRepo,
+            $this->auditoriaServicio
+        );
     }
 
     /**
      * Crea una nueva cuenta humana de usuario vinculada directamente a una Persona existente.
      *
      * @param array<string, mixed> $datos
+     * @param int|null $rolInicialId Rol inicial opcional a asignar a la nueva cuenta.
+     * @param int|null $creadoPorUsuarioId Usuario que ejecuta la creación para trazabilidad de rol.
      * @return Usuario
      * @throws EntidadNoEncontradaExcepcion
      * @throws ValidacionExcepcion
      * @throws UsuarioDuplicadoExcepcion
      * @throws Throwable
      */
-    public function crearUsuario(array $datos): Usuario
-    {
+    public function crearUsuario(
+        array $datos,
+        ?int $rolInicialId = null,
+        ?int $creadoPorUsuarioId = null
+    ): Usuario {
         $personaId = isset($datos['persona_id']) ? (int) $datos['persona_id'] : 0;
         if ($personaId <= 0) {
             throw new ValidacionExcepcion('Se requiere un identificador de persona válido.', ['persona_id' => 'Requerido']);
@@ -144,19 +159,29 @@ class UsuarioServicio
             );
 
             $usuarioPersistido = $this->usuarioRepo->insertar($nuevoUsuario);
+            $nuevoUsuarioId = (int) $usuarioPersistido->obtenerId();
+
+            // Asegurar actor humano en tabla actores dentro de la misma transacción
+            $this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuarioPersistido, $this->pdo);
+
+            // Asignar rol inicial opcional dentro de la misma transacción
+            $rolIdAAsignar = $rolInicialId ?? (isset($datos['rol_id']) && (int) $datos['rol_id'] > 0 ? (int) $datos['rol_id'] : null);
+            if ($rolIdAAsignar !== null && $rolIdAAsignar > 0) {
+                $this->rolServicio->asignarRolAUsuario($nuevoUsuarioId, $rolIdAAsignar, $creadoPorUsuarioId);
+            }
 
             // Registrar auditoría atómicamente dentro de la misma transacción (contrasena_hash es sanitizada)
             $this->auditoriaServicio->registrar(
                 AccionAuditoria::CREAR,
                 'usuarios',
                 'usuario',
-                (string) $usuarioPersistido->obtenerId(),
+                (string) $nuevoUsuarioId,
                 "Creación de la cuenta de usuario '{$usuarioPersistido->obtenerNombreUsuario()}'",
                 null,
                 $usuarioPersistido->aArreglo(false),
                 null,
-                null,
-                (int) $usuarioPersistido->obtenerId(),
+                $creadoPorUsuarioId,
+                $nuevoUsuarioId,
                 null,
                 $this->pdo
             );
@@ -184,7 +209,7 @@ class UsuarioServicio
      * @throws ValidacionExcepcion
      * @throws Throwable
      */
-    public function cambiarEstado(int $usuarioId, string $nuevoEstado): bool
+    public function cambiarEstado(int $usuarioId, string $nuevoEstado, ?int $ejecutadoPorUsuarioId = null): bool
     {
         if ($usuarioId <= 0) {
             throw new ValidacionExcepcion('Se requiere un identificador de usuario válido.');
@@ -242,7 +267,7 @@ class UsuarioServicio
                 ['estado' => (string) $fila['estado']],
                 ['estado' => $nuevoEstado],
                 null,
-                null,
+                $ejecutadoPorUsuarioId,
                 $usuarioId,
                 null,
                 $this->pdo
@@ -421,5 +446,206 @@ class UsuarioServicio
     {
         $normalizado = $this->normalizarNombreUsuario($nombreUsuario);
         return $this->usuarioRepo->buscarPorNombreUsuario($normalizado, $cargarPersona);
+    }
+
+    /**
+     * Lista usuarios paginados aplicando filtros de búsqueda, estado y rol.
+     *
+     * @param array<string, mixed> $filtros
+     * @param int $limite
+     * @param int $pagina
+     * @return array{usuarios: array<int, array<string, mixed>>, total: int, pagina: int, limite: int, paginas: int}
+     */
+    public function listarUsuarios(array $filtros = [], int $limite = 20, int $pagina = 1): array
+    {
+        $limite = max(1, min(100, $limite));
+        $pagina = max(1, $pagina);
+        $desplazamiento = ($pagina - 1) * $limite;
+
+        $usuarios = $this->usuarioRepo->listarConFiltros($filtros, $limite, $desplazamiento);
+        $total = $this->usuarioRepo->contarConFiltros($filtros);
+
+        return [
+            'usuarios' => $usuarios,
+            'total' => $total,
+            'pagina' => $pagina,
+            'limite' => $limite,
+            'paginas' => (int) ceil($total / $limite),
+        ];
+    }
+
+    /**
+     * Cuenta el total de usuarios según los filtros especificados.
+     *
+     * @param array<string, mixed> $filtros
+     * @return int
+     */
+    public function contarUsuarios(array $filtros = []): int
+    {
+        return $this->usuarioRepo->contarConFiltros($filtros);
+    }
+
+    /**
+     * Obtiene el detalle estructurado de un usuario específico sin exponer secretos técnicos.
+     *
+     * @param int $id
+     * @return array<string, mixed>|null
+     */
+    public function obtenerDetalleUsuario(int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+
+        return $this->usuarioRepo->buscarDetallePorId($id);
+    }
+
+    /**
+     * Lista personas naturales activas que están disponibles para ser vinculadas a un nuevo usuario.
+     *
+     * @param string $busqueda
+     * @param int $limite
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerPersonasDisponibles(string $busqueda = '', int $limite = 20): array
+    {
+        $limite = max(1, min(50, $limite));
+        return $this->usuarioRepo->listarPersonasDisponibles($busqueda, $limite);
+    }
+
+    /**
+     * Restablece administrativamente la contraseña de un usuario sin requerir la contraseña actual.
+     * Genera un nuevo hash con PASSWORD_DEFAULT, revoca todas las sesiones activas del usuario y audita.
+     *
+     * @param int $usuarioId
+     * @param string $nuevaContrasena
+     * @param int|null $ejecutadoPorUsuarioId
+     * @return bool
+     * @throws EntidadNoEncontradaExcepcion
+     * @throws ValidacionExcepcion
+     * @throws Throwable
+     */
+    public function restablecerContrasena(
+        int $usuarioId,
+        string $nuevaContrasena,
+        ?int $ejecutadoPorUsuarioId = null
+    ): bool {
+        if ($usuarioId <= 0) {
+            throw new ValidacionExcepcion('Se requiere un identificador de usuario válido.');
+        }
+
+        $this->validarPoliticaContrasena($nuevaContrasena);
+
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare('SELECT id, contrasena_hash, estado FROM usuarios WHERE id = :id FOR UPDATE');
+            $stmt->bindValue(':id', $usuarioId, PDO::PARAM_INT);
+            $stmt->execute();
+            $fila = $stmt->fetch();
+
+            if (!$fila) {
+                throw new EntidadNoEncontradaExcepcion('Usuario', $usuarioId);
+            }
+
+            // Generar nuevo hash seguro con PASSWORD_DEFAULT
+            $nuevoHash = password_hash($nuevaContrasena, PASSWORD_DEFAULT);
+            $this->usuarioRepo->actualizarHashContrasena($usuarioId, $nuevoHash);
+
+            // Revocar todas las sesiones activas con motivo CAMBIO_CONTRASENA
+            $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'CAMBIO_CONTRASENA');
+
+            // Registrar auditoría atómicamente (NUNCA registrar contraseñas ni hashes)
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CAMBIAR_CLAVE,
+                'usuarios',
+                'usuario',
+                (string) $usuarioId,
+                "Restablecimiento administrativo de contraseña para el usuario ID {$usuarioId}",
+                null,
+                null,
+                null,
+                $ejecutadoPorUsuarioId,
+                $usuarioId,
+                null,
+                $this->pdo
+            );
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Cierra administrativamente una sesión activa específica de un usuario.
+     *
+     * @param int $sesionId
+     * @param int $usuarioId
+     * @param int|null $ejecutadoPorUsuarioId
+     * @return bool
+     * @throws EntidadNoEncontradaExcepcion
+     */
+    public function cerrarSesion(int $sesionId, int $usuarioId, ?int $ejecutadoPorUsuarioId = null): bool
+    {
+        $sesion = $this->sesionServicio->buscarPorId($sesionId);
+        if ($sesion === null || $sesion->obtenerUsuarioId() !== $usuarioId) {
+            throw new EntidadNoEncontradaExcepcion('SesionUsuario', $sesionId);
+        }
+
+        $exito = $this->sesionServicio->revocarSesion($sesionId, 'REVOCACION_ADMINISTRATIVA');
+        if ($exito) {
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CERRAR_SESION,
+                'usuarios',
+                'sesion_usuario',
+                (string) $sesionId,
+                "Cierre administrativo de la sesión ID {$sesionId} para el usuario ID {$usuarioId}",
+                null,
+                null,
+                null,
+                $ejecutadoPorUsuarioId,
+                $usuarioId
+            );
+        }
+
+        return $exito;
+    }
+
+    /**
+     * Cierra administrativamente todas las sesiones activas de un usuario.
+     *
+     * @param int $usuarioId
+     * @param int|null $ejecutadoPorUsuarioId
+     * @return int Total de sesiones revocadas.
+     * @throws EntidadNoEncontradaExcepcion
+     */
+    public function cerrarTodasSesiones(int $usuarioId, ?int $ejecutadoPorUsuarioId = null): int
+    {
+        $usuario = $this->usuarioRepo->buscarPorId($usuarioId, false);
+        if ($usuario === null) {
+            throw new EntidadNoEncontradaExcepcion('Usuario', $usuarioId);
+        }
+
+        $totalRevocadas = $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'REVOCACION_ADMINISTRATIVA');
+        if ($totalRevocadas > 0) {
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CERRAR_SESION,
+                'usuarios',
+                'usuario',
+                (string) $usuarioId,
+                "Cierre administrativo de todas las sesiones ({$totalRevocadas} activas) para el usuario ID {$usuarioId}",
+                null,
+                ['sesiones_revocadas' => $totalRevocadas],
+                null,
+                $ejecutadoPorUsuarioId,
+                $usuarioId
+            );
+        }
+
+        return $totalRevocadas;
     }
 }

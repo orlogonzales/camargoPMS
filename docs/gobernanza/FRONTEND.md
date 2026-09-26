@@ -39,7 +39,14 @@ Ambas zonas forman una sola navegación vinculada dinámicamente desde la base d
 
 La ruta activa (`$rutaActual`) marca visualmente la categoría principal activa (`.active`) y la opción secundaria en curso. El servidor filtra la visibilidad según permisos RBAC y elimina categorías principales vacías. La seguridad reside independientemente en el backend.
 
-En la interfaz de administración (`/configuracion/menu`), se utiliza `public/assets/js/gestion-menu.js` (Vanilla JS puro, Fetch API y validación client-side modular con PristineJS v1.1.0) junto con SweetAlert2 para modales y confirmaciones, comunicando tokens CSRF mediante `<meta name="csrf-token">`.
+En la interfaz de administración de menú (`/configuracion/menu`), se utiliza `public/assets/js/gestion-menu.js` (Vanilla JS puro, Fetch API y validación client-side modular con PristineJS v1.1.0) junto con SweetAlert2 para modales y confirmaciones, comunicando tokens CSRF mediante `<meta name="csrf-token">`.
+
+En la administración de usuarios (`/usuarios`), se implementa `app/Vistas/usuarios/index.php` con tabla responsive Alina, filtros dinámicos, paginación server-side y cuatro modales Bootstrap 5 orquestados por `public/assets/js/gestion-usuarios.js`:
+- **Modal Crear Usuario:** Selección reactiva de personas disponibles no vinculadas, nombre de usuario con validación en tiempo real PristineJS v1.1.0, asignación de rol inicial RBAC y contraseña segura (`PASSWORD_DEFAULT` validada de 12 a 1024 caracteres).
+- **Modal Detalle de Usuario:** Perfil de la persona vinculada, rol, estado, fechas de creación/actualización y listado tabular de sesiones activas con revocación puntual o masiva.
+- **Modal Cambiar Estado:** Transiciones de estado operacionales (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) con confirmación SweetAlert2 y protección defensiva del último superadministrador activo.
+- **Modal Restablecer Contraseña:** Asignación de credenciales seguras de 12 a 1024 caracteres validadas por PristineJS v1.1.0, confirmación SweetAlert2 y revocación obligatoria de sesiones concurrentes.
+Todos los modales resetean el formulario e instancias del validador en `hidden.bs.modal` con `validador.reset()`, operan con Fetch API sin recarga de página y transmiten tokens CSRF mediante cabecera `X-CSRF-TOKEN`.
 
 ## Assets
 

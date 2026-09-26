@@ -4,6 +4,39 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase USUARIOS-1 — Administración Integral de Cuentas Humanas
+
+- **Administración Integral de Cuentas Humanas (`/usuarios`):**
+  - Implementada la interfaz administrativa completa bajo `/usuarios` con diseño nativo Alina y Bootstrap 5, paginación server-side, búsqueda multicriterio (nombre de usuario, nombre y apellidos de la persona vinculada) y filtros dinámicos por estado y rol RBAC.
+  - Cuatro modales Bootstrap 5 orquestados de forma asíncrona:
+    - *Crear Usuario:* Búsqueda y vinculación de Personas humanas elegibles (no vinculadas a otros usuarios), definición de nombre de usuario con normalización en tiempo real, asignación de rol inicial RBAC y contraseña segura con validación en cliente.
+    - *Detalle de Usuario:* Inspección completa de perfil (datos personales, rol, estado, fechas) y tabla de sesiones activas con revocación puntual o masiva.
+    - *Cambiar Estado:* Transiciones operacionales (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) con confirmación SweetAlert2 y protección defensiva del último superadministrador activo.
+    - *Restablecer Contraseña:* Asignación de nuevas credenciales criptográficamente seguras con validación en cliente, confirmación y revocación forzada de sesiones concurrentes.
+- **Principio Vinculante `PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL` y Cero Cuentas Sintéticas:**
+  - El Usuario representa exclusivamente la credencial de acceso de un individuo humano vinculado unívocamente a una Persona natural (`usuarios.persona_id UNIQUE NOT NULL REFERENCES personas(id)`).
+  - Prohibición categórica de crear usuarios sintéticos para integraciones, WordPress o procesos del sistema.
+- **Prohibición Estricta de Eliminación Física (Zero Physical Delete):**
+  - Las cuentas de usuario son inmutables en su existencia histórica (`DELETE FROM usuarios` = 0). Las bajas y suspensiones se gestionan únicamente mediante transiciones de estado a `INACTIVO` o `BLOQUEADO`.
+- **Invariante Concurrente del Último Superadministrador Activo:**
+  - Implementada protección pesimista (`FOR UPDATE`) en `UsuarioServicio::cambiarEstado()` para asegurar que el último superadministrador humano en estado activo con persona activa no pueda ser bloqueado o desactivado (`UltimoSuperadministradorExcepcion`), impidiendo condiciones de carrera concurrentes.
+- **Políticas Criptográficas y de Sesiones Consolidadas:**
+  - Preservación estricta de `PASSWORD_DEFAULT`, política de 12 a 1024 caracteres, preservación total de espacios y caracteres Unicode sin normalizaciones destructivas ni truncamiento. Cero usos de algoritmos obsoletos o no aprobados.
+  - La alteración o restablecimiento de contraseña revoca de forma concurrente todas las demás sesiones activas en `sesiones_usuario` marcando `revocada_en = NOW()`.
+- **Validación Frontend Modular con PristineJS v1.1.0 y SweetAlert2:**
+  - Integrada la biblioteca local PristineJS v1.1.0 en `public/assets/js/gestion-usuarios.js` para validación interactiva inmediata en modales (longitud, caracteres permitidos, confirmación de contraseña coincidente).
+  - Limpieza defensiva del ciclo de vida de modales en `hidden.bs.modal` con `validador.reset()`, garantizando ausencia de fugas de memoria o errores residuales al reabrir modales.
+  - Comunicación asíncrona mediante Fetch API con token CSRF transmitido por cabecera `X-CSRF-TOKEN` y soporte de respuestas 403 JSON en `AutorizacionIntermediario`.
+- **Auditoría Transversal Nativa con Cero Fuga de Secretos:**
+  - Integración nativa de `AuditoriaServicio` en todos los flujos de `UsuarioServicio`: eventos `CREAR`, `CAMBIAR_ESTADO` y `CAMBIAR_CLAVE` con resolución de actor (`ACTOR ≠ USUARIO`), contexto HTTP y sanitización total de credenciales y contraseñas vía `SanitizadorAuditoria`.
+- **Base de Datos y Migraciones:**
+  - Esquema completamente cubierto por las migraciones oficiales `001` a `009`. Cero migraciones nuevas creadas (001-009 aplicadas, 0 pendientes).
+- **Puertas de Calidad y Pruebas:**
+  - Matriz Formal de Usuarios `USR-01` a `USR-40` aprobada al 100% (40 PASS / 0 FAIL).
+  - Suite HTTP E2E Real contra servidor Apache bajo HTTPS `E2E-USR-01` a `E2E-USR-10` aprobada al 100% (10 PASS / 0 FAIL).
+  - Regresiones históricas completas aprobadas al 100%: IDENTIDAD (27/27), PERSONAL (26/26), AUTH-1/1A (60/60), MENÚ-1/1A (40/40), SANITIZADOR AUDITORIA-1A (62/62), AUDITORIA-1 (40/40).
+  - Total consolidado: 268 pruebas unitarias/integración estrictamente independientes (272 brutas) + 24 pruebas E2E HTTP reales (100% PASS).
+
 ### Micro-fase AUDITORÍA-1A — Sanitización Multibyte y Corrección de Trazabilidad Documental
 
 - **Completitud y Normalización en `SanitizadorAuditoria`:**

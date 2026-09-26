@@ -34,15 +34,15 @@ Aplican preocupaciones transversales como sesión, autenticación (`Autenticacio
 
 ### Controladores
 
-Interpretan entrada HTTP, invocan un servicio y producen HTML o JSON (`Respuesta::json()`). Validan forma y tipos básicos de la petición, pero no ejecutan SQL ni concentran reglas de dominio.
+Interpretan entrada HTTP, invocan un servicio y producen HTML o JSON (`Respuesta::json()`). Validan forma y tipos básicos de la petición, pero no ejecutan SQL ni concentran reglas de dominio. `UsuarioControlador` expone la interfaz administrativa web y los endpoints de consulta/mutación JSON bajo `/usuarios`.
 
 ### Servicios
 
-Implementan casos de uso, invariantes, cálculos, coordinación entre repositorios y límites transaccionales (ej. `MenuServicio`, `AutorizacionServicio`). Un mismo servicio puede ser usado por controladores web o API. `MenuServicio` ensambla el árbol de navegación dinámico autorizando cada opción contra RBAC y depurando categorías vacías.
+Implementan casos de uso, invariantes, cálculos, coordinación entre repositorios y límites transaccionales (ej. `MenuServicio`, `AutorizacionServicio`, `UsuarioServicio`). Un mismo servicio puede ser usado por controladores web o API. `MenuServicio` ensambla el árbol de navegación dinámico autorizando cada opción contra RBAC y depurando categorías vacías. `UsuarioServicio` centraliza la creación de usuarios humanos sincronizando actores, la mutación de estados (`ACTIVO`, `INACTIVO`, `BLOQUEADO`), la revocación de sesiones y el restablecimiento administrativo de contraseñas garantizando el invariante del último superadministrador activo y la auditoría transversal.
 
 ### Repositorios
 
-Encapsulan consultas y persistencia. Devuelven entidades, objetos de transferencia o resultados tipados; no generan HTML ni respuestas HTTP.
+Encapsulan consultas y persistencia. Devuelven entidades, objetos de transferencia o resultados tipados; no generan HTML ni respuestas HTTP. `UsuarioRepositorio` implementa consultas paginadas con filtros multicriterio, inspección detallada de perfiles, conteos y proyección de personas humanas disponibles no vinculadas.
 
 ### Vistas
 
@@ -50,7 +50,7 @@ Renderizan datos ya preparados por los controladores o componentes de layout (`n
 
 ### JavaScript
 
-Mejora la experiencia, valida de forma complementaria y consume JSON (ej. `gestion-menu.js` con Vanilla JS, Fetch API y SweetAlert2). La autoridad y validación residen incondicionalmente en el servidor.
+Mejora la experiencia, valida de forma complementaria y consume JSON (ej. `gestion-menu.js`, `gestion-usuarios.js` con Vanilla JS, Fetch API, PristineJS v1.1.0 y SweetAlert2). La autoridad y validación residen incondicionalmente en el servidor.
 
 ### Núcleo Transversal de Auditoría (AUDITORÍA-1)
 
@@ -58,6 +58,13 @@ Capa de persistencia y trazabilidad de negocio transversal:
 - **`AuditoriaServicio`:** Orquesta la captura de eventos, resuelve el actor en ejecución (`ACTOR ≠ USUARIO`), extrae el contexto HTTP (`ip`, `user_agent`, `metodo_http`, `ruta`, `correlacion_id`), coordina la transacción y delega la desinfección a `SanitizadorAuditoria`.
 - **`SanitizadorAuditoria`:** Purga recursivamente secretos, contraseñas, tokens y claves de API de los valores auditados.
 - **`AuditoriaRepositorio` & `ActorAuditoriaRepositorio`:** Repositorios append-only con inmutabilidad estricta.
+
+### Gestión Integral de Usuarios (USUARIOS-1)
+
+Capa de administración de cuentas humanas de acceso:
+- **`UsuarioControlador`:** Enruta peticiones hacia `/usuarios`, gestiona respuestas HTML y API REST (listado paginado, búsqueda, detalle, cambio de estado, restablecimiento de contraseña, revocación individual y masiva de sesiones, personas disponibles).
+- **`UsuarioServicio`:** Aplica invariantes de dominio: vinculación obligatoria y única a Persona humana (`PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL`), no eliminación física de usuarios (solo transiciones entre `ACTIVO`, `INACTIVO` y `BLOQUEADO`), protección estricta del último Superadministrador activo, y registro obligatorio de eventos en `AuditoriaServicio`.
+- **`UsuarioRepositorio`:** Persiste y consulta entidades de usuario con paginación, filtros dinámicos, búsquedas insensibles a mayúsculas y proyección de personas elegibles.
 
 ## Dependencias permitidas
 
