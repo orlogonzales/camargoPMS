@@ -184,20 +184,39 @@ if ($personaId === null) {
     }
 }
 
+use CamargoPMS\Repositorios\AutorizacionRepositorio;
+use CamargoPMS\Repositorios\RolRepositorio;
+
 try {
+    $pdo->beginTransaction();
+
     $nuevoUsuario = $usuarioServicio->crearUsuario([
         'persona_id' => $personaId,
         'nombre_usuario' => $nombreUsuario,
         'contrasena' => $password,
     ]);
 
-    echo "[OK] Usuario inicial de bootstrap creado exitosamente.\n";
+    $rolRepo = new RolRepositorio($pdo);
+    $rolSuper = $rolRepo->buscarPorClave('SUPERADMINISTRADOR');
+
+    if ($rolSuper !== null) {
+        $autorizacionRepo = new AutorizacionRepositorio($pdo);
+        $autorizacionRepo->asignarRolUsuario((int) $nuevoUsuario->obtenerId(), (int) $rolSuper->obtenerId(), null);
+    }
+
+    $pdo->commit();
+
+    echo "[OK] Usuario inicial de bootstrap creado exitosamente con rol SUPERADMINISTRADOR.\n";
     echo "ID Usuario: " . $nuevoUsuario->obtenerId() . "\n";
     echo "Nombre de usuario: " . $nuevoUsuario->obtenerNombreUsuario() . "\n";
     echo "Persona ID: " . $nuevoUsuario->obtenerPersonaId() . "\n";
     echo "Estado: " . $nuevoUsuario->obtenerEstado() . "\n";
+    echo "Rol asignado: SUPERADMINISTRADOR\n";
     exit(0);
 } catch (\Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     fwrite(STDERR, "[ERROR] " . $e->getMessage() . "\n");
     exit(1);
 }

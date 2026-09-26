@@ -67,6 +67,30 @@ final class Respuesta
     }
 
     /**
+     * Alias semántico para obtenerCodigo().
+     */
+    public function obtenerCodigoEstado(): int
+    {
+        return $this->codigoEstado;
+    }
+
+    /**
+     * Obtiene el contenido o cuerpo de la respuesta.
+     */
+    public function obtenerContenido(): string
+    {
+        return $this->contenido;
+    }
+
+    /**
+     * Alias semántico para obtenerContenido().
+     */
+    public function obtenerCuerpo(): string
+    {
+        return $this->contenido;
+    }
+
+    /**
      * Obtiene la lista de cabeceras HTTP configuradas.
      *
      * @return array<string, string>

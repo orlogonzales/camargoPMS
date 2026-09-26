@@ -135,10 +135,27 @@ Cuentas humanas de acceso al software Camargo PMS:
   - Sanitización estricta de rutas de retorno para mitigar redirección abierta (Open Redirect).
   - Cookies configuradas con `HttpOnly = true`, `SameSite = Lax` y `Secure` condicional a HTTPS.
 
-### Catálogo de Roles y Permisos
+### Catálogo de Roles y Permisos (ROLES-1)
 
-- **Roles:** Catálogo administrable que agrupa permisos funcionales (ej. Superadministrador, Administrador, Ventas, Operaciones, Solo Consulta). Un usuario puede soportar uno o múltiples roles.
-- **Permisos:** Capacidades atómicas expresadas en formato `recurso.accion` (ej. `personal.ver`, `personal.crear`, `personal.editar`, `personal.desactivar`, `usuarios.ver`, `usuarios.crear`, `usuarios.editar`, `usuarios.bloquear`, `reservas.cancelar`, `caja.registrar_ingreso`, `caja.anular`, `configuracion.roles`, `configuracion.menu`).
+- **Arquitectura de Autorización:** Control de acceso basado en roles (RBAC) estructurado en dos relaciones muchos a muchos normalizadas:
+  `Usuario (1) <---> (N) usuarios_roles (N) <---> (1) Rol (1) <---> (N) roles_permisos (N) <---> (1) Permiso`.
+- **Roles (`roles`):**
+  - Identificados unívocamente por su código técnico (`codigo VARCHAR(50) UNIQUE`, ej. `SUPERADMINISTRADOR`, `RECEPCION`).
+  - Nombre representativo (`nombre VARCHAR(100)`), descripción opcional y estado (`ACTIVO`, `INACTIVO`).
+  - Banderas estructurales: `es_sistema` (roles base protegidos) y `es_superadministrador` (rol estructural con autoridad absoluta).
+- **Permisos Atómicos (`permisos`):**
+  - Capacidades atómicas de seguridad expresadas obligatoriamente en formato canónico `recurso.accion` en minúsculas (ej. `usuarios.ver`, `usuarios.crear`, `usuarios.editar`, `usuarios.bloquear`, `roles.ver`, `roles.crear`, `roles.editar`, `roles.asignar`, `roles.revocar`, `permisos.ver`).
+  - Cada permiso pertenece a un `modulo` y mantiene estado (`ACTIVO`, `INACTIVO`).
+- **Naturaleza Aditiva de Permisos:**
+  - Para usuarios normales, los permisos efectivos corresponden estrictamente a la **unión aditiva** de todos los permisos asociados a sus roles asignados activos.
+  - Se prohíben sobreescrituras a nivel de usuario (`usuarios_permisos`), jerarquías de herencia de roles y sustracciones de permisos.
+- **Autoridad Total del Superadministrador:**
+  - El rol estructural `SUPERADMINISTRADOR` confiere autoridad total e incondicional sobre todos los recursos y acciones de la plataforma. Dicha autoridad se reconoce centralmente en `AutorizacionServicio`: si el usuario posee el rol activo, su cuenta está activa y su persona está activa, el método `puede()` retorna `true` inmediatamente, sin necesidad de listar exhaustivamente cada permiso en `roles_permisos` y garantizando inmunidad ante permisos creados en fases futuras.
+  - El rol `SUPERADMINISTRADOR` está protegido: se prohíbe renombrar su código, desactivarlo o eliminarlo de la base de datos (`RolProtegidoExcepcion`).
+- **Invariante del Último Superadministrador Activo:**
+  - El sistema garantiza que siempre exista al menos un Superadministrador humano activo y habilitado para operar la plataforma.
+  - Se prohíbe categóricamente revocar el rol `SUPERADMINISTRADOR`, bloquear o desactivar la cuenta de usuario, o desactivar la persona natural asociada, si se trata del único Superadministrador activo restante (`UltimoSuperadministradorExcepcion`).
+  - La comprobación se ejecuta bajo transacciones con bloqueo pesimista de filas (`FOR UPDATE`) para asegurar concurrencia estricta sin condiciones de carrera. No se depende de identificadores estáticos hardcodeados.
 
 ### Relación entre Personal y Caja
 

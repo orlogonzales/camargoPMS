@@ -4,6 +4,39 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase ROLES-1 — Roles, Permisos y Autorización RBAC de Backend
+
+- **Arquitectura de Autorización RBAC:**
+  - Implementada la infraestructura de autorización de backend bajo el principio de separación: `Usuario <---> usuarios_roles <---> Rol <---> roles_permisos <---> Permiso`.
+  - Permisos modelados como capacidades atómicas granulares con convención `recurso.accion` en minúsculas (D-047).
+  - Permisos puramente aditivos: la autorización efectiva para usuarios ordinarios resulta de la unión de todos los permisos de sus roles asignados activos.
+- **Rol Estructural Protegido SUPERADMINISTRADOR:**
+  - Creado el rol `SUPERADMINISTRADOR` (`es_sistema = 1`, `es_superadministrador = 1`) con autoridad total e incondicional centralizada en `AutorizacionServicio` (D-048).
+  - Cualquier comprobación de permisos para un Superadministrador activo devuelve `true` de inmediato, sin requerir asignación exhaustiva en `roles_permisos` y garantizando inmunidad ante permisos futuros.
+  - Protección absoluta del rol contra cambio de código, desactivación o eliminación física (`RolProtegidoExcepcion`).
+- **Invariante del Último Superadministrador Activo:**
+  - Bloqueo pesimista de filas (`FOR UPDATE`) en transacciones para garantizar la permanencia de al menos un Superadministrador activo en el sistema (D-049).
+  - Se prohíbe revocar el rol, bloquear o desactivar la cuenta del usuario, o desactivar la persona asociada si es el último Superadministrador activo (`UltimoSuperadministradorExcepcion`).
+  - Lógica libre de hardcoding de IDs estáticos o nombres de usuario específicos.
+- **Base de Datos y Migración 007:**
+  - Creada la migración `SQL/migraciones/007_roles_permisos_autorizacion.sql` (lote 7) definiendo las tablas `roles`, `permisos`, `roles_permisos` y `usuarios_roles`.
+  - Semillas estructurales: rol `SUPERADMINISTRADOR` y catálogo de 10 permisos atómicos iniciales (`usuarios.ver`, `usuarios.crear`, `usuarios.editar`, `usuarios.bloquear`, `roles.ver`, `roles.crear`, `roles.editar`, `roles.asignar`, `roles.revocar`, `permisos.ver`).
+  - Transición determinista: vinculación automática de `SUPERADMINISTRADOR` al usuario inicial existente solo si `COUNT(usuarios) = 1` y no cuenta con el rol.
+  - Sincronizado `SQL/camargo_pms.sql` con las 16 tablas del sistema y semillas RBAC (paridad 100%).
+- **Intermediario de Autorización y Manejo HTTP 403:**
+  - Implementado `AutorizacionIntermediario`: redirige a `/login` a usuarios sin sesión y emite `HTTP 403 Forbidden` controlado con plantilla segura de Alina (`Vistas/errores/error.php`) ante permisos insuficientes (D-050).
+  - Registrada ruta protegida de demostración `/usuarios` con permiso `usuarios.ver`.
+- **Modelos, Repositorios y Servicios:**
+  - Modelos puros: `Rol` y `Permiso` en `app/Modelos/`.
+  - Repositorios con PDO: `RolRepositorio`, `PermisoRepositorio` y `AutorizacionRepositorio` en `app/Repositorios/`.
+  - Servicios de dominio: `AutorizacionServicio` y `RolServicio` en `app/Servicios/`.
+  - Actualizados `UsuarioServicio` y `PersonaServicio` para defender la invariante del último Superadministrador.
+  - Actualizado `bin/crear-usuario-inicial.php` para asignar atómicamente el rol `SUPERADMINISTRADOR` al usuario inicial (D-051).
+- **Pruebas y Verificación:**
+  - Suite de pruebas de dominio `scratch/probar_roles_completo.php` con 55 pruebas aprobadas (55 PASS / 0 FAIL) en base de datos temporal aislada.
+  - Regresiones completas aprobadas: IDENTIDAD-1 (27 PASS), PERSONAL-1 (26 PASS), AUTH-1/AUTH-1A (60 PASS). Total pruebas automatizadas: 168 PASS / 0 FAIL.
+  - Validación HTTP real end-to-end contra servidor Apache (`https://app.camargo-pms.test`): 6/6 PASS (redirección 302 sin sesión, HTTP 200 para Superadmin en `/usuarios`, y HTTP 403 Forbidden con layout Alina para usuario sin permiso).
+
 ### Hotfix Post-AUTH-1 — Corrección de Renderizado Autenticado Post-Login y Seguridad 500
 
 - **Síntoma:** Al autenticarse exitosamente en `/login` y ser redirigido a la ruta protegida `/`, la aplicación arrojaba una pantalla de error HTTP 500 controlada ("Error del Servidor — Camargo PMS").

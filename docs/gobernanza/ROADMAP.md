@@ -50,17 +50,17 @@ Gestión de Usuarios humanos vinculados 1:1 a Personas (`usuarios.persona_id UNI
 
 Estado: completada (AUTH-1A aplicada y verificada).
 
-## Roles, Permisos y Autorización
+## ROLES-1 — Roles, Permisos y Autorización RBAC de Backend
 
-Catálogo administrable de Roles, permisos atómicos granulares (`recurso.accion`) independientes de los cargos, intermediarios de backend para autorización estricta (HTTP 403 real) bajo la regla vinculante `OCULTAR EL MENÚ NO ES AUTORIZACIÓN`.
+Infraestructura de control de acceso basado en roles (RBAC) puro en backend: modelos `Rol` y `Permiso`, entidades asociativas `usuarios_roles` y `roles_permisos`, convención atómica de permisos `recurso.accion` aditiva, rol estructural protegido `SUPERADMINISTRADOR` con autoridad total e incondicional reconocida centralmente en `AutorizacionServicio`, protección de la cuenta raíz e invariante concurrente del último Superadministrador activo mediante bloqueo pesimista (`FOR UPDATE`) en base de datos sin hardcoding de IDs o nombres de usuario, intermediario `AutorizacionIntermediario` con emisión de HTTP 403 Forbidden y layout seguro de Alina, asignación atómica en bootstrap CLI y migración determinista 007.
 
-Estado: siguiente fase recomendada.
+Estado: completada.
 
-## Menú Dinámico
+## MENÚ-1 — Menú Dinámico
 
 Módulo de administración visual de menú en Configuración (jerarquía, rutas, iconos Tabler, drag & drop, activación y asociación opción ↔ permiso), preservando el contrato visual Alina (`data-target` ↔ `id`).
 
-Estado: pendiente.
+Estado: siguiente fase recomendada.
 
 ## Configuración
 

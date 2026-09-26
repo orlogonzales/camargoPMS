@@ -6,16 +6,19 @@ namespace CamargoPMS\Servicios;
 
 use CamargoPMS\Excepciones\DocumentoDuplicadoExcepcion;
 use CamargoPMS\Excepciones\EntidadNoEncontradaExcepcion;
+use CamargoPMS\Excepciones\UltimoSuperadministradorExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
 use CamargoPMS\Modelos\ContactoPersona;
 use CamargoPMS\Modelos\DocumentoPersona;
 use CamargoPMS\Modelos\Persona;
 use CamargoPMS\Nucleo\BaseDatos;
+use CamargoPMS\Repositorios\AutorizacionRepositorio;
 use CamargoPMS\Repositorios\ContactoPersonaRepositorio;
 use CamargoPMS\Repositorios\DocumentoPersonaRepositorio;
 use CamargoPMS\Repositorios\PaisRepositorio;
 use CamargoPMS\Repositorios\PersonaRepositorio;
 use CamargoPMS\Repositorios\TipoDocumentoRepositorio;
+use CamargoPMS\Repositorios\UsuarioRepositorio;
 use DateTimeImmutable;
 use PDO;
 use PDOException;
@@ -256,7 +259,30 @@ class PersonaServicio
     public function desactivarPersona(int $personaId): bool
     {
         $this->obtenerPersonaOExcepcion($personaId);
-        return $this->personaRepo->desactivar($personaId);
+
+        $this->pdo->beginTransaction();
+        try {
+            $usuario = (new UsuarioRepositorio($this->pdo))->buscarPorPersonaId($personaId, false);
+            if ($usuario !== null) {
+                $autorizacionRepo = new AutorizacionRepositorio($this->pdo);
+                $superadminsActivos = $autorizacionRepo->listarIdsSuperadministradoresActivos(true);
+
+                if (in_array($usuario->obtenerId(), $superadminsActivos, true) && count($superadminsActivos) <= 1) {
+                    throw new UltimoSuperadministradorExcepcion(
+                        'Operación denegada: no se puede desactivar la persona vinculada al único Superadministrador activo del sistema.'
+                    );
+                }
+            }
+
+            $resultado = $this->personaRepo->desactivar($personaId);
+            $this->pdo->commit();
+            return $resultado;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     /**

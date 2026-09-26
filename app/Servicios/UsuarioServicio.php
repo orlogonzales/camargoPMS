@@ -6,10 +6,12 @@ namespace CamargoPMS\Servicios;
 
 use CamargoPMS\Excepciones\CredencialesInvalidasExcepcion;
 use CamargoPMS\Excepciones\EntidadNoEncontradaExcepcion;
+use CamargoPMS\Excepciones\UltimoSuperadministradorExcepcion;
 use CamargoPMS\Excepciones\UsuarioDuplicadoExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
 use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
+use CamargoPMS\Repositorios\AutorizacionRepositorio;
 use CamargoPMS\Repositorios\PersonaRepositorio;
 use CamargoPMS\Repositorios\UsuarioRepositorio;
 use PDO;
@@ -79,7 +81,12 @@ class UsuarioServicio
             throw new ValidacionExcepcion("El estado '{$estado}' no es válido.", ['estado' => 'Estado no permitido']);
         }
 
-        $this->pdo->beginTransaction();
+        $transaccionPropia = false;
+        if (!$this->pdo->inTransaction()) {
+            $this->pdo->beginTransaction();
+            $transaccionPropia = true;
+        }
+
         try {
             // Bloqueo pesimista de la Persona para asegurar su estado y evitar carreras
             $stmtP = $this->pdo->prepare('SELECT id, estado FROM personas WHERE id = :id FOR UPDATE');
@@ -134,11 +141,13 @@ class UsuarioServicio
 
             $usuarioPersistido = $this->usuarioRepo->insertar($nuevoUsuario);
 
-            $this->pdo->commit();
+            if ($transaccionPropia && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
 
             return $usuarioPersistido;
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
+            if ($transaccionPropia && $this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
             throw $e;
@@ -175,6 +184,19 @@ class UsuarioServicio
 
             if (!$fila) {
                 throw new EntidadNoEncontradaExcepcion('Usuario', $usuarioId);
+            }
+
+            // Invariante del último Superadministrador activo:
+            // Si el nuevo estado es no activo, impedir si es el único Superadministrador activo restante
+            if ($nuevoEstado !== 'ACTIVO') {
+                $autorizacionRepo = new AutorizacionRepositorio($this->pdo);
+                $superadminsActivos = $autorizacionRepo->listarIdsSuperadministradoresActivos(true);
+
+                if (in_array($usuarioId, $superadminsActivos, true) && count($superadminsActivos) <= 1) {
+                    throw new UltimoSuperadministradorExcepcion(
+                        'Operación denegada: no se puede bloquear ni desactivar al único Superadministrador activo del sistema.'
+                    );
+                }
             }
 
             $this->usuarioRepo->cambiarEstado($usuarioId, $nuevoEstado);

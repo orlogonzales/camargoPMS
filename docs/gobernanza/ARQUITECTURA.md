@@ -30,7 +30,7 @@ Resuelve método y ruta, extrae parámetros y entrega la petición al pipeline. 
 
 ### Intermediarios
 
-Aplican preocupaciones transversales como sesión, autenticación, autorización, CSRF, límites de uso o contexto del actor. Deben ser componibles y no realizar lógica propia de un módulo.
+Aplican preocupaciones transversales como sesión, autenticación (`AutenticacionIntermediario`), autorización RBAC (`AutorizacionIntermediario`), CSRF, límites de uso o contexto del actor. Deben ser componibles y emitir respuestas HTTP seguras y controladas (redirecciones 302 a `/login` o respuestas 403 Forbidden). No contienen lógica acoplada de un módulo específico.
 
 ### Controladores
 

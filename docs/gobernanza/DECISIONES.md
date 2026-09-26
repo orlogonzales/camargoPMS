@@ -238,6 +238,38 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 3. Si la persona asociada no existe y la base de datos no tiene usuarios, el script la crea de forma atómica en el núcleo de personas con su correspondiente documento de identidad.
 4. Por motivos de seguridad y auditoría, el script jamás imprime la contraseña generada o asignada en la salida de la consola ni en archivos de log.
 
+### D-047 — Modelo de autorización RBAC puro con permisos atómicos aditivos (ROLES-1)
+
+1. La autorización de backend se modela mediante control de acceso basado en roles (RBAC) estructurado en dos relaciones muchos a muchos:
+   `Usuario <---> usuarios_roles <---> Rol <---> roles_permisos <---> Permiso`.
+2. Los permisos son estrictamente atómicos y siguen la convención obligatoria de nomenclatura `recurso.accion` en minúsculas (ej. `usuarios.ver`, `usuarios.crear`, `roles.editar`).
+3. Para roles ordinarios, los permisos son puramente aditivos: los permisos efectivos corresponden a la unión de todos los permisos asociados a los roles activos asignados al usuario.
+4. Se prohíben sobreescrituras directas de permisos a nivel de usuario (`usuarios_permisos`), jerarquías de herencia de roles e inferencias de permisos a partir de cargos laborales.
+
+### D-048 — Rol estructural protegido SUPERADMINISTRADOR con autoridad total (ROLES-1)
+
+1. El rol con clave técnica `SUPERADMINISTRADOR` es un rol estructural protegido del sistema (`es_sistema = 1`, `es_superadministrador = 1`).
+2. La autoridad del Superadministrador se reconoce de forma centralizada en `AutorizacionServicio`: si un usuario cuenta con dicho rol activo, su cuenta está activa y su persona está activa, el método `puede()` retorna `true` de manera incondicional e inmediata para cualquier recurso o acción presente o futura, sin necesidad de listar exhaustivamente permisos en `roles_permisos`.
+3. El rol `SUPERADMINISTRADOR` está protegido: se prohíbe renombrar su clave técnica, desactivarlo (`estado = 'INACTIVO'`) o eliminarlo físicamente de la base de datos (`RolProtegidoExcepcion`).
+
+### D-049 — Invariante del último Superadministrador activo con bloqueo pesimista (ROLES-1)
+
+1. El sistema garantiza en todo momento la existencia de al menos un Superadministrador humano activo y facultado.
+2. Se prohíbe categóricamente revocar el rol `SUPERADMINISTRADOR`, bloquear o inactivar al usuario, o desactivar la persona natural asociada, si se trata del único Superadministrador activo restante en el sistema (`UltimoSuperadministradorExcepcion`).
+3. La verificación de la cantidad de Superadministradores activos se realiza dentro de transacciones de base de datos utilizando bloqueo pesimista de filas (`FOR UPDATE`) para prevenir condiciones de carrera concurrentes (race conditions).
+4. No se utilizan identificadores estáticos hardcodeados (como `id = 1` o nombre de usuario `'orlando'`); la invariante protege a cualquier usuario que sea el último titular activo del rol.
+
+### D-050 — Intermediario de autorización y respuesta HTTP 403 Forbidden segura (ROLES-1)
+
+1. La protección de rutas que exigen autorización se implementa mediante el intermediario `AutorizacionIntermediario` parametrizado con el permiso atómico requerido (`$permisoRequerido`).
+2. Si la petición no cuenta con una sesión autenticada activa, el intermediario redirige a `/login` preservando el parámetro de retorno.
+3. Si el usuario está autenticado pero carece del permiso exigido, el intermediario interrumpe el procesamiento y retorna inmediatamente una respuesta con código de estado `HTTP 403 Forbidden`, renderizando la plantilla de error aislada de Alina (`Vistas/errores/error.php` con código 403) sin filtrar datos de negocio, consultas SQL, contraseñas ni trazas técnicas.
+
+### D-051 — Asignación atómica de SUPERADMINISTRADOR en bootstrap CLI y migración determinista 007 (ROLES-1)
+
+1. La migración `007_roles_permisos_autorizacion.sql` crea las tablas `roles`, `permisos`, `roles_permisos` y `usuarios_roles`, siembra el rol `SUPERADMINISTRADOR` y el catálogo de 10 permisos atómicos iniciales, e incluye una consulta de transición determinista que asocia automáticamente el rol al usuario existente solo si existe exactamente una cuenta registrada en el sistema.
+2. El script CLI `bin/crear-usuario-inicial.php` asigna de forma atómica y transaccional el rol `SUPERADMINISTRADOR` a la primera cuenta humana creada.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

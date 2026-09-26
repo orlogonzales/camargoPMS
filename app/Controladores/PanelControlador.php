@@ -51,6 +51,35 @@ final class PanelControlador
     }
 
     /**
+     * Muestra la pantalla de gestión de usuarios (protegida por autorización usuarios.ver).
+     *
+     * @return Respuesta
+     */
+    public function usuarios(): Respuesta
+    {
+        $datos = [
+            'titulo' => 'Camargo PMS — Gestión de Usuarios',
+            'categoriaActiva' => 'administracion',
+            'migasPan' => [
+                ['etiqueta' => 'Panel', 'url' => url_ruta('/'), 'activo' => false],
+                ['etiqueta' => 'Administración', 'url' => '#', 'activo' => false],
+                ['etiqueta' => 'Usuarios', 'url' => url_ruta('/usuarios'), 'activo' => true],
+            ],
+            'menuEstatico' => $this->obtenerMenuEstaticoPrueba(),
+            'sistema' => [
+                'nombre' => 'Camargo PMS',
+                'version' => 'Fase ROLES-1',
+                'entorno' => 'Desarrollo Local',
+                'phpVersion' => PHP_VERSION,
+            ],
+        ];
+
+        $html = $this->vista->renderizar('panel/inicio', $datos, 'principal');
+
+        return new Respuesta($html, 200);
+    }
+
+    /**
      * Muestra una vista controlada para errores HTTP reutilizando la plantilla aislada de Alina.
      *
      * @param int $codigo Código de estado HTTP (400, 403, 404, 500, 503).

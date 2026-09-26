@@ -21,16 +21,18 @@
 - Rate limiting y defensa contra fuerza bruta: registro de intentos en `intentos_autenticacion`; bloqueo temporal tras 5 fallos en 15 minutos sin alterar el estado permanente del usuario (`usuarios.estado`).
 - Bootstrap CLI de uso único estricto: utilidad administrativa inicial (`bin/crear-usuario-inicial.php`) restringida a CLI (`PHP_SAPI === 'cli'`), que rechaza categóricamente su ejecución si ya existe al menos un usuario registrado en el sistema (`usuarios >= 1`) sin banderas de bypass ni excepciones (`--forzar` eliminado). Sin exposición de credenciales en consola o logs.
 
-## Autorización
+## Autorización (ROLES-1)
 
 ### Regla Vinculante: OCULTAR EL MENÚ NO ES AUTORIZACIÓN
 
 El filtrado visual u ocultamiento de opciones en la interfaz es un control exclusivo de ergonomía y presentación; **no constituye bajo ninguna circunstancia un control de seguridad**.
 
-1. **Validación obligatoria en servidor:** Cada endpoint, ruta HTTP y caso de uso debe verificar la capacidad del actor en backend mediante intermediarios (*middleware*) de autorización.
-2. **Respuesta ante violación de acceso:** Si un usuario sin privilegios intenta invocar una ruta directamente (ej. escribiendo la URL manual en el navegador o mediante petición Fetch/API), el sistema emitirá invariablemente una respuesta **HTTP 403 Forbidden real** utilizando la plantilla de error correspondiente.
-3. **Principio MENÚ ≠ PERMISO:** Una opción de menú define su visibilidad en el cliente en función de un permiso requerido; la autorización real valida el permiso en el controlador o servicio del backend.
-4. **Protección de la cuenta Superadministrador:** El sistema debe incorporar salvaguardas arquitectónicas para impedir que una modificación accidental de roles o permisos despoje a la plataforma de su cuenta administrativa raíz.
+1. **Validación obligatoria en servidor:** Cada endpoint, ruta HTTP y caso de uso verifica la capacidad del actor en backend mediante `AutorizacionIntermediario` y `AutorizacionServicio::puede()` o `exigirPermiso()`.
+2. **Respuesta ante violación de acceso:** Si un usuario autenticado sin privilegios intenta acceder a una ruta protegida (directamente por URL o mediante fetch), el sistema emite invariablemente una respuesta **HTTP 403 Forbidden** controlada utilizando la plantilla de error aislada de Alina (`Vistas/errores/error.php`), sin filtrar datos de negocio, consultas SQL ni trazas. Usuarios sin sesión son redirigidos a `/login` con parámetro de retorno sanitizado.
+3. **Principio MENÚ ≠ PERMISO:** Una opción de menú define su visibilidad en el cliente en función de un permiso requerido; la autorización real valida el permiso atómico en el intermediario del enrutador o servicio de dominio.
+4. **Permisos atómicos aditivos:** Los permisos se modelan exclusivamente como capacidades atómicas con formato `recurso.accion` (ej. `usuarios.ver`, `roles.crear`). Para usuarios ordinarios, los permisos efectivos corresponden a la unión de todos los permisos de sus roles activos. No existen sobreescrituras directas ni denegaciones negativas.
+5. **Protección estructural de SUPERADMINISTRADOR:** El rol `SUPERADMINISTRADOR` confiere autoridad total e incondicional centralizada en `AutorizacionServicio`. El rol está protegido contra modificación de su código, desactivación o eliminación física (`RolProtegidoExcepcion`).
+6. **Invariante del Último Superadministrador Activo:** Se prohíbe categóricamente revocar el rol, bloquear la cuenta de usuario o desactivar la persona si es el último Superadministrador activo del sistema (`UltimoSuperadministradorExcepcion`). Dicho control opera con bloqueo pesimista de filas (`FOR UPDATE`) bajo transacción para evitar condiciones de carrera concurrentes.
 
 Los permisos se modelan como capacidades atómicas (`recurso.accion`). Los roles agrupan capacidades, pero la lógica de negocio y las capas intermediarias comprueban siempre el permiso granular exigido.
 

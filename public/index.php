@@ -60,9 +60,13 @@ $enrutador->get('/login', [\CamargoPMS\Controladores\AutenticacionControlador::c
 $enrutador->post('/login', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'procesarLogin']);
 $enrutador->post('/logout', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'cerrarSesion']);
 
-// Rutas protegidas por autenticación
+// Rutas protegidas por autenticación y autorización
 $enrutador->get('/', [\CamargoPMS\Controladores\PanelControlador::class, 'inicio'], [
     \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
+]);
+
+$enrutador->get('/usuarios', [\CamargoPMS\Controladores\PanelControlador::class, 'usuarios'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),
 ]);
 
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
