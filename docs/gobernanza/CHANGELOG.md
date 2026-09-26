@@ -4,6 +4,23 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Micro-fase USUARIOS-1A — Corrección de Identidad del Actor de Auditoría
+
+- **Resolución Rigurosa de Identidad de Actor (`ACTOR ≠ USUARIO`):**
+  - Subsanada la colisión conceptual en `UsuarioServicio` donde se transfería directamente `$creadoPorUsuarioId` / `$ejecutadoPorUsuarioId` (entero de `usuarios.id`) al noveno argumento (`$actor`) de `AuditoriaServicio::registrar()`, el cual esperaba `ActorAuditoria|int|string|null` interpretando enteros como `actores.id`.
+  - Esta divergencia generaba excepciones `ActorNoEncontradoExcepcion` (HTTP 500) cuando mutaciones eran ejecutadas por administradores distintos al usuario inicial (`usuario_id != actor_id`), o provocaba la falsa atribución de autoría al sistema `CAMARGO_PMS` (`actor_id = 1`) cuando ejecutaba el usuario 1 (`orlando`) en vez de su actor humano correspondiente `USR_1` (`actores.id = 2`).
+  - Implementado el método auxiliar `resolverActorEjecutor(?int $usuarioId): ?ActorAuditoria` en `UsuarioServicio`, asegurando la resolución mediante `AuditoriaServicio::obtenerOAsegurarActorUsuario($usuarioId, $this->pdo)`.
+  - Corregidas las 6 invocaciones a `registrar()` en `UsuarioServicio`: `crearUsuario()`, `cambiarEstado()`, `cambiarContrasenaPropia()`, `restablecerContrasena()`, `cerrarSesion()` y `cerrarTodasSesiones()`.
+  - Actualizado `RolServicio::asignarRolAUsuario()` y `RolServicio::revocarRolDeUsuario()` para resolver el actor ejecutor explícito (`$asignadoPor` / `$revocadoPor`) participando en la conexión transaccional.
+  - Actualizado `UsuarioControlador::revocarRol()` para extraer el usuario activo en sesión y transferirlo como `$revocadoPor` a `RolServicio::revocarRolDeUsuario()`.
+- **Verificación, Gates y Pruebas Automatizadas:**
+  - Creada y aprobada la matriz específica de resolución de identidad de actor `ACTOR-01` a `ACTOR-06` (6 PASS / 0 FAIL), comprobando desacople de IDs, autoría correcta de Orlando (`USR_1`), preservación de `CAMARGO_PMS` para procesos de sistema, auto-aseguramiento `USR_{id}` sin duplicados y atomicidad transaccional con rollback.
+  - Aprobada al 100% la suite HTTP E2E Real contra servidor Apache (`test_e2e_usuarios.php`) con 10/10 PASS (E2E-USR-01 a E2E-USR-10), verificando que las mutaciones HTTP de creación, asignación de rol, cambio de estado y restablecimiento de contraseña operan con éxito (HTTP 201/200) y registran autoría íntegra con cero fugas.
+  - Matriz de usuarios `USR-01` a `USR-40` aprobada al 100% (40/40 PASS).
+  - Regresiones de todo el árbol histórico aprobadas al 100% (Auditoría 40/40, Sanitizador 62/62, Auditoría E2E 8/8, Menú 57/57, Identidad 27/27, Personal 26/26, Auth 60/60).
+  - Esquema de base de datos intacto (migraciones 001-009, 0 migraciones nuevas, `SQL/` intacto).
+  - Catálogo `admin-dashboard/` intacto.
+
 ### Fase USUARIOS-1 — Administración Integral de Cuentas Humanas
 
 - **Administración Integral de Cuentas Humanas (`/usuarios`):**

@@ -487,8 +487,11 @@ class UsuarioControlador
             return Respuesta::json(['ok' => false, 'exito' => false, 'error' => 'Identificador de rol inválido.'], 422);
         }
 
+        $usuarioActual = $this->sesionServicio->validarSesionActual();
+        $revocadoPor = $usuarioActual !== null ? (int) $usuarioActual->obtenerId() : null;
+
         try {
-            $this->rolServicio->revocarRolDeUsuario($usuarioId, $targetRolId);
+            $this->rolServicio->revocarRolDeUsuario($usuarioId, $targetRolId, $revocadoPor);
 
             return Respuesta::json([
                 'ok' => true,

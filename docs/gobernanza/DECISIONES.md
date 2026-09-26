@@ -372,6 +372,20 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Los formularios interactivos en modales (`modal-crear-usuario`, `modal-restablecer-clave`) implementan validación en el cliente mediante PristineJS local v1.1.0, bloqueando envíos HTTP inválidos y limpiando errores en eventos `hidden.bs.modal`.
    - El backend opera como autoridad canónica estricta: todos los datos son revalidados en los controladores y servicios, retornando códigos HTTP semánticos (400, 403, 404, 409, 422, 500) y validando obligatoriamente tokens CSRF en todas las operaciones de mutación.
 
+### D-061 — Resolución canónica de identidad del actor en auditoría y prevención de colisión de identificadores (USUARIOS-1A)
+
+1. Principio vinculante de desacople de identidad (`ACTOR ≠ USUARIO`):
+   - Los identificadores de cuenta humana (`usuarios.id`) y los identificadores de actor de trazabilidad (`actores.id`) habitan dominios ontológicos distintos y no comparten equivalencia numérica.
+   - Se prohíbe terminantemente suministrar identificadores primarios de la tabla `usuarios` como enteros planos en el parámetro `$actor` de `AuditoriaServicio::registrar()`, dado que dicho servicio interpreta los enteros escalares exclusivamente como claves primarias de la tabla `actores` (`actores.id`).
+2. Mecanismo canónico de resolución en capas de servicio:
+   - Todo servicio de dominio que gestione mutaciones administrativas con usuario ejecutor conocido (`$ejecutadoPorUsuarioId`, `$creadoPorUsuarioId`, `$asignadoPor`, `$revocadoPor`) debe resolver explícitamente la instancia correspondiente de `ActorAuditoria` invocando `$this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuarioId, $this->pdo)` a través de un resolvedor centralizado (`resolverActorEjecutor()`).
+   - Dicha invocación garantiza que:
+     - Si ya existe un actor vinculado (`actores.usuario_id = $usuarioId`), se recupera de inmediato su instancia.
+     - Si el usuario aún no posee un actor en la base de datos, se crea y persiste automáticamente un nuevo actor con tipo `USUARIO`, código canónico `USR_{id}` y nombre del usuario, preservando la relación 1:1 sin duplicados.
+     - Se previene la generación de excepciones críticas de tiempo de ejecución (`ActorNoEncontradoExcepcion` -> HTTP 500) ante IDs de usuario que no coincidan con claves primarias de `actores`.
+     - Se erradica la colisión accidental de autoría en el usuario inicial (`usuario_id = 1`), asegurando que sus acciones queden correctamente imputadas a su actor humano `USR_1` (`actores.id = 2`) y no al actor estructural del sistema `CAMARGO_PMS` (`actores.id = 1`).
+   - Cuando la operación no cuente con un usuario ejecutor explícito (procesos en segundo plano, tareas programadas, CLI o ejecuciones sin contexto), el actor se resuelve defensivamente hacia el contexto actual de sesión o hacia el actor de sistema `CAMARGO_PMS` (`tipo = 'SISTEMA'`).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

@@ -59,15 +59,24 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 - **Matriz de Sanitización Multibyte AUDITORÍA-1A (14/14 PASS):** Verificación exhaustiva de eliminación y redacción recursiva de todas las 14 variantes sensibles (`password`, `contrasena`, `contraseña`, `password_hash`, `csrf`, `csrf_token`, `authorization`, `cookie`, `session`, `session_id`, `token`, `api_key`, `secret`, `client_secret`), combinaciones de mayúsculas/minúsculas (`CONTRASEÑA`, `SESSION`), anidamiento profundo y strings JSON embebidos, con preservación estricta de claves legítimas de negocio.
 
 - **Matriz Formal de Administración de Usuarios (USR-01 a USR-40):** 40 verificaciones automáticas cubriendo listado administrativo paginado, búsqueda por `nombre_usuario` y Persona, filtros por estado y rol, listado sin secretos técnicos (cero hashes/tokens), ficha de detalle completa de usuario, filtro de personas disponibles (excluyendo inactivas y vinculadas previamente), creación válida vinculada a Persona activa, rechazo de persona inexistente y duplicada (1:1 estricto), rechazo de username duplicado, política de contraseña estricta (12 a 1024 caracteres, preservación de espacios y caracteres Unicode), sincronización automática de actor humano (`USR_{id}`), transiciones de estado (`ACTIVO`, `INACTIVO`, `BLOQUEADO`), revocación inmediata de sesiones activas ante desactivación o bloqueo con motivo `CAMBIO_ESTADO_USUARIO`, protección del último Superadministrador activo contra desactivación, bloqueo o revocación de rol, restablecimiento administrativo de contraseña con revocación de sesiones (`CAMBIO_CONTRASENA`) y purga de secretos en auditoría, asignación y revocación de roles, listado de sesiones sin exposición de hashes, revocación de sesiones individuales y masivas (`REVOCACION_ADMINISTRATIVA`), y trazabilidad integral auditada con cero fugas de datos sensibles (40 PASS / 0 FAIL).
-- **Suite E2E HTTP Real contra Apache (E2E-USR-01 a E2E-USR-10):** 10 validaciones end-to-end con cURL contra Apache real evaluando login real con Superadministrador, acceso a `/usuarios` (HTTP 200 con maquetación Alina, tabla y modales operativos), redirección de acceso anónimo (HTTP 302 a `/login`), rechazo de usuario ordinario sin permiso `usuarios.ver` (HTTP 403 estricto), endpoint JSON `/usuarios/datos` sin secretos, rechazo de mutaciones sin token CSRF (HTTP 403), creación de cuenta fixture vía POST (HTTP 201), asignación de rol vía POST (HTTP 200), cambio de estado a BLOQUEADO vía POST (HTTP 200), restablecimiento administrativo de clave vía POST (HTTP 200), y verificación de auditoría en BD productiva (`CREAR`, `ASIGNAR`, `BLOQUEAR`, `CAMBIAR_CLAVE`) con cero fugas y cleanup defensivo total (10 PASS / 0 FAIL).
+- **Matriz de Identidad de Actor (ACTOR-01 a ACTOR-06 — USUARIOS-1A):** 6 verificaciones automáticas comprobando:
+  - `ACTOR-01`: Desacople riguroso de IDs (`usuarios.id != actores.id`), persistiendo `actores.id` del ejecutor y `usuarios.id` del usuario afectado.
+  - `ACTOR-02`: Orlando (`usuario_id = 1`) registra actor humano `USR_1` (`actores.id = 2`), nunca actor sistema `CAMARGO_PMS` (`actores.id = 1`).
+  - `ACTOR-03`: Operaciones sin usuario ejecutor preservan actor `CAMARGO_PMS` (`actores.id = 1`, tipo `SISTEMA`, `usuario_id = NULL`).
+  - `ACTOR-04`: Usuario sin actor previo asegura automáticamente `USR_{id}` al ejecutar mutaciones sin duplicados.
+  - `ACTOR-05`: Múltiples operaciones consecutivas del mismo usuario mantienen exactamente 1 actor único (cero duplicación de filas en `actores`).
+  - `ACTOR-06`: Transaccionalidad y rollback: fallo en la operación revierte atómicamente usuario y auditoría sin registros huérfanos.
+- **Suite E2E HTTP Real contra Apache (E2E-USR-01 a E2E-USR-10):** 10 validaciones end-to-end con cURL contra Apache real evaluando login real con Superadministrador, acceso a `/usuarios` (HTTP 200 con maquetación Alina, tabla y modales operativos), redirección de acceso anónimo (HTTP 302 a `/login`), rechazo de usuario ordinario sin permiso `usuarios.ver` (HTTP 403 estricto), endpoint JSON `/usuarios/datos` sin secretos, rechazo de mutaciones sin token CSRF (HTTP 403), creación de cuenta fixture vía POST (HTTP 201), asignación de rol vía POST (HTTP 200), cambio de estado a BLOQUEADO vía POST (HTTP 200), restablecimiento administrativo de clave vía POST (HTTP 200), y verificación de auditoría en BD productiva (`CREAR`, `ASIGNAR`, `BLOQUEAR`, `CAMBIAR_CLAVE`) con cero fugas, autoría humana correcta y cleanup defensivo total (10 PASS / 0 FAIL).
 - **Reconciliación Canónica de Pruebas Automatizadas:**
-  - Total bruto de ejecuciones de prueba acumuladas: **272 ejecuciones (272 PASS / 0 FAIL)**.
-  - Total de pruebas estrictamente independientes: **268 pruebas independientes** (las 4 restantes corresponden a comprobaciones de humo en `test_regresion_menu1a.php` que solapan verificaciones ya cubiertas en `probar_menu_completo.php` y pruebas de contrato).
-  - Desglose independiente:
+  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **357 ejecuciones brutas (357 PASS / 0 FAIL)**.
+  - Total de casos de prueba estrictamente independientes de dominio e integración: **325 casos independientes**.
+  - Total de pruebas HTTP E2E reales contra servidor Apache: **34 casos únicos**.
+  - Desglose independiente por módulos:
     - IDENTIDAD-1: 27/27 PASS.
-    - PERSONAL-1: 26/26 PASS.
+    - PERSONAL-1 / PERSONAL-1A: 26/26 PASS.
     - AUTH-1 / AUTH-1A: 60/60 PASS.
     - ROLES-1: 7/7 PASS (Safe invariant + E2E).
-    - MENÚ-1 / MENÚ-1A: 50/50 PASS (40 unitarias/integración + 10 E2E HTTP real).
-    - AUDITORÍA-1 / AUDITORÍA-1A: 48/48 PASS (40 AUD matriz formal + 8 E2E HTTP real).
-    - USUARIOS-1: 50/50 PASS (40 USR matriz formal + 10 E2E HTTP real).
+    - MENÚ-1 / MENÚ-1A: 57/57 PASS (40 MENU matriz formal + 12 Pristine CDP + 5 Delete integrity).
+    - AUDITORÍA-1 / AUDITORÍA-1A: 102/102 PASS (40 AUD matriz formal + 62 Sanitizador multibyte).
+    - USUARIOS-1 / USUARIOS-1A: 46/46 PASS (40 USR matriz formal + 6 ACTOR matriz de identidad).
+    - SUITES HTTP E2E REALES (Apache HTTPS): 34/34 PASS (10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).

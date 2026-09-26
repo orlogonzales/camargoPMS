@@ -296,7 +296,7 @@ class RolServicio
 
         if ($resultado) {
             try {
-                $actor = $asignadoPor !== null ? $this->auditoriaServicio->obtenerOAsegurarActorUsuario($asignadoPor) : null;
+                $actor = ($asignadoPor !== null && $asignadoPor > 0) ? $this->auditoriaServicio->obtenerOAsegurarActorUsuario($asignadoPor, $this->pdo) : null;
                 $this->auditoriaServicio->registrar(
                     AccionAuditoria::ASIGNAR,
                     'seguridad',
@@ -335,7 +335,7 @@ class RolServicio
      * @throws UltimoSuperadministradorExcepcion
      * @throws Throwable
      */
-    public function revocarRolDeUsuario(int $usuarioId, int $rolId): bool
+    public function revocarRolDeUsuario(int $usuarioId, int $rolId, ?int $revocadoPor = null): bool
     {
         $usuario = $this->usuarioRepo->buscarPorId($usuarioId, false);
         if (!$usuario) {
@@ -365,6 +365,7 @@ class RolServicio
 
             if ($resultado) {
                 // Registrar auditoría atómicamente dentro de la misma transacción
+                $actor = ($revocadoPor !== null && $revocadoPor > 0) ? $this->auditoriaServicio->obtenerOAsegurarActorUsuario($revocadoPor, $this->pdo) : null;
                 $this->auditoriaServicio->registrar(
                     AccionAuditoria::REVOCAR,
                     'seguridad',
@@ -377,10 +378,11 @@ class RolServicio
                         'rol_id' => $rolId,
                         'rol_codigo' => $rol->obtenerCodigo(),
                         'rol_nombre' => $rol->obtenerNombre(),
+                        'revocado_por' => $revocadoPor,
                     ],
                     null,
                     null,
-                    null,
+                    $actor,
                     $usuarioId,
                     null,
                     $this->pdo

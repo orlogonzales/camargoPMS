@@ -10,6 +10,7 @@ use CamargoPMS\Excepciones\UltimoSuperadministradorExcepcion;
 use CamargoPMS\Excepciones\UsuarioDuplicadoExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
 use CamargoPMS\Modelos\AccionAuditoria;
+use CamargoPMS\Modelos\ActorAuditoria;
 use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
 use CamargoPMS\Repositorios\AutorizacionRepositorio;
@@ -171,6 +172,7 @@ class UsuarioServicio
             }
 
             // Registrar auditoría atómicamente dentro de la misma transacción (contrasena_hash es sanitizada)
+            $actorEjecutor = $this->resolverActorEjecutor($creadoPorUsuarioId);
             $this->auditoriaServicio->registrar(
                 AccionAuditoria::CREAR,
                 'usuarios',
@@ -180,7 +182,7 @@ class UsuarioServicio
                 null,
                 $usuarioPersistido->aArreglo(false),
                 null,
-                $creadoPorUsuarioId,
+                $actorEjecutor,
                 $nuevoUsuarioId,
                 null,
                 $this->pdo
@@ -258,6 +260,7 @@ class UsuarioServicio
                 'INACTIVO' => AccionAuditoria::DESACTIVAR,
                 default => AccionAuditoria::EDITAR,
             };
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
             $this->auditoriaServicio->registrar(
                 $accion,
                 'usuarios',
@@ -267,7 +270,7 @@ class UsuarioServicio
                 ['estado' => (string) $fila['estado']],
                 ['estado' => $nuevoEstado],
                 null,
-                $ejecutadoPorUsuarioId,
+                $actorEjecutor,
                 $usuarioId,
                 null,
                 $this->pdo
@@ -332,6 +335,7 @@ class UsuarioServicio
             $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'CAMBIO_CONTRASENA', $sesionActualId);
 
             // Registrar auditoría atómicamente (NUNCA registrar contraseñas ni hashes)
+            $actorEjecutor = $this->resolverActorEjecutor($usuarioId);
             $this->auditoriaServicio->registrar(
                 AccionAuditoria::CAMBIAR_CLAVE,
                 'usuarios',
@@ -341,7 +345,7 @@ class UsuarioServicio
                 null,
                 null,
                 null,
-                null,
+                $actorEjecutor,
                 $usuarioId,
                 null,
                 $this->pdo
@@ -555,6 +559,7 @@ class UsuarioServicio
             $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'CAMBIO_CONTRASENA');
 
             // Registrar auditoría atómicamente (NUNCA registrar contraseñas ni hashes)
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
             $this->auditoriaServicio->registrar(
                 AccionAuditoria::CAMBIAR_CLAVE,
                 'usuarios',
@@ -564,7 +569,7 @@ class UsuarioServicio
                 null,
                 null,
                 null,
-                $ejecutadoPorUsuarioId,
+                $actorEjecutor,
                 $usuarioId,
                 null,
                 $this->pdo
@@ -598,6 +603,7 @@ class UsuarioServicio
 
         $exito = $this->sesionServicio->revocarSesion($sesionId, 'REVOCACION_ADMINISTRATIVA');
         if ($exito) {
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
             $this->auditoriaServicio->registrar(
                 AccionAuditoria::CERRAR_SESION,
                 'usuarios',
@@ -607,7 +613,7 @@ class UsuarioServicio
                 null,
                 null,
                 null,
-                $ejecutadoPorUsuarioId,
+                $actorEjecutor,
                 $usuarioId
             );
         }
@@ -632,6 +638,7 @@ class UsuarioServicio
 
         $totalRevocadas = $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'REVOCACION_ADMINISTRATIVA');
         if ($totalRevocadas > 0) {
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
             $this->auditoriaServicio->registrar(
                 AccionAuditoria::CERRAR_SESION,
                 'usuarios',
@@ -641,11 +648,27 @@ class UsuarioServicio
                 null,
                 ['sesiones_revocadas' => $totalRevocadas],
                 null,
-                $ejecutadoPorUsuarioId,
+                $actorEjecutor,
                 $usuarioId
             );
         }
 
         return $totalRevocadas;
+    }
+
+    /**
+     * Resuelve el actor de auditoría correspondiente al usuario ejecutor,
+     * evitando la colisión conceptual entre usuarios.id y actores.id.
+     *
+     * @param int|null $usuarioId ID de la cuenta de usuario (usuarios.id)
+     * @return ActorAuditoria|null
+     */
+    private function resolverActorEjecutor(?int $usuarioId): ?ActorAuditoria
+    {
+        if ($usuarioId === null || $usuarioId <= 0) {
+            return null;
+        }
+
+        return $this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuarioId, $this->pdo);
     }
 }
