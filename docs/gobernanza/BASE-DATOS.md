@@ -163,9 +163,9 @@ Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica.
    - Incorporación de columna nullable `zona_horaria VARCHAR(50) NULL DEFAULT NULL` en tabla `propiedades` para almacenar identificadores IANA (ej. `America/Lima`). Si es `NULL`, hereda el valor central del PMS (`operacion.zona_horaria_predeterminada`).
 3. **Flujo transaccional obligatorio:**
    - Iniciar transacción PDO (`beginTransaction`).
-   - Ordenar inserciones deterministamente: `ORDER BY unidad_id ASC, fecha ASC` (prevención matemática de deadlocks cruzados).
+   - Ordenar inserciones deterministamente: `ORDER BY unidad_id ASC, fecha ASC` (reducción sustancial del riesgo de deadlocks y patrones de bloqueo cruzado).
    - Insertar cada noche del intervalo semiabierto en el inventario.
-   - Si colisiona alguna fecha (error de clave duplicada 1062 o lock wait timeout 1205), capturar y ejecutar `rollBack()` total inmediato. Mapear a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+   - Si colisiona alguna fecha (error de clave duplicada 1062, lock wait timeout 1205 o deadlock 1213), capturar y ejecutar `rollBack()` total inmediato. Mapear a `ConflictoDisponibilidadExcepcion` (HTTP 409).
    - Si todas las noches se persisten exitosamente, ejecutar `commit()`.
 4. **Liberación atómica:**
    - La cancelación o expiración de un hold temporal ejecuta `DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`, liberando las noches de forma inmediata sin residuos.

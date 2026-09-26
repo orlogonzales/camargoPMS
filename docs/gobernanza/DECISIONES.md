@@ -487,7 +487,7 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.
    - **Instante técnico (`TIMESTAMP` / `DATETIME` UTC):** Representa un punto exacto e inequívoco en la línea de tiempo universal (ej. creación de registros, tokens, sesiones, eventos de auditoría, webhooks). Se almacena normalizado en UTC.
    - **Fecha hotelera (`DATE` local):** Representa la noche de ocupación o venta en la localidad geográfica donde se sitúa el inmueble físico (ej. `2026-11-10`). No es un instante ni debe convertirse indiscriminadamente a UTC.
-   - **Horario operacional (`TIME` / parámetros configurables):** Las horas de check-in (ej. 15:00) y check-out (ej. 11:00) son parámetros operativos administrativos que regulan el flujo de huéspedes, limpieza y entrega de llaves. No deciden qué noches están ocupadas en el motor de inventario.
+    - **Horario operacional (`TIME` / parámetros configurables):** Las horas de check-in y check-out son acuerdos operativos administrativos que regulan el flujo de huéspedes, limpieza y entrega de llaves. Serán gobernadas por parámetros configurables del PMS (`operacion.hora_checkin_predeterminada` y `operacion.hora_checkout_predeterminada`), cuyos valores iniciales deberán definirse explícitamente como decisión operativa antes de utilizarlos en producción; no se fijan valores arbitrarios en esta fase. Dichos horarios no deciden qué noches están ocupadas en el motor de inventario.
 
 2. Identificadores de zona horaria IANA:
    - Se prohíbe el uso de offsets fijos (`UTC-5`, `GMT-5`, `-05:00`) como identidad persistente de zona horaria, ya que carecen de semántica sobre cambios estacionales o reglas territoriales.
@@ -530,14 +530,14 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Si alguna noche del intervalo colisiona con una ocupación existente (error de clave duplicada 1062 / conflicto de lock), la transacción ejecuta un `ROLLBACK` total inmediato.
    - Queda terminantemente prohibido que una reserva quede parcialmente persistida o que queden noches huérfanas en el inventario diario.
 
-5. Orden Determinista de Bloqueos para Prevención de Deadlocks:
+5. Orden Determinista de Bloqueos para Mitigación de Deadlocks:
    - En cualquier operación que involucre múltiples noches o múltiples unidades, las inserciones/bloqueos deben procesarse obligatoriamente en orden determinista:
      `ORDER BY unidad_id ASC, fecha ASC`
-   - Esto elimina el riesgo de bloqueos cruzados (*deadlocks*) entre transacciones concurrentes que soliciten las mismas unidades en órdenes distintos.
+   - Este ordenamiento reduce sustancialmente el riesgo de bloqueos mutuos (*deadlocks*) y minimiza patrones de adquisición cruzada de locks entre transacciones concurrentes que soliciten las mismas unidades, aunque en un sistema transaccional complejo no permite asumir inmunidad absoluta ante deadlocks.
 
 6. Manejo de Conflictos y Excepciones de Dominio:
-   - Los errores de colisión por clave duplicada (`1062`), lock wait timeouts (`1205`) o deadlocks (`1213`) no deben propagarse como HTTP 500.
-   - Deben capturarse en la capa de servicio y traducirse a una excepción de dominio específica: `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), indicando con precisión la unidad y fecha que causaron el conflicto.
+   - Precisamente porque pueden ocurrir colisiones de concurrencia o bloqueos, los errores de clave duplicada (`1062`), lock wait timeouts (`1205`) o deadlocks (`1213`) deben capturarse explícitamente en la capa de servicio.
+   - La transacción debe ejecutar `ROLLBACK` total inmediato y traducir el error a una excepción de dominio específica: `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), indicando con precisión la unidad y fecha en disputa, evitando la propagación de errores HTTP 500 genéricos.
 
 7. Liberación Atómica de Noches:
    - La cancelación de una reserva o la expiración de un hold temporal de pago ejecuta la eliminación atómica de sus noches en el inventario diario (`DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`), dejando las fechas inmediatamente disponibles para otros clientes sin residuos lógicos.

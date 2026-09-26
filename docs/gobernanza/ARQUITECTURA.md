@@ -91,7 +91,7 @@ El servicio define el límite transaccional de casos críticos: reservar disponi
 - **Modelo Híbrido:** La reserva u orden comercial se vincula atómicamente a un inventario diario físico (`inventario_diario_unidades`).
 - **Defensa Absoluta en BD:** Se aplica `UNIQUE(unidad_id, fecha)` en el inventario diario como barrera definitiva contra sobreventa concurrente (cero dependencia de lógica frontend o consultas previas no atómicas).
 - **Atomicidad y Rollback:** Fallos en cualquier noche de una estancia multinoche provocan `ROLLBACK` total inmediato en la transacción del servicio.
-- **Prevención de Deadlocks:** Todo bloqueo u ocupación multifecha/multiunidad se ejecuta en orden determinista estricto (`ORDER BY unidad_id ASC, fecha ASC`).
+- **Mitigación de Deadlocks:** Todo bloqueo u ocupación multifecha/multiunidad se procesa en orden determinista estricto (`ORDER BY unidad_id ASC, fecha ASC`) para reducir sustancialmente adquisiciones cruzadas de locks, preservando la gestión explícita de colisiones.
 - **Intervalo Hotelero Semiabierto:** La estancia se rige por $[\text{fecha\_entrada}, \text{fecha\_salida})$, liberando la fecha de checkout para check-in simultáneo sin conflicto.
 - **Canalización Unificada:** Todo canal externo (WordPress, App móvil, OTAs, APIs) debe invocar forzosamente el mismo servicio de disponibilidad del PMS; no existen motores paralelos.
 
@@ -100,7 +100,7 @@ El servicio define el límite transaccional de casos críticos: reservar disponi
 - Excepciones de dominio: violación esperada de una regla, traducible a respuesta controlada.
 - Errores de validación: campos y mensajes seguros para el cliente.
 - Fallos técnicos: registrados con identificador de correlación; el cliente recibe un mensaje genérico.
-- Conflicto de disponibilidad: colisiones de concurrencia (1062 / lock timeout) se capturan y devuelven como `ConflictoDisponibilidadExcepcion` (HTTP 409), nunca HTTP 500.
+- Conflicto de disponibilidad: colisiones de concurrencia (1062 clave duplicada, 1205 lock wait timeout, 1213 deadlock) se capturan y devuelven como `ConflictoDisponibilidadExcepcion` (HTTP 409), nunca HTTP 500.
 - Nunca exponer traza, SQL, credenciales o estructura interna en producción.
 
 ## Integraciones

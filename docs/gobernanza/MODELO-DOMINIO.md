@@ -255,7 +255,7 @@ ACTOR ≠ USUARIO
 1. **Separación ontológica:** `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.
    - **Instante técnico:** Representa un punto exacto en la línea de tiempo global (creación, auditoría, sesiones, tokens, webhooks) almacenado normalizado en UTC (`TIMESTAMP`).
    - **Fecha hotelera:** Representa la noche física de alojamiento en la ubicación geográfica de la propiedad (`DATE` local). Una noche no es un timestamp y no se convierte a UTC.
-   - **Horario operacional:** Las horas de check-in (ej. 15:00) y check-out (ej. 11:00) son parámetros operativos configurables; regulan recepción y limpieza, pero no alteran qué noches están ocupadas.
+   - **Horario operacional:** Las horas de check-in y check-out son acuerdos operativos administrativos que regulan recepción, entrega de llaves y rotación de limpieza. Serán gobernadas por parámetros configurables del PMS (`operacion.hora_checkin_predeterminada` y `operacion.hora_checkout_predeterminada`), cuyos valores iniciales deberán definirse explícitamente como decisión operativa antes de utilizarlos en producción (sin fijar valores arbitrarios en esta fase). No alteran qué noches están ocupadas.
 2. **Identificadores IANA:** Todo identificador de huso horario es una cadena canónica IANA (ej. `America/Lima`). Se prohíben offsets fijos (`UTC-5`).
 3. **Zona horaria por propiedad:** Cada propiedad física podrá declarar su propio identificador IANA (`propiedades.zona_horaria`); si es nulo, hereda la zona horaria central predeterminada del PMS (`operacion.zona_horaria_predeterminada`).
 4. **Intervalo semiabierto y cálculo de noches:**
@@ -273,7 +273,7 @@ ACTOR ≠ USUARIO
    - La base de datos impone `UNIQUE(unidad_id, fecha)` en el inventario diario.
    - No se confía en consultas previas (`SELECT ...`) ni en el frontend para evitar sobreventa: la restricción única en InnoDB previene condiciones de carrera concurrentes a nivel de base de datos.
 4. **Atomicidad Multinoche y Rollback Completo:** Las reservas multinoche se procesan dentro de una transacción atómica. Si cualquier noche colisiona, se ejecuta `ROLLBACK` total inmediato (cero reservas parcialmente confirmadas, cero noches huérfanas).
-5. **Orden Determinista de Bloqueos:** Las reservas procesan sus noches e inventario ordenadas deterministamente por `ORDER BY unidad_id ASC, fecha ASC`, erradicando el riesgo de deadlocks cruzados.
+5. **Orden Determinista de Bloqueos:** Las reservas procesan sus noches e inventario ordenadas deterministamente por `ORDER BY unidad_id ASC, fecha ASC`, reduciendo sustancialmente el riesgo de bloqueos mutuos (*deadlocks*) y minimizando patrones de adquisición cruzada de locks (sin asumir que un sistema transaccional complejo quede matemáticamente inmune a deadlocks).
 6. **Manejo de Excepciones:** Errores de clave duplicada (`1062`), lock wait timeouts (`1205`) o deadlocks (`1213`) se capturan en el servicio y se traducen a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), nunca HTTP 500.
 7. **Liberación Atómica:** La cancelación o expiración de un hold temporal elimina de forma atómica sus noches (`DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`), restableciendo la disponibilidad de inmediato.
 8. **Fuente Central de Verdad:** Camargo PMS es la única fuente autoritativa. Canales externos (WordPress, App móvil, OTA, API, Webhooks) consumen el mismo servicio de disponibilidad y transacción.

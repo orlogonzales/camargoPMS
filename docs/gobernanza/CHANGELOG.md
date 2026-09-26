@@ -4,13 +4,13 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
-### Gate Operativo-1 — Definición del Tiempo Hotelero y Concurrencia de Disponibilidad (P-004 + P-006)
+### Gate Operativo-1 / Gate Operativo-1A — Definición del Tiempo Hotelero y Concurrencia de Disponibilidad (P-004 + P-006)
 
 - **Cierre Formal de Decisión P-004 (D-066 — Modelo Temporal Hotelero y Zonas Horarias IANA):**
   - Formalizada la separación ontológica tripartita: `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.
   - Instantes técnicos (creación, auditoría, sesiones, tokens, webhooks) se almacenan normalizados en UTC (`TIMESTAMP`).
   - Fechas hoteleras (noches de estancia) se modelan como `DATE` local de la propiedad; no son timestamps ni se convierten a UTC.
-  - Horarios de check-in (15:00) y check-out (11:00) se establecen como parámetros operativos reguladores de recepción y aseo; no alteran qué noches están ocupadas.
+  - Horarios de check-in y check-out se gobernarán mediante parámetros configurables del PMS (`operacion.hora_checkin_predeterminada` y `operacion.hora_checkout_predeterminada`), cuyos valores iniciales se definirán operativamente antes de producción; no alteran qué noches están ocupadas.
   - Prohibidos los offsets fijos (`UTC-5`). Se adoptan identificadores canónicos IANA con zona predeterminada del PMS en `America/Lima` (`operacion.zona_horaria_predeterminada`).
   - Preparada la tabla `propiedades` para incorporar la columna nullable `zona_horaria VARCHAR(50)` en `DISPONIBILIDAD-1`, heredando la zona del PMS si es nula.
   - Intervalo de estancia modelado matemáticamente como semiabierto: $[\text{fecha\_entrada}, \text{fecha\_salida})$. El día de salida queda libre para check-in simultáneo sin conflicto.
@@ -20,10 +20,13 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
   - Semántica *sparse*: inventario diario registra únicamente noches ocupadas/bloqueadas (cero pregeneración de años vacíos); disponibilidad formalizada como ausencia de registro para `(unidad_id, fecha)` en el rango semiabierto.
   - Barrera absoluta de concurrencia: restricción `UNIQUE (unidad_id, fecha)` en InnoDB que previene condiciones de carrera y sobreventa (cero dependencia de lógica en frontend o checks previos desfasados).
   - Atomicidad transaccional y rollback completo ante colisiones (cero reservas parcialmente confirmadas, cero noches huérfanas).
-  - Orden determinista de bloqueo: `ORDER BY unidad_id ASC, fecha ASC`, erradicando matemáticamente el riesgo de deadlocks cruzados.
-  - Captura y traducción de errores de clave duplicada (1062) o timeouts (1205) a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), nunca HTTP 500.
+  - Orden determinista de bloqueo: `ORDER BY unidad_id ASC, fecha ASC`, reduciendo sustancialmente el riesgo de deadlocks y adquisiciones cruzadas.
+  - Captura y traducción de errores de clave duplicada (1062), lock wait timeouts (1205) y deadlocks (1213) a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), nunca HTTP 500.
   - Liberación atómica de noches por cancelación o expiración de hold temporal (`DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`).
   - Centralización multicanal: Camargo PMS como única fuente de verdad autoritativa para PMS, WordPress, App móvil, OTAs y Webhooks.
+- **Micro-fase GATE-OPERATIVO-1A (Corrección de Gobernanza):**
+  - Retiradas las horas fijas (15:00 y 11:00) estableciendo parámetros configurables sin valores arbitrarios preasignados.
+  - Sustituida la afirmación absoluta sobre deadlocks por la formulación técnica precisa de mitigación mediante orden determinista y captura obligatoria de códigos MySQL 1062, 1205 y 1213 con rollback.
 - **Preservación de Decisión P-005:**
   - P-005 (moneda, redondeo e impuestos) se mantiene formal y estrictamente **PENDIENTE** para antes de la fase de tarifas y caja.
 - **Prueba Técnica Aislada de Concurrencia:**
