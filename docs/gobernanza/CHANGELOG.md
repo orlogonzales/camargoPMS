@@ -4,42 +4,23 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
-### Fase AUDITORÍA-1 — Núcleo Transversal de Auditoría y Trazabilidad
+### Micro-fase AUDITORÍA-1A — Sanitización Multibyte y Corrección de Trazabilidad Documental
 
-- **Principio Arquitectónico Vinculante `ACTOR ≠ USUARIO`:**
-  - Desacople ontológico entre el sujeto de una acción y la cuenta humana de acceso: un actor puede ser `USUARIO` (humano), `SISTEMA` (procesos de background / cron), `INTEGRACION` (clientes técnicos de API como WordPress o app móvil) o `PROVEEDOR_PAGO` (webhooks seguros).
-  - Tabla `actores` con tipo, código único, nombre descriptivo, referencia opcional a `usuarios(id)` (`ON DELETE CASCADE`) y metadatos en JSON.
-  - Semilla estructural protegida `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`).
-  - Sincronización automática 1:1 de actores humanos para usuarios registrados en el sistema (`USR_{id}`).
-- **Inmutabilidad Estricta de la Bitácora (`auditoria`):**
-  - Tabla `auditoria` diseñada para registro append-only de solo inserción. Clave foránea `fk_auditoria_actor` con `ON DELETE RESTRICT` (impide borrar actores con histórico) y `fk_auditoria_usuario` con `ON DELETE SET NULL` (garantiza que la baja de un usuario jamás degrade la autoría histórica).
-  - Repositorio `AuditoriaRepositorio` implementado sin métodos `actualizar()` o `eliminar()`. Prohibición de mutaciones o borrado en caliente.
-- **Sanitizador Recursivo de Secretos (`SanitizadorAuditoria`):**
-  - Algoritmo recursivo que inspecciona campos `valores_anteriores`, `valores_nuevos` y `metadatos`, eliminando o redactando (`[REDACTADO]`) contraseñas, hashes criptográficos, tokens CSRF, cabeceras de autorización, tokens de sesión y claves de API en cualquier nivel de anidamiento.
-  - Verificación formal de CERO fugas de credenciales en base de datos real y en respuestas HTTP.
-- **Trazabilidad Contextual y Correlación:**
-  - Captura estandarizada de contexto HTTP (`ip`, `user_agent`, `metodo_http`, `ruta`) y generación/propagación de identificador único de trazabilidad `correlacion_id` (UUIDv4 / CSPRNG 32 hex chars).
-  - Modelo polimórfico de excepciones de dominio: `AuditoriaExcepcion`, `ActorNoEncontradoExcepcion` y `ActorDuplicadoExcepcion`.
-- **Integración Transversal en Servicios de Dominio:**
-  - `AutenticacionServicio`: Audita eventos de `LOGIN` y `LOGOUT` vinculados al actor correspondiente.
-  - `RolServicio`: Audita atómicamente la asignación (`ASIGNAR`) y revocación (`REVOCAR`) de roles a usuarios bajo transacción.
-  - `MenuServicio`: Audita operaciones de `CREAR`, `EDITAR`, `ACTIVAR`, `DESACTIVAR`, `REORDENAR` y `ELIMINAR` de opciones de menú.
-  - `UsuarioServicio`: Audita `CREAR`, `CAMBIAR_ESTADO` y `CAMBIAR_CLAVE` garantizando trazabilidad sin filtrar contraseñas o hashes.
-- **Base de Datos y Migración 009:**
-  - Creada la migración `SQL/migraciones/009_auditoria_actores.sql` (lote 9) creando las tablas `actores` y `auditoria`, con restricciones CHECK, claves foráneas e índices optimizados por actor, usuario, acción, módulo, entidad, correlación y fecha.
-  - Sincronizado `SQL/camargo_pms.sql` alcanzando 20 tablas operativas y paridad estructural del 100%.
-- **Puertas de Calidad y Pruebas:**
-  - Matriz Formal AUD-01 a AUD-40 aprobada al 100% (40 PASS / 0 FAIL).
-  - Suite HTTP E2E Real contra Apache bajo HTTPS aprobada al 100% (8 PASS / 0 FAIL).
-  - Auditoría de Paridad SQL 100% entre migraciones 001..009 y `SQL/camargo_pms.sql`.
-  - Inspección de base de datos productiva: 0 fugas de credenciales detectadas.
-  - Regresiones históricas completas aprobadas (174/174 PASS).
+- **Completitud y Normalización en `SanitizadorAuditoria`:**
+  - Incorporadas explícitamente las claves técnicas y sensibles `'contraseña'`, `'session'` y `'client_secret'` a la lista canónica `CLAVES_SENSIBLES`.
+  - Implementada normalización insensible a mayúsculas y minúsculas con soporte estricto de codificación multibyte (`mb_strtolower(..., 'UTF-8')`) en `esClaveSensible()` y en `sanitizarTexto()`, neutralizando variantes como `CONTRASEÑA`, `Contraseña`, `SESSION` y `Client_Secret`.
+  - Verificada la eliminación recursiva total (14/14 variantes sensibles evaluadas: `password`, `contrasena`, `contraseña`, `password_hash`, `csrf`, `csrf_token`, `authorization`, `cookie`, `session`, `session_id`, `token`, `api_key`, `secret`, `client_secret` en mayúsculas, minúsculas, arreglos anidados y JSON embebido).
+- **Corrección Documental de Integridad Referencial:**
+  - Rectificada la errata descriptiva en la documentación de `fk_actores_usuario` hacia `usuarios(id)`: el DDL canónico real de la migración `009` y `camargo_pms.sql` es `ON DELETE SET NULL ON UPDATE CASCADE` (no `CASCADE`).
+  - Formalizada la política vinculante de ciclo de vida de usuarios: las cuentas humanas no se eliminan físicamente en operación ordinaria (`DELETE FROM usuarios` está prohibido a nivel de servicio y repositorio; solo existen estados `ACTIVO`, `INACTIVO` y `BLOQUEADO`). La configuración de FKs (`SET NULL` en usuario y `RESTRICT` en actor) garantiza de forma absoluta la supervivencia inmutable de los registros de auditoría.
+- **Reconciliación y Trazabilidad del Conteo de Pruebas:**
+  - Registrado el conteo canónico exacto: 222 ejecuciones brutas en el árbol de suites (222 PASS / 0 FAIL), que representan 218 pruebas estrictamente independientes (debido a 4 verificaciones de comprobación rápida en `test_regresion_menu1a.php` que solapan cobertura ya existente en `probar_menu_completo.php` y contratos previos).
 
 ### Fase AUDITORÍA-1 — Núcleo Transversal de Auditoría y Trazabilidad
 
 - **Principio Arquitectónico Vinculante `ACTOR ≠ USUARIO`:**
   - Desacople ontológico entre el sujeto de una acción y la cuenta humana de acceso: un actor puede ser `USUARIO` (humano), `SISTEMA` (procesos de background / cron), `INTEGRACION` (clientes técnicos de API como WordPress o app móvil) o `PROVEEDOR_PAGO` (webhooks seguros).
-  - Tabla `actores` con tipo, código único, nombre descriptivo, referencia opcional a `usuarios(id)` (`ON DELETE CASCADE`) y metadatos en JSON.
+  - Tabla `actores` con tipo, código único, nombre descriptivo, referencia opcional a `usuarios(id)` (`ON DELETE SET NULL ON UPDATE CASCADE`) y metadatos en JSON.
   - Semilla estructural protegida `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`).
   - Sincronización automática 1:1 de actores humanos para usuarios registrados en el sistema (`USR_{id}`).
 - **Inmutabilidad Estricta de la Bitácora (`auditoria`):**

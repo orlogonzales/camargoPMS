@@ -293,9 +293,13 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Un **Usuario** representa exclusivamente una cuenta de acceso humano con contraseñas seguras y sesiones. Se prohíbe crear usuarios humanos ficticios para representar procesos de sistema o clientes técnicos de API.
 2. La tabla `actores` desacopla la autoría del concepto exclusivo de usuario:
    - Contiene `tipo`, `codigo` único, `nombre`, `usuario_id` nullable y `metadatos` en JSON.
-   - Todo usuario humano registrado posee un actor asociado de tipo `USUARIO` mediante `usuario_id` único (`fk_actores_usuario` con `ON DELETE CASCADE`), generado deterministamente (`USR_{id}`).
+   - Todo usuario humano registrado posee un actor asociado de tipo `USUARIO` mediante `usuario_id` único (`fk_actores_usuario` con `ON DELETE SET NULL ON UPDATE CASCADE`), generado deterministamente (`USR_{id}`).
    - La tabla `auditoria` referencia obligatoriamente `actor_id` (`ON DELETE RESTRICT`) y opcionalmente `usuario_id` (`ON DELETE SET NULL`), garantizando que la eliminación o desactivación de un usuario jamás destruya ni degrade la autoría histórica de los registros de auditoría.
 3. Se siembra el actor estructural protegido `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`, `codigo = 'CAMARGO_PMS'`).
+4. Política vinculante sobre el ciclo de vida de usuarios e integridad referencial:
+   - En las operaciones ordinarias de negocio, las cuentas de usuario jamás se eliminan físicamente de la base de datos (`DELETE FROM usuarios` está prohibido a nivel de servicio y repositorio; no se exponen métodos destructivos en `UsuarioServicio` ni `UsuarioRepositorio`).
+   - El ciclo de vida de las cuentas humanas se gestiona exclusivamente mediante transiciones de estado explícitas: `ACTIVO`, `INACTIVO` y `BLOQUEADO`.
+   - Ante cualquier depuración física técnica excepcional a bajo nivel, la integridad referencial y de auditoría está 100% blindada por diseño DDL: `actores.usuario_id` pasa a `NULL` (el actor humano sobrevive intacto) y `auditoria.usuario_id` pasa a `NULL` (el registro inmutable de auditoría sobrevive intacto vinculado al actor), mientras que `auditoria.actor_id` (`ON DELETE RESTRICT`) prohíbe de forma absoluta cualquier eliminación de actores con histórico.
 
 ### D-054 — Inmutabilidad estricta del registro de auditoría y persistencia defensiva (AUDITORÍA-1)
 
@@ -311,7 +315,7 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 1. Se prohíbe terminantemente la presencia de credenciales, tokens, secretos o datos financieros en el registro de auditoría.
 2. Se implementa el servicio transversal `SanitizadorAuditoria`:
    - Aplica purga recursiva sobre cualquier estructura de datos (`valores_anteriores`, `valores_nuevos`, `metadatos`).
-   - Elimina o redacta (`[REDACTADO]`) campos sensibles: `contrasena`, `contrasena_hash`, `password`, `clave`, `token`, `_csrf_token`, `authorization`, `api_key`, `secret`, `tarjeta`, `cvv`, `pin`, etc., independientemente del nivel de anidamiento en estructuras JSON o arreglos.
+   - Elimina o redacta (`[REDACTADO]`) campos sensibles: `password`, `contrasena`, `contraseña`, `password_hash`, `contrasena_hash`, `clave`, `csrf`, `csrf_token`, `authorization`, `cookie`, `session`, `session_id`, `token`, `api_key`, `secret`, `client_secret`, `tarjeta`, `cvv`, `pin`, etc., con normalización multibyte insensible a mayúsculas/minúsculas (`mb_strtolower(..., 'UTF-8')`) e independientemente del nivel de anidamiento en estructuras JSON o arreglos.
 3. La base de datos de auditoría no debe contener contraseñas planas ni hashes de contraseñas de usuarios.
 
 ### D-056 — Trazabilidad contextual y correlación de peticiones (AUDITORÍA-1)

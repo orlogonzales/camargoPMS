@@ -23,9 +23,11 @@ class SanitizadorAuditoria
      */
     private const CLAVES_SENSIBLES = [
         'contrasena',
+        'contraseña',
         'password',
         'clave',
         'contrasena_hash',
+        'contraseña_hash',
         'password_hash',
         'hash',
         'hash_contrasena',
@@ -36,6 +38,7 @@ class SanitizadorAuditoria
         'cookie',
         'cookies',
         'phpsessid',
+        'session',
         'session_id',
         'sesion_token',
         'token_sesion',
@@ -48,6 +51,7 @@ class SanitizadorAuditoria
         'apikey',
         'secret_key',
         'secret',
+        'client_secret',
         'webhook_secret',
         'private_key',
         'env',
@@ -105,7 +109,7 @@ class SanitizadorAuditoria
         $limpio = preg_replace('/basic\s+[a-zA-Z0-9+\/]+={0,2}/i', 'Basic [REDACTADO]', (string) $limpio);
 
         // Redactar patrones clave=valor para passwords/tokens
-        $patron = '/(password|contrasena|clave|token|secret|hash|api_key)=([^\s&]+)/i';
+        $patron = '/(password|contrasena|contraseña|clave|token|secret|session|hash|api_key)=([^\s&]+)/iu';
         $limpio = preg_replace($patron, '$1=[REDACTADO]', (string) $limpio);
 
         return (string) $limpio;
@@ -119,10 +123,10 @@ class SanitizadorAuditoria
      */
     public function esClaveSensible(string $clave): bool
     {
-        $normalizada = strtolower(str_replace(['-', '_', ' '], '', trim($clave)));
+        $normalizada = mb_strtolower(str_replace(['-', '_', ' '], '', trim($clave)), 'UTF-8');
 
         foreach (self::CLAVES_SENSIBLES as $sensible) {
-            $sensibleNormalizada = strtolower(str_replace(['-', '_', ' '], '', $sensible));
+            $sensibleNormalizada = mb_strtolower(str_replace(['-', '_', ' '], '', $sensible), 'UTF-8');
             if ($normalizada === $sensibleNormalizada || str_contains($normalizada, $sensibleNormalizada)) {
                 return true;
             }

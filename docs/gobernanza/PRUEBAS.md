@@ -56,4 +56,14 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 - **Suite E2E HTTP Real contra Apache (E2E-01 a E2E-08):** 8 validaciones end-to-end con cURL contra Apache real evaluando generación de auditoría en Login/Logout real, mutaciones de roles, creación de opciones de menú vía JSON, ausencia absoluta de fugas de datos de auditoría en respuestas HTTP, y preservación inalterada de navegación y autorización RBAC (8 PASS / 0 FAIL).
 - **Verificación de Cero Fugas de Secretos en Base de Datos Real:** Script de inspección profunda sobre la tabla `auditoria` en `camargo_pms` confirmando cero coincidencias de contraseñas, hashes, tokens o secretos en registros generados en tiempo real.
 - **Auditoría de Paridad SQL 100% Migración 009:** Paridad verificada entre la ejecución acumulada de migraciones `001..009` y el esquema canónico consolidado `SQL/camargo_pms.sql` (20 tablas, 22 claves foráneas, semillas estructurales idénticas).
-- **Suites de Regresión Históricas (174/174 PASS):** IDENTIDAD-1 (27/27), PERSONAL-1 (26/26), AUTH-1/1A (60/60), ROLES-1 (7/7 con safe invariant y E2E), MENÚ-1/1A (54/54 con unitarias, regresión PristineJS y E2E).
+- **Matriz de Sanitización Multibyte AUDITORÍA-1A (14/14 PASS):** Verificación exhaustiva de eliminación y redacción recursiva de todas las 14 variantes sensibles (`password`, `contrasena`, `contraseña`, `password_hash`, `csrf`, `csrf_token`, `authorization`, `cookie`, `session`, `session_id`, `token`, `api_key`, `secret`, `client_secret`), combinaciones de mayúsculas/minúsculas (`CONTRASEÑA`, `SESSION`), anidamiento profundo y strings JSON embebidos, con preservación estricta de claves legítimas de negocio.
+- **Reconciliación Canónica de Pruebas Automatizadas:**
+  - Total bruto de ejecuciones de prueba acumuladas: **222 ejecuciones (222 PASS / 0 FAIL)**.
+  - Total de pruebas estrictamente independientes: **218 pruebas independientes** (las 4 restantes corresponden a comprobaciones de humo en `test_regresion_menu1a.php` que solapan verificaciones ya cubiertas en `probar_menu_completo.php` y pruebas de contrato).
+  - Desglose independiente:
+    - IDENTIDAD-1: 27/27 PASS.
+    - PERSONAL-1: 26/26 PASS.
+    - AUTH-1 / AUTH-1A: 60/60 PASS.
+    - ROLES-1: 7/7 PASS (Safe invariant + E2E).
+    - MENÚ-1 / MENÚ-1A: 50/50 PASS (40 unitarias/integración + 10 E2E HTTP real).
+    - AUDITORÍA-1 / AUDITORÍA-1A: 48/48 PASS (40 AUD matriz formal + 8 E2E HTTP real).
