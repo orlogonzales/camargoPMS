@@ -216,7 +216,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                 <h5 class="modal-title f-w-700" id="modal-opcion-titulo">Opción de Menú</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-opcion-menu" autocomplete="off">
+            <form id="form-opcion-menu" autocomplete="off" novalidate>
                 <input type="hidden" id="opcion-id" name="id" value="">
                 <?= csrf_campo() ?>
 
@@ -244,7 +244,10 @@ $permisos = $datosGestion['permisos'] ?? [];
                         <div class="col-md-6 mb-3">
                             <label for="opcion-clave" class="form-label f-s-13 f-w-600">Clave Técnica <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" id="opcion-clave" name="clave"
-                                   placeholder="ej. config_menu" required pattern="[a-z0-9_\-]+" maxlength="50">
+                                   placeholder="ej. config_menu" required pattern="/^[a-z0-9_\-]+$/" maxlength="50"
+                                   data-pristine-required-message="La clave técnica es obligatoria."
+                                   data-pristine-pattern-message="Solo se admiten letras minúsculas, números, guiones y barras bajas."
+                                   data-pristine-maxlength-message="La clave técnica no puede superar los 50 caracteres.">
                             <div class="form-text f-s-11">Minúsculas, números y guiones. Estable y única.</div>
                         </div>
 
@@ -252,7 +255,9 @@ $permisos = $datosGestion['permisos'] ?? [];
                         <div class="col-md-6 mb-3">
                             <label for="opcion-nombre" class="form-label f-s-13 f-w-600">Nombre Visible <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" id="opcion-nombre" name="nombre"
-                                   placeholder="ej. Gestión de menú" required maxlength="100">
+                                   placeholder="ej. Gestión de menú" required maxlength="100"
+                                   data-pristine-required-message="El nombre visible es obligatorio."
+                                   data-pristine-maxlength-message="El nombre visible no puede superar los 100 caracteres.">
                         </div>
                     </div>
 
@@ -271,7 +276,9 @@ $permisos = $datosGestion['permisos'] ?? [];
                         <div class="col-md-6 mb-3">
                             <label for="opcion-orden" class="form-label f-s-13 f-w-600">Posición de Orden</label>
                             <input type="number" class="form-control form-control-sm" id="opcion-orden" name="orden"
-                                   value="1" min="1" max="999">
+                                   value="1" min="1" max="999"
+                                   data-pristine-min-message="La posición de orden mínima es 1."
+                                   data-pristine-max-message="La posición de orden máxima es 999.">
                         </div>
                     </div>
 
@@ -325,4 +332,5 @@ $permisos = $datosGestion['permisos'] ?? [];
 
 <!-- Scripts específicos del módulo de Gestión de Menú -->
 <script src="<?= url_asset('vendor/sweetalert/sweetalert.js') ?>"></script>
+<script src="<?= url_asset('vendor/pristine/pristine.min.js') ?>"></script>
 <script src="<?= url_asset('js/gestion-menu.js') ?>"></script>

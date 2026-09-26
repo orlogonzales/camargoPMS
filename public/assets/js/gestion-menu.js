@@ -68,6 +68,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let validadorPristine = null;
+
+    /**
+     * Inicializa y configura la instancia de validación PristineJS sobre el formulario de opción de menú.
+     *
+     * @returns {Object|null} Instancia de Pristine o null si no está disponible.
+     */
+    function inicializarPristine() {
+        if (!formOpcion || typeof Pristine === 'undefined') {
+            return null;
+        }
+
+        if (validadorPristine) {
+            return validadorPristine;
+        }
+
+        // Parche defensivo para soporte universal de patrones regex en PristineJS
+        if (typeof Pristine.addValidator === 'function' && !Pristine.__patternParcheado) {
+            Pristine.__patternParcheado = true;
+            Pristine.addValidator('pattern', function(val, pattern) {
+                if (!val) return true;
+                let regex;
+                const m = String(pattern).match(/^\/(.*?)\/([gimy]*)$/);
+                if (m) {
+                    regex = new RegExp(m[1], m[2]);
+                } else {
+                    regex = new RegExp(pattern);
+                }
+                return regex.test(val);
+            }, 'El formato no coincide con el solicitado.', 2, false);
+        }
+
+        validadorPristine = new Pristine(formOpcion, {
+            classTo: 'mb-3',
+            errorClass: 'has-validation-error',
+            successClass: 'is-valid-group',
+            errorTextParent: 'mb-3',
+            errorTextTag: 'div',
+            errorTextClass: 'text-danger f-s-11 mt-1 pristine-error'
+        }, true);
+
+        // Validador explícito de nombre visible
+        validadorPristine.addValidator(
+            inputNombre,
+            function(valor) {
+                return valor !== undefined && valor !== null && valor.trim() !== '';
+            },
+            'El nombre visible es obligatorio.',
+            99,
+            true
+        );
+
+        // Validador de categoría padre: obligatorio si el modo es secundaria
+        validadorPristine.addValidator(
+            selectPadre,
+            function(valor) {
+                const esModoSecundaria = formOpcion.dataset.modo === 'secundaria';
+                if (esModoSecundaria && (!valor || valor.trim() === '')) {
+                    return false;
+                }
+                return true;
+            },
+            'Debe seleccionar una categoría principal para asignar esta opción secundaria.',
+            10,
+            false
+        );
+
+        // Validador de clave técnica: formato alfanumérico seguro
+        validadorPristine.addValidator(
+            inputClave,
+            function(valor) {
+                if (!valor || valor.trim() === '') {
+                    return false;
+                }
+                return /^[a-z0-9_\-]+$/.test(valor.trim());
+            },
+            'La clave técnica solo admite letras minúsculas, números, guiones y barras bajas.',
+            8,
+            false
+        );
+
+        // Validador de ruta: inocua, sin esquemas externos ni scripts (solo aplicable a secundarias)
+        validadorPristine.addValidator(
+            inputRuta,
+            function(valor) {
+                const esSecundaria = selectPadre.value !== '' || formOpcion.dataset.modo === 'secundaria';
+                if (!esSecundaria) {
+                    return true;
+                }
+                if (!valor || valor.trim() === '') {
+                    return true;
+                }
+                const valLimpio = valor.trim().toLowerCase();
+                if (
+                    valLimpio.startsWith('javascript:') ||
+                    valLimpio.startsWith('data:') ||
+                    valLimpio.startsWith('vbscript:') ||
+                    valLimpio.startsWith('http://') ||
+                    valLimpio.startsWith('https://') ||
+                    valLimpio.includes('<') ||
+                    valLimpio.includes('>') ||
+                    valLimpio.includes('"')
+                ) {
+                    return false;
+                }
+                return true;
+            },
+            'La ruta debe ser interna y no contener esquemas externos (http/https) ni scripts no seguros.',
+            5,
+            false
+        );
+
+        return validadorPristine;
+    }
+
     /**
      * Ajusta la visibilidad y requerimiento del campo ruta según el nivel seleccionado.
      */
@@ -76,10 +191,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (contenedorRuta) {
             contenedorRuta.style.display = esSecundaria ? 'block' : 'none';
         }
+        formOpcion.dataset.modo = esSecundaria ? 'secundaria' : 'principal';
+        if (validadorPristine) {
+            validadorPristine.reset();
+        }
     }
 
     if (selectPadre) {
         selectPadre.addEventListener('change', sincronizarVisibilidadRuta);
+    }
+
+    if (modalOpcionEl) {
+        modalOpcionEl.addEventListener('hidden.bs.modal', () => {
+            if (validadorPristine) {
+                validadorPristine.reset();
+            }
+            formOpcion.reset();
+        });
     }
 
     /**
@@ -93,14 +221,26 @@ document.addEventListener('DOMContentLoaded', () => {
         inputClave.readOnly = false;
         selectPadre.disabled = false;
 
-        if (padreIdPredeterminado !== null) {
+        if (padreIdPredeterminado !== null && padreIdPredeterminado !== undefined) {
+            formOpcion.dataset.modo = 'secundaria';
             selectPadre.value = String(padreIdPredeterminado);
-        } else {
+            modalTitulo.textContent = 'Nueva Opción Secundaria';
+        } else if (padreIdPredeterminado === undefined) {
+            formOpcion.dataset.modo = 'secundaria';
             selectPadre.value = '';
+            modalTitulo.textContent = 'Nueva Opción Secundaria';
+        } else {
+            formOpcion.dataset.modo = 'principal';
+            selectPadre.value = '';
+            modalTitulo.textContent = 'Nueva Categoría Principal';
+        }
+
+        const validador = inicializarPristine();
+        if (validador) {
+            validador.reset();
         }
 
         sincronizarVisibilidadRuta();
-        modalTitulo.textContent = padreIdPredeterminado ? 'Nueva Opción Secundaria' : 'Nueva Categoría Principal';
 
         if (modalBootstrap) {
             modalBootstrap.show();
@@ -115,6 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.abrirModalEditarOpcion = function(datos) {
         formOpcion.reset();
         inputId.value = datos.id || '';
+        const esSecundaria = Boolean(datos.padre_id);
+        formOpcion.dataset.modo = esSecundaria ? 'secundaria' : 'principal';
         selectPadre.value = datos.padre_id ? String(datos.padre_id) : '';
         inputClave.value = datos.clave || '';
         inputNombre.value = datos.nombre || '';
@@ -128,6 +270,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const esSistema = Boolean(datos.es_sistema);
         inputClave.readOnly = esSistema;
         selectPadre.disabled = esSistema;
+
+        const validador = inicializarPristine();
+        if (validador) {
+            validador.reset();
+        }
 
         sincronizarVisibilidadRuta();
         modalTitulo.textContent = `Editar: ${datos.nombre}`;
@@ -143,6 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formOpcion) {
         formOpcion.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // Validación estricta con PristineJS previa al Fetch
+            const validador = inicializarPristine();
+            if (validador) {
+                const esValido = validador.validate();
+                if (!esValido) {
+                    // Validación en cliente fallida: cancelar Fetch de inmediato
+                    return;
+                }
+            }
 
             const id = inputId.value.trim();
             const esEdicion = id !== '';

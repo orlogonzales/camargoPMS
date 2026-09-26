@@ -4,6 +4,22 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Micro-lote MENÚ-1A — Integración de PristineJS y Verificación de Contrato
+
+- **Integración de PristineJS (Frontend UX):**
+  - Incorporada la librería `pristine.min.js` (v1.1.0, distribución oficial de código abierto) en `public/assets/vendor/pristine/` bajo carga modular exclusiva para `/configuracion/menu`.
+  - Configurada validación interactiva sobre el formulario y modales de `Gestión de Menú`: validación de clave técnica con regex, nombre visible, selección obligatoria de categoría padre en opciones secundarias y restricción estricta de rutas locales sin esquemas externos ni scripts.
+  - Implementado ciclo de vida limpio para modales Bootstrap (`hidden.bs.modal`) con `validador.reset()`, garantizando ausencia de duplicación de mensajes de error o listeners al cerrar y reabrir.
+  - Sincronización dinámica de visibilidad y reglas aplicables al alternar entre nivel principal y nivel secundario.
+  - Bloqueo preventivo de envíos asíncronos (`Fetch`) cuando la validación en cliente falla.
+- **Principio "VALIDACIÓN FRONTEND ≠ VALIDACIÓN DE SEGURIDAD":**
+  - Preservada la autoridad canónica e independiente del backend en `MenuControlador` y `MenuServicio`: cualquier petición directa que evada el cliente continúa siendo rechazada con `HTTP 422 Unprocessable Entity`.
+- **Verificación del Contrato de Contraseñas AUTH-1A:**
+  - Inspección exhaustiva de código productivo: confirmado que `AutenticacionServicio` y `UsuarioServicio` utilizan estrictamente `PASSWORD_DEFAULT` conforme a AUTH-1A. (Se rectifica el error descriptivo de la auditoría anterior que mencionó erróneamente un uso general de ARGON2ID en el sistema).
+- **Puertas de Calidad:**
+  - Matriz de pruebas automatizada `PRISTINE-01` a `PRISTINE-12` aprobada al 100% (12 PASS / 0 FAIL).
+  - Regresión acotada PASS (`MENU-28`, `MENU-39`, `MENU-40`, `AUTH-PASS-01`).
+
 ### Fase MENÚ-1 — Menú Dinámico, Navegación Autorizada y Gestión de Menú
 
 - **Navegación Dinámica y Contrato Visual Alina:**

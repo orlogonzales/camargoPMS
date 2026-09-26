@@ -39,7 +39,7 @@ Ambas zonas forman una sola navegación vinculada dinámicamente desde la base d
 
 La ruta activa (`$rutaActual`) marca visualmente la categoría principal activa (`.active`) y la opción secundaria en curso. El servidor filtra la visibilidad según permisos RBAC y elimina categorías principales vacías. La seguridad reside independientemente en el backend.
 
-En la interfaz de administración (`/configuracion/menu`), se utiliza `public/assets/js/gestion-menu.js` (Vanilla JS puro y Fetch API) junto con SweetAlert2 para modales y confirmaciones, comunicando tokens CSRF mediante `<meta name="csrf-token">`.
+En la interfaz de administración (`/configuracion/menu`), se utiliza `public/assets/js/gestion-menu.js` (Vanilla JS puro, Fetch API y validación client-side modular con PristineJS v1.1.0) junto con SweetAlert2 para modales y confirmaciones, comunicando tokens CSRF mediante `<meta name="csrf-token">`.
 
 ## Assets
 
