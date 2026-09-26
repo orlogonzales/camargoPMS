@@ -332,68 +332,6 @@ class RolServicio
     }
 
     /**
-     * Elimina físicamente un rol no protegido y sin usuarios asociados.
-     *
-     * @param int $id
-     * @param int|null $ejecutadoPorUsuarioId
-     * @return bool
-     * @throws RolNoEncontradoExcepcion
-     * @throws RolProtegidoExcepcion
-     * @throws ValidacionExcepcion
-     */
-    public function eliminarRol(int $id, ?int $ejecutadoPorUsuarioId = null): bool
-    {
-        $rol = $this->rolRepo->buscarPorId($id);
-        if (!$rol) {
-            throw new RolNoEncontradoExcepcion($id);
-        }
-
-        if ($rol->esSuperadministrador() || $rol->esSistema()) {
-            throw new RolProtegidoExcepcion(
-                "No se puede eliminar el rol protegido del sistema '{$rol->obtenerNombre()}'."
-            );
-        }
-
-        $stmtCheck = $this->pdo->prepare('SELECT COUNT(*) FROM usuarios_roles WHERE rol_id = :rol_id');
-        $stmtCheck->bindValue(':rol_id', $id, PDO::PARAM_INT);
-        $stmtCheck->execute();
-        $usuariosAsociados = (int) $stmtCheck->fetchColumn();
-
-        if ($usuariosAsociados > 0) {
-            throw new ValidacionExcepcion(
-                "No se puede eliminar el rol '{$rol->obtenerNombre()}' porque tiene {$usuariosAsociados} usuario(s) asignado(s)."
-            );
-        }
-
-        $datosPrevios = $rol->aArreglo();
-        $resultado = $this->rolRepo->eliminar($id);
-
-        if ($resultado) {
-            try {
-                $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
-                $this->auditoriaServicio->registrar(
-                    AccionAuditoria::ELIMINAR,
-                    'seguridad',
-                    'rol',
-                    (string) $id,
-                    "Eliminación del rol '{$rol->obtenerCodigo()}'",
-                    $datosPrevios,
-                    null,
-                    null,
-                    $actorEjecutor,
-                    $ejecutadoPorUsuarioId,
-                    null,
-                    $this->pdo
-                );
-            } catch (Throwable) {
-                // Prevenir interrupción
-            }
-        }
-
-        return $resultado;
-    }
-
-    /**
      * Asigna un rol a un usuario, validando la vigencia de ambos.
      *
      * @param int $usuarioId

@@ -74,9 +74,9 @@ Administración completa de cuentas humanas de acceso al sistema desde la interf
 
 Estado: completada (candidata a micro-baseline post USUARIOS-1).
 
-## ROLES-2 — Administración Visual de Roles y Permisos RBAC
+## ROLES-2 / ROLES-2A — Administración Visual de Roles y Permisos RBAC
 
-Administración interactiva de roles y permisos del sistema desde la interfaz Alina bajo `/configuracion/roles`: listado con filtros y búsqueda, creación y edición de roles personalizados, visualización de usuarios asociados en modo lectura, asignación masiva de permisos atómicos agrupados por módulos funcionales mediante matriz interactiva, protección incondicional del rol estructural `SUPERADMINISTRADOR` (código, eliminación, desactivación y permisos críticos protegidos), actualización de autorizaciones en tiempo real sin relogin, auditoría contextual transversal (D-061 y D-062), validación cliente con PristineJS v1.1.0 y confirmaciones defensivas con SweetAlert2. Suites formales ROL2-01..40 (40/40 PASS) y E2E-ROL2-01..12 (12/12 PASS).
+Administración interactiva de roles y permisos del sistema desde la interfaz Alina bajo `/configuracion/roles`: listado con filtros y búsqueda, creación y edición de roles personalizados, visualización de usuarios asociados en modo lectura, asignación masiva de permisos atómicos agrupados por módulos funcionales mediante matriz interactiva, preservación del principio `ROL ≠ REGISTRO DESECHABLE` (ciclo de vida exclusivo `ACTIVO` / `INACTIVO`, cero DELETE físico), protección incondicional del rol estructural `SUPERADMINISTRADOR` (código, desactivación y permisos críticos protegidos), actualización de autorizaciones en tiempo real sin relogin, auditoría contextual transversal (D-061 y D-062), validación cliente con PristineJS v1.1.0 y confirmaciones defensivas con SweetAlert2. Suites formales ROL2-01..40 (40/40 PASS), ROL-HIST-01 (1/1 PASS) y E2E-ROL2-01..12 (12/12 PASS).
 
 Estado: completada.
 

@@ -66,13 +66,13 @@ Capa de administración de cuentas humanas de acceso:
 - **`UsuarioServicio`:** Aplica invariantes de dominio: vinculación obligatoria y única a Persona humana (`PERSONA ≠ USUARIO ≠ COLABORADOR ≠ ROL`), no eliminación física de usuarios (solo transiciones entre `ACTIVO`, `INACTIVO` y `BLOQUEADO`), protección estricta del último Superadministrador activo, y registro obligatorio de eventos en `AuditoriaServicio`.
 - **`UsuarioRepositorio`:** Persiste y consulta entidades de usuario con paginación, filtros dinámicos, búsquedas insensibles a mayúsculas y proyección de personas elegibles.
 
-### Gestión Visual de Roles y Permisos (ROLES-2)
+### Gestión Visual de Roles y Permisos (ROLES-2 / ROLES-2A)
 
 Capa de administración visual de roles de autorización y matriz de permisos por módulo funcional:
-- **`RolControlador`:** Enruta peticiones hacia `/configuracion/roles`, sirviendo la vista Alina y los endpoints JSON (`/datos`, `/permisos-catalogo`, `/{id}`, `/{id}/estado`, `/{id}/permisos`, `/{id}/eliminar`).
-- **`RolServicio`:** Centraliza las reglas de negocio de roles y permisos: principio `ROL DE AUTORIZACIÓN ≠ CARGO LABORAL`, cálculo de permisos en tiempo real sin relogin, protección inviolable de `SUPERADMINISTRADOR` (bloqueo de cambio de clave, desactivación, eliminación física y revocación de permisos críticos), invariante pesimista del último Superadministrador humano activo, sincronización matricial transaccional y trazabilidad D-061 con actor humano resuelto.
+- **`RolControlador`:** Enruta peticiones hacia `/configuracion/roles`, sirviendo la vista Alina y los endpoints JSON (`/datos`, `/permisos-catalogo`, `/{id}`, `/{id}/estado`, `/{id}/permisos`).
+- **`RolServicio`:** Centraliza las reglas de negocio de roles y permisos: principios `ROL DE AUTORIZACIÓN ≠ CARGO LABORAL` y `ROL ≠ REGISTRO DESECHABLE` (cero eliminación física en operación ordinaria, gestión exclusiva vía `ACTIVO` / `INACTIVO` para preservar historial y auditoría), cálculo de permisos en tiempo real sin relogin, protección incondicional de `SUPERADMINISTRADOR` (código inmutable, no desactivable y revocación de permisos críticos prohibida), invariante pesimista del último Superadministrador humano activo, sincronización matricial transaccional y trazabilidad D-061 con actor humano resuelto.
 - **`RolRepositorio` & `PermisoRepositorio`:** Proveen agregaciones de conteos de usuarios y permisos vinculados por rol (`listarRolesConConteos`), listado de usuarios con proyección de personas asociadas (`obtenerUsuariosPorRol`) y catálogo de permisos agrupados por módulo funcional (`listarAgrupadosPorModulo`).
-- **`gestion-roles.js`:** Módulo cliente en Vanilla JS con Fetch API, PristineJS v1.1.0 local para validación client-side y SweetAlert2 para confirmaciones de cambio de estado y eliminación.
+- **`gestion-roles.js`:** Módulo cliente en Vanilla JS con Fetch API, PristineJS v1.1.0 local para validación client-side y SweetAlert2 para confirmaciones defensivas de cambio de estado (`ACTIVO` / `INACTIVO`).
 
 ## Dependencias permitidas
 

@@ -348,15 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Eliminar rol (Protegido para Superadmin, Sistema y con usuarios)
-            if (!esSuper && !esSistema && r.total_usuarios === 0) {
-                botonesAccion += `
-                    <button type="button" class="btn btn-outline-danger btn-sm btn-eliminar-rol" data-id="${r.id}" data-nombre="${escapeHtml(r.nombre)}" title="Eliminar rol">
-                        <i class="ti ti-trash"></i>
-                    </button>
-                `;
-            }
-
             botonesAccion += '</div>';
 
             html += `
@@ -425,15 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const rolId = btn.getAttribute('data-id');
                 const nuevoEstado = btn.getAttribute('data-estado');
                 await ejecutarCambioEstado(rolId, nuevoEstado);
-            });
-        });
-
-        // Botones de eliminación
-        document.querySelectorAll('.btn-eliminar-rol').forEach((btn) => {
-            btn.addEventListener('click', async () => {
-                const rolId = btn.getAttribute('data-id');
-                const rolNombre = btn.getAttribute('data-nombre');
-                await ejecutarEliminarRol(rolId, rolNombre);
             });
         });
     }
@@ -675,51 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await cargarRoles();
         } catch (error) {
             notificar('error', error.message, 'Error al cambiar estado');
-        }
-    }
-
-    // =========================================================================
-    // ELIMINAR ROL
-    // =========================================================================
-
-    /**
-     * Ejecuta la eliminación física de un rol sin dependencias.
-     *
-     * @param {string|number} rolId
-     * @param {string} rolNombre
-     */
-    async function ejecutarEliminarRol(rolId, rolNombre) {
-        const confirmado = await confirmar(
-            '¿Eliminar este rol de autorización?',
-            `Esta acción eliminará de forma permanente el rol "${rolNombre}". No podrá deshacerse.`,
-            'Sí, eliminar rol',
-            '#dc3545'
-        );
-
-        if (!confirmado) return;
-
-        try {
-            const resp = await fetch(`/configuracion/roles/${rolId}/eliminar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': obtenerCsrfToken()
-                },
-                body: JSON.stringify({
-                    _csrf_token: obtenerCsrfToken()
-                })
-            });
-
-            const json = await resp.json();
-            if (!resp.ok) {
-                throw new Error(json.error || `Error HTTP ${resp.status}`);
-            }
-
-            notificar('success', json.mensaje || 'Rol eliminado exitosamente.');
-            await cargarRoles();
-        } catch (error) {
-            notificar('error', error.message, 'No se pudo eliminar el rol');
         }
     }
 

@@ -396,58 +396,6 @@ class RolControlador
     }
 
     /**
-     * Elimina físicamente un rol no protegido y sin usuarios asociados (POST/DELETE /configuracion/roles/{id}/eliminar).
-     *
-     * @param string|int $id
-     * @return Respuesta
-     */
-    public function eliminar(string|int $id): Respuesta
-    {
-        SesionServicio::iniciarSesionPhp();
-
-        $rolId = (int) $id;
-        if ($rolId <= 0) {
-            return Respuesta::json(['ok' => false, 'exito' => false, 'error' => 'Identificador de rol inválido.'], 400);
-        }
-
-        $payload = $this->obtenerPayload();
-        if (!$this->validarCsrf($payload)) {
-            return Respuesta::json(['ok' => false, 'exito' => false, 'error' => 'Token CSRF inválido o ausente.'], 403);
-        }
-
-        $usuarioActual = $this->sesionServicio->validarSesionActual();
-        $ejecutorId = $usuarioActual !== null ? (int) $usuarioActual->obtenerId() : null;
-
-        try {
-            $this->rolServicio->eliminarRol($rolId, $ejecutorId);
-
-            return Respuesta::json([
-                'ok' => true,
-                'exito' => true,
-                'mensaje' => 'Rol eliminado exitosamente.',
-                'datos' => ['rol_id' => $rolId],
-            ], 200);
-        } catch (RolNoEncontradoExcepcion $e) {
-            return Respuesta::json(['ok' => false, 'exito' => false, 'error' => $e->getMessage()], 404);
-        } catch (RolProtegidoExcepcion $e) {
-            return Respuesta::json(['ok' => false, 'exito' => false, 'error' => $e->getMessage()], 403);
-        } catch (ValidacionExcepcion $e) {
-            return Respuesta::json([
-                'ok' => false,
-                'exito' => false,
-                'error' => $e->getMessage(),
-                'errores' => $e->obtenerErrores(),
-            ], 422);
-        } catch (Throwable $e) {
-            return Respuesta::json([
-                'ok' => false,
-                'exito' => false,
-                'error' => 'Error interno al eliminar el rol: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
      * Obtiene el payload de la petición parseando JSON o $_POST según corresponda.
      *
      * @return array<string, mixed>

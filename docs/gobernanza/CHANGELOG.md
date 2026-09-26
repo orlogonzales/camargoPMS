@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Micro-fase ROLES-2A — Preservación Histórica del Ciclo de Vida de Roles
+
+- **Preservación Histórica del Ciclo de Vida (`ROL ≠ REGISTRO DESECHABLE`):**
+  - Reemplazado el criterio provisional de eliminación física de roles introducido en ROLES-2 antes de la homologación definitiva.
+  - Formalizado el principio de que los roles participan en autorizaciones, auditoría, asignaciones y relaciones históricas; su ciclo de vida operacional se administra exclusivamente mediante la alternancia `ACTIVO` / `INACTIVO`.
+  - Retiradas del enrutador las rutas de eliminación física (`DELETE /configuracion/roles/{id}` y `POST /configuracion/roles/{id}/eliminar`).
+  - Retirada la acción productiva `eliminar()` de `RolControlador` y la operación `eliminarRol()` de `RolServicio`.
+  - Retirado el botón de eliminar, diálogo SweetAlert2 de borrado y llamada Fetch de la interfaz Alina (`public/assets/js/gestion-roles.js`).
+  - La UI comunica el estado de forma clara y ofrece exclusivamente alternancia de estado: *Desactivar* para roles activos y *Activar* para roles inactivos.
+  - Se mantiene en `RolRepositorio::eliminar()` su presencia de bajo nivel heredada (originada en commit `25018c4`, `fase-roles-1`), sin invocación en servicios, controladores ni interfaz.
+- **Protección y Trazabilidad:**
+  - Preservada la protección incondicional de `SUPERADMINISTRADOR` (no desactivable, código inmutable, permisos críticos protegidos).
+  - Preservada la protección de roles de sistema (`es_sistema = 1`).
+  - La bitácora de auditoría no genera eventos `ELIMINAR` sobre roles; registra de forma normalizada las acciones `DESACTIVAR` y `ACTIVAR` con autoría humana resuelta conforme a D-061.
+- **Pruebas y Verificaciones:**
+  - Matriz formal `ROL2-01` a `ROL2-40` adaptada al contrato de ciclo de vida histórico (40/40 PASS).
+  - Implementada la prueba específica de persistencia histórica `ROL-HIST-01` (10/10 pasos PASS).
+  - Suite HTTP E2E Real contra Apache HTTPS adaptada (`E2E-ROL2-01` a `E2E-ROL2-12`), verificando respuesta HTTP 404 ante intentos de DELETE físico (12/12 PASS).
+  - Batería completa de regresiones aprobada al 100%.
+
 ### Fase ROLES-2 — Administración Visual de Roles y Permisos
 
 - **Administración Visual de Roles y Permisos (`/configuracion/roles`):**

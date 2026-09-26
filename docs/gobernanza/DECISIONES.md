@@ -391,14 +391,16 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 1. Principio de autorización en tiempo real (`ROL DE AUTORIZACIÓN ≠ CARGO LABORAL`):
    - La administración de roles y permisos bajo `/configuracion/roles` opera como fuente canónica de autorización RBAC del sistema.
    - Toda alteración en la asignación matricial de permisos de un rol entra en vigencia de forma inmediata en las consultas de `AutorizacionServicio::puede()` y `obtenerPermisosEfectivos()` para los usuarios activos sin requerir re-login ni revocación de sesiones.
-2. Protección inviolable del rol `SUPERADMINISTRADOR` y roles del sistema:
-   - El rol estructural `SUPERADMINISTRADOR` es inmutable en su clave técnica, no puede ser desactivado (`estado = INACTIVO`) ni eliminado físicamente de la base de datos (`RolProtegidoExcepcion`).
+2. Protección estructural de `SUPERADMINISTRADOR` y preservación histórica de roles (ROLES-2A):
+   - El rol estructural `SUPERADMINISTRADOR` es inmutable en su clave técnica, no puede ser desactivado (`estado = INACTIVO`) ni mutado (`RolProtegidoExcepcion`).
    - La sincronización matricial de permisos prohíbe taxativamente revocar los permisos críticos de administración del sistema (`roles.ver`, `roles.editar`, `permisos.ver`, `usuarios.ver`, `usuarios.editar`), lanzando `RolProtegidoExcepcion`.
    - Se mantiene el invariante pesimista del último Superadministrador humano activo (`>= 1` superadmin humano activo con persona activa), prohibiendo su revocación o desactivación.
-   - Roles con `es_sistema = 1` impiden modificación de su clave técnica y eliminación física.
+   - Roles con `es_sistema = 1` impiden modificación de su clave técnica.
+   - **Principio `ROL ≠ REGISTRO DESECHABLE` (ROLES-2A)**: Los roles no se eliminan físicamente durante la operación ordinaria. Su ciclo de vida se administra exclusivamente mediante la alternancia operativa `ACTIVO` / `INACTIVO`. Se retiraron todas las capacidades de DELETE físico de la UI, HTTP, Controlador y Servicio para asegurar la conservación de trazabilidad histórica (`usuarios_roles`, `roles_permisos`, `auditoria`).
 3. Sincronización atómica y trazabilidad unificada bajo D-061:
    - Las mutaciones matriciales de permisos se procesan de forma atómica dentro de una transacción de base de datos (`beginTransaction` / `commit` / `rollBack`).
    - Cada permiso agregado genera un evento de auditoría `ASIGNAR` y cada permiso retirado genera `REVOCAR`, agrupados bajo un identificador de correlación unificado (`correlacion_id`) y con autoría humana resuelta conforme a D-061 (`resolverActorEjecutor()`).
+   - La alternancia de estado operacional registra auditoría con acciones normalizadas `DESACTIVAR` y `ACTIVAR`, conservando autoría y correlación.
 
 ## Pendientes de decisión
 
