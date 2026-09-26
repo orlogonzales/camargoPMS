@@ -4,6 +4,37 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase CONFIGURACIÓN-1 — Núcleo Central de Configuración y Parámetros del Sistema
+
+- **Arquitectura y Separación Canónica (`CONFIGURACIÓN FUNCIONAL (BD) ≠ ENTORNO TÉCNICO (.env)`):**
+  - Implementación de la tabla `configuraciones` para el catálogo de parámetros funcionales del PMS mediante migración `010_configuracion_sistema.sql` con paridad exacta al 100% en `SQL/camargo_pms.sql` (21 tablas, 22 FKs).
+  - Separación estricta: parámetros operativos residen en BD; secretos de infraestructura y credenciales de servicios permanecen inmutables en `.env` (cero modificaciones a `.env` desde UI o backend).
+  - Parámetros sensibles (`es_sensible = 1`) son automáticamente ofuscados (`***`) en los registros de auditoría y salidas operativas.
+  - Respeto riguroso de gobernanza: Decisiones P-004 (zona horaria y fecha hotelera) y P-005 (moneda, redondeo e impuestos) se mantienen formalmente pendientes, sin sembrar parámetros especulativos.
+- **Contrato de Tipado Fuerte y Capa de Dominio:**
+  - Enumeración `TipoConfiguracion` soportando `TEXTO`, `ENTERO`, `DECIMAL`, `BOOLEANO`, `FECHA`, `HORA` y `JSON`, con validación sintáctica, casting a tipos nativos PHP y serialización canónica.
+  - Modelo de dominio `ConfiguracionParametro` con métodos `obtenerValorTipado()`, `obtenerValorPredeterminadoTipado()`, `esEditable()`, `esSensible()` y serialización `haciaArreglo()`.
+  - Repositorio `ConfiguracionRepositorio` con consultas estructuradas por clave, ID, grupo y soporte de transacciones PDO.
+  - Excepciones de dominio `ConfiguracionNoEncontradaExcepcion` (404) y `ConfiguracionNoEditableExcepcion` (422).
+- **Servicio Canónico y Trazabilidad D-061:**
+  - `ConfiguracionServicio`: punto de acceso único para la lectura y escritura de parámetros.
+  - Caché de memoria en tiempo de petición (`request-scoped`) para optimizar lecturas consecutivas de alta frecuencia.
+  - Actualización atómica en lote (`actualizarMultiples()`) bajo una única transacción con reversión completa ante fallos y `correlacion_id` unificado.
+  - Parámetros protegidos (`editable = 0`, ej. `sistema.version_instalada`) protegidos incondicionalmente contra mutación.
+  - Capacidad de reversión o restablecimiento a valores de fábrica (`restaurarPredeterminado()`).
+  - Auditoría transversal imputando la autoría al actor humano correspondiente (`USR_x`) mediante `resolverActorEjecutor()`, cumpliendo D-061.
+- **Controlador, Rutas y Permisos RBAC:**
+  - Nuevos permisos de sistema: `configuracion.ver` y `configuracion.editar`.
+  - Rutas registradas en `public/index.php`: `GET /configuracion/sistema`, `GET /configuracion/sistema/datos`, `POST /configuracion/sistema`, `PUT /configuracion/sistema`, `POST /configuracion/sistema/restaurar` y `POST /configuracion/sistema/{clave}/restaurar`.
+  - Nueva opción de menú autorizada: `config_sistema` ('Configuración General', `/configuracion/sistema`, orden 1 bajo `configuracion`).
+- **Interfaz Alina y Assets Propios:**
+  - Vista `app/Vistas/configuracion/sistema/index.php` estructurada en pestañas temáticas (`General`, `Localización`, `Operación`), badges de claves técnicas y controles adaptados por tipo de dato (switches, inputs numéricos, selectores, badges protegidos).
+  - Script Vanilla JS modular `public/assets/js/gestion-configuracion.js` con soporte de validación cliente (PristineJS v1.1.0) y diálogos de confirmación defensivos con SweetAlert2.
+- **Pruebas y Verificaciones:**
+  - Matriz formal unitaria y de integración `CFG-01` a `CFG-40` (40/40 PASS).
+  - Suite HTTP E2E Real contra servidor Apache HTTPS `E2E-CFG-01` a `E2E-CFG-12` (12/12 PASS).
+  - Cero regresiones en toda la batería histórica de pruebas (406 pruebas independientes unitarias/integración + 58 pruebas E2E reales 100% PASS).
+
 ### Micro-fase ROLES-2A — Preservación Histórica del Ciclo de Vida de Roles
 
 - **Preservación Histórica del Ciclo de Vida (`ROL ≠ REGISTRO DESECHABLE`):**

@@ -82,6 +82,17 @@ La gestión estructural del esquema sigue el principio de doble representación 
     - Índices: `idx_auditoria_actor_id`, `idx_auditoria_usuario_id`, `idx_auditoria_accion`, `idx_auditoria_modulo`, `idx_auditoria_entidad`, `idx_auditoria_correlacion_id`, `idx_auditoria_creado_en`.
     - Política de ciclo de vida: las cuentas de usuario no se eliminan físicamente en operación normal; se gestionan mediante estados `ACTIVO`, `INACTIVO`, `BLOQUEADO`. La combinación de `SET NULL` en usuario y `RESTRICT` en actor asegura inmutabilidad estricta del historial de auditoría.
 
+## Esquema del Núcleo Central de Configuración (CONFIGURACIÓN-1 y Migración 010)
+
+- `configuraciones`: Catálogo tipado y normalizado de parámetros funcionales del PMS (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `clave` VARCHAR(100) NOT NULL UNIQUE, `grupo` VARCHAR(50) NOT NULL, `nombre` VARCHAR(100) NOT NULL, `descripcion` TEXT NULL, `tipo` ENUM('TEXTO', 'ENTERO', 'DECIMAL', 'BOOLEANO', 'FECHA', 'HORA', 'JSON') NOT NULL DEFAULT 'TEXTO', `valor` LONGTEXT NULL, `valor_predeterminado` LONGTEXT NULL, `editable` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1, `es_sensible` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, `orden` INT UNSIGNED NOT NULL DEFAULT 1, `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO', `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+- Restricciones e Integridad:
+  - Restricciones CHECK de cadenas no vacías: `chk_configuraciones_clave_no_vacia`, `chk_configuraciones_nombre_no_vacio`, `chk_configuraciones_grupo_no_vacio`.
+  - Índices: `idx_configuraciones_grupo`, `idx_configuraciones_estado`, `idx_configuraciones_orden (grupo, orden)`.
+  - Parámetros protegidos por el sistema (`editable = 0`) no son mutables por usuarios ni API.
+  - Parámetros sensibles (`es_sensible = 1`) no exponen su contenido en auditoría.
+- Permisos RBAC introducidos: `configuracion.ver`, `configuracion.editar`.
+- Opción de menú introducida: `config_sistema` ('Configuración General', `/configuracion/sistema`, orden 1 bajo `configuracion`).
+
 ## Reglas
 
 - Claves primarias estables y claves foráneas explícitas.

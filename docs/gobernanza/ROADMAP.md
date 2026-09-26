@@ -78,11 +78,21 @@ Estado: completada (candidata a micro-baseline post USUARIOS-1).
 
 Administración interactiva de roles y permisos del sistema desde la interfaz Alina bajo `/configuracion/roles`: listado con filtros y búsqueda, creación y edición de roles personalizados, visualización de usuarios asociados en modo lectura, asignación masiva de permisos atómicos agrupados por módulos funcionales mediante matriz interactiva, preservación del principio `ROL ≠ REGISTRO DESECHABLE` (ciclo de vida exclusivo `ACTIVO` / `INACTIVO`, cero DELETE físico), protección incondicional del rol estructural `SUPERADMINISTRADOR` (código, desactivación y permisos críticos protegidos), actualización de autorizaciones en tiempo real sin relogin, auditoría contextual transversal (D-061 y D-062), validación cliente con PristineJS v1.1.0 y confirmaciones defensivas con SweetAlert2. Suites formales ROL2-01..40 (40/40 PASS), ROL-HIST-01 (1/1 PASS) y E2E-ROL2-01..12 (12/12 PASS).
 
+## CONFIGURACIÓN-1 — Núcleo Central de Configuración y Parámetros del Sistema
+
+Catálogo central de parámetros funcionales del sistema bajo la tabla `configuraciones` y la interfaz Alina en `/configuracion/sistema`:
+- Separación canónica `CONFIGURACIÓN FUNCIONAL (BD) ≠ ENTORNO TÉCNICO (.env)` (cero secretos de infraestructura en BD, cero mutaciones a `.env` desde UI).
+- Tipado fuertemente gobernado por `TipoConfiguracion` (`TEXTO`, `ENTERO`, `DECIMAL`, `BOOLEANO`, `FECHA`, `HORA`, `JSON`) con validación y casting nativo en backend.
+- Acceso canónico encapsulado: `ConfiguracionServicio -> ConfiguracionRepositorio -> PDO -> MySQL` con caché de lectura en memoria de ciclo de vida de petición (`request-scoped`).
+- Parámetros protegidos inmutables (`editable = 0`, ej. `sistema.version_instalada`) rechazados ante mutación con `ConfiguracionNoEditableExcepcion`.
+- Capacidad de restauración a valores predeterminados de fábrica (`restaurarPredeterminado()`).
+- Actualización atómica en lote (`actualizarMultiples()`) bajo una única transacción con reversión completa ante fallos.
+- Auditoría contextual transversal cumpliendo D-061 (`ACTOR ≠ USUARIO`), imputación de autoría a `USR_x` y unificación de `correlacion_id` en operaciones de lote.
+- Respeto riguroso de decisiones pendientes: exclusión deliberada de semillas de zona horaria / corte hotelero (P-004) y moneda / redondeo / impuestos (P-005).
+- Vista administrativa Alina con navegación en pestañas (General, Localización, Operación), validación modular PristineJS v1.1.0 y confirmaciones con SweetAlert2.
+- Suites de pruebas: CFG-01..40 (40/40 PASS) y E2E-CFG-01..12 (12/12 PASS).
+
 Estado: completada.
-
-## Configuración
-
-Empresa, logo, membrete, márgenes, parámetros, vigencias y plantillas versionadas.
 
 ## Dominio operativo
 

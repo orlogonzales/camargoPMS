@@ -182,6 +182,26 @@ $enrutador->post('/configuracion/roles/{id}/permisos', [\CamargoPMS\Controladore
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
 ]);
 
+// Rutas de Configuración General del Sistema (CONFIGURACIÓN-1)
+$enrutador->get('/configuracion/sistema', [\CamargoPMS\Controladores\ConfiguracionControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.ver'),
+]);
+$enrutador->get('/configuracion/sistema/datos', [\CamargoPMS\Controladores\ConfiguracionControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.ver'),
+]);
+$enrutador->post('/configuracion/sistema', [\CamargoPMS\Controladores\ConfiguracionControlador::class, 'guardar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.editar'),
+]);
+$enrutador->put('/configuracion/sistema', [\CamargoPMS\Controladores\ConfiguracionControlador::class, 'guardar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.editar'),
+]);
+$enrutador->post('/configuracion/sistema/restaurar', [\CamargoPMS\Controladores\ConfiguracionControlador::class, 'restaurar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.editar'),
+]);
+$enrutador->post('/configuracion/sistema/{clave}/restaurar', [\CamargoPMS\Controladores\ConfiguracionControlador::class, 'restaurar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.editar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

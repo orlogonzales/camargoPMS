@@ -402,6 +402,24 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Cada permiso agregado genera un evento de auditoría `ASIGNAR` y cada permiso retirado genera `REVOCAR`, agrupados bajo un identificador de correlación unificado (`correlacion_id`) y con autoría humana resuelta conforme a D-061 (`resolverActorEjecutor()`).
    - La alternancia de estado operacional registra auditoría con acciones normalizadas `DESACTIVAR` y `ACTIVAR`, conservando autoría y correlación.
 
+### D-063 — Núcleo Central de Configuración, tipado funcional y separación estricta de entorno (CONFIGURACIÓN-1)
+
+1. Principio de separación `CONFIGURACIÓN FUNCIONAL (BD) ≠ ENTORNO TÉCNICO (.env)`:
+   - Los parámetros funcionales de operación administrativa del PMS residen en la base de datos (`configuraciones`), auditados y gobernados por RBAC.
+   - Las variables de entorno de bajo nivel, secretos de infraestructura y credenciales de servicios permanecen exclusivamente en `.env`, gestionadas por administradores de sistemas y nunca mutables desde la UI del PMS.
+   - Parámetros sensibles en BD (`es_sensible = 1`) son ofuscados (`***`) en los registros de auditoría y salidas operativas.
+2. Contrato de tipado canónico y acceso encapsulado:
+   - Todo parámetro de configuración pertenece a un tipo de dato funcional fuertemente tipado (`TEXTO`, `ENTERO`, `DECIMAL`, `BOOLEANO`, `FECHA`, `HORA`, `JSON`) administrado por la enumeración `TipoConfiguracion`.
+   - Se prohíbe el acceso directo mediante consultas SQL dispersas: todo consumo se canaliza estrictamente a través de `ConfiguracionServicio -> ConfiguracionRepositorio -> PDO -> MySQL`.
+   - `ConfiguracionServicio::obtener()` retorna el valor casteado a su tipo nativo de PHP y aprovecha una caché de ciclo de vida de petición en memoria (`request-scoped`).
+3. Inmutabilidad de parámetros del sistema y capacidad de restauración:
+   - Parámetros marcados con `editable = 0` (como `sistema.version_instalada`) están estrictamente protegidos contra mutación tanto a nivel de backend (`ConfiguracionNoEditableExcepcion`) como en la interfaz de usuario.
+   - Cada parámetro conserva su `valor_predeterminado` de fábrica, permitiendo restauración atómica (`restaurarPredeterminado()`).
+   - La actualización múltiple o en lote (`actualizarMultiples()`) se ejecuta en una transacción atómica con validación previa estricta y reversión completa (`rollBack`) ante cualquier error.
+   - Mutaciones auditadas bajo D-061 con imputación a actores humanos (`USR_x`) y `correlacion_id` unificado para lotes.
+4. Preservación estricta de decisiones pendientes (P-004 y P-005):
+   - Se mantiene la exclusión deliberada de semillas funcionales para zona horaria / corte hotelero (P-004) y moneda / redondeo / impuestos (P-005) hasta su resolución formal en las fases correspondientes.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |
