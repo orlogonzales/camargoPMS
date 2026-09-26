@@ -87,10 +87,37 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `E2E-PROP-10`: PUT `/propiedades/{id}` actualiza información y coordenadas GPS (HTTP 200 JSON).
   - `E2E-PROP-11`: PATCH `/propiedades/{id}/estado` conmuta ciclo de vida `ACTIVO` ↔ `INACTIVO` con HTTP 200 JSON.
   - `E2E-PROP-12`: DELETE `/propiedades/{id}` es una ruta no registrada que responde 404 Not Found (garantía de no DELETE físico).
+- **Matriz Formal de Unidades Físicas y Alojables (UNI-01 a UNI-40 — UNIDADES-1):** 40 verificaciones automáticas cubriendo:
+  - Instanciación e hidratación de `TipoUnidad` y `Unidad`.
+  - Comprobación de `estaActiva()`, cálculo de ocupación total `capacidadTotal()` (`capacidad_estandar + capacidad_maxima`), validación de número de camas, baños, piso/nivel.
+  - Serialización consistente en `aArreglo()`, `haciaArreglo()`, `aArray()` y deserialización fiel con `desdeArreglo()`.
+  - Excepciones de dominio `UnidadDuplicadaExcepcion` (409) y `UnidadNoEncontradaExcepcion` (404).
+  - Principio `PROPIEDAD ≠ UNIDAD` (propiedad física continente con ID obligatorio `propiedad_id NOT NULL`, cero unidades huérfanas).
+  - Principio `UNIDAD ≠ REGISTRO DESECHABLE` (cero métodos de eliminación física, ciclo histórico `ACTIVO ↔ INACTIVO`).
+  - Principio `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD` (cero fechas de ocupación, check-in/out, precios, contratos de arrendamiento; P-004, P-005 y P-006 estrictamente abiertas).
+  - Unicidad de código acotada por propiedad (`UNIQUE(propiedad_id, codigo)` bajo D-065). Códigos idénticos en distintas propiedades admitidos; duplicados en la misma propiedad rechazados con 409.
+  - Regla de negocio de propiedad inactiva: rechazo de creación de nuevas unidades en propiedades inactivas, pero preservación intacta de unidades históricas preexistentes.
+  - Validación de tipos de unidad existentes en BD (`tipos_unidad`).
+  - Persistencia, filtros de búsqueda textual, filtros por propiedad, tipo y estado operativo.
+  - Registro de eventos en bitácora de auditoría (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) con resolución de actor humano (`USR_1`) bajo D-061 y diff de atributos sin auditoría redundante (40 PASS / 0 FAIL).
+- **Prueba Específica de Persistencia Histórica (UNI-HIST-01 — UNIDADES-1):** 10 verificaciones secuenciales automáticas certificando el ciclo de vida completo de una unidad: creación vinculada a propiedad activa, persistencia inicial en estado `ACTIVO`, actualización de especificaciones físicas, trazabilidad `CREAR` y `EDITAR` en `auditoria`, desactivación operativa a `INACTIVO` con motivo, comprobación de persistencia inmutable en tabla `unidades` (cero DELETE), comprobación de evento `DESACTIVAR`, reactivación a `ACTIVO`, comprobación de evento `ACTIVAR`, y garantía arquitectónica de cero DELETE en servicios y repositorios (10/10 PASS).
+- **Suite E2E HTTP Real contra Apache (E2E-UNI-01 a E2E-UNI-12 — UNIDADES-1):** 12 validaciones end-to-end con cURL contra el servidor web real Apache en HTTPS (`https://app.camargo-pms.test/`) evaluando:
+  - `E2E-UNI-01`: Acceso anónimo a `/unidades` redirige a `/login` (HTTP 302).
+  - `E2E-UNI-02`: Usuario ordinario sin permiso `unidades.ver` recibe HTTP 403 Forbidden.
+  - `E2E-UNI-03`: Superadmin accede a `/unidades` (HTTP 200) y la plantilla contiene el contrato de navegación Alina.
+  - `E2E-UNI-04`: Endpoint `/unidades/datos` no autenticado es redirigido a `/login` (HTTP 302).
+  - `E2E-UNI-05`: Endpoint `/unidades/datos` retorna JSON válido con listado, metadatos y conteos (HTTP 200).
+  - `E2E-UNI-06`: POST `/unidades` sin token CSRF devuelve HTTP 403 Forbidden.
+  - `E2E-UNI-07`: POST `/unidades` crea nueva unidad física alojable vinculada a propiedad y retorna HTTP 201 JSON.
+  - `E2E-UNI-08`: GET `/unidades/{id}` retorna detalle completo en JSON (HTTP 200).
+  - `E2E-UNI-09`: GET `/unidades/{id}/perfil` renderiza la ficha técnica con principio `PROPIEDAD ≠ UNIDAD` (HTTP 200).
+  - `E2E-UNI-10`: PUT `/unidades/{id}` actualiza capacidades físicas y metadatos (HTTP 200 JSON).
+  - `E2E-UNI-11`: PATCH `/unidades/{id}/estado` conmuta ciclo de vida `ACTIVO` ↔ `INACTIVO` con HTTP 200 JSON.
+  - `E2E-UNI-12`: DELETE `/unidades/{id}` es una ruta no registrada que responde 404 Not Found (garantía de no DELETE físico).
 - **Reconciliación Canónica de Pruebas Automatizadas:**
-  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **524 ejecuciones brutas (524 PASS / 0 FAIL)**.
-  - Total de casos de prueba estrictamente independientes de dominio e integración: **447 casos independientes** (406 previos + 41 de PROPIEDADES-1).
-  - Total de pruebas HTTP E2E reales contra servidor Apache: **70 casos únicos** (58 previos + 12 de PROPIEDADES-1).
+  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **576 ejecuciones brutas (576 PASS / 0 FAIL)**.
+  - Total de casos de prueba estrictamente independientes de dominio e integración: **488 casos independientes** (447 previos + 41 de UNIDADES-1).
+  - Total de pruebas HTTP E2E reales contra servidor Apache: **82 casos únicos** (70 previos + 12 de UNIDADES-1).
   - Desglose independiente por módulos:
     - IDENTIDAD-1: 27/27 PASS.
     - PERSONAL-1 / PERSONAL-1A: 26/26 PASS.
@@ -101,5 +128,7 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - USUARIOS-1 / USUARIOS-1A: 46/46 PASS (40 USR matriz formal + 6 ACTOR matriz de identidad).
     - CONFIGURACIÓN-1: 40/40 PASS (40 CFG matriz formal unitaria/integración).
     - PROPIEDADES-1: 41/41 PASS (40 PROP matriz formal + 1 PROP-HIST-01 persistencia histórica de 10 pasos).
-    - SUITES HTTP E2E REALES (Apache HTTPS): 70/70 PASS (12 Propiedades + 12 Configuración + 12 Roles + 10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).
+    - UNIDADES-1: 41/41 PASS (40 UNI matriz formal + 1 UNI-HIST-01 persistencia histórica de 10 pasos).
+    - SUITES HTTP E2E REALES (Apache HTTPS): 82/82 PASS (12 Unidades + 12 Propiedades + 12 Configuración + 12 Roles + 10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).
+
 

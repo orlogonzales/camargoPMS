@@ -211,6 +211,9 @@ class PropiedadControlador
             ];
         }, $paises);
 
+        $unidadesRepo = new \CamargoPMS\Repositorios\UnidadRepositorio(\CamargoPMS\Nucleo\BaseDatos::conexion());
+        $unidades = $unidadesRepo->listarPorPropiedad($propiedadId);
+
         $datos = [
             'titulo' => 'Camargo PMS — Ficha de Propiedad: ' . $propiedad->obtenerNombre(),
             'categoriaActiva' => 'propiedades',
@@ -222,6 +225,9 @@ class PropiedadControlador
             'propiedad' => $propiedad,
             'paises' => $paisesFormateados,
             'capacidades' => $capacidades,
+            'unidades' => $unidades,
+            'puedeCrearUnidad' => $this->autorizacionServicio->puede($usuarioActualId, 'unidades.crear'),
+            'puedeVerUnidad' => $this->autorizacionServicio->puede($usuarioActualId, 'unidades.ver'),
             'csrf_token' => $this->csrfServicio->obtenerToken(),
         ];
 

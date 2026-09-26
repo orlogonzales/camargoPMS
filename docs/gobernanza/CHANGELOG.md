@@ -4,6 +4,42 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase UNIDADES-1 — Maestro Central de Unidades Físicas y Alojables por Propiedad
+
+- **Arquitectura y Principios de Delimitación de Dominio:**
+  - **`PROPIEDAD ≠ UNIDAD`:** La propiedad es el contenedor físico raíz (`propiedades`); la unidad (`unidades`) modela la división física, departamento, habitación o espacio divisible e individualizable con destino de alojamiento. Toda unidad está subordinada obligatoriamente a una propiedad física existente y activa (`propiedad_id INT NOT NULL`, `fk_unidades_propiedad`). Cero unidades huérfanas en el sistema.
+  - **`UNIDAD ≠ REGISTRO DESECHABLE`:** Cero eliminación física en toda la arquitectura (`DELETE FROM unidades` = 0). Ciclo de vida operacional gobernado exclusivamente por la alternancia de estados `ACTIVO` e `INACTIVO`. Ausencia absoluta de métodos `eliminar()` en repositorio y servicio, y de acciones de eliminación en controlador. Rutas HTTP DELETE no registradas responden `404 Not Found`.
+  - **`UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD`:** Respeto estricto a las decisiones de gobernanza P-004 (zona horaria y corte hotelero), P-005 (moneda, redondeo e impuestos) y P-006 (concurrencia de disponibilidad). Cero atributos o lógica de fechas, check-in/out, calendarios, tarifas monetarias o contratos de arrendamiento en esta fase.
+  - **Unicidad de Código Acotada a la Propiedad (D-065):** Restricción de unicidad compuesta `UNIQUE KEY uq_unidades_propiedad_codigo (propiedad_id, codigo)`. Se permite el uso de códigos idénticos (ej. "101") en propiedades distintas, garantizando unicidad estricta al interior de una misma propiedad.
+  - **Regla de Negocio de Propiedad Inactiva:** Una propiedad inactiva preserva intactas sus unidades históricas para consulta y trazabilidad, pero bloquea incondicionalmente la creación de nuevas unidades con `DominioReglaExcepcion` (HTTP 422).
+- **Base de Datos y Migración 012:**
+  - Migración `SQL/migraciones/012_unidades.sql` aplicada con paridad canónica al 100% en `SQL/camargo_pms.sql` (24 tablas en total, 25 foreign keys).
+  - Tabla `tipos_unidad`: catálogo clasificador de tipologías físicas (`DEPARTAMENTO`, `HABITACION`, `CASA`, `SUITE`, `BUNGALOW`).
+  - Tabla `unidades`: campos físicos `propiedad_id`, `tipo_unidad_id`, `codigo`, `nombre`, `nivel` (piso/planta), `capacidad_estandar`, `capacidad_maxima`, `numero_camas`, `numero_banos`, `descripcion`, `estado`, `creado_en`, `actualizado_en`.
+  - Permisos RBAC sembrados: `unidades.ver`, `unidades.crear`, `unidades.editar`, `unidades.cambiar_estado` asignados al rol `SUPERADMINISTRADOR`.
+  - Menú de navegación sembrado: submenú `unidades_catalogo` ('Catálogo de Unidades', ruta `/unidades`, orden 2) bajo la categoría principal `propiedades`.
+- **Capa de Dominio y Validaciones:**
+  - Modelos de dominio `TipoUnidad` y `Unidad` con tipado estricto, métodos de utilidad `estaActiva()`, cálculo de ocupación total `capacidadTotal()` (`capacidad_estandar + capacidad_maxima`), y serialización consistente `haciaArreglo()`, `aArreglo()`, `aArray()`, y recreación `desdeArreglo()`.
+  - Excepciones de dominio `UnidadDuplicadaExcepcion` (HTTP 409) y `UnidadNoEncontradaExcepcion` (HTTP 404).
+  - Validaciones de dominio en `UnidadServicio`: validación de propiedad activa existente, tipo de unidad existente, unicidad de código por propiedad, longitudes de texto, capacidades no negativas con `capacidad_maxima >= capacidad_estandar`.
+- **Servicio y Trazabilidad Transversal D-061:**
+  - `UnidadServicio`: punto único de acceso para operaciones sobre unidades físicas.
+  - Actualizaciones con cálculo diferencial exacto (`diff`) que previene la emisión de auditoría redundante cuando no hay cambios.
+  - Trazabilidad integral de operaciones (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) en `auditoria` bajo D-061, resolviendo el actor humano (`USR_x`) mediante `resolverActorEjecutor()` y reservando `CAMARGO_PMS` (`id = 1`) para ejecuciones de sistema.
+  - Enlace bidireccional en `AuditoriaServicio::listarPorEntidad()` para consultar el historial de auditoría de cualquier entidad del sistema.
+- **Controlador, Rutas y Permisos RBAC:**
+  - Rutas registradas en `public/index.php`: `GET /unidades`, `GET /unidades/datos`, `GET /unidades/{id}`, `GET /unidades/{id}/perfil`, `POST /unidades`, `PUT /unidades/{id}`, `PATCH /unidades/{id}/estado`, y variantes POST compatibles.
+  - Integración en `PropiedadControlador` y vista de perfil `app/Vistas/propiedades/detalle.php`: tabla de unidades asociadas al inmueble y conteos consolidados.
+- **Interfaz Alina y Ficha Técnica:**
+  - Vista general `app/Vistas/unidades/index.php` con maquetación de tarjetas Alina, tabla dinámica, filtros de búsqueda textual, selector por propiedad, por tipo y por estado, y modal interactivo para creación y edición.
+  - Vista de perfil `app/Vistas/unidades/detalle.php` con ficha técnica de la unidad, especificaciones físicas (camas, baños, capacidad estándar y máxima, nivel), tarjeta del inmueble contenedor, trazabilidad de auditoría e indicador visual del principio `PROPIEDAD ≠ UNIDAD`.
+  - Script Vanilla JS modular `public/assets/js/gestion-unidades.js` con debounce de búsqueda, paginación dinámica, validación cliente mediante PristineJS v1.1.0 y confirmaciones con SweetAlert2.
+- **Pruebas y Verificaciones:**
+  - Matriz formal unitaria y de integración `UNI-01` a `UNI-40` (40/40 PASS).
+  - Prueba específica de persistencia histórica `UNI-HIST-01` de 10 pasos (10/10 PASS).
+  - Suite HTTP E2E Real contra servidor Apache HTTPS `E2E-UNI-01` a `E2E-UNI-12` (12/12 PASS).
+  - Regresión integral sin fallos sobre todos los módulos previos del sistema (421/421 verificaciones directas PASS).
+
 ### Fase PROPIEDADES-1 — Maestro Central de Propiedades e Inmuebles Físicos
 
 - **Arquitectura y Principio Ontológico de Delimitación Física (`PROPIEDAD ≠ UNIDAD`):**

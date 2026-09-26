@@ -23,9 +23,14 @@ Esta separación es vinculante y rige la arquitectura del dominio:
    - **Prohibición ontológica:** Se prohíbe incorporar atributos de unidades arrendables, tipologías de habitación, camas, amenidades específicas, disponibilidad, tarifas, estancias o bloqueos dentro de la entidad `Propiedad`.
    - Trazabilidad integral de operaciones (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) en `auditoria` bajo D-061.
 
-2. **Nivel / Piso y Unidad (UNIDADES-1 — Fase subsiguiente):**
-   - Una propiedad agrupa unidades físicas. Un nivel o piso permite representar subdivisiones verticales de la edificación, contemplando propiedades donde no resulte necesario explicitar niveles.
-   - Cada unidad representará el inventario comercializable y conservará configuración, tipología, características, precio base, disponibilidad e inventario específico.
+2. **Unidad Física y Tipología (`unidades`, `tipos_unidad` — UNIDADES-1):**
+   - La unidad (`unidades`) modela la división física habitable, arrendable o alojable (departamento, habitación, bungalow, suite) subordinada estrictamente a su inmueble raíz (`propiedad_id NOT NULL`). No existen unidades huérfanas en el sistema.
+   - Atributos ontológicos: `codigo` (alfanumérico único por propiedad), `nombre`, `tipo_unidad_id` (`tipos_unidad`), `piso_nivel` (alfanumérico opcional), `capacidad_personas` (entero positivo), `dormitorios` (entero no negativo, admitiendo 0 para monoambiente/estudio), `banos` (decimal para medios baños), `area_m2` (decimal opcional), `descripcion`, `observaciones` y `estado` (`ACTIVO`, `INACTIVO`).
+   - **Principio `UNIDAD ≠ REGISTRO DESECHABLE`:** Cero eliminación física (`DELETE FROM unidades` = 0). Preservación histórica mediante alternancia operativa `ACTIVO` ↔ `INACTIVO`.
+   - **Unicidad Scoped por Propiedad (`UNIQUE(propiedad_id, codigo)`):** El código técnico es único dentro de cada inmueble, admitiendo códigos idénticos entre propiedades distintas (D-065).
+   - **Regla de Inmueble Inactivo:** Se prohíbe registrar nuevas unidades en propiedades inactivas; la propiedad inactiva preserva íntegramente sus unidades históricas.
+   - **Principio `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD`:** Exclusión deliberada de fechas de corte, calendarios, tarifas y precios en esta fase (P-004, P-005, P-006 abiertas).
+   - Trazabilidad integral de operaciones (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) en `auditoria` bajo D-061.
 
 ## Identidad, Personas y Personal
 
@@ -281,9 +286,9 @@ Camargo PMS es la fuente central. WordPress y futuras aplicaciones consultan y o
 
 ## Pendientes de modelado
 
-- Cardinalidad exacta entre propiedad, nivel y unidad.
+- Jerarquía física avanzada de niveles/alas independientes (la relación base 1:N Propiedad -> Unidad física alojable quedó establecida en UNIDADES-1).
 - Identificadores fiscales y reglas específicas por país.
 - Catálogos definitivos de estados y transiciones.
-- Política exacta de solapamiento, zonas horarias y noches.
-- Contabilidad, impuestos y conciliación requeridos legalmente.
+- Política exacta de solapamiento, zonas horarias y noches (P-004 y P-006).
+- Contabilidad, impuestos y conciliación requeridos legalmente (P-005).
 - Retención y anonimización de datos personales.

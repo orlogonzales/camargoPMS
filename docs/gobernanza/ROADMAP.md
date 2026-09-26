@@ -107,6 +107,22 @@ Maestro central de predios e inmuebles contenedores raíz bajo la tabla `propied
 
 Estado: completada.
 
+## UNIDADES-1 — Maestro Central de Unidades Físicas y Alojables
+
+Maestro central de divisiones físicas y unidades habitacionales/arrendables bajo las tablas `tipos_unidad` y `unidades`, y la interfaz Alina en `/unidades` y `/unidades/{id}/perfil`:
+- Principio ontológico vinculante `PROPIEDAD ≠ UNIDAD`: La propiedad es el inmueble raíz y la unidad es la división física habitable/arrendable (Dpto, Habitación, Bungalow, Suite). Toda unidad pertenece obligatoriamente a una propiedad física (`propiedad_id NOT NULL`). No se admiten unidades huérfanas.
+- Regla de propiedad inactiva: Se prohíbe la creación de nuevas unidades en propiedades inactivas. Una propiedad inactiva preserva íntegramente sus unidades históricas.
+- Preservación histórica del ciclo de vida (`UNIDAD ≠ REGISTRO DESECHABLE`): Cero eliminación física (`DELETE FROM unidades` inexistente); ciclo de vida administrado por alternancia operacional `ACTIVO` ↔ `INACTIVO`. Solicitudes HTTP DELETE devuelven estrictamente `404 Not Found`.
+- Unicidad scoped por propiedad (`UNIQUE(propiedad_id, codigo)`): El código técnico es único dentro de cada inmueble, admitiendo códigos idénticos en distintas propiedades (D-065).
+- Catálogo de tipologías arquitectónicas (`tipos_unidad`): 5 semillas iniciales (`DEPARTAMENTO`, `HABITACION`, `CASA`, `SUITE`, `BUNGALOW`).
+- Especificaciones físicas y ocupacionales: Capacidad de personas (1 a 100), dormitorios (>= 0, permitiendo 0 para monoambiente/estudio), baños (con decimales para medios baños, ej. 1.5), área en m² (opcional positiva) y piso/nivel (alfanumérico opcional).
+- Trazabilidad y auditoría D-061 (`ACTOR ≠ USUARIO`): Eventos `CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR` registrados con actor humano (`USR_x`) y cálculo diferencial que suprime auditoría redundante en actualizaciones sin cambios reales.
+- Delimitación estricta de dominio: `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD`. P-004 (corte hotelero), P-005 (moneda/impuestos) y P-006 (concurrencia de disponibilidad) permanecen estrictamente abiertas y pendientes.
+- Integración bidireccional con propiedades: Pestaña/tabla de unidades en `/propiedades/{id}/perfil` y tarjeta de inmueble raíz en `/unidades/{id}/perfil`.
+- Suites de pruebas: Matriz formal UNI-01..40 (40/40 PASS), ciclo histórico UNI-HIST-01 (10/10 PASS) y suite HTTP E2E Real Apache HTTPS E2E-UNI-01..12 (12/12 PASS).
+
+Estado: completada.
+
 ## Dominio operativo
 
 1. propiedades, niveles y unidades;

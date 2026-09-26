@@ -231,6 +231,35 @@ $enrutador->post('/propiedades/{id}/estado', [\CamargoPMS\Controladores\Propieda
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.cambiar_estado'),
 ]);
 
+// Rutas de Maestro Central de Unidades (UNIDADES-1)
+$enrutador->get('/unidades', [\CamargoPMS\Controladores\UnidadControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.ver'),
+]);
+$enrutador->get('/unidades/datos', [\CamargoPMS\Controladores\UnidadControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.ver'),
+]);
+$enrutador->post('/unidades', [\CamargoPMS\Controladores\UnidadControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.crear'),
+]);
+$enrutador->get('/unidades/{id}', [\CamargoPMS\Controladores\UnidadControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.ver'),
+]);
+$enrutador->get('/unidades/{id}/perfil', [\CamargoPMS\Controladores\UnidadControlador::class, 'perfil'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.ver'),
+]);
+$enrutador->put('/unidades/{id}', [\CamargoPMS\Controladores\UnidadControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.editar'),
+]);
+$enrutador->post('/unidades/{id}', [\CamargoPMS\Controladores\UnidadControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.editar'),
+]);
+$enrutador->patch('/unidades/{id}/estado', [\CamargoPMS\Controladores\UnidadControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.cambiar_estado'),
+]);
+$enrutador->post('/unidades/{id}/estado', [\CamargoPMS\Controladores\UnidadControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.cambiar_estado'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

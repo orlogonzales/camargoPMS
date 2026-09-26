@@ -108,6 +108,32 @@ La gestión estructural del esquema sigue el principio de doble representación 
   - Nivel 1 (Principal): `propiedades` ('Propiedades', icono `ti ti-building`, orden 2, entre Inicio y Configuración).
   - Nivel 2 (Secundaria): `propiedades_catalogo` ('Catálogo de Inmuebles', bajo `propiedades`, ruta `/propiedades`, permiso `propiedades.ver`, orden 1).
 
+## Esquema del Maestro de Unidades y Tipologías (UNIDADES-1 y Migración 012)
+
+- `tipos_unidad`: Catálogo maestro de tipologías arquitectónicas habitacionales y arrendables (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `codigo` VARCHAR(30) NOT NULL UNIQUE, `nombre` VARCHAR(100) NOT NULL, `descripcion` TEXT NULL, `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO', `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+  - Semillas arquitectónicas iniciales: `DEPARTAMENTO`, `HABITACION`, `CASA`, `SUITE`, `BUNGALOW`.
+  - Restricciones CHECK: `chk_tipos_unidad_codigo_no_vacio`, `chk_tipos_unidad_nombre_no_vacio`.
+- `unidades`: Catálogo físico de divisiones habitacionales por propiedad (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `propiedad_id` BIGINT UNSIGNED NOT NULL, `tipo_unidad_id` INT UNSIGNED NOT NULL, `codigo` VARCHAR(50) NOT NULL, `nombre` VARCHAR(150) NOT NULL, `descripcion` TEXT NULL, `piso_nivel` VARCHAR(30) NULL, `capacidad_personas` SMALLINT UNSIGNED NOT NULL DEFAULT 1, `dormitorios` SMALLINT UNSIGNED NOT NULL DEFAULT 1, `banos` DECIMAL(3, 1) NOT NULL DEFAULT 1.0, `area_m2` DECIMAL(8, 2) NULL, `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO', `observaciones` TEXT NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+  - Claves foráneas:
+    - `fk_unidades_propiedad`: Hacia `propiedades(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE`. Impide eliminar o desasociar propiedades que contengan unidades registradas.
+    - `fk_unidades_tipo`: Hacia `tipos_unidad(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE`. Impide eliminar tipologías asignadas.
+  - Unicidad:
+    - `uq_unidades_propiedad_codigo`: `UNIQUE KEY (propiedad_id, codigo)`. Unicidad scoped por propiedad; el código técnico es único dentro de cada inmueble pero admisible entre propiedades distintas (D-065).
+  - Restricciones CHECK:
+    - `chk_unidades_codigo_no_vacio`: `codigo <> ''`.
+    - `chk_unidades_nombre_no_vacio`: `nombre <> ''`.
+    - `chk_unidades_capacidad_positiva`: `capacidad_personas >= 1 AND capacidad_personas <= 100`.
+    - `chk_unidades_dormitorios`: `dormitorios >= 0 AND dormitorios <= 50` (permite 0 dormitorios para tipo estudio).
+    - `chk_unidades_banos`: `banos >= 0.0 AND banos <= 50.0` (permite fracciones para medios baños).
+    - `chk_unidades_area_positiva`: `area_m2 IS NULL OR (area_m2 > 0.00 AND area_m2 <= 99999.99)`.
+  - Índices: `idx_unidades_propiedad_id`, `idx_unidades_tipo_unidad_id`, `idx_unidades_estado`, `idx_unidades_capacidad`.
+  - Principio `PROPIEDAD ≠ UNIDAD`: La unidad se subordina estructuralmente al inmueble raíz.
+  - Principio `UNIDAD ≠ REGISTRO DESECHABLE`: Cero eliminación física (`DELETE FROM unidades` = 0). Ciclo de vida gobernado por `ACTIVO` / `INACTIVO`.
+  - Principio `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD`: Cero fechas, calendarios, precios ni bloqueos en esta fase (P-004, P-005, P-006 abiertas).
+- Permisos RBAC introducidos: `unidades.ver`, `unidades.crear`, `unidades.editar`, `unidades.cambiar_estado`.
+- Opciones de menú introducidas:
+  - Nivel 2 (Secundaria): `unidades_catalogo` ('Unidades Habitacionales', bajo `propiedades`, ruta `/unidades`, icono `ti ti-door`, permiso `unidades.ver`, orden 2).
+
 ## Reglas
 
 - Claves primarias estables y claves foráneas explícitas.

@@ -473,4 +473,16 @@ class AuditoriaServicio
     {
         return $this->sanitizador;
     }
+
+    /**
+     * Consulta los registros históricos de auditoría asociados a una entidad.
+     *
+     * @param string $entidad
+     * @param string|int $entidadId
+     * @return array<int, RegistroAuditoria>
+     */
+    public function listarPorEntidad(string $entidad, string|int $entidadId): array
+    {
+        return $this->auditoriaRepo->listarPorEntidad($entidad, $entidadId);
+    }
 }

@@ -185,4 +185,14 @@ class RegistroAuditoria
             'creado_en' => $this->creadoEn,
         ];
     }
+
+    /**
+     * Alias en español según convenciones de Camargo PMS.
+     *
+     * @return array<string, mixed>
+     */
+    public function aArreglo(): array
+    {
+        return $this->aArray();
+    }
 }

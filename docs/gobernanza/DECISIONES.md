@@ -441,6 +441,46 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 5. Preservación estricta de decisiones pendientes (P-004, P-005 y P-006):
    - Se mantiene la exclusión deliberada de zonas horarias de propiedad, fechas de corte hotelero (P-004), monedas/tarifas asociadas (P-005) y reglas de concurrencia de disponibilidad (P-006) hasta sus respectivas fases autorizadas.
 
+### D-065 — Maestro Central de Unidades Físicas, tipología arquitectónica y unicidad de código por propiedad (UNIDADES-1)
+
+1. Principio ontológico de delimitación física (`PROPIEDAD ≠ UNIDAD`):
+   - La propiedad (`propiedades`) actúa exclusivamente como el inmueble, edificación o contenedor físico raíz.
+   - La unidad (`unidades`) modela la división física habitable, arrendable o alojable (ej. "Dpto 101", "Habitación 204", "Bungalow B", "Suite Presidencial") subordinada a su propiedad física (`propiedad_id NOT NULL`).
+   - Una unidad física no puede existir de forma huérfana en el sistema; toda unidad pertenece estrictamente a una propiedad física existente.
+   - Regla de negocio vinculante: Se prohíbe la creación de nuevas unidades en propiedades que se encuentren en estado `INACTIVO`. Una propiedad inactiva preserva íntegramente sus unidades históricas para fines de trazabilidad y consulta, pero no admite el registro de inventario físico adicional.
+
+2. Principio de preservación histórica (`UNIDAD ≠ REGISTRO DESECHABLE`):
+   - Las unidades físicas constituyen el inventario habitable estructural del PMS. No se admite eliminación física (`DELETE FROM unidades`) bajo ningún escenario de la operativa del sistema.
+   - El ciclo de vida de una unidad se gestiona exclusivamente a través de los estados operativos `ACTIVO` e `INACTIVO` mediante el método `cambiarEstado()`.
+   - Se prohíbe la creación de métodos o endpoints destructivos de eliminación (`eliminar()`, `DELETE /unidades/{id}`). Las solicitudes HTTP DELETE responden estrictamente `404 Not Found`.
+   - Las unidades inactivas persisten íntegras en base de datos conservando sus especificaciones físicas, auditoría previa y vínculos estructurales con su propiedad.
+
+3. Unicidad de código por propiedad (`UNIQUE(propiedad_id, codigo)`):
+   - La unicidad del código técnico de una unidad (`codigo`) tiene alcance local por propiedad (`uq_unidades_propiedad_codigo`), no global a nivel de todo el PMS.
+   - Es admisible y válido que propiedades físicas independientes contengan unidades con el mismo identificador o código (ej. "Dpto 101" en la propiedad A y "Dpto 101" en la propiedad B).
+   - Se rechaza estrictamente cualquier intento de registrar o renombrar una unidad con un código que ya exista dentro de la misma propiedad (`UnidadDuplicadaExcepcion`, HTTP 409).
+
+4. Catálogo de Tipologías Arquitectónicas (`tipos_unidad`):
+   - Las unidades se tipifican a través de un catálogo maestro estructurado (`tipos_unidad`) con semillas arquitectónicas iniciales: `DEPARTAMENTO`, `HABITACION`, `CASA`, `SUITE` y `BUNGALOW`.
+   - Cada tipo de unidad cuenta con código técnico inmutable, nombre descriptivo y estado (`ACTIVO` / `INACTIVO`).
+   - Toda unidad valida obligatoriamente que su `tipo_unidad_id` corresponda a un tipo activo y existente.
+
+5. Especificaciones físicas y validaciones numéricas:
+   - Capacidad física de personas (`capacidad_personas`): entero positivo mayor o igual a 1 (máximo 100).
+   - Dormitorios (`dormitorios`): entero no negativo mayor o igual a 0 (admitiendo 0 para tipologías monoambiente o tipo estudio).
+   - Baños (`banos`): decimal positivo o no negativo con hasta 1 decimal (ej. 1.0, 1.5, 2.0 baños).
+   - Área construida (`area_m2`): decimal opcional con hasta 2 decimales mayor a 0 si es especificada.
+   - Piso / Nivel (`piso_nivel`): cadena alfanumérica opcional de hasta 30 caracteres (admitiendo "PB", "Sótano", "Azotea", "Piso 3").
+
+6. Trazabilidad integral y auditoría bajo D-061:
+   - Toda mutación de unidades (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) es auditada de forma transversal en la tabla `auditoria`.
+   - Conforme a D-061, se resuelve explícitamente el actor ejecutor humano (`USR_x`) a partir del usuario en sesión, reservando el actor estructural `CAMARGO_PMS` (`id = 1`) únicamente para ejecuciones de sistema o CLI.
+   - En actualizaciones (`EDITAR`), se calcula el diferencial exacto de atributos mutados ignorando timestamps y metadatos relacionales, suprimiendo la emisión de eventos de auditoría redundantes cuando no existen cambios funcionales reales.
+
+7. Preservación estricta de decisiones pendientes (P-004, P-005 y P-006):
+   - Principio: `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD`.
+   - Se mantiene la exclusión deliberada de calendarios, bloqueos, tarifas nocturnas, precios, monedas (P-005), cortes hoteleros (P-004) y concurrencia de disponibilidad (P-006) hasta sus respectivas fases autorizadas.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

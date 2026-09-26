@@ -37,9 +37,11 @@
   - Maestro central de edificaciones, predios e inmuebles contenedores (`propiedades`).
   - Administración de código único, nombre, dirección física obligatoria, ubicación geográfica (departamento, provincia, distrito, país del catálogo `paises`), coordenadas GPS opcionales con rangos validados (`latitud` en `[-90, 90]`, `longitud` en `[-180, 180]`), datos de contacto y ciclo de vida histórico (`ACTIVO` ↔ `INACTIVO`).
   - Ficha técnica y perfil del inmueble (`/propiedades/{id}/perfil`) con georreferenciación y enlace interactivo a Google Maps.
-  - Respeto estricto del principio `PROPIEDAD ≠ UNIDAD` (cero unidades modeladas en esta fase) y `PROPIEDAD ≠ REGISTRO DESECHABLE` (cero eliminación física).
-- **Unidades Físicas (UNIDADES-1 — Fase subsiguiente):**
-  - Catálogo de unidades arrendables comercializables vinculadas a la propiedad raíz.
+- **Unidades Físicas y Tipologías (UNIDADES-1 — Completada):**
+  - Catálogo de tipologías arquitectónicas (`tipos_unidad`) y divisiones físicas habitacionales (`unidades`) vinculadas a su inmueble contenedor raíz.
+  - Interfaz Alina operativa en `/unidades` y ficha técnica en `/unidades/{id}/perfil`.
+  - Respeto de los principios `PROPIEDAD ≠ UNIDAD` (subordinación a propiedad_id), `UNIDAD ≠ REGISTRO DESECHABLE` (ciclo ACTIVO/INACTIVO, cero DELETE) y `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD` (fechas y precios diferidos).
+  - Unicidad scoped por propiedad `UNIQUE(propiedad_id, codigo)` bajo D-065.
 
 ## Personas y Terceros
 

@@ -138,29 +138,88 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
             </div>
         </div>
 
-        <!-- Tarjeta de Contenedor Arquitectónico (Principio PROPIEDAD ≠ UNIDAD) -->
+        <!-- Sección Funcional: Unidades de la Propiedad (UNIDADES-1) -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark">
-                    <i class="ti ti-layout-grid me-1 text-primary"></i> Contenedor de Unidades Arrendables
-                </h5>
-                <span class="badge bg-primary-subtle text-primary f-s-11">Arquitectura Estructural</span>
+                <div class="d-flex align-items-center">
+                    <i class="ti ti-door me-2 text-primary f-s-18"></i>
+                    <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark me-2">
+                        Unidades Físicas (<?= count($unidades ?? []) ?>)
+                    </h5>
+                    <span class="badge bg-primary-subtle text-primary f-s-11">Principio PROPIEDAD ≠ UNIDAD</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <?php if (!empty($puedeCrearUnidad) && $propiedad->estaActiva()): ?>
+                        <a href="<?= url_ruta("/unidades?propiedad_id={$propiedad->obtenerId()}") ?>" class="btn btn-primary btn-sm">
+                            <i class="ti ti-plus me-1"></i> Nueva Unidad
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
-            <div class="card-body p-4 text-center py-5">
-                <div class="p-3 b-r-12 bg-light-subtle d-inline-block mb-3">
-                    <i class="ti ti-door f-s-36 text-muted"></i>
-                </div>
-                <h6 class="f-w-700 f-s-16 mb-2">Principio de Dominio: PROPIEDAD ≠ UNIDAD</h6>
-                <p class="text-secondary f-s-13 mx-auto" style="max-width: 580px;">
-                    Este inmueble físico actúa exclusivamente como contenedor estructural. Las unidades arrendables
-                    (departamentos, habitaciones, oficinas) pertenecen a esta propiedad física y se gestionarán en la fase posterior
-                    <strong>UNIDADES-1</strong>, conservando la estricta separación de dominio.
-                </p>
-                <div class="mt-3">
-                    <span class="badge bg-secondary f-s-12 px-3 py-2">
-                        <i class="ti ti-clock me-1"></i> Gestión de unidades habilitada en UNIDADES-1
-                    </span>
-                </div>
+            <div class="card-body p-0">
+                <?php if (!empty($unidades)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="f-s-11 text-uppercase text-secondary">
+                                    <th style="width: 15%;">Código</th>
+                                    <th style="width: 25%;">Nombre / Unidad</th>
+                                    <th style="width: 15%;">Tipo</th>
+                                    <th style="width: 25%;">Especificaciones</th>
+                                    <th style="width: 10%;" class="text-center">Estado</th>
+                                    <th style="width: 10%;" class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($unidades as $u): ?>
+                                    <tr>
+                                        <td>
+                                            <span class="f-w-700 text-dark f-s-13"><?= e($u->obtenerCodigo()) ?></span>
+                                        </td>
+                                        <td>
+                                            <a href="<?= url_ruta("/unidades/{$u->obtenerId()}/perfil") ?>" class="fw-semibold text-primary text-decoration-none">
+                                                <?= e($u->obtenerNombre()) ?>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle f-s-11">
+                                                <?= e($u->obtenerTipoUnidadNombre() ?? 'Unidad') ?>
+                                            </span>
+                                        </td>
+                                        <td class="f-s-12 text-secondary">
+                                            <?= e($u->obtenerResumenFisico()) ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge <?= $u->estaActiva() ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> f-s-10">
+                                                <?= $u->obtenerEstado() ?>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="<?= url_ruta("/unidades/{$u->obtenerId()}/perfil") ?>" class="btn btn-outline-secondary btn-sm" title="Ver ficha técnica de la unidad">
+                                                <i class="ti ti-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center py-5 p-3">
+                        <div class="p-3 b-r-12 bg-light-subtle d-inline-block mb-3">
+                            <i class="ti ti-door-off f-s-36 text-muted"></i>
+                        </div>
+                        <h6 class="f-w-700 f-s-15 mb-1">Sin unidades habitacionales registradas</h6>
+                        <p class="text-secondary f-s-13 mx-auto mb-3" style="max-width: 480px;">
+                            Esta propiedad física no tiene divisiones o unidades registradas actualmente.
+                        </p>
+                        <?php if (!empty($puedeCrearUnidad) && $propiedad->estaActiva()): ?>
+                            <a href="<?= url_ruta("/unidades?propiedad_id={$propiedad->obtenerId()}") ?>" class="btn btn-primary btn-sm">
+                                <i class="ti ti-plus me-1"></i> Registrar Primera Unidad
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
