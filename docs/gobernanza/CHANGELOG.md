@@ -4,6 +4,35 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase ROLES-2 — Administración Visual de Roles y Permisos
+
+- **Administración Visual de Roles y Permisos (`/configuracion/roles`):**
+  - Implementada la interfaz administrativa completa con maquetación Alina y Bootstrap 5 bajo `/configuracion/roles` y opción de menú autorizada (`config_roles`, permiso `roles.ver`).
+  - Catálogo de roles con búsqueda en tiempo real (nombre, clave, descripción), filtros por estado (`ACTIVO`/`INACTIVO`), conteo agregado de usuarios vinculados y permisos asociados.
+  - Cuatro modales Bootstrap 5 orquestados de forma asíncrona:
+    - *Crear Rol:* Formulario con validación en cliente mediante PristineJS v1.1.0 local, clave técnica normalizada en mayúsculas (alfanumérico y guión bajo, 3 a 50 caracteres), nombre (2 a 100 caracteres), descripción opcional y estado inicial. Prohibición de crear roles con la clave reservada `SUPERADMINISTRADOR`.
+    - *Editar Rol:* Modificación segura de nombre, descripción y estado operativo. Clave técnica protegida en modo solo lectura para roles del sistema. Prohibición de desactivar el rol `SUPERADMINISTRADOR`.
+    - *Matriz de Permisos:* Visualización jerárquica agrupada por módulo funcional (`usuarios`, `roles`, `permisos`, `menu`) con checkboxes interactivos, botones de selección masiva global y por módulo, contador reactivo de permisos seleccionados y protección explícita de `SUPERADMINISTRADOR` que bloquea la revocación de permisos críticos de administración.
+    - *Usuarios Vinculados:* Consulta en solo lectura de las cuentas humanas que ostentan el rol, con detalle de la `Persona` vinculada, estado de la cuenta y fecha de asignación.
+- **Autorización Dinámica en Tiempo Real:**
+  - La actualización matricial de permisos de un rol impacta de inmediato en `puede()` y `obtenerPermisosEfectivos()` para los usuarios activos sin requerir re-login ni revocación forzada de sesiones.
+- **Protección Inviolable de `SUPERADMINISTRADOR` y Roles de Sistema:**
+  - El rol estructural `SUPERADMINISTRADOR` no puede ser renombrado, desactivado ni eliminado físicamente (`RolProtegidoExcepcion`).
+  - La sincronización matricial impide revocar los permisos críticos de administración del rol `SUPERADMINISTRADOR` (`roles.ver`, `roles.editar`, `permisos.ver`, `usuarios.ver`, `usuarios.editar`).
+  - Se preserva el invariante pesimista del último Superadministrador humano activo (`UltimoSuperadministradorExcepcion`).
+  - Roles con `es_sistema = 1` no permiten modificación de clave técnica ni eliminación física.
+- **Trazabilidad y Auditoría Transversal bajo D-061:**
+  - Todas las operaciones de creación (`CREAR`), edición (`EDITAR`), cambio de estado (`ACTIVAR`/`DESACTIVAR`), eliminación (`ELIMINAR`) y sincronización matricial (`ASIGNAR`/`REVOCAR`) resuelven el `ActorAuditoria` del ejecutor mediante `resolverActorEjecutor(?int $usuarioId)`.
+  - La sincronización matricial agrupa todos los eventos atómicos de asignación y revocación bajo un identificador de correlación unificado (`correlacion_id`).
+  - Cero fugas de credenciales, tokens o hashes en auditoría.
+- **Base de Datos y Esquema:**
+  - Esquema completamente cubierto por las migraciones existentes `001..009`. Cero migraciones nuevas creadas (001-009 aplicadas, 0 pendientes).
+  - Archivos bajo `SQL/` y catálogo `admin-dashboard/` intactos.
+- **Pruebas y Verificaciones:**
+  - Matriz formal `ROL2-01` a `ROL2-40` aprobada al 100% (40/40 PASS).
+  - Suite HTTP E2E Real contra servidor Apache HTTPS (`test_e2e_roles2.php`) aprobada al 100% (12/12 PASS).
+  - Cero regresiones en todo el árbol histórico de pruebas (ACTOR 6/6, USR 40/40, E2E-USR 10/10, AUD 40/40, Sanitizador 62/62, E2E-AUD 8/8, Menú 40/40).
+
 ### Micro-fase USUARIOS-1A — Corrección de Identidad del Actor de Auditoría
 
 - **Resolución Rigurosa de Identidad de Actor (`ACTOR ≠ USUARIO`):**

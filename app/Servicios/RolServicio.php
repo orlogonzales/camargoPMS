@@ -12,6 +12,7 @@ use CamargoPMS\Excepciones\RolProtegidoExcepcion;
 use CamargoPMS\Excepciones\UltimoSuperadministradorExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
 use CamargoPMS\Modelos\AccionAuditoria;
+use CamargoPMS\Modelos\ActorAuditoria;
 use CamargoPMS\Modelos\Permiso;
 use CamargoPMS\Modelos\Rol;
 use CamargoPMS\Nucleo\BaseDatos;
@@ -55,14 +56,31 @@ class RolServicio
     }
 
     /**
+     * Resuelve el actor de auditoría correspondiente al usuario ejecutor,
+     * garantizando que nunca se use un usuario_id como actor_id directo (D-061).
+     *
+     * @param int|null $usuarioId
+     * @return ActorAuditoria|null
+     */
+    private function resolverActorEjecutor(?int $usuarioId): ?ActorAuditoria
+    {
+        if ($usuarioId === null || $usuarioId <= 0) {
+            return null;
+        }
+
+        return $this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuarioId, $this->pdo);
+    }
+
+    /**
      * Crea un nuevo rol en el sistema.
      *
      * @param array<string, mixed> $datos
+     * @param int|null $ejecutadoPorUsuarioId
      * @return Rol
      * @throws ValidacionExcepcion
      * @throws RolDuplicadoExcepcion
      */
-    public function crearRol(array $datos): Rol
+    public function crearRol(array $datos, ?int $ejecutadoPorUsuarioId = null): Rol
     {
         $clave = isset($datos['codigo']) ? strtoupper(trim((string) $datos['codigo'])) : (isset($datos['clave']) ? strtoupper(trim((string) $datos['clave'])) : '');
         $nombre = isset($datos['nombre']) ? trim((string) $datos['nombre']) : '';
@@ -109,7 +127,30 @@ class RolServicio
             false
         );
 
-        return $this->rolRepo->insertar($nuevoRol);
+        $rolPersistido = $this->rolRepo->insertar($nuevoRol);
+
+        // Auditoría transversal con D-061
+        try {
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CREAR,
+                'seguridad',
+                'rol',
+                (string) $rolPersistido->obtenerId(),
+                "Creación del rol '{$rolPersistido->obtenerCodigo()}'",
+                null,
+                $rolPersistido->aArreglo(),
+                null,
+                $actorEjecutor,
+                $ejecutadoPorUsuarioId,
+                null,
+                $this->pdo
+            );
+        } catch (Throwable) {
+            // Prevenir interrupción si la auditoría informativa falla
+        }
+
+        return $rolPersistido;
     }
 
     /**
@@ -117,13 +158,14 @@ class RolServicio
      *
      * @param int $id
      * @param array<string, mixed> $datos
+     * @param int|null $ejecutadoPorUsuarioId
      * @return Rol
      * @throws RolNoEncontradoExcepcion
      * @throws RolProtegidoExcepcion
      * @throws ValidacionExcepcion
      * @throws RolDuplicadoExcepcion
      */
-    public function actualizarRol(int $id, array $datos): Rol
+    public function actualizarRol(int $id, array $datos, ?int $ejecutadoPorUsuarioId = null): Rol
     {
         $rolExistente = $this->rolRepo->buscarPorId($id);
         if (!$rolExistente) {
@@ -160,6 +202,13 @@ class RolServicio
             throw new ValidacionExcepcion('El nombre del rol es obligatorio.', ['nombre' => 'Requerido']);
         }
 
+        if (mb_strlen($nombre, 'UTF-8') < 2 || mb_strlen($nombre, 'UTF-8') > 100) {
+            throw new ValidacionExcepcion(
+                'El nombre del rol debe tener entre 2 y 100 caracteres.',
+                ['nombre' => 'Longitud fuera de rango (2 a 100)']
+            );
+        }
+
         if (!in_array($estado, ['ACTIVO', 'INACTIVO'], true)) {
             throw new ValidacionExcepcion("El estado '{$estado}' no es válido para un rol.");
         }
@@ -184,7 +233,30 @@ class RolServicio
 
         $this->rolRepo->actualizar($rolActualizado);
 
-        return $this->rolRepo->buscarPorId($id) ?? $rolActualizado;
+        $rolFinal = $this->rolRepo->buscarPorId($id) ?? $rolActualizado;
+
+        // Auditoría transversal con D-061
+        try {
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::EDITAR,
+                'seguridad',
+                'rol',
+                (string) $id,
+                "Modificación del rol '{$rolFinal->obtenerCodigo()}'",
+                $rolExistente->aArreglo(),
+                $rolFinal->aArreglo(),
+                null,
+                $actorEjecutor,
+                $ejecutadoPorUsuarioId,
+                null,
+                $this->pdo
+            );
+        } catch (Throwable) {
+            // Prevenir interrupción si la auditoría informativa falla
+        }
+
+        return $rolFinal;
     }
 
     /**
@@ -192,12 +264,13 @@ class RolServicio
      *
      * @param int $id
      * @param string $nuevoEstado
+     * @param int|null $ejecutadoPorUsuarioId
      * @return bool
      * @throws RolNoEncontradoExcepcion
      * @throws RolProtegidoExcepcion
      * @throws ValidacionExcepcion
      */
-    public function cambiarEstadoRol(int $id, string $nuevoEstado): bool
+    public function cambiarEstadoRol(int $id, string $nuevoEstado, ?int $ejecutadoPorUsuarioId = null): bool
     {
         $rol = $this->rolRepo->buscarPorId($id);
         if (!$rol) {
@@ -215,7 +288,12 @@ class RolServicio
             );
         }
 
-        return $this->rolRepo->actualizar(new Rol(
+        $estadoAnterior = $rol->obtenerEstado();
+        if ($estadoAnterior === $nuevoEstado) {
+            return true;
+        }
+
+        $rolActualizado = new Rol(
             $rol->obtenerId(),
             $rol->obtenerCodigo(),
             $rol->obtenerNombre(),
@@ -223,19 +301,47 @@ class RolServicio
             $nuevoEstado,
             $rol->esSistema(),
             $rol->esSuperadministrador()
-        ));
+        );
+
+        $resultado = $this->rolRepo->actualizar($rolActualizado);
+
+        if ($resultado) {
+            try {
+                $accion = ($nuevoEstado === 'ACTIVO') ? AccionAuditoria::ACTIVAR : AccionAuditoria::DESACTIVAR;
+                $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+                $this->auditoriaServicio->registrar(
+                    $accion,
+                    'seguridad',
+                    'rol',
+                    (string) $id,
+                    "Cambio de estado administrativo a {$nuevoEstado} para el rol '{$rol->obtenerCodigo()}'",
+                    ['estado' => $estadoAnterior],
+                    ['estado' => $nuevoEstado],
+                    null,
+                    $actorEjecutor,
+                    $ejecutadoPorUsuarioId,
+                    null,
+                    $this->pdo
+                );
+            } catch (Throwable) {
+                // Prevenir interrupción
+            }
+        }
+
+        return $resultado;
     }
 
     /**
      * Elimina físicamente un rol no protegido y sin usuarios asociados.
      *
      * @param int $id
+     * @param int|null $ejecutadoPorUsuarioId
      * @return bool
      * @throws RolNoEncontradoExcepcion
      * @throws RolProtegidoExcepcion
      * @throws ValidacionExcepcion
      */
-    public function eliminarRol(int $id): bool
+    public function eliminarRol(int $id, ?int $ejecutadoPorUsuarioId = null): bool
     {
         $rol = $this->rolRepo->buscarPorId($id);
         if (!$rol) {
@@ -259,7 +365,32 @@ class RolServicio
             );
         }
 
-        return $this->rolRepo->eliminar($id);
+        $datosPrevios = $rol->aArreglo();
+        $resultado = $this->rolRepo->eliminar($id);
+
+        if ($resultado) {
+            try {
+                $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::ELIMINAR,
+                    'seguridad',
+                    'rol',
+                    (string) $id,
+                    "Eliminación del rol '{$rol->obtenerCodigo()}'",
+                    $datosPrevios,
+                    null,
+                    null,
+                    $actorEjecutor,
+                    $ejecutadoPorUsuarioId,
+                    null,
+                    $this->pdo
+                );
+            } catch (Throwable) {
+                // Prevenir interrupción
+            }
+        }
+
+        return $resultado;
     }
 
     /**
@@ -448,30 +579,203 @@ class RolServicio
     }
 
     /**
-     * Sincroniza exhaustivamente la lista de permisos de un rol.
+     * Sincroniza exhaustivamente la lista de permisos de un rol con protección
+     * para SUPERADMINISTRADOR y trazabilidad transaccional de auditoría bajo D-061.
      *
      * @param int $rolId
      * @param array<int> $permisoIds
-     * @return void
+     * @param int|null $ejecutadoPorUsuarioId
+     * @param string|null $correlacionId
+     * @return array<string, mixed>
      * @throws RolNoEncontradoExcepcion
      * @throws PermisoNoEncontradoExcepcion
+     * @throws RolProtegidoExcepcion
+     * @throws Throwable
      */
-    public function sincronizarPermisosDeRol(int $rolId, array $permisoIds): void
-    {
+    public function sincronizarPermisosDeRol(
+        int $rolId,
+        array $permisoIds,
+        ?int $ejecutadoPorUsuarioId = null,
+        ?string $correlacionId = null
+    ): array {
         $rol = $this->rolRepo->buscarPorId($rolId);
         if (!$rol) {
             throw new RolNoEncontradoExcepcion($rolId);
         }
 
-        // Validar que todos los permisos existan
+        // Normalizar lista de IDs (enteros únicos mayores a 0)
+        $permisoIdsNormalizados = [];
         foreach ($permisoIds as $pId) {
-            $p = $this->permisoRepo->buscarPorId((int) $pId);
+            $pInt = (int) $pId;
+            if ($pInt > 0) {
+                $permisoIdsNormalizados[] = $pInt;
+            }
+        }
+        $permisoIdsNormalizados = array_values(array_unique($permisoIdsNormalizados));
+
+        // Validar que todos los permisos existan
+        $permisosCatalogo = [];
+        foreach ($permisoIdsNormalizados as $pId) {
+            $p = $this->permisoRepo->buscarPorId($pId);
             if (!$p) {
                 throw new PermisoNoEncontradoExcepcion($pId);
             }
+            $permisosCatalogo[$pId] = $p;
         }
 
-        $this->autorizacionRepo->sincronizarPermisosRol($rolId, $permisoIds);
+        // Si es SUPERADMINISTRADOR, proteger contra revocación de permisos críticos
+        if ($rol->esSuperadministrador()) {
+            $codigosPermisosNuevos = array_map(fn($p) => $p->obtenerCodigo(), $permisosCatalogo);
+            $permisosCriticos = ['roles.ver', 'roles.editar', 'permisos.ver', 'usuarios.ver', 'usuarios.editar'];
+            foreach ($permisosCriticos as $critico) {
+                if (!in_array($critico, $codigosPermisosNuevos, true)) {
+                    throw new RolProtegidoExcepcion(
+                        "No se pueden revocar permisos críticos ('{$critico}') del rol SUPERADMINISTRADOR."
+                    );
+                }
+            }
+        }
+
+        // Permisos actuales del rol
+        $permisosActuales = $this->autorizacionRepo->obtenerPermisosRol($rolId);
+        $actualesIds = array_map(fn($p) => (int) $p->obtenerId(), $permisosActuales);
+
+        $agregados = array_values(array_diff($permisoIdsNormalizados, $actualesIds));
+        $removidos = array_values(array_diff($actualesIds, $permisoIdsNormalizados));
+
+        // Transacción para sincronización atómica y auditoría consistente
+        $transaccionPropia = false;
+        if (!$this->pdo->inTransaction()) {
+            $this->pdo->beginTransaction();
+            $transaccionPropia = true;
+        }
+
+        try {
+            $this->autorizacionRepo->sincronizarPermisosRol($rolId, $permisoIdsNormalizados);
+
+            $correlacion = $correlacionId ?? $this->auditoriaServicio->generarCorrelacionId();
+            $actorEjecutor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+
+            // Auditar permisos asignados
+            foreach ($agregados as $pId) {
+                $pObj = $permisosCatalogo[$pId] ?? $this->permisoRepo->buscarPorId((int) $pId);
+                $pCodigo = $pObj ? $pObj->obtenerCodigo() : (string) $pId;
+
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::ASIGNAR,
+                    'seguridad',
+                    'rol_permiso',
+                    "{$rolId}:{$pId}",
+                    "Asignación de permiso '{$pCodigo}' al rol '{$rol->obtenerCodigo()}'",
+                    null,
+                    [
+                        'rol_id' => $rolId,
+                        'rol_codigo' => $rol->obtenerCodigo(),
+                        'permiso_id' => $pId,
+                        'permiso_codigo' => $pCodigo,
+                    ],
+                    null,
+                    $actorEjecutor,
+                    $ejecutadoPorUsuarioId,
+                    $correlacion,
+                    $this->pdo
+                );
+            }
+
+            // Auditar permisos revocados
+            foreach ($removidos as $pId) {
+                $pObj = $this->permisoRepo->buscarPorId((int) $pId);
+                $pCodigo = $pObj ? $pObj->obtenerCodigo() : (string) $pId;
+
+                $this->auditoriaServicio->registrar(
+                    AccionAuditoria::REVOCAR,
+                    'seguridad',
+                    'rol_permiso',
+                    "{$rolId}:{$pId}",
+                    "Revocación de permiso '{$pCodigo}' del rol '{$rol->obtenerCodigo()}'",
+                    [
+                        'rol_id' => $rolId,
+                        'rol_codigo' => $rol->obtenerCodigo(),
+                        'permiso_id' => $pId,
+                        'permiso_codigo' => $pCodigo,
+                    ],
+                    null,
+                    null,
+                    $actorEjecutor,
+                    $ejecutadoPorUsuarioId,
+                    $correlacion,
+                    $this->pdo
+                );
+            }
+
+            if ($transaccionPropia && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+
+            return [
+                'rol_id' => $rolId,
+                'agregados' => $agregados,
+                'removidos' => $removidos,
+                'total_asignados' => count($permisoIdsNormalizados),
+                'correlacion_id' => $correlacion,
+            ];
+        } catch (Throwable $e) {
+            if ($transaccionPropia && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Lista roles con agregaciones de conteo de usuarios y permisos vinculados,
+     * admitiendo filtros opcionales de búsqueda y estado.
+     *
+     * @param string|null $busqueda
+     * @param string|null $estado
+     * @return array<int, array<string, mixed>>
+     */
+    public function listarRolesConConteos(?string $busqueda = null, ?string $estado = null): array
+    {
+        return $this->rolRepo->listarRolesConConteos($busqueda, $estado);
+    }
+
+    /**
+     * Obtiene el detalle consolidado de un rol, incluyendo sus permisos asignados
+     * y los usuarios que lo tienen asignado actualmente.
+     *
+     * @param int $id
+     * @return array<string, mixed>
+     * @throws RolNoEncontradoExcepcion
+     */
+    public function obtenerDetalleRol(int $id): array
+    {
+        $rol = $this->rolRepo->buscarPorId($id);
+        if (!$rol) {
+            throw new RolNoEncontradoExcepcion($id);
+        }
+
+        $permisos = $this->autorizacionRepo->obtenerPermisosRol($id);
+        $usuarios = $this->rolRepo->obtenerUsuariosPorRol($id);
+
+        return [
+            'rol' => $rol->aArreglo(),
+            'permisos' => array_map(fn($p) => $p->aArreglo(), $permisos),
+            'permisos_ids' => array_map(fn($p) => (int) $p->obtenerId(), $permisos),
+            'usuarios' => $usuarios,
+            'total_usuarios' => count($usuarios),
+            'total_permisos' => count($permisos),
+        ];
+    }
+
+    /**
+     * Lista todos los permisos del catálogo agrupados jerárquicamente por módulo funcional.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public function listarPermisosAgrupados(): array
+    {
+        return $this->permisoRepo->listarAgrupadosPorModulo();
     }
 
     /**

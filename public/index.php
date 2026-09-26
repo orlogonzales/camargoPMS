@@ -147,6 +147,47 @@ $enrutador->post('/configuracion/menu/{id}/eliminar', [\CamargoPMS\Controladores
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
 ]);
 
+// Rutas de Administración de Roles y Permisos (ROLES-2)
+$enrutador->get('/configuracion/roles', [\CamargoPMS\Controladores\RolControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.ver'),
+]);
+$enrutador->get('/configuracion/roles/datos', [\CamargoPMS\Controladores\RolControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.ver'),
+]);
+$enrutador->get('/configuracion/roles/permisos-catalogo', [\CamargoPMS\Controladores\RolControlador::class, 'catalogoPermisosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.ver'),
+]);
+$enrutador->post('/configuracion/roles', [\CamargoPMS\Controladores\RolControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.crear'),
+]);
+$enrutador->get('/configuracion/roles/{id}', [\CamargoPMS\Controladores\RolControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.ver'),
+]);
+$enrutador->put('/configuracion/roles/{id}', [\CamargoPMS\Controladores\RolControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->post('/configuracion/roles/{id}', [\CamargoPMS\Controladores\RolControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->patch('/configuracion/roles/{id}/estado', [\CamargoPMS\Controladores\RolControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->post('/configuracion/roles/{id}/estado', [\CamargoPMS\Controladores\RolControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->put('/configuracion/roles/{id}/permisos', [\CamargoPMS\Controladores\RolControlador::class, 'guardarPermisos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->post('/configuracion/roles/{id}/permisos', [\CamargoPMS\Controladores\RolControlador::class, 'guardarPermisos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->delete('/configuracion/roles/{id}', [\CamargoPMS\Controladores\RolControlador::class, 'eliminar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+$enrutador->post('/configuracion/roles/{id}/eliminar', [\CamargoPMS\Controladores\RolControlador::class, 'eliminar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('roles.editar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

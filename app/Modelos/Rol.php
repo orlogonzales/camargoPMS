@@ -146,4 +146,25 @@ class Rol
     {
         return self::hidratar($datos);
     }
+
+    /**
+     * Serializa los datos del rol a un arreglo asociativo.
+     *
+     * @return array<string, mixed>
+     */
+    public function aArreglo(): array
+    {
+        return [
+            'id' => $this->id,
+            'codigo' => $this->codigo,
+            'clave' => $this->codigo,
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion,
+            'estado' => $this->estado,
+            'es_sistema' => $this->esSistema,
+            'es_superadministrador' => $this->esSuperadministrador,
+            'creado_en' => $this->creadoEn,
+            'actualizado_en' => $this->actualizadoEn,
+        ];
+    }
 }

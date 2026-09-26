@@ -386,6 +386,20 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
      - Se erradica la colisión accidental de autoría en el usuario inicial (`usuario_id = 1`), asegurando que sus acciones queden correctamente imputadas a su actor humano `USR_1` (`actores.id = 2`) y no al actor estructural del sistema `CAMARGO_PMS` (`actores.id = 1`).
    - Cuando la operación no cuente con un usuario ejecutor explícito (procesos en segundo plano, tareas programadas, CLI o ejecuciones sin contexto), el actor se resuelve defensivamente hacia el contexto actual de sesión o hacia el actor de sistema `CAMARGO_PMS` (`tipo = 'SISTEMA'`).
 
+### D-062 — Administración visual de Roles, sincronización matricial de permisos y protección estructural (ROLES-2)
+
+1. Principio de autorización en tiempo real (`ROL DE AUTORIZACIÓN ≠ CARGO LABORAL`):
+   - La administración de roles y permisos bajo `/configuracion/roles` opera como fuente canónica de autorización RBAC del sistema.
+   - Toda alteración en la asignación matricial de permisos de un rol entra en vigencia de forma inmediata en las consultas de `AutorizacionServicio::puede()` y `obtenerPermisosEfectivos()` para los usuarios activos sin requerir re-login ni revocación de sesiones.
+2. Protección inviolable del rol `SUPERADMINISTRADOR` y roles del sistema:
+   - El rol estructural `SUPERADMINISTRADOR` es inmutable en su clave técnica, no puede ser desactivado (`estado = INACTIVO`) ni eliminado físicamente de la base de datos (`RolProtegidoExcepcion`).
+   - La sincronización matricial de permisos prohíbe taxativamente revocar los permisos críticos de administración del sistema (`roles.ver`, `roles.editar`, `permisos.ver`, `usuarios.ver`, `usuarios.editar`), lanzando `RolProtegidoExcepcion`.
+   - Se mantiene el invariante pesimista del último Superadministrador humano activo (`>= 1` superadmin humano activo con persona activa), prohibiendo su revocación o desactivación.
+   - Roles con `es_sistema = 1` impiden modificación de su clave técnica y eliminación física.
+3. Sincronización atómica y trazabilidad unificada bajo D-061:
+   - Las mutaciones matriciales de permisos se procesan de forma atómica dentro de una transacción de base de datos (`beginTransaction` / `commit` / `rollBack`).
+   - Cada permiso agregado genera un evento de auditoría `ASIGNAR` y cada permiso retirado genera `REVOCAR`, agrupados bajo un identificador de correlación unificado (`correlacion_id`) y con autoría humana resuelta conforme a D-061 (`resolverActorEjecutor()`).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

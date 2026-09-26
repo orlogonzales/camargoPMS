@@ -158,4 +158,27 @@ class PermisoRepositorio
 
         return $permisos;
     }
+
+    /**
+     * Lista todos los permisos agrupados jerárquicamente por módulo funcional.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public function listarAgrupadosPorModulo(): array
+    {
+        $sql = 'SELECT * FROM permisos ORDER BY modulo ASC, codigo ASC';
+        $stmt = $this->pdo->query($sql);
+
+        $agrupados = [];
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $modulo = (string) $fila['modulo'];
+            if (!isset($agrupados[$modulo])) {
+                $agrupados[$modulo] = [];
+            }
+            $permiso = Permiso::hidratar($fila);
+            $agrupados[$modulo][] = $permiso->aArreglo();
+        }
+
+        return $agrupados;
+    }
 }

@@ -144,4 +144,25 @@ class Permiso
     {
         return self::hidratar($datos);
     }
+
+    /**
+     * Serializa los datos del permiso a un arreglo asociativo.
+     *
+     * @return array<string, mixed>
+     */
+    public function aArreglo(): array
+    {
+        return [
+            'id' => $this->id,
+            'codigo' => $this->codigo,
+            'clave' => $this->codigo,
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion,
+            'modulo' => $this->modulo,
+            'estado' => $this->estado,
+            'es_sistema' => $this->esSistema,
+            'creado_en' => $this->creadoEn,
+            'actualizado_en' => $this->actualizadoEn,
+        ];
+    }
 }
