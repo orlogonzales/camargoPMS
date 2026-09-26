@@ -150,17 +150,27 @@ Las operaciones emitidas congelan los valores necesarios para reproducirlas: tar
 
 La configuración y tarifas sensibles a vigencia usan `vigente_desde`, `vigente_hasta` o versión equivalente. No sobrescribir una fila histórica si altera el significado de registros ya emitidos.
 
-## Disponibilidad y concurrencia
+## Disponibilidad y concurrencia (Diseño Técnico Aprobado — GATE OPERATIVO-1 / D-066 y D-067)
 
-Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica. El servicio debe:
+Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica. A partir del Gate Operativo-1 queda formalmente aprobado el **Modelo Híbrido con Inventario Diario Sparse**:
 
-1. abrir transacción;
-2. adquirir la protección de concurrencia definida;
-3. volver a comprobar solapamientos;
-4. persistir todos los cambios relacionados;
-5. confirmar o revertir por completo.
-
-La estrategia exacta —bloqueo pesimista, tabla de inventario temporal u otra— se decidirá con pruebas de concurrencia. Una comprobación previa en interfaz nunca es suficiente.
+1. **Tabla de inventario diario (`inventario_diario_unidades`) para DISPONIBILIDAD-1:**
+   - Estructura: `id BIGINT AUTO_INCREMENT PRIMARY KEY`, `reserva_id INT NOT NULL`, `unidad_id INT NOT NULL`, `fecha DATE NOT NULL`, `tipo_bloqueo ENUM('RESERVA', 'BLOQUEO_MANUAL', 'MANTENIMIENTO', 'HOLD_TEMPORAL') NOT NULL`, `creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP`.
+   - Restricción defensiva inviolable: `UNIQUE KEY uq_unidad_fecha (unidad_id, fecha)`.
+   - Modelo *sparse*: solo contiene filas para noches ocupadas o bloqueadas (no pregenera millones de filas vacías).
+   - Disponibilidad formal = ausencia de registro para `(unidad_id, fecha)` en el intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$.
+2. **Zona horaria por propiedad (en DISPONIBILIDAD-1):**
+   - Incorporación de columna nullable `zona_horaria VARCHAR(50) NULL DEFAULT NULL` en tabla `propiedades` para almacenar identificadores IANA (ej. `America/Lima`). Si es `NULL`, hereda el valor central del PMS (`operacion.zona_horaria_predeterminada`).
+3. **Flujo transaccional obligatorio:**
+   - Iniciar transacción PDO (`beginTransaction`).
+   - Ordenar inserciones deterministamente: `ORDER BY unidad_id ASC, fecha ASC` (prevención matemática de deadlocks cruzados).
+   - Insertar cada noche del intervalo semiabierto en el inventario.
+   - Si colisiona alguna fecha (error de clave duplicada 1062 o lock wait timeout 1205), capturar y ejecutar `rollBack()` total inmediato. Mapear a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+   - Si todas las noches se persisten exitosamente, ejecutar `commit()`.
+4. **Liberación atómica:**
+   - La cancelación o expiración de un hold temporal ejecuta `DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`, liberando las noches de forma inmediata sin residuos.
+5. **Estado de migraciones:**
+   - Las migraciones productivas activas son estrictamente `001` a `012` (24 tablas, 25 Foreign Keys). La migración `013` será creada en la fase `DISPONIBILIDAD-1`.
 
 ## Migraciones
 

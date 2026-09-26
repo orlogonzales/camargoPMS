@@ -481,14 +481,80 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Principio: `UNIDAD ≠ RESERVA / TARIFA / DISPONIBILIDAD`.
    - Se mantiene la exclusión deliberada de calendarios, bloqueos, tarifas nocturnas, precios, monedas (P-005), cortes hoteleros (P-004) y concurrencia de disponibilidad (P-006) hasta sus respectivas fases autorizadas.
 
+### D-066 — Modelo Temporal Hotelero, Zonas Horarias IANA y Definición del Día Hotelero (cierra P-004)
+
+1. Separación ontológica tripartita:
+   - `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.
+   - **Instante técnico (`TIMESTAMP` / `DATETIME` UTC):** Representa un punto exacto e inequívoco en la línea de tiempo universal (ej. creación de registros, tokens, sesiones, eventos de auditoría, webhooks). Se almacena normalizado en UTC.
+   - **Fecha hotelera (`DATE` local):** Representa la noche de ocupación o venta en la localidad geográfica donde se sitúa el inmueble físico (ej. `2026-11-10`). No es un instante ni debe convertirse indiscriminadamente a UTC.
+   - **Horario operacional (`TIME` / parámetros configurables):** Las horas de check-in (ej. 15:00) y check-out (ej. 11:00) son parámetros operativos administrativos que regulan el flujo de huéspedes, limpieza y entrega de llaves. No deciden qué noches están ocupadas en el motor de inventario.
+
+2. Identificadores de zona horaria IANA:
+   - Se prohíbe el uso de offsets fijos (`UTC-5`, `GMT-5`, `-05:00`) como identidad persistente de zona horaria, ya que carecen de semántica sobre cambios estacionales o reglas territoriales.
+   - Todo identificador de zona horaria en el sistema debe ser un identificador canónico IANA (ej. `America/Lima`).
+   - Zona horaria predeterminada de Camargo PMS: `America/Lima` (administrada en el parámetro central `operacion.zona_horaria_predeterminada`).
+
+3. Zona horaria por propiedad:
+   - La arquitectura soporta que cada propiedad física pueda operar en su propia zona horaria local.
+   - En la fase `DISPONIBILIDAD-1`, la tabla `propiedades` incorporará una columna `zona_horaria VARCHAR(50) NULL DEFAULT NULL`.
+   - Semántica resolutiva: si `propiedad.zona_horaria IS NOT NULL`, se utiliza dicha zona; si es `NULL`, se hereda la zona horaria predeterminada del PMS (`operacion.zona_horaria_predeterminada`).
+
+4. Definición matemática del intervalo hotelero y cálculo de noches:
+   - La estancia se modela como un **intervalo semiabierto**:
+     $$\text{Estancia} = [\text{fecha\_entrada}, \text{fecha\_salida})$$
+   - El huésped ocupa las noches comprendidas desde `fecha_entrada` (inclusive) hasta el día previo a `fecha_salida`. La noche correspondiente a `fecha_salida` **NO** se consume, quedando disponible para el check-in de una nueva reserva ese mismo día.
+   - Contrato matemático de noches:
+     $$\text{noches} = \text{fecha\_salida} - \text{fecha\_entrada}$$
+   - Restricción estricta de dominio para el motor ordinario: `fecha_salida > fecha_entrada` ($\text{noches} \ge 1$). Se rechazan estancias de 0 noches o fechas invertidas. Casos especiales futuros (day use, early check-in, late checkout) serán modelados como servicios complementarios o estados operativos, sin alterar el contrato base del intervalo semiabierto.
+
+### D-067 — Estrategia de Concurrencia para Disponibilidad e Inventario Diario (cierra P-006)
+
+1. Arquitectura y Modelo Híbrido:
+   - Se adopta el **Modelo Híbrido** compuesto por:
+     a) **Entidad Comercial/Operacional (`reservas` / `bloqueos`):** Representa el contrato comercial, titular, estado administrativo y metadatos de la operación.
+     b) **Inventario Diario Físico (`inventario_diario_unidades`):** Representa la ocupación atómica de cada noche individual para cada unidad física.
+     c) **Transacción ACID Relacional:** Garantiza la coherencia total entre la entidad comercial y el inventario diario.
+
+2. Semántica del Inventario Diario Sparse:
+   - Se adopta el modelo **Sparse (disperso / bajo demanda)**: la tabla de inventario diario contiene únicamente filas para las noches efectivamente ocupadas o bloqueadas. No se pregeneran millones de filas vacías para años futuros.
+   - Disponibilidad se define formalmente como la **ausencia de fila de bloqueo/ocupación** para la tupla `(unidad_id, fecha)` en el rango semiabierto solicitado.
+
+3. Restricción UNIQUE como Última Línea Defensiva Inviolable:
+   - La tabla `inventario_diario_unidades` implementa la restricción única:
+     `UNIQUE KEY uq_unidad_fecha (unidad_id, fecha)`
+   - Ninguna reserva puede consolidarse basándose exclusivamente en consultas previas (`SELECT ... WHERE`), dado que existe una ventana de carrera (*race condition*) entre el check y el insert.
+   - La restricción `UNIQUE` en el motor InnoDB de la base de datos es la garantía última e inviolable que impide que dos transacciones simultáneas inserten la misma noche para la misma unidad.
+
+4. Atomicidad Transaccional y Rollback Completo:
+   - La ocupación de un intervalo multinoche se ejecuta bajo una única transacción de base de datos.
+   - Si alguna noche del intervalo colisiona con una ocupación existente (error de clave duplicada 1062 / conflicto de lock), la transacción ejecuta un `ROLLBACK` total inmediato.
+   - Queda terminantemente prohibido que una reserva quede parcialmente persistida o que queden noches huérfanas en el inventario diario.
+
+5. Orden Determinista de Bloqueos para Prevención de Deadlocks:
+   - En cualquier operación que involucre múltiples noches o múltiples unidades, las inserciones/bloqueos deben procesarse obligatoriamente en orden determinista:
+     `ORDER BY unidad_id ASC, fecha ASC`
+   - Esto elimina el riesgo de bloqueos cruzados (*deadlocks*) entre transacciones concurrentes que soliciten las mismas unidades en órdenes distintos.
+
+6. Manejo de Conflictos y Excepciones de Dominio:
+   - Los errores de colisión por clave duplicada (`1062`), lock wait timeouts (`1205`) o deadlocks (`1213`) no deben propagarse como HTTP 500.
+   - Deben capturarse en la capa de servicio y traducirse a una excepción de dominio específica: `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), indicando con precisión la unidad y fecha que causaron el conflicto.
+
+7. Liberación Atómica de Noches:
+   - La cancelación de una reserva o la expiración de un hold temporal de pago ejecuta la eliminación atómica de sus noches en el inventario diario (`DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`), dejando las fechas inmediatamente disponibles para otros clientes sin residuos lógicos.
+
+8. Centralización Arquitectónica y Camargo PMS como Única Fuente de Verdad:
+   - Todos los canales de venta (PMS administrativo, WordPress, App móvil, canales OTA / Airbnb, APIs externas y Webhooks) deben consumir forzosamente el **mismo servicio de disponibilidad**, la **misma transacción** y las **mismas restricciones de concurrencia**.
+   - Ningún canal externo mantiene inventario autoritativo paralelo.
+
 ## Pendientes de decisión
 
-| ID | Tema | Momento límite |
-|---|---|---|
-| P-003 | Framework de pruebas PHP/JS | Antes de pruebas automatizadas de dominio |
-| P-004 | Estrategia de zona horaria y fecha hotelera | Antes de disponibilidad |
-| P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja |
-| P-006 | Estrategia de concurrencia para disponibilidad | Antes de reservas |
-| P-007 | Librería PDF | Antes de contratos/recibos |
-| P-008 | Proveedor inicial de pagos | Antes de integración de pagos |
-| P-009 | Retención de datos y auditoría | Antes de producción |
+| ID | Tema | Momento límite | Estado |
+|---|---|---|---|
+| P-003 | Framework de pruebas PHP/JS | Antes de pruebas automatizadas de dominio | Pendiente |
+| P-004 | Estrategia de zona horaria y fecha hotelera | Antes de disponibilidad | **Cerrada en D-066** |
+| P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja | **PENDIENTE (ABIERTA)** |
+| P-006 | Estrategia de concurrencia para disponibilidad | Antes de reservas | **Cerrada en D-067** |
+| P-007 | Librería PDF | Antes de contratos/recibos | Pendiente |
+| P-008 | Proveedor inicial de pagos | Antes de integración de pagos | Pendiente |
+| P-009 | Retención de datos y auditoría | Antes de producción | Pendiente |
+

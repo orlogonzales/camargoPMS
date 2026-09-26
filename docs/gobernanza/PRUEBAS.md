@@ -114,9 +114,15 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `E2E-UNI-10`: PUT `/unidades/{id}` actualiza capacidades físicas y metadatos (HTTP 200 JSON).
   - `E2E-UNI-11`: PATCH `/unidades/{id}/estado` conmuta ciclo de vida `ACTIVO` ↔ `INACTIVO` con HTTP 200 JSON.
   - `E2E-UNI-12`: DELETE `/unidades/{id}` es una ruta no registrada que responde 404 Not Found (garantía de no DELETE físico).
+- **Harness Técnico de Concurrencia de Disponibilidad e Inventario Diario (CONC-01 a CONC-05 — GATE OPERATIVO-1 / P-006):** 5 verificaciones automáticas de concurrencia real ejecutadas sobre base de datos efímera aislada (`camargo_pms_concurrencia_p006`) con dos conexiones PDO concurrentes independientes:
+  - `CONC-01`: Concurrencia directa / Condición de carrera por la misma noche en una unidad. Dos transacciones concurrentes intentan ocupar la misma fecha; solo la primera confirma exitosamente (`COMMIT`), mientras que la segunda es bloqueada y rechazada por la restricción `UNIQUE (unidad_id, fecha)`. Cero sobreventa confirmada (1 PASS / 0 FAIL).
+  - `CONC-02`: Atomicidad multinoche y rollback completo. Un intento de reserva multinoche colisiona con una noche previamente ocupada y ejecuta `ROLLBACK` total inmediato de toda la transacción; comprobación estricta de cero noches huérfanas o reservas parcialmente persistidas en base de datos (1 PASS / 0 FAIL).
+  - `CONC-03`: Coexistencia de intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$. Comprobación de que la fecha de salida (checkout) de una reserva y la fecha de entrada (check-in) de una reserva subsecuente sobre la misma unidad en la misma fecha calendario coexisten a la perfección sin generar colisión espuria (1 PASS / 0 FAIL).
+  - `CONC-04`: Liberación atómica y reocupación inmediata. La cancelación o expiración de una reserva elimina atómicamente sus noches en el inventario diario y permite la reocupación inmediata por otra reserva sin residuos lógicos (1 PASS / 0 FAIL).
+  - `CONC-05`: Timeouts defensivos y verificación de cero locks residuales. La sesión impone `innodb_lock_wait_timeout = 2` y confirma la inexistencia de transacciones zombis o bloqueos residuales en `information_schema.innodb_trx` tras la ejecución concurrente (1 PASS / 0 FAIL).
 - **Reconciliación Canónica de Pruebas Automatizadas:**
-  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **576 ejecuciones brutas (576 PASS / 0 FAIL)**.
-  - Total de casos de prueba estrictamente independientes de dominio e integración: **488 casos independientes** (447 previos + 41 de UNIDADES-1).
+  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **581 ejecuciones brutas (581 PASS / 0 FAIL)**.
+  - Total de casos de prueba estrictamente independientes de dominio e integración: **493 casos independientes** (488 previos + 5 de GATE OPERATIVO-1).
   - Total de pruebas HTTP E2E reales contra servidor Apache: **82 casos únicos** (70 previos + 12 de UNIDADES-1).
   - Desglose independiente por módulos:
     - IDENTIDAD-1: 27/27 PASS.
@@ -129,6 +135,8 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - CONFIGURACIÓN-1: 40/40 PASS (40 CFG matriz formal unitaria/integración).
     - PROPIEDADES-1: 41/41 PASS (40 PROP matriz formal + 1 PROP-HIST-01 persistencia histórica de 10 pasos).
     - UNIDADES-1: 41/41 PASS (40 UNI matriz formal + 1 UNI-HIST-01 persistencia histórica de 10 pasos).
+    - GATE OPERATIVO-1: 5/5 PASS (5 CONC harness de concurrencia e inventario diario P-006).
     - SUITES HTTP E2E REALES (Apache HTTPS): 82/82 PASS (12 Unidades + 12 Propiedades + 12 Configuración + 12 Roles + 10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).
+
 
 

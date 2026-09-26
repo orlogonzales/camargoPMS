@@ -123,6 +123,30 @@ Maestro central de divisiones físicas y unidades habitacionales/arrendables baj
 
 Estado: completada.
 
+## GATE OPERATIVO-1 — Definición del Tiempo Hotelero y Concurrencia de Disponibilidad (P-004 + P-006)
+
+Microfase obligatoria de análisis, diseño técnico, prueba aislada y decisión formal antes del motor de disponibilidad:
+- **P-004 Resuelta (D-066 — Modelo Temporal Hotelero):**
+  - Separación ontológica tripartita: `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.
+  - UTC obligatorio para instantes técnicos (`TIMESTAMP`); `DATE` local para fechas/noches hoteleras.
+  - Identificadores canónicos IANA obligatorios (cero offsets fijos).
+  - Zona horaria predeterminada: `America/Lima` (`operacion.zona_horaria_predeterminada`), con capacidad de sobreescritura por propiedad física (`propiedades.zona_horaria` en DISPONIBILIDAD-1).
+  - Intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$. Noches: $\text{noches} = \text{fecha\_salida} - \text{fecha\_entrada}$ con $\text{noches} \ge 1$.
+  - Horarios de check-in / check-out: parámetros operativos que no alteran el consumo de noches.
+- **P-006 Resuelta (D-067 — Concurrencia e Inventario Diario):**
+  - Modelo Híbrido: Entidad comercial (`reservas`/`bloqueos`) + Inventario Diario Físico (`inventario_diario_unidades`) bajo transacción ACID.
+  - Inventario diario sparse: solo filas para noches ocupadas; disponibilidad = ausencia de fila.
+  - Barrera absoluta de BD: restricción `UNIQUE(unidad_id, fecha)` en InnoDB que previene condiciones de carrera concurrentes y sobreventa.
+  - Atomicidad y Rollback completo ante colisiones (cero reservas parcialmente confirmadas).
+  - Orden determinista de locks: `ORDER BY unidad_id ASC, fecha ASC` (prevención de deadlocks cruzados).
+  - Captura y traducción de conflictos a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+  - Liberación atómica por cancelación o expiración de hold temporal.
+  - Centralización multicanal: Camargo PMS como única fuente de verdad autoritativa para PMS, WordPress, App móvil, OTAs y Webhooks.
+- **P-005 Permanece Estrictamente Pendiente:** Moneda, redondeo e impuestos diferidos a la fase de tarifas y caja.
+- **Harness Técnico Aislado:** 5/5 verificaciones de concurrencia directa, multinoches, intervalo semiabierto, liberación y timeouts defensivos (CONC-01..05 PASS).
+
+Estado: completada (candidata a micro-baseline post GATE OPERATIVO-1).
+
 ## Dominio operativo
 
 1. propiedades, niveles y unidades;

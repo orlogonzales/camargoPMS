@@ -244,15 +244,39 @@ ACTOR ≠ USUARIO
 
 ## Ocupación y disponibilidad
 
-- Reserva: intención o bloqueo temporal.
+- Reserva: intención comercial o bloqueo con titular y condiciones de pago.
 - Estancia: ocupación efectiva de corta duración.
 - Arrendamiento: relación contractual normalmente mensual o prolongada.
-- Bloqueo: indisponibilidad administrativa.
-- Mantenimiento: indisponibilidad técnica cuando corresponda.
+- Bloqueo: indisponibilidad administrativa o bloqueo de propietario.
+- Mantenimiento: indisponibilidad física por reparaciones o acondicionamiento.
 
-La disponibilidad resulta de todas esas fuentes y futuras reservas OTA. Ninguna operación puede confirmar un solapamiento incompatible. La confirmación debe usar transacción y estrategia de concurrencia definida en el diseño de datos.
+### Modelo Temporal Hotelero (D-066 / P-004)
 
-Las reservas registran persona, unidad, fechas, duración, tarifa, conceptos, total, canal, origen, estado de reserva y estado de pago. Las pendientes expiran mediante una regla configurable y auditable.
+1. **Separación ontológica:** `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.
+   - **Instante técnico:** Representa un punto exacto en la línea de tiempo global (creación, auditoría, sesiones, tokens, webhooks) almacenado normalizado en UTC (`TIMESTAMP`).
+   - **Fecha hotelera:** Representa la noche física de alojamiento en la ubicación geográfica de la propiedad (`DATE` local). Una noche no es un timestamp y no se convierte a UTC.
+   - **Horario operacional:** Las horas de check-in (ej. 15:00) y check-out (ej. 11:00) son parámetros operativos configurables; regulan recepción y limpieza, pero no alteran qué noches están ocupadas.
+2. **Identificadores IANA:** Todo identificador de huso horario es una cadena canónica IANA (ej. `America/Lima`). Se prohíben offsets fijos (`UTC-5`).
+3. **Zona horaria por propiedad:** Cada propiedad física podrá declarar su propio identificador IANA (`propiedades.zona_horaria`); si es nulo, hereda la zona horaria central predeterminada del PMS (`operacion.zona_horaria_predeterminada`).
+4. **Intervalo semiabierto y cálculo de noches:**
+   - La estancia se modela matemáticamente como:
+     $$\text{Estancia} = [\text{fecha\_entrada}, \text{fecha\_salida})$$
+   - El huésped ocupa las noches desde `fecha_entrada` hasta el día anterior a `fecha_salida`. La noche de `fecha_salida` queda libre para el check-in de una nueva reserva ese mismo día.
+   - Duración en noches: $\text{noches} = \text{fecha\_salida} - \text{fecha\_entrada}$.
+   - Regla del motor ordinario: $\text{noches} \ge 1$ ($\text{fecha\_salida} > \text{fecha\_entrada}$). Estancias de 0 noches o fechas invertidas son inválidas.
+
+### Estrategia de Concurrencia e Inventario Diario (D-067 / P-006)
+
+1. **Modelo Híbrido:** Desacopla la entidad comercial/administrativa (`reservas`, `bloqueos`) del inventario diario físico (`inventario_diario_unidades`), coordinados mediante transacciones ACID.
+2. **Inventario Diario Sparse:** La tabla de inventario diario contiene únicamente registros para noches efectivamente ocupadas o bloqueadas; no pregenera calendarios vacíos. La disponibilidad se define formalmente como la **ausencia de fila** para la tupla `(unidad_id, fecha)` en el intervalo $[\text{fecha\_entrada}, \text{fecha\_salida})$.
+3. **Restricción UNIQUE como Última Línea Defensiva:**
+   - La base de datos impone `UNIQUE(unidad_id, fecha)` en el inventario diario.
+   - No se confía en consultas previas (`SELECT ...`) ni en el frontend para evitar sobreventa: la restricción única en InnoDB previene condiciones de carrera concurrentes a nivel de base de datos.
+4. **Atomicidad Multinoche y Rollback Completo:** Las reservas multinoche se procesan dentro de una transacción atómica. Si cualquier noche colisiona, se ejecuta `ROLLBACK` total inmediato (cero reservas parcialmente confirmadas, cero noches huérfanas).
+5. **Orden Determinista de Bloqueos:** Las reservas procesan sus noches e inventario ordenadas deterministamente por `ORDER BY unidad_id ASC, fecha ASC`, erradicando el riesgo de deadlocks cruzados.
+6. **Manejo de Excepciones:** Errores de clave duplicada (`1062`), lock wait timeouts (`1205`) o deadlocks (`1213`) se capturan en el servicio y se traducen a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), nunca HTTP 500.
+7. **Liberación Atómica:** La cancelación o expiración de un hold temporal elimina de forma atómica sus noches (`DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`), restableciendo la disponibilidad de inmediato.
+8. **Fuente Central de Verdad:** Camargo PMS es la única fuente autoritativa. Canales externos (WordPress, App móvil, OTA, API, Webhooks) consumen el mismo servicio de disponibilidad y transacción.
 
 ## Contratos y documentos
 
@@ -289,6 +313,5 @@ Camargo PMS es la fuente central. WordPress y futuras aplicaciones consultan y o
 - Jerarquía física avanzada de niveles/alas independientes (la relación base 1:N Propiedad -> Unidad física alojable quedó establecida en UNIDADES-1).
 - Identificadores fiscales y reglas específicas por país.
 - Catálogos definitivos de estados y transiciones.
-- Política exacta de solapamiento, zonas horarias y noches (P-004 y P-006).
-- Contabilidad, impuestos y conciliación requeridos legalmente (P-005).
-- Retención y anonimización de datos personales.
+- Contabilidad, impuestos y conciliación requeridos legalmente (P-005, PENDIENTE antes de tarifas/caja).
+- Retención y anonimización de datos personales (P-009).
