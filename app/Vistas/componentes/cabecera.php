@@ -49,12 +49,12 @@ declare(strict_types=1);
                                 <i class="ti ti-user f-s-18"></i>
                             </span>
                             <span class="d-none d-md-inline-block text-dark f-s-14 f-w-500">
-                                <?= e($usuarioActual['nombre_usuario']) ?>
+                                <?= e($usuarioActual->obtenerNombreUsuario()) ?>
                             </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow p-2">
                             <li class="px-3 py-2 border-bottom mb-2">
-                                <div class="f-w-600 f-s-14 text-dark"><?= e($usuarioActual['nombre_usuario']) ?></div>
+                                <div class="f-w-600 f-s-14 text-dark"><?= e($usuarioActual->obtenerNombreUsuario()) ?></div>
                                 <div class="f-s-12 text-secondary">Usuario autenticado</div>
                             </li>
                             <li>

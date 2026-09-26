@@ -4,6 +4,24 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Hotfix Post-AUTH-1 — Corrección de Renderizado Autenticado Post-Login y Seguridad 500
+
+- **Síntoma:** Al autenticarse exitosamente en `/login` y ser redirigido a la ruta protegida `/`, la aplicación arrojaba una pantalla de error HTTP 500 controlada ("Error del Servidor — Camargo PMS").
+- **Causa raíz:** En el componente visual `app/Vistas/componentes/cabecera.php`, la función auxiliar `usuario_autenticado()` devuelve una instancia del modelo de dominio puro `\CamargoPMS\Modelos\Usuario`. El componente intentaba acceder a sus propiedades mediante sintaxis de arreglo (`$usuarioActual['nombre_usuario']`), lo que en PHP 8.3 arrojaba un `TypeError` fatal (`Cannot use object of type CamargoPMS\Modelos\Usuario as array`). En solicitudes no autenticadas dicho bloque condicional no se ejecutaba, razón por la cual las pruebas previas sin renderizado completo de vistas bajo sesión activa no detectaron la falla.
+- **Corrección:**
+  - `app/Vistas/componentes/cabecera.php`: Reemplazado el acceso por arreglo con la llamada al método de dominio `$usuarioActual->obtenerNombreUsuario()`.
+  - `public/index.php`: Establecido `ini_set('display_errors', '0')`, añadido registro seguro de excepciones mediante `error_log((string) $error)` en el bloque `catch (\Throwable $error)` global, y eliminado el volcado de diagnósticos técnicos hacia el navegador para garantizar que las páginas de error 500 nunca filtren rutas internas, trazas ni datos de depuración.
+- **Pruebas de regresión agregadas:**
+  - Incorporada de forma permanente la prueba `T-AUTH-45` (sub-pruebas A, B y C) en la suite automatizada: valida que un usuario con sesión persistente acceda a `GET /`, el intermediario permita el paso sin redirigir a `/login`, responda con código HTTP 200, y renderice el layout Alina completo mostrando el nombre de usuario, el menú de perfil, el formulario POST de logout y el token CSRF sin arrojar excepciones ni página 500.
+  - Validación HTTP real end-to-end con 6 gates contra servidor Apache (`https://app.camargo-pms.test`):
+    1. `GET /login` sin sesión → HTTP 200.
+    2. `GET /` sin sesión → HTTP 302 Redirige a `/login`.
+    3. `GET /` con sesión activa → HTTP 200 Dashboard renderizado con éxito.
+    4. `POST /logout` con token CSRF válido → HTTP 302 a `/login` y sesión revocada en BD.
+    5. `GET /` tras logout con cookie revocada → HTTP 302 Redirige a `/login`.
+    6. `GET /ruta-inexistente` → HTTP 404 Not Found.
+  - Suite de regresión ejecutada sobre base de datos aislada temporal (`camargo_pms_test`) con 60/60 pruebas aprobadas (PASS), preservando intacto el usuario real y datos del propietario en `camargo_pms`.
+
 ### Micro-lote AUTH-1A — Cierre de Contrato Criptográfico y Bootstrap Inicial
 
 - Implementada la migración evolutiva `SQL/migraciones/006_ajustes_auth_credenciales.sql` (lote 6):

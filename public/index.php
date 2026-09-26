@@ -17,7 +17,7 @@ define('RUTA_PUBLIC', __DIR__);
 
 // Configuración defensiva de errores
 error_reporting(E_ALL);
-ini_set('display_errors', '1');
+ini_set('display_errors', '0');
 
 // Carga del autocargador PSR-4 (Composer con fallback nativo)
 $archivoAutoload = RUTA_RAIZ . '/vendor/autoload.php';
@@ -78,6 +78,9 @@ try {
     // Manejo defensivo de error 500 separando vista segura de diagnóstico técnico
     http_response_code(500);
 
+    // Registro seguro en log del sistema sin exponer detalles al usuario
+    error_log((string) $error);
+
     try {
         $controlador = new \CamargoPMS\Controladores\PanelControlador();
         $respuesta500 = $controlador->error(500);
@@ -88,12 +91,5 @@ try {
         echo '<h2>Error del Servidor (500)</h2>';
         echo '<p>Ha ocurrido una falla inesperada en Camargo PMS.</p>';
         echo '</div></body></html>';
-    }
-
-    if (ini_get('display_errors')) {
-        echo '<div style="max-width:850px;margin:2rem auto;padding:1rem;background:#fff3cd;border:1px solid #ffeeba;border-radius:6px;font-family:monospace;font-size:13px;color:#856404;">';
-        echo '<strong>Detalle de diagnóstico (visible solo en desarrollo local):</strong><br>';
-        echo htmlspecialchars((string) $error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        echo '</div>';
     }
 }
