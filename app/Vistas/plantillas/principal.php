@@ -28,8 +28,9 @@ use CamargoPMS\Nucleo\Vista;
 
     <!-- Barra de navegación con contrato Alina -->
     <?= Vista::componente('navegacion', [
-        'menuEstatico' => $menuEstatico ?? [],
-        'categoriaActiva' => $categoriaActiva ?? 'inicio'
+        'menuDinamico' => $menuDinamico ?? null,
+        'menuEstatico' => $menuEstatico ?? null,
+        'categoriaActiva' => $categoriaActiva ?? null
     ]) ?>
 
     <!-- Contenido principal de la aplicación -->

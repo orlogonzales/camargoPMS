@@ -56,11 +56,11 @@ Infraestructura de control de acceso basado en roles (RBAC) puro en backend: mod
 
 Estado: completada.
 
-## MENÚ-1 — Menú Dinámico
+## MENÚ-1 — Menú Dinámico, Navegación Autorizada y Gestión de Menú
 
-Módulo de administración visual de menú en Configuración (jerarquía, rutas, iconos Tabler, drag & drop, activación y asociación opción ↔ permiso), preservando el contrato visual Alina (`data-target` ↔ `id`).
+Navegación dinámica autorizada de 2 niveles persistida en tabla `opciones_menu`, preservando el contrato visual Alina (`navbar-menu-list` con `data-target="clave"` <-> `main-side-menu` con `id="clave"`). Filtro de visibilidad aditiva gobernado por RBAC (`menu.ver`, `menu.gestionar`), eliminación de categorías principales vacías, módulo interactivo bajo `/configuracion/menu` (CRUD, alternancia de estado y reordenamiento transaccional atómico sin jQuery), protección de opciones del sistema (`es_sistema = 1`), sanitización estricta de rutas internas y suites formales de prueba (MENU-01..40 y E2E-MENU-01..10).
 
-Estado: siguiente fase recomendada.
+Estado: completada (candidata a micro-baseline).
 
 ## Configuración
 

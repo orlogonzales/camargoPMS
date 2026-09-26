@@ -23,12 +23,13 @@ final class Migrador
     /**
      * @param PDO|null $pdo Instancia PDO opcional; si es null usa BaseDatos::conexion().
      * @param string|null $directorioMigraciones Directorio de archivos SQL.
+     * @param string|null $baseDatosObjetivo Nombre de la base de datos objetivo esperada para validación.
      */
-    public function __construct(?PDO $pdo = null, ?string $directorioMigraciones = null)
+    public function __construct(?PDO $pdo = null, ?string $directorioMigraciones = null, ?string $baseDatosObjetivo = null)
     {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->directorioMigraciones = $directorioMigraciones ?? dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'SQL' . DIRECTORY_SEPARATOR . 'migraciones';
-        $this->baseDatosObjetivo = Configuracion::obtener('DB_DATABASE', 'camargo_pms');
+        $this->baseDatosObjetivo = $baseDatosObjetivo ?? Configuracion::obtener('DB_DATABASE', 'camargo_pms');
     }
 
     /**

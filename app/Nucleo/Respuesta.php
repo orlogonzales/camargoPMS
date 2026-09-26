@@ -101,6 +101,22 @@ final class Respuesta
     }
 
     /**
+     * Crea una respuesta JSON estructurada.
+     *
+     * @param mixed $datos Datos serializables a JSON.
+     * @param int $codigo Código de estado HTTP (por defecto 200).
+     * @param array<string, string> $cabeceras Cabeceras HTTP adicionales.
+     * @return self
+     */
+    public static function json(mixed $datos, int $codigo = 200, array $cabeceras = []): self
+    {
+        $json = json_encode($datos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return new self($json !== false ? $json : '{}', $codigo, array_merge([
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ], $cabeceras));
+    }
+
+    /**
      * Crea una respuesta de redirección HTTP inmediata.
      *
      * @param string $url URL de destino

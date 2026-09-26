@@ -157,6 +157,19 @@ Cuentas humanas de acceso al software Camargo PMS:
   - Se prohíbe categóricamente revocar el rol `SUPERADMINISTRADOR`, bloquear o desactivar la cuenta de usuario, o desactivar la persona natural asociada, si se trata del único Superadministrador activo restante (`UltimoSuperadministradorExcepcion`).
   - La comprobación se ejecuta bajo transacciones con bloqueo pesimista de filas (`FOR UPDATE`) para asegurar concurrencia estricta sin condiciones de carrera. No se depende de identificadores estáticos hardcodeados.
 
+### Subsistema de Navegación y Menú Dinámico (MENÚ-1)
+
+- **Entidad `OpcionMenu`:**
+  - Modela un elemento de navegación jerárquico sujeto a un máximo estricto de dos niveles conforme al contrato de la plantilla Alina:
+    - **Nivel 1 (Categoría Principal):** `padre_id = NULL`. Proporciona el punto de entrada horizontal superior (`navbar-menu-list` con `data-target="clave"`), un icono representativo y agrupa opciones funcionales secundarias.
+    - **Nivel 2 (Opción Secundaria):** `padre_id != NULL`. Proporciona el enlace navegable final en el menú vertical desplegable (`main-side-menu` con `id="clave"`), con una ruta interna relativa saneada y un permiso RBAC opcional de visibilidad.
+- **Invariantes y Reglas de Dominio:**
+  - **Principio "MENÚ ≠ AUTORIZACIÓN":** El árbol de navegación dinámico es exclusivamente una interfaz visual de usuario. La visibilidad de un elemento se calcula mediante `AutorizacionServicio::puede()` o el rol `SUPERADMINISTRADOR`, pero el acceso al recurso o endpoint está garantizado de forma independiente en backend por `AutorizacionIntermediario` y la lógica interna de los controladores.
+  - **Filtro de Categorías Válidas:** Una categoría principal solo es visible para el usuario si está activa, autorizada y cuenta con al menos una opción secundaria activa y visible. Las categorías vacías se omiten automáticamente para evitar contenedores muertos en la interfaz.
+  - **Protección Estructural de Sistema:** Las opciones marcadas con `es_sistema = 1` (ej. `config_menu`) están protegidas a nivel de servicio y no pueden ser eliminadas físicamente ni desactivadas (`OpcionMenuProtegidaExcepcion`), impidiendo que el sistema quede sin acceso a su propia administración.
+  - **Reordenamiento Transaccional Atómico:** Las opciones de un mismo nivel y padre se reordenan mediante listas atómicas de pares `[id, orden]`, garantizando consistencia relacional y aplicando rollback total ante cualquier incongruencia.
+  - **Rutas Saneadas:** Solo se admiten rutas relativas internas; se rechazan esquemas externos o vectores maliciosos (`javascript:`, `data:`, `vbscript:`).
+
 ### Relación entre Personal y Caja
 
 Un colaborador puede ser contraparte, beneficiario o responsable de transacciones financieras:

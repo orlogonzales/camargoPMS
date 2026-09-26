@@ -270,6 +270,22 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 1. La migración `007_roles_permisos_autorizacion.sql` crea las tablas `roles`, `permisos`, `roles_permisos` y `usuarios_roles`, siembra el rol `SUPERADMINISTRADOR` y el catálogo de 10 permisos atómicos iniciales, e incluye una consulta de transición determinista que asocia automáticamente el rol al usuario existente solo si existe exactamente una cuenta registrada en el sistema.
 2. El script CLI `bin/crear-usuario-inicial.php` asigna de forma atómica y transaccional el rol `SUPERADMINISTRADOR` a la primera cuenta humana creada.
 
+### D-052 — Menú dinámico de dos niveles y principio MENÚ ≠ AUTORIZACIÓN (MENÚ-1)
+
+1. Estructura jerárquica estricta de 2 niveles:
+   - Nivel 1: Categorías principales (`padre_id IS NULL`), representadas por los iconos superiores en la cabecera horizontal de Alina (`navbar-menu-list` con atributo `data-target="clave"`).
+   - Nivel 2: Opciones secundarias (`padre_id IS NOT NULL`), agrupadas en paneles verticales del submenú lateral (`main-side-menu` con `id="clave"`).
+   - Se prohíbe anidamiento de más de dos niveles (`NivelMenuInvalidoExcepcion`), la autorreferencia y el uso de opciones secundarias como padres de otras secundarias.
+2. Principio fundamental "MENÚ ≠ AUTORIZACIÓN":
+   - El menú es una guía visual de navegación y experiencia de usuario; jamás actúa como frontera o mecanismo de seguridad.
+   - La visibilidad de un elemento de menú está condicionada a los permisos RBAC (`AutorizacionServicio::puede()` o rol `SUPERADMINISTRADOR`), pero la seguridad de los recursos y endpoints está garantizada independientemente en el backend mediante intermediarios (`AutorizacionIntermediario`) y comprobaciones directas en controladores y servicios.
+   - Regla de visibilidad de categorías principales: una categoría solo se renderiza si está activa, autorizada (si tiene permiso asignado) y cuenta con al menos una opción secundaria visible para el usuario actual. Las categorías vacías se omiten automáticamente para evitar contenedores muertos.
+3. Administración transaccional y protección estructural:
+   - Se provee una interfaz administrativa bajo `/configuracion/menu` gobernada por los permisos `menu.ver` y `menu.gestionar`.
+   - Elementos estructurales (`es_sistema = 1`) no pueden ser eliminados ni desactivados (`OpcionMenuProtegidaExcepcion`) para garantizar la persistencia del acceso administrativo al sistema.
+   - El reordenamiento de opciones dentro de una misma categoría o entre categorías principales se ejecuta de forma atómica y transaccional mediante arrays de pares `[id, orden]`, rechazando mezclas de padres o niveles con rollback total ante fallos.
+   - Las rutas configuradas deben ser rutas internas relativas; se prohíben URLs externas o esquemas maliciosos (`javascript:`, `data:`, `vbscript:`).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

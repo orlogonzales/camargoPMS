@@ -29,15 +29,17 @@ La vista de un módulo aporta solo su contenido y assets particulares. El layout
 
 ```text
 navbar-menu-list
-    data-target="operaciones"
+    data-target="clave"
               ↓
 main-side-menu
-    main-menu id="operaciones"
+    main-menu id="clave"
 ```
 
-Ambas zonas forman una sola navegación. La clave es estable, única, apta para DOM y generada desde un identificador interno controlado. Etiquetas, iconos y orden son datos distintos. El menú secundario admite enlaces y grupos colapsables con IDs igualmente controlados.
+Ambas zonas forman una sola navegación vinculada dinámicamente desde la base de datos (`opciones_menu` vía `MenuServicio`). La clave técnica es alfanumérica en minúsculas, estable, única y apta para selectores DOM. El menú secundario admite enlaces directos y grupos con estructura idéntica.
 
-La ruta activa debe seleccionar área, opción y padres colapsables. El servidor filtra por permisos y protege cada endpoint de forma independiente.
+La ruta activa (`$rutaActual`) marca visualmente la categoría principal activa (`.active`) y la opción secundaria en curso. El servidor filtra la visibilidad según permisos RBAC y elimina categorías principales vacías. La seguridad reside independientemente en el backend.
+
+En la interfaz de administración (`/configuracion/menu`), se utiliza `public/assets/js/gestion-menu.js` (Vanilla JS puro y Fetch API) junto con SweetAlert2 para modales y confirmaciones, comunicando tokens CSRF mediante `<meta name="csrf-token">`.
 
 ## Assets
 

@@ -54,6 +54,20 @@ La gestión estructural del esquema sigue el principio de doble representación 
 - `roles_permisos`: Asociación N:M entre roles y permisos (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `rol_id` BIGINT UNSIGNED NOT NULL, `permiso_id` BIGINT UNSIGNED NOT NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP). Restricción `UNIQUE (rol_id, permiso_id)`. Claves foráneas con `ON DELETE CASCADE ON UPDATE CASCADE`.
 - `usuarios_roles`: Asignación N:M de roles a usuarios (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `usuario_id` BIGINT UNSIGNED NOT NULL, `rol_id` BIGINT UNSIGNED NOT NULL, `asignado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `asignado_por_usuario_id` BIGINT UNSIGNED NULL). Restricción `UNIQUE (usuario_id, rol_id)`. Clave foránea `fk_usuarios_roles_usuario` con `ON DELETE CASCADE`, `fk_usuarios_roles_rol` con `ON DELETE RESTRICT` y `fk_usuarios_roles_asignado_por` con `ON DELETE SET NULL`. Transición determinista en migración 007 para asignar `SUPERADMINISTRADOR` al usuario inicial existente solo si `COUNT(usuarios) = 1`.
 
+## Esquema de Menú Dinámico y Navegación (MENÚ-1 y Migración 008)
+
+- `opciones_menu`: Estructura jerárquica de dos niveles para navegación autorizada de interfaz (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `padre_id` BIGINT UNSIGNED NULL, `clave` VARCHAR(50) NOT NULL UNIQUE, `nombre` VARCHAR(100) NOT NULL, `ruta` VARCHAR(255) NULL, `icono` VARCHAR(50) NULL, `permiso_id` BIGINT UNSIGNED NULL, `orden` INT UNSIGNED NOT NULL DEFAULT 1, `es_sistema` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0, `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO', `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+- Restricciones e Integridad:
+  - Clave foránea autorreferencial `fk_opciones_menu_padre` hacia `opciones_menu(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE`. Impide eliminar o reordenar categorías huérfanas de forma destructiva.
+  - Clave foránea `fk_opciones_menu_permiso` hacia `permisos(id)` con `ON DELETE SET NULL ON UPDATE CASCADE`. Si se elimina o depura un permiso opcional, la opción no se destruye sino que desacopla la exigencia de autorización.
+  - Restricciones CHECK para cadenas no vacías en `clave` y `nombre`.
+  - Índices optimizados: `fk_opciones_menu_padre_idx` en `padre_id`, `fk_opciones_menu_permiso_idx` en `permiso_id`, `idx_opciones_menu_padre_orden` en `(padre_id, orden)` e `idx_opciones_menu_estado_orden` en `(estado, orden)`.
+- Semillas base en Migración 008 y `SQL/camargo_pms.sql`:
+  - Permisos RBAC: `menu.ver` ("Ver menú de navegación") y `menu.gestionar` ("Gestionar opciones de menú").
+  - Opciones de menú:
+    - Nivel 1 (Principales): `inicio` (Icono `ti ti-home`), `configuracion` (Icono `ti ti-settings`).
+    - Nivel 2 (Secundarias): `inicio_panel` (bajo `inicio`, ruta `/`), `config_menu` (bajo `configuracion`, ruta `/configuracion/menu`, permiso `menu.ver`, estructural `es_sistema = 1`), `config_usuarios` (bajo `configuracion`, ruta `/usuarios`, permiso `usuarios.ver`).
+
 ## Reglas
 
 - Claves primarias estables y claves foráneas explícitas.

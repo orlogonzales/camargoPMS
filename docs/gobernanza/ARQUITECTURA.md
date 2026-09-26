@@ -26,7 +26,7 @@ MySQL / MariaDB
 
 ### Enrutador
 
-Resuelve método y ruta, extrae parámetros y entrega la petición al pipeline. No contiene reglas de negocio.
+Resuelve método y ruta, soporta patrones parametrizados (ej. `/configuracion/menu/{id}`), emulación de verbos HTTP (`_method` o cabecera `X-HTTP-Method-Override` para `PUT`, `PATCH`, `DELETE`), extrae parámetros y entrega la petición al pipeline. No contiene reglas de negocio.
 
 ### Intermediarios
 
@@ -34,11 +34,11 @@ Aplican preocupaciones transversales como sesión, autenticación (`Autenticacio
 
 ### Controladores
 
-Interpretan entrada HTTP, invocan un servicio y producen HTML o JSON. Validan forma y tipos básicos de la petición, pero no ejecutan SQL ni concentran reglas de dominio.
+Interpretan entrada HTTP, invocan un servicio y producen HTML o JSON (`Respuesta::json()`). Validan forma y tipos básicos de la petición, pero no ejecutan SQL ni concentran reglas de dominio.
 
 ### Servicios
 
-Implementan casos de uso, invariantes, cálculos, coordinación entre repositorios y límites transaccionales. Un mismo servicio puede ser usado por controladores web o API.
+Implementan casos de uso, invariantes, cálculos, coordinación entre repositorios y límites transaccionales (ej. `MenuServicio`, `AutorizacionServicio`). Un mismo servicio puede ser usado por controladores web o API. `MenuServicio` ensambla el árbol de navegación dinámico autorizando cada opción contra RBAC y depurando categorías vacías.
 
 ### Repositorios
 
@@ -46,11 +46,11 @@ Encapsulan consultas y persistencia. Devuelven entidades, objetos de transferenc
 
 ### Vistas
 
-Renderizan datos ya preparados. No consultan base de datos, no autorizan acciones y no construyen reglas de negocio. Todo valor dinámico se escapa según su contexto.
+Renderizan datos ya preparados por los controladores o componentes de layout (`navegacion.php`). No consultan base de datos, no autorizan acciones y no construyen reglas de negocio. Todo valor dinámico se escapa según su contexto mediante `e()`.
 
 ### JavaScript
 
-Mejora la experiencia, valida de forma complementaria y consume JSON. La autoridad sigue en el servidor.
+Mejora la experiencia, valida de forma complementaria y consume JSON (ej. `gestion-menu.js` con Vanilla JS, Fetch API y SweetAlert2). La autoridad y validación residen incondicionalmente en el servidor.
 
 ## Dependencias permitidas
 

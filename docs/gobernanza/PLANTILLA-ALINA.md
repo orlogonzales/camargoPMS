@@ -101,3 +101,12 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
 5. Arquitectura de errores implementada con plantilla aislada `plantillas/error.php` e ilustración oficial `images/error/error-*.png`.
 6. Vista genérica `errores/error.php` lista para 400, 403, 404, 500 y 503 sin duplicación de código.
 7. `admin-dashboard/` permanece 100% inmutable.
+
+## Materialización en MENÚ-1
+
+1. **Navegación Dinámica Autorizada:** El menú estático de prueba fue reemplazado por la estructura de 2 niveles persistida en la tabla `opciones_menu`. `Vistas/componentes/navegacion.php` resuelve el árbol para el usuario actual mediante `MenuServicio::obtenerMenuParaUsuario()`.
+2. **Contrato Alina Preservado:** Las claves de nivel 1 alimentan `navbar-menu-list` con `data-target="clave"` y las opciones de nivel 2 se agrupan en `main-side-menu` con `id="clave"`, respetando al 100% el comportamiento visual de `blank.html`.
+3. **Resaltado Activo Sincronizado:** `$rutaActual` activa simultáneamente el elemento principal horizontal y la opción secundaria correspondiente.
+4. **Depuración Automática de Categorías Vacías:** Categorías principales sin opciones secundarias activas y autorizadas no se renderizan, evitando secciones huérfanas en la barra superior.
+5. **Assets Selectivos por Módulo:** Se copió `sweetalert.js` desde `admin-dashboard/alina/assets/vendor/sweetalert/` hacia `public/assets/vendor/sweetalert/` sin tocar los originales de Alina.
+6. **Módulo de Gestión:** Se implementó `public/assets/js/gestion-menu.js` con Vanilla JS y Fetch API nativo para la administración reactiva de opciones sin dependencias de jQuery.

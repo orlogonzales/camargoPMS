@@ -244,6 +244,7 @@ class AutorizacionRepositorio
                 JOIN usuarios u ON ur.usuario_id = u.id
                 JOIN personas per ON u.persona_id = per.id
                 WHERE ur.usuario_id = :usuario_id
+                  AND p.estado = 'ACTIVO'
                   AND r.estado = 'ACTIVO'
                   AND u.estado = 'ACTIVO'
                   AND per.estado = 'ACTIVO'

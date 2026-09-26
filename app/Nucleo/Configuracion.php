@@ -74,6 +74,18 @@ final class Configuracion
     }
 
     /**
+     * Fija o sobrescribe temporalmente un parámetro de configuración (útil en pruebas aisladas).
+     *
+     * @param string $clave
+     * @param mixed $valor
+     * @return void
+     */
+    public static function fijar(string $clave, mixed $valor): void
+    {
+        self::$valores[$clave] = $valor;
+    }
+
+    /**
      * Indica si la aplicación se ejecuta en entorno local/desarrollo.
      *
      * @return bool

@@ -12,6 +12,7 @@ declare(strict_types=1);
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Camargo PMS — Plataforma centralizada de gestión hotelera e inmobiliaria">
+<meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 <title><?= e($titulo ?? 'Camargo PMS') ?></title>
 
 <!-- Favicon -->

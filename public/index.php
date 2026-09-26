@@ -69,6 +69,38 @@ $enrutador->get('/usuarios', [\CamargoPMS\Controladores\PanelControlador::class,
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),
 ]);
 
+// Rutas de Gestión de Menú (MENÚ-1)
+$enrutador->get('/configuracion/menu', [\CamargoPMS\Controladores\MenuControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.ver'),
+]);
+$enrutador->get('/configuracion/menu/datos', [\CamargoPMS\Controladores\MenuControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.ver'),
+]);
+$enrutador->post('/configuracion/menu', [\CamargoPMS\Controladores\MenuControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->put('/configuracion/menu/{id}', [\CamargoPMS\Controladores\MenuControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->post('/configuracion/menu/{id}', [\CamargoPMS\Controladores\MenuControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->patch('/configuracion/menu/{id}/estado', [\CamargoPMS\Controladores\MenuControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->post('/configuracion/menu/{id}/estado', [\CamargoPMS\Controladores\MenuControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->post('/configuracion/menu/orden', [\CamargoPMS\Controladores\MenuControlador::class, 'actualizarOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->delete('/configuracion/menu/{id}', [\CamargoPMS\Controladores\MenuControlador::class, 'eliminar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+$enrutador->post('/configuracion/menu/{id}/eliminar', [\CamargoPMS\Controladores\MenuControlador::class, 'eliminar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('menu.gestionar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

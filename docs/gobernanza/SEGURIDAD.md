@@ -61,9 +61,14 @@ Validar extensión, MIME real, tamaño y contenido; generar nombre interno; guar
 
 Clasificar datos personales, financieros, contractuales y credenciales. Minimizar recopilación y acceso. Los logs no contienen contraseñas, tokens completos, números de tarjeta, documentos completos ni cuerpos sensibles. Las exportaciones y respaldos reciben protección equivalente a producción.
 
-## Menús Alina
+## Menús Alina y Navegación Dinámica (MENÚ-1)
 
-El servidor filtra las áreas y opciones visibles. Las claves de `data-target` e `id` se generan desde identificadores internos permitidos, no desde etiquetas de base de datos. URL, icono y orden se validan antes de renderizar. Una opción oculta o deshabilitada no sustituye el control de autorización de su endpoint.
+El servidor filtra las áreas y opciones visibles según permisos RBAC y el estado de sus hijos. Las claves de `data-target` e `id` son identificadores técnicos estables en minúsculas. URL, icono y orden se validan rigurosamente antes de persistir y renderizar:
+1. **Sanitización de rutas:** Las rutas configuradas deben ser rutas relativas locales comenzando con `/`. Se rechazan esquemas maliciosos (`javascript:`, `data:`, `vbscript:`) y URLs absolutas externas (`http:`, `https:`, `//`) mediante `RutaInvalidaExcepcion`.
+2. **Protección estructural (`es_sistema = 1`):** Opciones críticas para el control del sistema (como `config_menu`) están blindadas a nivel de servicio y no pueden ser eliminadas ni desactivadas (`OpcionMenuProtegidaExcepcion`), garantizando la preservación del acceso administrativo.
+3. **Protección CSRF estricta:** Todas las operaciones de mutación de menú (`POST /configuracion/menu`, `PUT /configuracion/menu/{id}`, `PATCH .../estado`, `PUT .../orden`, `DELETE .../{id}`) exigen validación de token CSRF mediante payload o cabecera `X-CSRF-TOKEN`.
+4. **Reordenamiento atómico transaccional:** La actualización del orden se ejecuta bajo transacciones con validación previa de jerarquía, rechazando mezclas de padres o de niveles para prevenir estados inconsistentes en la navegación.
+5. **Regla vinculante:** Una opción oculta o deshabilitada jamás sustituye el control de autorización de su endpoint en backend.
 
 ## Revisión obligatoria
 

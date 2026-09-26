@@ -4,6 +4,36 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase MENÚ-1 — Menú Dinámico, Navegación Autorizada y Gestión de Menú
+
+- **Navegación Dinámica y Contrato Visual Alina:**
+  - Sustituida la navegación estática de prueba por una estructura jerárquica de dos niveles persistida en la tabla `opciones_menu`, respetando estrictamente el contrato Alina (`navbar-menu-list` con `data-target="clave"` <-> `main-side-menu` con `id="clave"`).
+  - Categorías principales (`padre_id IS NULL`, Nivel 1) representadas como iconos horizontales en la cabecera; opciones secundarias (`padre_id IS NOT NULL`, Nivel 2) renderizadas en el menú lateral desplegable.
+  - Sincronización automática de elementos activos (`.active`) para nivel 1 y nivel 2 en base a la ruta actual (`$rutaActual`).
+- **Principio "MENÚ ≠ AUTORIZACIÓN" y Filtrado Aditivo:**
+  - Separación total entre visibilidad en cliente y autorización real en backend: el menú guía la experiencia visual del usuario, mientras que `AutorizacionIntermediario` protege de forma independiente cada endpoint HTTP.
+  - Filtro aditivo RBAC: las opciones con permiso asociado (`permiso_id`) solo se muestran si el usuario cuenta con la capacidad activa (`AutorizacionServicio::puede()`) o posee el rol `SUPERADMINISTRADOR`.
+  - Depuración automática de categorías principales vacías: una categoría solo se renderiza si tiene al menos una opción secundaria activa y visible.
+- **Base de Datos y Migración 008:**
+  - Creada la migración `SQL/migraciones/008_menu_dinamico.sql` (lote 8) definiendo la tabla `opciones_menu` con claves foráneas autorreferenciales (`padre_id` RESTRICT) y hacia permisos (`permiso_id` SET NULL).
+  - Semillas base de permisos: `menu.ver` ("Ver menú de navegación") y `menu.gestionar` ("Gestionar opciones de menú").
+  - Semillas base de opciones: Nivel 1 (`inicio`, `configuracion`) y Nivel 2 (`inicio_panel`, `config_menu`, `config_usuarios`).
+  - Sincronizado `SQL/camargo_pms.sql` con las 17 tablas operativas y paridad estructural 100%.
+- **Módulo de Administración de Menú (`/configuracion/menu`):**
+  - Desarrollada vista reactiva `app/Vistas/configuracion/menu/index.php` con tabla jerárquica, modales de creación/edición, alternancia rápida de estado (activo/inactivo) y controles de ordenamiento.
+  - Controlador `MenuControlador`: endpoints para CRUD completo, alternancia de estado y reordenamiento transaccional atómico por pares `[id, orden]`.
+  - Enrutador ampliado: soporte de patrones parametrizados (`{id}`), verbos REST (`put`, `patch`, `delete`) y emulación por `_method` o cabecera `X-HTTP-Method-Override`.
+  - Frontend interactivo: `public/assets/js/gestion-menu.js` desarrollado con Vanilla JS nativo y Fetch API (sin dependencias de jQuery), con SweetAlert2 para alertas y confirmaciones.
+- **Seguridad y Protección Estructural:**
+  - Protección de opciones del sistema (`es_sistema = 1`): `config_menu` no puede ser eliminada físicamente ni desactivada (`OpcionMenuProtegidaExcepcion`), impidiendo que el sistema quede sin acceso a su propia gestión.
+  - Sanitización de rutas: las rutas deben ser relativas internas locales comenzando con `/`; rechazo categórico de esquemas maliciosos (`javascript:`, `data:`, `vbscript:`, URLs externas con `http:`, `https:`).
+  - Protección CSRF estricta en todas las operaciones de mutación mediante token en payload o cabecera `X-CSRF-TOKEN`.
+- **Pruebas y Verificación:**
+  - Suite de pruebas de dominio `scratch/probar_menu_completo.php` con 40 gates formales aprobados (40 PASS / 0 FAIL, `MENU-01` a `MENU-40`) en base temporal aislada con timeouts de seguridad (`innodb_lock_wait_timeout = 2`, `lock_wait_timeout = 3`) y cleanup defensivo.
+  - Auditoría de paridad SQL estricta `scratch/verificar_paridad_sql.php`: 100% idéntico entre migraciones (`001` a `008`) y `SQL/camargo_pms.sql`.
+  - Suite E2E HTTP real contra Apache bajo HTTPS `scratch/e2e_http_menu.php`: 10/10 PASS (`E2E-MENU-01` a `E2E-MENU-10`).
+  - Regresiones de suites previas: AUTH-1/AUTH-1A (60 PASS / 0 FAIL), HTTP Apache autenticado (6/6 PASS).
+
 ### Fase ROLES-1 — Roles, Permisos y Autorización RBAC de Backend
 
 - **Arquitectura de Autorización RBAC:**

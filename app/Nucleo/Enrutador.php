@@ -45,6 +45,45 @@ final class Enrutador
     }
 
     /**
+     * Registra una ruta para el método HTTP PUT con intermediarios opcionales.
+     *
+     * @param string $ruta
+     * @param array|callable $manejador
+     * @param array<int, class-string|object> $intermediarios
+     * @return void
+     */
+    public function put(string $ruta, array|callable $manejador, array $intermediarios = []): void
+    {
+        $this->agregarRuta('PUT', $ruta, $manejador, $intermediarios);
+    }
+
+    /**
+     * Registra una ruta para el método HTTP PATCH con intermediarios opcionales.
+     *
+     * @param string $ruta
+     * @param array|callable $manejador
+     * @param array<int, class-string|object> $intermediarios
+     * @return void
+     */
+    public function patch(string $ruta, array|callable $manejador, array $intermediarios = []): void
+    {
+        $this->agregarRuta('PATCH', $ruta, $manejador, $intermediarios);
+    }
+
+    /**
+     * Registra una ruta para el método HTTP DELETE con intermediarios opcionales.
+     *
+     * @param string $ruta
+     * @param array|callable $manejador
+     * @param array<int, class-string|object> $intermediarios
+     * @return void
+     */
+    public function delete(string $ruta, array|callable $manejador, array $intermediarios = []): void
+    {
+        $this->agregarRuta('DELETE', $ruta, $manejador, $intermediarios);
+    }
+
+    /**
      * Registra una ruta genérica indicando el método HTTP e intermediarios opcionales.
      *
      * @param string $metodo Método HTTP (GET, POST, etc.).
@@ -84,10 +123,44 @@ final class Enrutador
     public function despachar(string $metodo, string $uri): Respuesta
     {
         $metodoNormalizado = strtoupper($metodo);
+
+        // Soporte para spoofing de método HTTP vía _method o cabecera X-HTTP-Method-Override
+        if ($metodoNormalizado === 'POST') {
+            if (!empty($_POST['_method'])) {
+                $metodoNormalizado = strtoupper((string) $_POST['_method']);
+            } elseif (!empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+                $metodoNormalizado = strtoupper((string) $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+            }
+        }
+
         $metodoBusqueda = $metodoNormalizado === 'HEAD' ? 'GET' : $metodoNormalizado;
         $rutaSolicitada = $this->extraerRutaLimpia($uri);
 
+        // 1. Coincidencia exacta
         $registro = $this->rutas[$metodoBusqueda][$rutaSolicitada] ?? null;
+        $parametrosRuta = [];
+
+        // 2. Coincidencia con parámetros en patrón {param}
+        if ($registro === null && isset($this->rutas[$metodoBusqueda])) {
+            foreach ($this->rutas[$metodoBusqueda] as $patronRuta => $datosRuta) {
+                if (!str_contains($patronRuta, '{')) {
+                    continue;
+                }
+
+                $regex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[^/]+)', $patronRuta);
+                $regex = '#^' . $regex . '$#';
+
+                if (preg_match($regex, $rutaSolicitada, $coincidencias)) {
+                    $registro = $datosRuta;
+                    foreach ($coincidencias as $clave => $valor) {
+                        if (is_string($clave)) {
+                            $parametrosRuta[$clave] = $valor;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
 
         if ($registro !== null) {
             $manejador = is_array($registro) && isset($registro['manejador']) ? $registro['manejador'] : $registro;
@@ -104,7 +177,7 @@ final class Enrutador
                 }
             }
 
-            $respuesta = $this->ejecutarManejador($manejador);
+            $respuesta = $this->ejecutarManejador($manejador, $parametrosRuta);
             if ($metodoNormalizado === 'HEAD') {
                 return new Respuesta('', $respuesta->obtenerCodigo(), $respuesta->obtenerCabeceras());
             }
@@ -131,16 +204,21 @@ final class Enrutador
      * Ejecuta el callable o [Controlador, metodo] y convierte su retorno en objeto Respuesta.
      *
      * @param array|callable $manejador
+     * @param array<string, mixed> $parametros
      * @return Respuesta
      */
-    private function ejecutarManejador(array|callable $manejador): Respuesta
+    private function ejecutarManejador(array|callable $manejador, array $parametros = []): Respuesta
     {
         if (is_array($manejador) && count($manejador) === 2 && is_string($manejador[0])) {
             [$clase, $metodo] = $manejador;
             $instancia = new $clase();
-            $resultado = $instancia->$metodo();
+            $resultado = empty($parametros)
+                ? $instancia->$metodo()
+                : $instancia->$metodo(...array_values($parametros));
         } else {
-            $resultado = call_user_func($manejador);
+            $resultado = empty($parametros)
+                ? call_user_func($manejador)
+                : call_user_func_array($manejador, array_values($parametros));
         }
 
         if ($resultado instanceof Respuesta) {

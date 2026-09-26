@@ -6,9 +6,12 @@ declare(strict_types=1);
  * Componente Menú Principal: Barra de iconos primaria (.semi-side-nav).
  * Implementa el disparador del contrato de navegación con [data-target].
  *
- * @var array<string, array<string, mixed>> $menuEstatico
+ * @var array<string, array<string, mixed>>|null $menu
+ * @var array<string, array<string, mixed>>|null $menuEstatico
  * @var string $categoriaActiva
  */
+
+$menuItems = $menu ?? $menuEstatico ?? [];
 ?>
 <div class="semi-side-nav">
     <div class="py-4">
@@ -20,7 +23,7 @@ declare(strict_types=1);
     </div>
 
     <ul class="navbar-menu-list" role="tablist">
-        <?php foreach ($menuEstatico as $clave => $item): ?>
+        <?php foreach ($menuItems as $clave => $item): ?>
             <?php $estaActivo = ($clave === $categoriaActiva); ?>
             <li class="nav-item">
                 <a href="#"

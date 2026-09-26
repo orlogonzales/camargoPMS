@@ -36,10 +36,9 @@ final class PanelControlador
                 ['etiqueta' => 'Panel', 'url' => url_ruta('/'), 'activo' => false],
                 ['etiqueta' => 'Comprobación de Layout', 'url' => url_ruta('/'), 'activo' => true],
             ],
-            'menuEstatico' => $this->obtenerMenuEstaticoPrueba(),
             'sistema' => [
                 'nombre' => 'Camargo PMS',
-                'version' => 'Fase UI-0',
+                'version' => 'Fase MENÚ-1',
                 'entorno' => 'Desarrollo Local',
                 'phpVersion' => PHP_VERSION,
             ],
@@ -59,16 +58,15 @@ final class PanelControlador
     {
         $datos = [
             'titulo' => 'Camargo PMS — Gestión de Usuarios',
-            'categoriaActiva' => 'administracion',
+            'categoriaActiva' => 'configuracion',
             'migasPan' => [
                 ['etiqueta' => 'Panel', 'url' => url_ruta('/'), 'activo' => false],
-                ['etiqueta' => 'Administración', 'url' => '#', 'activo' => false],
+                ['etiqueta' => 'Configuración', 'url' => '#', 'activo' => false],
                 ['etiqueta' => 'Usuarios', 'url' => url_ruta('/usuarios'), 'activo' => true],
             ],
-            'menuEstatico' => $this->obtenerMenuEstaticoPrueba(),
             'sistema' => [
                 'nombre' => 'Camargo PMS',
-                'version' => 'Fase ROLES-1',
+                'version' => 'Fase MENÚ-1',
                 'entorno' => 'Desarrollo Local',
                 'phpVersion' => PHP_VERSION,
             ],
