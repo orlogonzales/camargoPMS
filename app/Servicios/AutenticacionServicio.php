@@ -30,9 +30,9 @@ use PDO;
 class AutenticacionServicio
 {
     /**
-     * Hash bcrypt dummy válido utilizado para equilibrar el tiempo de respuesta ante usuarios inexistentes.
+     * Hash dummy alineado con PASSWORD_DEFAULT utilizado para equilibrar el tiempo de respuesta ante usuarios inexistentes.
      */
-    private const HASH_DUMMY = '$2y$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    private static ?string $hashDummy = null;
 
     private PDO $pdo;
     private UsuarioRepositorio $usuarioRepo;
@@ -97,7 +97,7 @@ class AutenticacionServicio
 
         // 3. Mitigación de timing attack ante usuarios inexistentes
         if (!$usuario) {
-            password_verify($contrasena, self::HASH_DUMMY);
+            password_verify($contrasena, $this->obtenerHashDummy());
             $this->intentoRepo->registrarIntento($usernameNormalizado, $ipFinal, false);
             throw new CredencialesInvalidasExcepcion('Credenciales de acceso inválidas.');
         }
@@ -127,10 +127,11 @@ class AutenticacionServicio
         }
 
         // 7. Rehash transparente si los parámetros o algoritmo de contraseñas cambiaron
-        $opcionesHash = ['cost' => 12];
-        if (password_needs_rehash($usuario->obtenerContrasenaHash(), PASSWORD_BCRYPT, $opcionesHash)) {
-            $nuevoHash = password_hash($contrasena, PASSWORD_BCRYPT, $opcionesHash);
-            $this->usuarioRepo->actualizarHashContrasena((int) $usuario->obtenerId(), $nuevoHash);
+        if (password_needs_rehash($usuario->obtenerContrasenaHash(), PASSWORD_DEFAULT)) {
+            $nuevoHash = password_hash($contrasena, PASSWORD_DEFAULT);
+            if ($nuevoHash !== false) {
+                $this->usuarioRepo->actualizarHashContrasena((int) $usuario->obtenerId(), $nuevoHash);
+            }
         }
 
         // 8. Actualizar fecha de último acceso exitoso y registrar intento exitoso
@@ -165,5 +166,18 @@ class AutenticacionServicio
     public function obtenerUsuarioAutenticado(): ?Usuario
     {
         return $this->sesionServicio->validarSesionActual();
+    }
+
+    /**
+     * Obtiene un hash dummy calculado dinámicamente con PASSWORD_DEFAULT para mitigar timing attacks.
+     *
+     * @return string
+     */
+    private function obtenerHashDummy(): string
+    {
+        if (self::$hashDummy === null) {
+            self::$hashDummy = password_hash('camargo_timing_dummy_entropy_seed', PASSWORD_DEFAULT);
+        }
+        return self::$hashDummy;
     }
 }

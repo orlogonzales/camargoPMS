@@ -112,11 +112,11 @@ Cuentas humanas de acceso al software Camargo PMS:
 - **Nombres de Usuario Canónicos y Normalizados:**
   - `nombre_usuario VARCHAR(50)`: Nombre con formato de presentación visual.
   - `nombre_usuario_normalizado VARCHAR(50) UNIQUE`: Normalizado estrictamente en minúsculas y sin espacios para evitar colisiones y suplantación insensible a mayúsculas.
-- **Contraseñas Criptográficamente Seguras:**
-  - Almacenadas exclusivamente como hash en `contrasena_hash CHAR(60) NOT NULL` (algoritmo `PASSWORD_BCRYPT` con costo 12).
-  - Política de longitud: mínimo 10 caracteres, máximo 128 caracteres.
-  - Mecanismo transparente de rehash automático (`password_needs_rehash()`) en inicios de sesión exitosos.
-  - Mitigación contra ataques de temporización (timing attacks) y enumeración de usuarios mediante verificación con hash bcrypt dummy (`password_verify()`) y mensajes genéricos uniformes.
+- **Contraseñas Criptográficamente Seguras (AUTH-1A):**
+  - Almacenadas exclusivamente como hash en `contrasena_hash VARCHAR(255) NOT NULL` (algoritmo estándar `PASSWORD_DEFAULT`).
+  - Política de longitud: mínimo 12 caracteres, máximo 1024 caracteres evaluada antes del hash. Sin reglas artificiales de composición ni transformaciones destructivas (`trim`, truncamiento); soporte pleno de espacios y caracteres Unicode.
+  - Mecanismo transparente de rehash automático (`password_needs_rehash()`) con `PASSWORD_DEFAULT` en inicios de sesión exitosos.
+  - Mitigación contra ataques de temporización (timing attacks) y enumeración de usuarios mediante verificación con hash dummy precalculado con `PASSWORD_DEFAULT` y mensajes genéricos uniformes.
 - **Estados de Cuenta:**
   - `ACTIVO`: Cuenta habilitada para autenticarse.
   - `INACTIVO`: Cuenta deshabilitada administrativamente (invalida sesiones inmediatamente).

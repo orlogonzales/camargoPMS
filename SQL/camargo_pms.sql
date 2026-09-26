@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `persona_id` BIGINT UNSIGNED NOT NULL,
     `nombre_usuario` VARCHAR(50) NOT NULL,
-    `contrasena_hash` VARCHAR(255) NOT NULL,
+    `contrasena_hash` VARCHAR(255) NOT NULL COMMENT 'Hash criptográfico de la contraseña (soporta PASSWORD_DEFAULT y algoritmos futuros)',
     `estado` ENUM('ACTIVO', 'BLOQUEADO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
     `ultimo_acceso_en` DATETIME NULL,
     `contrasena_cambiada_en` DATETIME NULL,

@@ -170,16 +170,16 @@ Se define un doble almacenamiento canónico para el identificador de inicio de s
 2. `nombre_usuario_normalizado VARCHAR(50) NOT NULL UNIQUE`: Almacena el identificador transformado estrictamente a minúsculas y sin espacios mediante `UsuarioServicio::normalizarNombreUsuario()`.
 3. Esto garantiza que nombres como `Admin.Bootstrap` y `admin.bootstrap` colisionen a nivel de base de datos impidiendo suplantaciones y ambigüedades.
 
-### D-036 — Política de contraseñas robusta y hashing bcrypt con rehash (AUTH-1)
+### D-036 — Política de contraseñas robusta, hashing PASSWORD_DEFAULT y rehash (AUTH-1 / AUTH-1A)
 
-1. Longitud mínima de contraseña obligatoria de 10 caracteres, sin límites máximos arbitrariamente bajos (máximo 128 caracteres para mitigar denegación de servicio en hashing).
-2. Hashing criptográfico unidireccional obligatorio con `PASSWORD_BCRYPT` y factor de costo fijado en 12 (`['cost' => 12]`).
-3. Detección y migración transparente de costo (`password_needs_rehash()`) durante inicios de sesión exitosos si la política o configuración del sistema evoluciona.
-4. Prohibición absoluta de almacenar o loguear contraseñas en texto claro. La columna en base de datos se denomina estrictamente `contrasena_hash CHAR(60) NOT NULL`.
+1. Política de contraseñas: longitud mínima de 12 caracteres y máxima de 1024 caracteres evaluada estrictamente antes del hash. Sin reglas artificiales de composición obligatoria y sin transformaciones destructivas (`trim`, `lowercase`, truncamiento); espacios internos, externos y caracteres Unicode son parte integral de la clave.
+2. Hashing criptográfico unidireccional estándar mediante `password_hash($contrasena, PASSWORD_DEFAULT)` y verificación nativa con `password_verify()`. No se fija contractualmente un algoritmo rígido (como bcrypt cost=12) en el dominio, permitiendo que PHP evolucione su algoritmo por defecto de manera nativa.
+3. Mecanismo de migración y evolución transparente vía `password_needs_rehash($hash, PASSWORD_DEFAULT)` durante inicios de sesión exitosos, actualizando hashes antiguos de forma no disruptiva.
+4. Almacenamiento seguro extensible: la columna en base de datos se modela como `contrasena_hash VARCHAR(255) NOT NULL`, garantizando espacio suficiente para soportar `PASSWORD_DEFAULT` y futuros algoritmos criptográficos sin necesidad de migraciones de DDL adicionales. Prohibición absoluta de almacenar o registrar contraseñas en texto claro.
 
-### D-037 — Mitigación de timing attacks y enumeración de usuarios (AUTH-1)
+### D-037 — Mitigación de timing attacks y enumeración de usuarios (AUTH-1 / AUTH-1A)
 
-1. En caso de que un usuario no exista en el sistema durante el intento de inicio de sesión, el servicio ejecuta una verificación matemática ficticia (`password_verify()`) contra un hash bcrypt dummy precalculado (`$2y$10$abcdefghijklmnopqrstuu...`), equiparando el tiempo de respuesta con el de un usuario existente.
+1. En caso de que un usuario no exista en el sistema durante el intento de inicio de sesión, el servicio ejecuta una verificación matemática ficticia (`password_verify()`) contra un hash dummy precalculado dinámicamente con `PASSWORD_DEFAULT`, equiparando el tiempo de respuesta con el de un usuario existente sin introducir discrepancias algorítmicas.
 2. El mensaje devuelto ante credenciales erróneas o cuentas inactivas es siempre indistinguible y uniforme: `'Credenciales de acceso inválidas.'`, impidiendo la enumeración de nombres de usuario.
 
 ### D-038 — Sesiones de usuario persistidas con tokens opacos en base de datos (AUTH-1)
@@ -231,11 +231,11 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 2. Si se registran 5 o más intentos fallidos en una ventana móvil de 15 minutos para una misma IP o identificador, el servicio deniega temporalmente el intento con `DemasiadosIntentosExcepcion`.
 3. El throttling temporal no modifica el estado permanente del usuario (`usuarios.estado` permanece `ACTIVO`), evitando ataques de denegación de servicio distribuidos dirigidos a bloquear cuentas legítimas.
 
-### D-046 — Bootstrap CLI seguro e idempotente para usuario inicial (AUTH-1)
+### D-046 — Bootstrap CLI estrictamente de uso único para cuenta inicial (AUTH-1 / AUTH-1A)
 
 1. Se provee la utilidad de línea de comandos `bin/crear-usuario-inicial.php` restringida estrictamente a entornos CLI (`PHP_SAPI === 'cli'`).
-2. Si el sistema ya cuenta con al menos un usuario registrado en base de datos, el script rechaza la ejecución a menos que se invoque con el flag explícito `--forzar`.
-3. Si la persona asociada no existe, el script la crea de forma atómica en el núcleo de personas con su correspondiente documento de identidad.
+2. Contrato de uso único inmutable: si el sistema ya cuenta con al menos un usuario registrado en base de datos (`usuarios >= 1`), la ejecución es rechazada categóricamente sin excepciones ni banderas de bypass (se prohíbe `--forzar` o mecanismos similares). La administración posterior de cuentas se delega a las funciones administrativas normales del software bajo autorización adecuada.
+3. Si la persona asociada no existe y la base de datos no tiene usuarios, el script la crea de forma atómica en el núcleo de personas con su correspondiente documento de identidad.
 4. Por motivos de seguridad y auditoría, el script jamás imprime la contraseña generada o asignada en la salida de la consola ni en archivos de log.
 
 ## Pendientes de decisión

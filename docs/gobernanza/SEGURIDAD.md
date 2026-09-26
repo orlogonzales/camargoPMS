@@ -15,11 +15,11 @@
 - Expiración dual estricta: inactividad máxima de 30 minutos y duración absoluta de 12 horas desde la creación de la sesión.
 - Tokens opacos de sesión: cadenas de 64 caracteres hex (32 bytes CSPRNG); la base de datos almacena exclusivamente el hash SHA-256 (`token_hash`), impidiendo el uso de sesiones si la base de datos es vulnerada.
 - Revocación forzada y concurrente de sesiones activas ante cambio de contraseña o desactivación de la cuenta/persona.
-- Contraseñas con `PASSWORD_BCRYPT` (factor de costo 12) y migración automática transparente vía `password_needs_rehash()`. Longitud mínima de 10 caracteres (máximo 128). Prohibición estricta de texto claro en base de datos (`contrasena_hash CHAR(60)`).
-- Mitigación contra ataques de temporización (timing attacks) y enumeración de usuarios: hash bcrypt dummy precalculado ante usuarios inexistentes y mensajes genéricos uniformes (`'Credenciales de acceso inválidas.'`).
+- Contraseñas con `PASSWORD_DEFAULT` y migración automática transparente vía `password_needs_rehash($hash, PASSWORD_DEFAULT)`. Longitud mínima de 12 caracteres y máxima de 1024 caracteres evaluada antes del hash. Sin reglas artificiales de composición ni transformaciones destructivas (`trim`, truncamiento), permitiendo espacios y caracteres Unicode. Almacenamiento seguro extensible en `contrasena_hash VARCHAR(255) NOT NULL`. Prohibición estricta de contraseñas en texto claro.
+- Mitigación contra ataques de temporización (timing attacks) y enumeración de usuarios: verificación con hash dummy precalculado dinámicamente con `PASSWORD_DEFAULT` ante usuarios inexistentes y mensajes genéricos uniformes (`'Credenciales de acceso inválidas.'`).
 - Mitigación contra redirección abierta (Open Redirect): sanitización estricta de rutas de retorno (`return`) forzando esquemas relativos locales.
 - Rate limiting y defensa contra fuerza bruta: registro de intentos en `intentos_autenticacion`; bloqueo temporal tras 5 fallos en 15 minutos sin alterar el estado permanente del usuario (`usuarios.estado`).
-- Bootstrap CLI defensivo: utilidades administrativas iniciales (`bin/crear-usuario-inicial.php`) restringidas a CLI (`PHP_SAPI === 'cli'`), idempotentes y sin exposición de credenciales en consola o logs.
+- Bootstrap CLI de uso único estricto: utilidad administrativa inicial (`bin/crear-usuario-inicial.php`) restringida a CLI (`PHP_SAPI === 'cli'`), que rechaza categóricamente su ejecución si ya existe al menos un usuario registrado en el sistema (`usuarios >= 1`) sin banderas de bypass ni excepciones (`--forzar` eliminado). Sin exposición de credenciales en consola o logs.
 
 ## Autorización
 

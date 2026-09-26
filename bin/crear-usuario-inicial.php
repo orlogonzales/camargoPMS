@@ -13,7 +13,7 @@ declare(strict_types=1);
  * Restricciones:
  * - Ejecutable exclusivamente bajo CLI (PHP_SAPI === 'cli').
  * - No imprime contraseñas ni las almacena en texto plano.
- * - Rechaza la ejecución si el sistema ya cuenta con usuarios inicializados salvo con la bandera --forzar.
+ * - Rechaza la ejecución estrictamente si el sistema ya cuenta con al menos un usuario registrado (sin bypass).
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -51,7 +51,6 @@ $opciones = getopt('', [
     'tipo-documento::',
     'numero-documento::',
     'pais-emisor::',
-    'forzar',
     'ayuda',
 ]);
 
@@ -60,7 +59,7 @@ if (isset($opciones['ayuda'])) {
     echo "Opciones:\n";
     echo "  --usuario=VALOR           Nombre de usuario (3-50 caracteres, alfanumérico)\n";
     echo "  --email=VALOR             Correo electrónico válido y único\n";
-    echo "  --password=VALOR          Contraseña segura (mín. 10 chars, mayús, minús, número, símbolo)\n";
+    echo "  --password=VALOR          Contraseña segura (mínimo 12 caracteres, máximo 1024 caracteres)\n";
     echo "  --persona-id=ID           ID de persona existente (opcional si se pasan datos de persona)\n";
     echo "  --nombres=VALOR           Nombres para crear nueva persona\n";
     echo "  --primer-apellido=VALOR   Primer apellido de la persona\n";
@@ -68,7 +67,6 @@ if (isset($opciones['ayuda'])) {
     echo "  --tipo-documento=CODIGO   Código de tipo documento (ej. DNI, CE, PASAPORTE)\n";
     echo "  --numero-documento=VALOR  Número de documento\n";
     echo "  --pais-emisor=CODIGO      Código ISO Alpha-3 del país emisor (ej. PER)\n";
-    echo "  --forzar                  Permite crear usuario si ya existe otro registrado\n";
     echo "  --ayuda                   Muestra este mensaje de ayuda\n";
     exit(0);
 }
@@ -83,11 +81,11 @@ $pdo = BaseDatos::conexion();
 $usuarioServicio = new UsuarioServicio($pdo);
 $personaServicio = new PersonaServicio($pdo);
 
-// Comprobar política de usuario inicial único
+// Comprobar política de usuario inicial único (sin excepción de línea de comandos)
 $stmtCount = $pdo->query("SELECT COUNT(*) FROM usuarios");
 $totalUsuarios = (int) $stmtCount->fetchColumn();
 
-if ($totalUsuarios > 0 && !isset($opciones['forzar'])) {
+if ($totalUsuarios > 0) {
     fwrite(STDERR, "[ERROR] El sistema ya cuenta con {$totalUsuarios} usuario(s) registrado(s). El bootstrap inicial ya fue completado.\n");
     exit(1);
 }

@@ -44,11 +44,11 @@ Ajuste evolutivo a Identidad (monónimos internacionales y unicidad documental p
 
 Estado: completada.
 
-## AUTH-1 — Autenticación, Cuentas Humanas y Sesiones
+## AUTH-1 / AUTH-1A — Autenticación, Cuentas Humanas y Sesiones
 
-Gestión de Usuarios humanos vinculados 1:1 a Personas (`usuarios.persona_id UNIQUE NOT NULL`), desacoplado de Colaboradores. Hashing seguro de contraseñas (`PASSWORD_BCRYPT`, cost 12, rehash dinámico), mitigación de timing attacks / enumeración, sesiones persistidas en base de datos con tokens opacos (SHA-256), expiración dual (30m inactividad / 12h absoluta), revocación concurrente ante cambio de clave, rate limiting (5 intentos / 15m), protección CSRF estricta, mitigación session fixation y open redirect, cookies seguras, middleware de autenticación, vista de login Alina y script CLI de bootstrap.
+Gestión de Usuarios humanos vinculados 1:1 a Personas (`usuarios.persona_id UNIQUE NOT NULL`), desacoplado de Colaboradores. Hashing seguro y extensible de contraseñas (`PASSWORD_DEFAULT`, `contrasena_hash VARCHAR(255)`, política de 12 a 1024 caracteres, rehash dinámico con `password_needs_rehash()`), mitigación dinámica de timing attacks / enumeración, sesiones persistidas en base de datos con tokens opacos (SHA-256), expiración dual (30m inactividad / 12h absoluta), revocación concurrente ante cambio de clave, rate limiting (5 intentos / 15m), protección CSRF estricta, mitigación session fixation y open redirect, cookies seguras, middleware de autenticación, vista de login Alina y script CLI de bootstrap estrictamente de uso único sin bypass.
 
-Estado: completada.
+Estado: completada (AUTH-1A aplicada y verificada).
 
 ## Roles, Permisos y Autorización
 

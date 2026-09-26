@@ -4,6 +4,28 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Micro-lote AUTH-1A — Cierre de Contrato Criptográfico y Bootstrap Inicial
+
+- Implementada la migración evolutiva `SQL/migraciones/006_ajustes_auth_credenciales.sql` (lote 6):
+  - Modificación formal de la columna `contrasena_hash` en la tabla `usuarios` a `VARCHAR(255) NOT NULL` con comentario explícito de soporte para `PASSWORD_DEFAULT` y futuros algoritmos.
+  - Sincronización de comentarios descriptivos en tablas `usuarios`, `sesiones_usuario` e `intentos_autenticacion`.
+- Eliminación de la fijación rígida a `PASSWORD_BCRYPT` y `cost=12` en el dominio y gobernanza:
+  - Adopción de `PASSWORD_DEFAULT` estándar en `UsuarioServicio` y `AutenticacionServicio`.
+  - Rehash automático y dinámico (`password_needs_rehash()`) con `PASSWORD_DEFAULT` tras autenticaciones exitosas.
+  - Mitigación dinámica contra timing attacks y enumeración mediante hash dummy precalculado dinámicamente con `PASSWORD_DEFAULT`.
+- Formalización definitiva de la política de contraseñas (D-036):
+  - Longitud mínima de 12 caracteres y máxima de 1024 caracteres evaluada estrictamente antes del hash.
+  - Ausencia absoluta de transformaciones destructivas (`trim`, `lowercase`, truncamiento); soporte pleno de espacios internos/externos y caracteres Unicode.
+- Endurecimiento del contrato de bootstrap inicial en `bin/crear-usuario-inicial.php` (D-046):
+  - Eliminación categórica de la bandera `--forzar` y de cualquier mecanismo de bypass de línea de comandos.
+  - Regla estricta: `usuarios = 0` permite bootstrap inicial; `usuarios >= 1` rechaza incondicionalmente la ejecución. La creación posterior de usuarios queda reservada exclusivamente a las funciones administrativas del sistema bajo autorización.
+- Corrección de decisiones en gobernanza:
+  - D-036 actualizada para formalizar `PASSWORD_DEFAULT`, `VARCHAR(255)`, 12/1024 chars y rehash sin asunciones rígidas.
+  - D-046 actualizada eliminando toda referencia a `--forzar` y estableciendo el carácter de uso estrictamente único del bootstrap.
+- Paridad estructural 100% verificada entre las migraciones 001 a 006 y el consolidado `SQL/camargo_pms.sql` mediante recreación aislada en base de datos temporal `camargo_pms_test_parity_auth1a`.
+- Suite automatizada ampliada a 57 pruebas (57 PASS / 0 FAIL), reteniendo las 47 de AUTH-1 e incorporando las pruebas específicas A a L para validación de longitudes (11 rechazada, 12 aceptada, 500 aceptada, 1025 rechazada), preservación de espacios y no trim, compatibilidad `PASSWORD_DEFAULT`, soporte `VARCHAR(255)`, rehash dinámico y rechazo incondicional de `--forzar` en bootstrap con cuentas existentes.
+- Confirmada la intangibilidad total del catálogo `admin-dashboard/` (0 archivos modificados).
+
 ### Fase AUTH-1 — Autenticación, Cuentas Humanas y Sesiones
 
 - Implementada la migración evolutiva `SQL/migraciones/005_auth_usuarios_sesiones.sql` (lote 5):
