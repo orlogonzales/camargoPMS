@@ -4,6 +4,38 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase PROPIEDADES-1 — Maestro Central de Propiedades e Inmuebles Físicos
+
+- **Arquitectura y Principio Ontológico de Delimitación Física (`PROPIEDAD ≠ UNIDAD`):**
+  - Implementación de la tabla `propiedades` como raíz inmobiliaria física mediante migración `011_propiedades.sql` con paridad exacta al 100% en `SQL/camargo_pms.sql` (22 tablas, 23 FKs).
+  - Delimitación ontológica estricta: una propiedad modela única y exclusivamente el contenedor físico, edificación o inmueble raíz (ej. "Edificio Ayuda Mutua"). Se prohíbe taxativamente modelar unidades, tipologías de alojamiento, habitaciones o camas en esta fase, reservando dicha modelación para `UNIDADES-1`.
+  - Respeto riguroso de gobernanza: Decisiones P-004 (zona horaria y corte hotelero), P-005 (moneda, redondeo e impuestos) y P-006 (estrategia de concurrencia para disponibilidad) permanecen estrictamente pendientes, sin introducir atributos temporales, tarifarios o de inventario prematuros.
+- **Preservación Histórica del Ciclo de Vida (`PROPIEDAD ≠ REGISTRO DESECHABLE`):**
+  - Cero eliminación física en toda la arquitectura (`DELETE FROM propiedades` = 0).
+  - Ciclo de vida operacional gobernado exclusivamente por la alternancia de estados `ACTIVO` e `INACTIVO`.
+  - Ausencia absoluta de métodos `eliminar()` en repositorio y servicio, y de acciones de eliminación en controlador. Rutas HTTP DELETE no registradas responden `404 Not Found`.
+- **Capa de Dominio y Validaciones Geográficas:**
+  - Modelo de dominio `Propiedad` con tipado estricto, métodos de utilidad `estaActiva()`, `obtenerUbicacionCompleta()`, `obtenerCoordenadas(): array`, y serialización consistente `haciaArreglo()`, `aArreglo()`, `aArray()`, y recreación `desdeArreglo()`.
+  - Excepciones de dominio `PropiedadDuplicadaExcepcion` (HTTP 409) y `PropiedadNoEncontradaExcepcion` (HTTP 404).
+  - Validaciones de dominio en `PropiedadServicio`: código alfanumérico único (3-30 caracteres, mayúsculas normalizadas), nombre obligatorio (mínimo 3 caracteres), dirección física obligatoria y no vacía, vinculación a país válido del catálogo (`paises`), y validación defensiva de coordenadas geográficas en rangos válidos (latitud en `[-90.0, 90.0]`, longitud en `[-180.0, 180.0]`).
+- **Servicio y Trazabilidad Transversal D-061:**
+  - `PropiedadServicio`: punto de acceso único para gestión de propiedades.
+  - Actualización funcional con cálculo diferencial exacto (`diff`) que previene la emisión de eventos de auditoría redundantes cuando no hay cambios.
+  - Trazabilidad integral de operaciones (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) en `auditoria` bajo D-061, resolviendo el actor humano (`USR_x`) mediante `resolverActorEjecutor()` y reservando `CAMARGO_PMS` (`id = 1`) para ejecuciones de sistema.
+- **Controlador, Rutas y Permisos RBAC:**
+  - Nuevos permisos de sistema: `propiedades.ver`, `propiedades.crear`, `propiedades.editar`, `propiedades.cambiar_estado`.
+  - Rutas registradas en `public/index.php`: `GET /propiedades`, `GET /propiedades/datos`, `GET /propiedades/{id}`, `GET /propiedades/{id}/perfil`, `POST /propiedades`, `PUT /propiedades/{id}`, `PATCH /propiedades/{id}/estado`, y variantes POST compatibles.
+  - Nueva opción de menú autorizada: Nivel 1 `propiedades` ('Propiedades', icono `ti ti-building`, orden 2) y Nivel 2 `propiedades_catalogo` ('Catálogo de Inmuebles', ruta `/propiedades`, permiso `propiedades.ver`).
+- **Interfaz Alina y Ficha Técnica:**
+  - Vista general `app/Vistas/propiedades/index.php` con maquetación de tarjetas Alina, tabla dinámica, filtros de búsqueda, selector de estado y modal interactivo para creación y edición.
+  - Vista de perfil `app/Vistas/propiedades/detalle.php` con ficha técnica del inmueble, tarjeta de georreferenciación con enlace a Google Maps, trazabilidad de auditoría y bloque reservado con advertencia arquitectónica del principio `PROPIEDAD ≠ UNIDAD` hacia `UNIDADES-1`.
+  - Script Vanilla JS modular `public/assets/js/gestion-propiedades.js` con debounce de búsqueda, paginación dinámica, validación cliente mediante PristineJS v1.1.0 y confirmaciones con SweetAlert2.
+- **Pruebas y Verificaciones:**
+  - Matriz formal unitaria y de integración `PROP-01` a `PROP-40` (40/40 PASS).
+  - Prueba específica de persistencia histórica `PROP-HIST-01` de 10 pasos (10/10 PASS).
+  - Suite HTTP E2E Real contra servidor Apache HTTPS `E2E-PROP-01` a `E2E-PROP-12` (12/12 PASS).
+  - Regresión integral sin fallos sobre todos los módulos previos del sistema.
+
 ### Fase CONFIGURACIÓN-1 — Núcleo Central de Configuración y Parámetros del Sistema
 
 - **Arquitectura y Separación Canónica (`CONFIGURACIÓN FUNCIONAL (BD) ≠ ENTORNO TÉCNICO (.env)`):**

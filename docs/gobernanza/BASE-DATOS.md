@@ -93,6 +93,21 @@ La gestión estructural del esquema sigue el principio de doble representación 
 - Permisos RBAC introducidos: `configuracion.ver`, `configuracion.editar`.
 - Opción de menú introducida: `config_sistema` ('Configuración General', `/configuracion/sistema`, orden 1 bajo `configuracion`).
 
+## Esquema del Maestro Central de Propiedades (PROPIEDADES-1 y Migración 011)
+
+- `propiedades`: Catálogo físico de inmuebles y predios contenedores (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `codigo` VARCHAR(50) NOT NULL UNIQUE, `nombre` VARCHAR(150) NOT NULL, `descripcion` TEXT NULL, `pais_id` INT UNSIGNED NOT NULL, `departamento` VARCHAR(100) NULL, `provincia` VARCHAR(100) NULL, `distrito` VARCHAR(100) NULL, `direccion` VARCHAR(255) NOT NULL, `referencia` VARCHAR(255) NULL, `latitud` DECIMAL(10, 7) NULL, `longitud` DECIMAL(10, 7) NULL, `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO', `observaciones` TEXT NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP).
+- Restricciones e Integridad:
+  - Clave foránea `fk_propiedades_pais` hacia `paises(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE`. Impide desasociar o eliminar países con propiedades vinculadas.
+  - Restricciones CHECK para cadenas no vacías: `chk_propiedades_codigo_no_vacio`, `chk_propiedades_nombre_no_vacio`, `chk_propiedades_direccion_no_vacia`. La dirección física es obligatoria para garantizar la existencia material del inmueble.
+  - Restricciones CHECK para coordenadas GPS geográficas: `chk_propiedades_latitud` `(latitud IS NULL OR (latitud >= -90.0000000 AND latitud <= 90.0000000))` y `chk_propiedades_longitud` `(longitud IS NULL OR (longitud >= -180.0000000 AND longitud <= 180.0000000))`.
+  - Índices: `idx_propiedades_estado`, `idx_propiedades_pais_id`, `idx_propiedades_nombre`, `idx_propiedades_departamento`.
+  - Principio `PROPIEDAD ≠ REGISTRO DESECHABLE`: Cero eliminación física (`DELETE FROM propiedades` = 0). Preservación histórica mediante alternancia operativa `ACTIVO` ↔ `INACTIVO`.
+  - Principio `PROPIEDAD ≠ UNIDAD`: La tabla modela exclusivamente la edificación raíz; no contiene columnas de unidades arrendables, tipologías ni disponibilidad.
+- Permisos RBAC introducidos: `propiedades.ver`, `propiedades.crear`, `propiedades.editar`, `propiedades.cambiar_estado`.
+- Opciones de menú introducidas:
+  - Nivel 1 (Principal): `propiedades` ('Propiedades', icono `ti ti-building`, orden 2, entre Inicio y Configuración).
+  - Nivel 2 (Secundaria): `propiedades_catalogo` ('Catálogo de Inmuebles', bajo `propiedades`, ruta `/propiedades`, permiso `propiedades.ver`, orden 1).
+
 ## Reglas
 
 - Claves primarias estables y claves foráneas explícitas.

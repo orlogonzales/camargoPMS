@@ -94,6 +94,19 @@ Catálogo central de parámetros funcionales del sistema bajo la tabla `configur
 
 Estado: completada.
 
+## PROPIEDADES-1 — Maestro Central de Propiedades e Inmuebles Físicos
+
+Maestro central de predios e inmuebles contenedores raíz bajo la tabla `propiedades` y la interfaz Alina en `/propiedades` y `/propiedades/{id}/perfil`:
+- Principio ontológico vinculante `PROPIEDAD ≠ UNIDAD`: una propiedad representa única y estrictamente el contenedor físico o edificio (ej. "Edificio Ayuda Mutua"). Se prohíbe taxativamente modelar unidades, habitaciones, tipologías o inventario comercializable en esta fase (reservado a `UNIDADES-1`).
+- Preservación histórica del ciclo de vida (`PROPIEDAD ≠ REGISTRO DESECHABLE`): cero eliminación física (`DELETE` = 0) en toda la arquitectura; ciclo de vida gobernado exclusivamente por la alternancia operativa `ACTIVO` / `INACTIVO`.
+- Catálogo geográfico y georreferenciación defensiva: dirección física obligatoria no vacía (`direccion VARCHAR(255) NOT NULL`), vinculación íntegra al catálogo de países (`paises.id`), coordenadas GPS opcionales con rangos validados (`latitud` `[-90, 90]`, `longitud` `[-180, 180]`), y ficha técnica con enlace interactivo a Google Maps.
+- Capa de servicio y repositorio con cálculo diferencial exacto (`diff`) que evita auditoría redundante, y trazabilidad integral bajo D-061 (`ACTOR ≠ USUARIO`) con autoría humana resuelta (`USR_x`).
+- Respeto estricto de gobernanza: Decisiones P-004 (zona horaria y corte hotelero), P-005 (moneda, redondeo e impuestos) y P-006 (concurrencia de disponibilidad) se mantienen formalmente abiertas y pendientes.
+- Interfaz Alina con maquetación de tarjetas, tabla dinámica, filtros multicriterio, modal con validación PristineJS v1.1.0 y diálogos con SweetAlert2.
+- Suites de pruebas: Matriz formal PROP-01..40 (40/40 PASS), prueba histórica PROP-HIST-01 (10/10 PASS) y suite HTTP E2E Real Apache HTTPS E2E-PROP-01..12 (12/12 PASS).
+
+Estado: completada.
+
 ## Dominio operativo
 
 1. propiedades, niveles y unidades;

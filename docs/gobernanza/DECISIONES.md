@@ -420,6 +420,27 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 4. Preservación estricta de decisiones pendientes (P-004 y P-005):
    - Se mantiene la exclusión deliberada de semillas funcionales para zona horaria / corte hotelero (P-004) y moneda / redondeo / impuestos (P-005) hasta su resolución formal en las fases correspondientes.
 
+### D-064 — Maestro Central de Propiedades, principio PROPIEDAD ≠ UNIDAD y preservación de ciclo de vida histórico (PROPIEDADES-1)
+
+1. Principio ontológico de delimitación física (`PROPIEDAD ≠ UNIDAD`):
+   - Una propiedad representa exclusiva y estrictamente el contenedor físico, edificación o inmueble raíz (ej. "Edificio Ayuda Mutua", "Casona Principal", "Villas del Valle").
+   - Bajo ninguna circunstancia una propiedad modela unidades arrendables, habitaciones, departamentos, camas o inventario comercializable. La modelación de unidades y tipologías de alojamiento queda estrictamente reservada para la fase subsiguiente `UNIDADES-1`.
+   - Se prohíbe introducir atributos o relaciones prematuras de disponibilidad, tarifas, estancias, reservas, bloqueos o amenidades específicas de habitación dentro de la entidad `Propiedad`.
+2. Principio de preservación histórica (`PROPIEDAD ≠ REGISTRO DESECHABLE`):
+   - Las propiedades físicas constituyen la raíz de la jerarquía inmobiliaria del PMS. No se admite eliminación física (`DELETE FROM propiedades`) bajo ningún escenario de la operativa del sistema.
+   - El ciclo de vida de una propiedad se gestiona exclusivamente a través de los estados operativos `ACTIVO` e `INACTIVO` mediante `cambiarEstado()`.
+   - Se prohíbe la creación de métodos o endpoints destructivos de eliminación (`eliminar()`, `DELETE /propiedades/{id}`). Las solicitudes HTTP DELETE responden estrictamente `404 Not Found`.
+   - Propiedades inactivas persisten íntegras en base de datos conservando su trazabilidad histórica, auditoría previa y referencias estructurales.
+3. Catálogo geográfico y georreferenciación defensiva:
+   - Toda propiedad física requiere obligatoriamente una dirección física no vacía (`direccion VARCHAR(255) NOT NULL`) y vinculación a un país válido registrado en el catálogo (`paises.id`).
+   - Las coordenadas geográficas (`latitud` y `longitud`) son opcionales con validación estricta de rango numérico: latitud en `[-90.0, 90.0]` y longitud en `[-180.0, 180.0]` almacenadas en tipo `DECIMAL(10, 8)` y `DECIMAL(11, 8)` respectivamente.
+4. Trazabilidad integral y auditoría bajo D-061:
+   - Toda mutación (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) es auditada de forma transversal en la tabla `auditoria`.
+   - Conforme a D-061, se resuelve explícitamente el actor ejecutor humano (`USR_x`) a partir del usuario en sesión, reservando el actor estructural `CAMARGO_PMS` (`id = 1`) únicamente para ejecuciones desatendidas o de sistema.
+   - En actualizaciones (`EDITAR`), se calcula el diferencial exacto de atributos mutados y se suprime la emisión de eventos de auditoría redundantes cuando no existen cambios funcionales.
+5. Preservación estricta de decisiones pendientes (P-004, P-005 y P-006):
+   - Se mantiene la exclusión deliberada de zonas horarias de propiedad, fechas de corte hotelero (P-004), monedas/tarifas asociadas (P-005) y reglas de concurrencia de disponibilidad (P-006) hasta sus respectivas fases autorizadas.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite |

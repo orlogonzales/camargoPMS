@@ -19,6 +19,8 @@
 
 ## Organización Conceptual de Menús Futuros
 
+- **PROPIEDADES:**
+  - Catálogo de Inmuebles (`/propiedades`)
 - **PERSONAS:**
   - Directorio de Personas
   - Gestión de Personal (Colaboradores, Cargos, Historial)
@@ -27,7 +29,17 @@
   - Roles y Permisos
   - Gestión de Menú
   - Sesiones Activas
-  - Parámetros Generales de Empresa
+  - Configuración General del Sistema (`/configuracion/sistema`)
+
+## Inmuebles e Infraestructura Física
+
+- **Propiedades Físicas (PROPIEDADES-1):**
+  - Maestro central de edificaciones, predios e inmuebles contenedores (`propiedades`).
+  - Administración de código único, nombre, dirección física obligatoria, ubicación geográfica (departamento, provincia, distrito, país del catálogo `paises`), coordenadas GPS opcionales con rangos validados (`latitud` en `[-90, 90]`, `longitud` en `[-180, 180]`), datos de contacto y ciclo de vida histórico (`ACTIVO` ↔ `INACTIVO`).
+  - Ficha técnica y perfil del inmueble (`/propiedades/{id}/perfil`) con georreferenciación y enlace interactivo a Google Maps.
+  - Respeto estricto del principio `PROPIEDAD ≠ UNIDAD` (cero unidades modeladas en esta fase) y `PROPIEDAD ≠ REGISTRO DESECHABLE` (cero eliminación física).
+- **Unidades Físicas (UNIDADES-1 — Fase subsiguiente):**
+  - Catálogo de unidades arrendables comercializables vinculadas a la propiedad raíz.
 
 ## Personas y Terceros
 

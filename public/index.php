@@ -202,6 +202,35 @@ $enrutador->post('/configuracion/sistema/{clave}/restaurar', [\CamargoPMS\Contro
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.editar'),
 ]);
 
+// Rutas de Maestro Central de Propiedades (PROPIEDADES-1)
+$enrutador->get('/propiedades', [\CamargoPMS\Controladores\PropiedadControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),
+]);
+$enrutador->get('/propiedades/datos', [\CamargoPMS\Controladores\PropiedadControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),
+]);
+$enrutador->post('/propiedades', [\CamargoPMS\Controladores\PropiedadControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.crear'),
+]);
+$enrutador->get('/propiedades/{id}', [\CamargoPMS\Controladores\PropiedadControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),
+]);
+$enrutador->get('/propiedades/{id}/perfil', [\CamargoPMS\Controladores\PropiedadControlador::class, 'perfil'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),
+]);
+$enrutador->put('/propiedades/{id}', [\CamargoPMS\Controladores\PropiedadControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.editar'),
+]);
+$enrutador->post('/propiedades/{id}', [\CamargoPMS\Controladores\PropiedadControlador::class, 'actualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.editar'),
+]);
+$enrutador->patch('/propiedades/{id}/estado', [\CamargoPMS\Controladores\PropiedadControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.cambiar_estado'),
+]);
+$enrutador->post('/propiedades/{id}/estado', [\CamargoPMS\Controladores\PropiedadControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.cambiar_estado'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

@@ -5,10 +5,27 @@ Este documento fija conceptos e invariantes, no tablas definitivas. El diseño f
 ## Núcleo inmobiliario
 
 ```text
-Propiedad → Nivel/Piso → Unidad
+Propiedad (Inmueble Físico Raíz) ──[1:N]──> Nivel/Piso ──[1:N]──> Unidad (Alojamiento Arrendable)
 ```
 
-Una propiedad agrupa unidades. Un nivel permite representar edificios, pero el modelo deberá admitir propiedades donde no resulte necesario mostrarlo. Cada unidad conserva configuración, características, precio base, disponibilidad, inventario y servicios aplicables.
+El modelo de Camargo PMS fija el **Principio de Separación Inmobiliaria**:
+
+```text
+PROPIEDAD (Contenedor Físico) ≠ UNIDAD (Espacio Arrendable Comercializable)
+```
+
+Esta separación es vinculante y rige la arquitectura del dominio:
+
+1. **Propiedad (`propiedades` — PROPIEDADES-1):**
+   - Modela única y exclusivamente el contenedor físico, edificación, lote o inmueble raíz (ej. "Edificio Ayuda Mutua", "Casona Principal", "Villas del Valle").
+   - Atributos ontológicos: `codigo` (alfanumérico único en mayúsculas), `nombre` (denominación del predio), `direccion` (dirección física obligatoria, no vacía), `distrito`, `provincia`, `departamento`, `pais_id` (vinculación obligatoria al catálogo `paises`), `codigo_postal`, `latitud` y `longitud` (coordenadas GPS opcionales con validación estricta de rangos geográficos: `[-90, 90]` y `[-180, 180]`), y canales de contacto (`telefono_contacto`, `email_contacto`).
+   - **Principio `PROPIEDAD ≠ REGISTRO DESECHABLE`:** Cero eliminación física (`DELETE FROM propiedades` = 0). Las propiedades no se borran bajo ninguna circunstancia operativa; su ciclo de vida se administra exclusivamente mediante la alternancia operativa `ACTIVO` / `INACTIVO`.
+   - **Prohibición ontológica:** Se prohíbe incorporar atributos de unidades arrendables, tipologías de habitación, camas, amenidades específicas, disponibilidad, tarifas, estancias o bloqueos dentro de la entidad `Propiedad`.
+   - Trazabilidad integral de operaciones (`CREAR`, `EDITAR`, `DESACTIVAR`, `ACTIVAR`) en `auditoria` bajo D-061.
+
+2. **Nivel / Piso y Unidad (UNIDADES-1 — Fase subsiguiente):**
+   - Una propiedad agrupa unidades físicas. Un nivel o piso permite representar subdivisiones verticales de la edificación, contemplando propiedades donde no resulte necesario explicitar niveles.
+   - Cada unidad representará el inventario comercializable y conservará configuración, tipología, características, precio base, disponibilidad e inventario específico.
 
 ## Identidad, Personas y Personal
 
