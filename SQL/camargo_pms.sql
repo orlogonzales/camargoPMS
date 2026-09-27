@@ -681,7 +681,7 @@ INSERT INTO `configuraciones` (`clave`, `grupo`, `nombre`, `descripcion`, `tipo`
 ('operacion.modo_mantenimiento', 'OPERACION', 'Modo Mantenimiento', 'Indica si el sistema se encuentra en ventana de mantenimiento operativo', 'BOOLEANO', '0', '0', 1, 0, 1, 'ACTIVO'),
 ('operacion.paginacion_predeterminada', 'OPERACION', 'Paginación Predeterminada', 'Cantidad de registros predeterminada por página en listados administrativos', 'ENTERO', '15', '15', 1, 0, 2, 'ACTIVO'),
 ('operacion.zona_horaria_predeterminada', 'OPERACION', 'Zona Horaria Predeterminada', 'Identificador IANA de la zona horaria central del sistema (ej. America/Lima)', 'TEXTO', 'America/Lima', 'America/Lima', 1, 0, 5, 'ACTIVO'),
-('reservas.duracion_hold_minutos', 'OPERACION', 'Duración de Hold para Reservas Pendientes (minutos)', 'Tiempo en minutos que una reserva en estado PENDIENTE retiene el inventario antes de expirar automáticamente', 'ENTERO', '30', '30', 1, 0, 6, 'ACTIVO')
+('reservas.duracion_hold_minutos', 'OPERACION', 'Duración de Hold para Reservas Pendientes (minutos)', 'Tiempo en minutos que una reserva en estado PENDIENTE retiene el inventario antes de expirar automáticamente (requiere configuración operacional explícita previa)', 'ENTERO', NULL, NULL, 1, 0, 6, 'ACTIVO')
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `descripcion` = VALUES(`descripcion`),

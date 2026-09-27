@@ -100,8 +100,8 @@ CREATE TABLE IF NOT EXISTS `reserva_unidades` (
 -- 4. PARÁMETRO DE CONFIGURACIÓN PARA HOLD DE RESERVAS PENDIENTES
 -- ----------------------------------------------------------------------------
 INSERT INTO `configuraciones` (`clave`, `grupo`, `nombre`, `descripcion`, `tipo`, `valor`, `valor_predeterminado`, `editable`, `es_sensible`, `orden`, `estado`) VALUES
-('reservas.duracion_hold_minutos', 'OPERACION', 'Duración de Hold para Reservas Pendientes (minutos)', 'Tiempo en minutos que una reserva en estado PENDIENTE retiene el inventario antes de expirar automáticamente', 'ENTERO', '30', '30', 1, 0, 6, 'ACTIVO')
-ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`), `valor_predeterminado` = VALUES(`valor_predeterminado`);
+('reservas.duracion_hold_minutos', 'OPERACION', 'Duración de Hold para Reservas Pendientes (minutos)', 'Tiempo en minutos que una reserva en estado PENDIENTE retiene el inventario antes de expirar automáticamente (requiere configuración operacional explícita previa)', 'ENTERO', NULL, NULL, 1, 0, 6, 'ACTIVO')
+ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`), `valor_predeterminado` = VALUES(`valor_predeterminado`), `descripcion` = VALUES(`descripcion`);
 
 -- ----------------------------------------------------------------------------
 -- 5. PERMISOS RBAC PARA EL MÓDULO DE RESERVAS

@@ -243,7 +243,13 @@ En RESERVAS-1 se introduce el núcleo transaccional comercial de reservas direct
 3. **Modificación a `inventario_diario_unidades`:**
    - La columna `tipo_bloqueo` se amplía a: `ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO', 'RESERVA') NOT NULL DEFAULT 'BLOQUEO_MANUAL'`.
 
-4. **Estado general de la base de datos:**
+4. **Parámetro de configuración de hold (RESERVAS-1A):**
+   - Parámetro operacional `reservas.duracion_hold_minutos` registrado en tabla `configuraciones` (tipo `ENTERO`, grupo `OPERACION`) con valor inicial `NULL`. El sistema no asume ni inventa valores predeterminados (como 30 minutos). Si no se encuentra configurado explícitamente por el negocio, la creación de reservas `PENDIENTE` es rechazada de forma segura (`ConfiguracionFaltanteExcepcion`, HTTP 422).
+
+5. **Contrato fiscal y snapshot provisional (RESERVAS-1A):**
+   - Al no existir aún un motor o fuente tributaria formal en Camargo PMS, toda reserva almacena provisoriamente `impuesto = 0.00` (ningún impuesto aplicado por el PMS, sin asignar clasificaciones tributarias prematuras como gravada, exonerada o inafecta) y $\text{total} = \text{subtotal}$ en `DECIMAL(15,2)`. El snapshot conserva las columnas tributarias preparadas para cuando exista un proveedor o regla impositiva formal.
+
+6. **Estado general de la base de datos:**
    - **28 tablas** físicas.
    - **35 Foreign Keys** referenciales inviolables.
    - **30 permisos** RBAC en catálogo (`reservas.ver`, `reservas.crear`, `reservas.confirmar`, `reservas.cancelar`, `reservas.expirar`).

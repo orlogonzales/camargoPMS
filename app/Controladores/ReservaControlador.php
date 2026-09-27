@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CamargoPMS\Controladores;
 
+use CamargoPMS\Excepciones\ConfiguracionFaltanteExcepcion;
 use CamargoPMS\Excepciones\ConflictoDisponibilidadExcepcion;
 use CamargoPMS\Excepciones\EstadoReservaInvalidoExcepcion;
 use CamargoPMS\Excepciones\IntervaloInvalidoExcepcion;
@@ -247,6 +248,12 @@ class ReservaControlador
                 'ok' => false,
                 'mensaje' => $e->getMessage(),
                 'errores' => $e->obtenerErrores(),
+            ], 422);
+        } catch (ConfiguracionFaltanteExcepcion $e) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => $e->getMessage(),
+                'parametro' => $e->obtenerClaveParametro(),
             ], 422);
         } catch (IntervaloInvalidoExcepcion $e) {
             return Respuesta::json([

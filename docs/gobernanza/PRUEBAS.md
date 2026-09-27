@@ -183,6 +183,19 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `FIN-18`: Aritmética exacta verificada en MySQL 8.4 con tipos `DECIMAL(15,2)` y escala de multiplicación $D1+D2$.
   - `FIN-19`: Aritmética exacta verificada en PHP 8.3 mediante la extensión `BCMath` y cadenas numéricas.
   - `FIN-20`: Cierre formal e inequívoco de la decisión P-005 antes de abordar la fase `RESERVAS-1` (20/20 PASS).
+- **Suite Específica de Verificación RESERVAS-1A (RES-FISC, RES-HOLD, RES-D061 — RESERVAS-1A):** 12 verificaciones de dominio, aritmética BCMath, ausencia de defaults inventados y resolución de actor canónico:
+  - `RES-FISC-01`: Ausencia de fuente tributaria formal aplica rigurosamente `impuesto_total = 0.00` y `total = subtotal`.
+  - `RES-FISC-02`: No existe 18% hardcodeado ni asumido como regla universal en unidad ni cabecera.
+  - `RES-FISC-03`: Snapshot monetario inmutable con moneda canónica `PEN` (`DECIMAL(15,2)`).
+  - `RES-FISC-04`: Aritmética de redondeo comercial `ROUND_HALF_UP` en strings con BCMath puro (ej. `1.005` -> `1.01`, cero IEEE 754 float precision loss).
+  - `RES-HOLD-01`: Ausencia de default 30 inventado en catálogo (`valor = NULL`, `valor_predeterminado = NULL` en `configuraciones`).
+  - `RES-HOLD-02`: Creación de reserva `PENDIENTE` sin parámetro explícito es rechazada limpiamente con `ConfiguracionFaltanteExcepcion` (HTTP 422, cero fallback silencioso).
+  - `RES-HOLD-03`: Parámetro explícito válido (ej. 45 min) calcula `expira_en` con exactitud matemática como instante técnico absoluto.
+  - `RES-HOLD-04`: Expiración atómica e idempotente: estado `EXPIRADA`, 0 noches residuales en inventario y segunda ejecución reporta 0 expiraciones.
+  - `RES-D061-01`: Creación de reserva resuelve canónicamente actor `USR_{id}` vinculado a `usuario_id` (`ACTOR ≠ USUARIO`).
+  - `RES-D061-02`: Confirmación registra `confirmado_por_actor_id` resuelto como actor humano.
+  - `RES-D061-03`: Cancelación registra `cancelado_por_actor_id` resuelto como actor humano.
+  - `RES-D061-04`: Expiración automática del sistema registra actor estructural `CAMARGO_PMS` (actor de sistema D-061).
 - **Reconciliación Canónica y Matemática Suite por Suite:**
 
 | Módulo / Fase | Suite de Prueba | Casos Dominio / Integración | Casos HTTP E2E (Apache) | Estado |
@@ -206,9 +219,10 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **RESERVAS-1** | `test_reservas_matriz_50.php` (RES-01..50) | 50 | — | 50/50 PASS |
 | **RESERVAS-1** | `test_reservas_concurrencia.php` (RES-CONC-01..05, EXP-01) | 6 | — | 6/6 PASS |
 | **RESERVAS-1** | `test_e2e_reservas.php` (E2E-RES-01..15) | — | 15 (`E2E-RES`) | 15/15 PASS |
-| **TOTALES CANÓNICOS**| **19 suites ejecutadas** | **616** | **109** | **725 casos (731 ejecuciones) PASS (100%)** |
+| **RESERVAS-1A** | `test_reservas_1a_fisc_hold_d061.php` (FISC, HOLD, D061) | 12 | — | 12/12 PASS |
+| **TOTALES CANÓNICOS**| **20 suites ejecutadas** | **628** | **109** | **737 casos (743 ejecuciones) PASS (100%)** |
 
-  - **Casos Independientes de Dominio e Integración:** 560 (previos) + 50 (RES-01..50) + 6 (RES-CONC-01..05, EXP-01) = **616 casos**.
-  - **Pruebas HTTP E2E Reales (Apache HTTPS):** 94 (previos) + 15 (E2E-RES-01..15) = **109 casos**.
-  - **Total Bruto Acumulado:** 660 (previos c2d41cc) + 71 (RESERVAS-1) = **731 ejecuciones (731 PASS / 0 FAIL)**.
+  - **Casos Independientes de Dominio e Integración:** 560 (previos c2d41cc) + 50 (RES-01..50) + 6 (RES-CONC-01..05, EXP-01) + 12 (RESERVAS-1A) = **628 casos**.
+  - **Pruebas HTTP E2E Reales (Apache HTTPS):** 94 (previos c2d41cc) + 15 (E2E-RES-01..15) = **109 casos**.
+  - **Total Bruto Acumulado:** 660 (previos c2d41cc) + 71 (RESERVAS-1) + 12 (RESERVAS-1A) = **743 ejecuciones (743 PASS / 0 FAIL)**.
 

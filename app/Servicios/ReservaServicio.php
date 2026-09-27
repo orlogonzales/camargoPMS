@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CamargoPMS\Servicios;
 
+use CamargoPMS\Excepciones\ConfiguracionFaltanteExcepcion;
 use CamargoPMS\Excepciones\ConflictoDisponibilidadExcepcion;
 use CamargoPMS\Excepciones\EstadoReservaInvalidoExcepcion;
 use CamargoPMS\Excepciones\IntervaloInvalidoExcepcion;
@@ -135,22 +136,29 @@ class ReservaServicio
                 throw new ValidacionExcepcion("La unidad '{$unidad->obtenerCodigo()}' no se encuentra activa para operar.");
             }
 
-            $precioNoche = isset($item['precio_unitario_noche']) ? (float) $item['precio_unitario_noche'] : 0.00;
-            if ($precioNoche < 0) {
-                throw new ValidacionExcepcion("El precio unitario por noche para la unidad '{$unidad->obtenerCodigo()}' no puede ser negativo.");
+            // Normalizar precio unitario con BCMath y cadenas
+            $precioNocheStr = trim((string) ($item['precio_unitario_noche'] ?? '0.00'));
+            if (!is_numeric($precioNocheStr) || bccomp($precioNocheStr, '0.00', 4) < 0) {
+                throw new ValidacionExcepcion("El precio unitario por noche para la unidad '{$unidad->obtenerCodigo()}' no puede ser negativo o inválido.");
             }
+            // Snapshot económico por unidad (D-069):
+            // Precisión intermedia >= 4 decimales para valores unitarios / tasas (D-069).
+            $precioNocheIntermedio = $this->redondearBc($precioNocheStr, 4);
+            $precioNoche = $this->redondearBc($precioNocheStr, 2);
 
-            // Snapshot económico por unidad (D-069)
-            $subtotalUnidad = bcmul((string) $precioNoche, (string) $noches, 4);
-            $subtotalUnidadRedondeado = number_format((float) round((float) $subtotalUnidad, 2, PHP_ROUND_HALF_UP), 2, '.', '');
+            // En RESERVAS-1, al no existir aún fuente tributaria ni motor fiscal formal, se aplica
+            // impuesto 0.00 (sin impuesto aplicado por el PMS, sin asumir clasificaciones fiscales
+            // como gravada, exonerada o inafecta). Por tanto, total de la unidad = subtotal.
+            $subtotalUnidad = bcmul($precioNocheIntermedio, (string) $noches, 4);
+            $subtotalUnidadRedondeado = $this->redondearBc($subtotalUnidad, 2);
             $impuestoUnidad = '0.00';
-            $totalUnidad = $subtotalUnidadRedondeado;
+            $totalUnidad = bcadd($subtotalUnidadRedondeado, $impuestoUnidad, 2);
 
             $unidadesIds[] = $uId;
             $unidadesProcesadas[] = [
                 'unidad' => $unidad,
                 'unidad_id' => $uId,
-                'precio_unitario_noche' => number_format($precioNoche, 2, '.', ''),
+                'precio_unitario_noche' => $precioNoche,
                 'noches' => $noches,
                 'subtotal' => $subtotalUnidadRedondeado,
                 'impuesto' => $impuestoUnidad,
@@ -177,10 +185,17 @@ class ReservaServicio
 
         $expiraEn = null;
         if ($estado === Reserva::ESTADO_PENDIENTE) {
-            $duracionHoldMin = (int) $this->configServicio->obtener('reservas.duracion_hold_minutos', 30);
-            if ($duracionHoldMin <= 0) {
-                $duracionHoldMin = 30;
+            $paramHold = isset($datos['duracion_hold_minutos']) && is_numeric((string) $datos['duracion_hold_minutos']) && (int) $datos['duracion_hold_minutos'] > 0
+                ? (int) $datos['duracion_hold_minutos']
+                : $this->configServicio->obtener('reservas.duracion_hold_minutos', null);
+
+            if ($paramHold === null || trim((string) $paramHold) === '' || !is_numeric((string) $paramHold) || (int) $paramHold <= 0) {
+                throw new ConfiguracionFaltanteExcepcion(
+                    'reservas.duracion_hold_minutos',
+                    "No se puede crear una reserva en estado PENDIENTE: el parámetro operacional 'reservas.duracion_hold_minutos' no ha sido configurado por el negocio."
+                );
             }
+            $duracionHoldMin = (int) $paramHold;
             $expiraEn = date('Y-m-d H:i:s', time() + ($duracionHoldMin * 60));
         }
 
@@ -626,7 +641,7 @@ class ReservaServicio
     }
 
     /**
-     * Resuelve el actor humano ejecutor para trazabilidad (D-061).
+     * Resuelve el actor humano ejecutor para trazabilidad (D-061: ACTOR != USUARIO).
      */
     private function resolverActorEjecutor(?int $usuarioId): ?ActorAuditoria
     {
@@ -635,5 +650,38 @@ class ReservaServicio
         }
 
         return $this->auditoriaServicio->obtenerOAsegurarActorUsuario($usuarioId, $this->pdo);
+    }
+
+    /**
+     * Redondeo canónico ROUND_HALF_UP usando BCMath y strings (D-069).
+     * Evita conversiones o imprecisiones de coma flotante binaria IEEE 754.
+     */
+    private function redondearBc(string $importe, int $decimales = 2): string
+    {
+        $importe = trim($importe);
+        if ($importe === '' || !is_numeric($importe)) {
+            return '0.' . str_repeat('0', $decimales);
+        }
+
+        if (!str_contains($importe, '.')) {
+            return $importe . '.' . str_repeat('0', $decimales);
+        }
+
+        $esNegativo = str_starts_with($importe, '-');
+        $factor = '0.' . str_repeat('0', $decimales) . '5';
+
+        $ajustado = $esNegativo
+            ? bcsub($importe, $factor, $decimales + 1)
+            : bcadd($importe, $factor, $decimales + 1);
+
+        $partes = explode('.', $ajustado);
+        $enteros = $partes[0];
+        $fraccion = isset($partes[1]) ? substr($partes[1], 0, $decimales) : str_repeat('0', $decimales);
+
+        if (strlen($fraccion) < $decimales) {
+            $fraccion = str_pad($fraccion, $decimales, '0');
+        }
+
+        return $enteros . '.' . $fraccion;
     }
 }

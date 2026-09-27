@@ -198,7 +198,7 @@ Formalización vinculante del contrato monetario, financiero y fiscal del PMS, c
 
 Estado: homologada (micro-baseline oficial c2d41cc).
 
-## RESERVAS-1 — Núcleo Transaccional de Reservas Directas
+## RESERVAS-1 / RESERVAS-1A — Núcleo Transaccional de Reservas Directas
 
 Implementación del dominio transaccional de reservas directas con soporte nativo de multiunidad, snapshot financiero inmutable y ciclo de expiración de holds:
 - **Modelo de Dominio y Persistencia (D-070):**
@@ -208,14 +208,14 @@ Implementación del dominio transaccional de reservas directas con soporte nativ
 - **Soporte Multiunidad (1 Reserva : N Unidades):**
   - Permite agrupar múltiples unidades en un mismo contrato de reserva, con desglose individual de precio por noche, noches, subtotal e impuesto.
   - Asignación atómica de inventario en `inventario_diario_unidades` con orden determinista `ORDER BY unidad_id ASC, fecha ASC`.
-- **Snapshot Financiero Inmutable (D-069):**
-  - Cálculo centralizado en el backend con aritmética exacta `BCMath` y redondeo `ROUND_HALF_UP` a 2 decimales.
-  - Almacenamiento obligatorio de `moneda_codigo = 'PEN'`, `subtotal`, `impuesto` (18% IGV) y `total` en `DECIMAL(15,2)`.
+- **Snapshot Financiero Inmutable (D-069 / D-070):**
+  - Cálculo centralizado en el backend con aritmética exacta `BCMath` y redondeo `ROUND_HALF_UP` a 2 decimales sin recurrir a tipos flotantes binarios.
+  - Almacenamiento de `moneda_codigo = 'PEN'`, `subtotal`, `impuesto = 0.00` (provisionalmente, sin clasificaciones tributarias asumidas por el PMS) y `total = subtotal` en `DECIMAL(15,2)`.
   - Inmutabilidad histórica garantizada: cambios de catálogo posteriores no alteran los snapshots pactados.
 - **Ciclo de Estados y Expiración Automática de Holds:**
   - Estados: `PENDIENTE`, `CONFIRMADA`, `CANCELADA`, `EXPIRADA`.
   - Retención de inventario en estados activos (`PENDIENTE` y `CONFIRMADA`); liberación atómica e inmediata en estados terminales (`CANCELADA` y `EXPIRADA`).
-  - Lógica de hold temporal: parámetro configurable `reservas.duracion_hold_minutos` (30 min por defecto); expiración idempotente vía web (`POST /reservas/expirar`) o comando CLI (`bin/expirar-reservas.php`).
+  - Lógica de hold temporal: parámetro operacional `reservas.duracion_hold_minutos` sin valor por defecto arbitrario; su ausencia impide la creación de reservas `PENDIENTE` arrojando `ConfiguracionFaltanteExcepcion` (HTTP 422). Al estar configurado, la expiración de holds opera de forma atómica e idempotente vía web (`POST /reservas/expirar`) o comando CLI (`bin/expirar-reservas.php`).
 - **Concurrencia, Locking y Manejo de Conflictos (D-067):**
   - Transacciones ACID en MySQL 8.4 InnoDB con captura de errores 1062, 1205 y 1213 convertidos a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict).
   - Rollback integral multiunidad: ante colisión en cualquier unidad, revierte atómicamente todas las unidades previas sin dejar noches huérfanas.

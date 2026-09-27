@@ -4,6 +4,25 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase RESERVAS-1A — Corrección Fiscal, Configuración de Hold y Semántica D-061
+
+- **Corrección de Política Fiscal y Snapshot Tributario (D-069 / D-070):**
+  - **Eliminación de Asunción Impositiva:** Suprimida cualquier referencia o regla que asuma que toda reserva aplica universalmente 18% IGV.
+  - **Contrato Fiscal Provisorio:** Al no existir aún fuente impositiva formal ni categorización tributaria en el PMS, se establece provisoriamente `impuesto = 0.00` (ningún impuesto aplicado por el PMS, sin calificar la operación como exonerada o inafecta) y `total = subtotal`.
+  - **Aritmética Exacta con BCMath:** Implementación del método canónico `redondearBc()` sobre strings con `ROUND_HALF_UP`, eliminando cualquier casting o conversión intermedia a tipos de coma flotante binaria (`(float)` o `round()` nativo).
+  - **Snapshot Inmutable:** El snapshot de la reserva (`subtotal`, `impuesto`, `total`) y de las unidades asociadas conserva las columnas tributarias preparadas para cuando se integre un motor impositivo formal, manteniendo los valores congelados en el instante de emisión.
+- **Corrección de Parámetro Operacional de Hold:**
+  - **Eliminación de Default Arbitrario:** Eliminado el valor por defecto de 30 minutos del código, migraciones y seeds (`SQL/migraciones/014_reservas.sql`, `SQL/camargo_pms.sql` y tabla `configuraciones` en base de datos real quedan con `valor = NULL` y `valor_predeterminado = NULL`).
+  - **Comportamiento sin Configuración:** Creación de la excepción de dominio `ConfiguracionFaltanteExcepcion` (HTTP 422). Si se intenta crear una reserva en estado `PENDIENTE` y el parámetro `reservas.duracion_hold_minutos` no ha sido definido explícitamente por el negocio, la operación es rechazada limpiamente sin recurrir a fallbacks inventados ni generar errores 500 genéricos.
+  - **Reservas Confirmadas:** Las reservas creadas directamente en estado `CONFIRMADA` no requieren hold (`expira_en = NULL`), operando sin depender del parámetro de expiración.
+- **Corrección de Gobernanza y Semántica D-061:**
+  - **Desacoplamiento de Preservación Histórica:** Separado el principio de ciclo de vida de Reserva (`CANCELACIÓN / EXPIRACIÓN ≠ DELETE`) del contrato D-061.
+  - **Contrato Canónico D-061 (`ACTOR ≠ USUARIO`):** D-061 se restringe y formaliza con precisión para la resolución obligatoria del actor ejecutor (`USR_X` para usuario humano autenticado o `CAMARGO_PMS` para procesos de sistema), garantizando de forma inviolable que jamás se asigne un `usuario_id` directamente como `actor_id` por coincidencia numérica.
+- **Actualización de Documentación de Gobernanza:**
+  - `DECISIONES.md`: Rectificada la decisión D-070 en sus cláusulas fiscal, de hold y de autoría D-061.
+  - `BASE-DATOS.md`: Documentado el estado del parámetro de hold sin default inventado y el contrato fiscal provisional.
+  - `ROADMAP.md`: Actualizada la descripción del módulo de reservas directas.
+
 ### Fase RESERVAS-1 — Núcleo Transaccional de Reservas Directas
 
 - **Dominio Transaccional y Persistencia Relacional (D-070):**

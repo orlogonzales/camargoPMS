@@ -191,6 +191,11 @@ class Reserva
         return $this->impuestoTotal;
     }
 
+    public function obtenerImpuesto(): string
+    {
+        return $this->impuestoTotal;
+    }
+
     public function obtenerTotal(): string
     {
         return $this->total;
@@ -216,12 +221,22 @@ class Reserva
         return $this->canceladaPorActorId;
     }
 
+    public function obtenerCanceladoPorActorId(): ?int
+    {
+        return $this->canceladaPorActorId;
+    }
+
     public function obtenerConfirmadaEn(): ?string
     {
         return $this->confirmadaEn;
     }
 
     public function obtenerConfirmadaPorActorId(): ?int
+    {
+        return $this->confirmadaPorActorId;
+    }
+
+    public function obtenerConfirmadoPorActorId(): ?int
     {
         return $this->confirmadaPorActorId;
     }
