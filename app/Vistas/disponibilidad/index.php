@@ -133,9 +133,9 @@ declare(strict_types=1);
                                         <label for="consulta-rango-fechas" class="form-label f-s-12 f-w-600 mb-1">
                                             <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo de Estadía (Check-in → Check-out)
                                         </label>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
-                                            <input type="text" class="form-control" id="consulta-rango-fechas"
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+                                            <input type="text" class="form-control ps-5" id="consulta-rango-fechas"
                                                    placeholder="Seleccione intervalo..."
                                                    data-provider="rangepicker"
                                                    data-target-inicio="#consulta-fecha-entrada"
@@ -147,7 +147,7 @@ declare(strict_types=1);
                                     </div>
                                     <div class="col-md-3 col-6">
                                         <label for="consulta-propiedad-id" class="form-label f-s-12 f-w-600 mb-1">Propiedad</label>
-                                        <select class="form-select form-select-sm" id="consulta-propiedad-id" name="propiedad_id">
+                                        <select class="form-select basic-select2" id="consulta-propiedad-id" name="propiedad_id" data-placeholder="Todas las propiedades">
                                             <option value="">Todas las propiedades</option>
                                             <?php foreach ($propiedades as $p): ?>
                                                 <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?> (<?= e($p['codigo']) ?>)</option>
@@ -156,7 +156,7 @@ declare(strict_types=1);
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <label for="consulta-tipo-unidad-id" class="form-label f-s-12 f-w-600 mb-1">Tipología</label>
-                                        <select class="form-select form-select-sm" id="consulta-tipo-unidad-id" name="tipo_unidad_id">
+                                        <select class="form-select basic-select2" id="consulta-tipo-unidad-id" name="tipo_unidad_id" data-placeholder="Todos los tipos">
                                             <option value="">Todos los tipos</option>
                                             <?php foreach ($tiposUnidad as $t): ?>
                                                 <option value="<?= (int) $t['id'] ?>"><?= e($t['nombre']) ?></option>
@@ -167,8 +167,8 @@ declare(strict_types=1);
                                         <button type="submit" class="btn btn-primary btn-sm flex-grow-1" id="btn-ejecutar-consulta">
                                             <i class="fa-solid fa-magnifying-glass me-1"></i> Consultar
                                         </button>
-                                        <div class="form-check form-switch pt-1 d-flex align-items-center">
-                                            <input class="form-check-input" type="checkbox" id="check-solo-disponibles">
+                                        <div class="form-check d-flex align-items-center gap-1 pt-1">
+                                            <input class="form-check-input f-s-18 mb-1" type="checkbox" id="check-solo-disponibles">
                                             <label class="form-check-label f-s-12 ms-1 text-nowrap" for="check-solo-disponibles">Solo libres</label>
                                         </div>
                                     </div>
@@ -219,7 +219,7 @@ declare(strict_types=1);
                         <div class="row g-2 mb-3 align-items-center bg-light-subtle p-2 b-r-8 border">
                             <div class="col-md-4 col-12">
                                 <label for="matriz-propiedad-id" class="form-label f-s-12 f-w-600 mb-1">Propiedad a Visualizar</label>
-                                <select class="form-select form-select-sm" id="matriz-propiedad-id">
+                                <select class="form-select basic-select2" id="matriz-propiedad-id">
                                     <?php foreach ($propiedades as $p): ?>
                                         <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?> (<?= e($p['codigo']) ?>)</option>
                                     <?php endforeach; ?>
@@ -227,7 +227,10 @@ declare(strict_types=1);
                             </div>
                             <div class="col-md-3 col-6">
                                 <label for="matriz-mes-selector" class="form-label f-s-12 f-w-600 mb-1">Mes Operacional</label>
-                                <input type="month" class="form-control form-control-sm" id="matriz-mes-selector" value="<?= e($mesDefecto) ?>">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-calendar position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                    <input type="month" class="form-control ps-5" id="matriz-mes-selector" value="<?= e($mesDefecto) ?>">
+                                </div>
                             </div>
                             <div class="col-md-2 col-6 d-flex align-items-end">
                                 <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn-recargar-matriz">
@@ -268,7 +271,7 @@ declare(strict_types=1);
                     <div class="tab-pane fade" id="tab-bloqueos" role="tabpanel">
                         <div class="row g-2 mb-3 bg-light-subtle p-2 b-r-8 border align-items-center">
                             <div class="col-md-3 col-6">
-                                <select class="form-select form-select-sm" id="filtro-bloqueos-propiedad">
+                                <select class="form-select basic-select2" id="filtro-bloqueos-propiedad" data-placeholder="Todas las propiedades">
                                     <option value="">Todas las propiedades</option>
                                     <?php foreach ($propiedades as $p): ?>
                                         <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?></option>
@@ -276,14 +279,14 @@ declare(strict_types=1);
                                 </select>
                             </div>
                             <div class="col-md-3 col-6">
-                                <select class="form-select form-select-sm" id="filtro-bloqueos-estado">
+                                <select class="form-select basic-select2" id="filtro-bloqueos-estado" data-placeholder="Todos los estados">
                                     <option value="">Todos los estados</option>
                                     <option value="ACTIVO" selected>ACTIVO (Vigentes)</option>
                                     <option value="LIBERADO">LIBERADO (Históricos)</option>
                                 </select>
                             </div>
                             <div class="col-md-3 col-6">
-                                <select class="form-select form-select-sm" id="filtro-bloqueos-tipo">
+                                <select class="form-select basic-select2" id="filtro-bloqueos-tipo" data-placeholder="Todos los tipos">
                                     <option value="">Todos los tipos</option>
                                     <option value="BLOQUEO_MANUAL">Bloqueo Manual</option>
                                     <option value="MANTENIMIENTO">Mantenimiento</option>
@@ -350,7 +353,7 @@ declare(strict_types=1);
                     <!-- Selector de Propiedad para filtrar unidades -->
                     <div class="mb-3">
                         <label for="bloqueo-propiedad-id" class="form-label f-s-13 f-w-600">Propiedad <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="bloqueo-propiedad-id" required>
+                        <select class="form-select basic-select2" id="bloqueo-propiedad-id" data-placeholder="Seleccione una propiedad..." required>
                             <option value="">Seleccione una propiedad...</option>
                             <?php foreach ($propiedades as $p): ?>
                                 <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?> (<?= e($p['codigo']) ?>)</option>
@@ -361,7 +364,7 @@ declare(strict_types=1);
                     <!-- Selector de Unidad -->
                     <div class="mb-3">
                         <label for="bloqueo-unidad-id" class="form-label f-s-13 f-w-600">Unidad Física <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="bloqueo-unidad-id" name="unidad_id" required disabled>
+                        <select class="form-select basic-select2" id="bloqueo-unidad-id" name="unidad_id" data-placeholder="Primero seleccione propiedad..." required disabled>
                             <option value="">Primero seleccione una propiedad...</option>
                         </select>
                     </div>
@@ -371,9 +374,9 @@ declare(strict_types=1);
                         <label for="bloqueo-rango-fechas" class="form-label f-s-13 f-w-600">
                             <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo del Bloqueo <span class="text-danger">*</span>
                         </label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
-                            <input type="text" class="form-control" id="bloqueo-rango-fechas"
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+                            <input type="text" class="form-control ps-5" id="bloqueo-rango-fechas"
                                    placeholder="Seleccione fecha de inicio y fin..."
                                    data-provider="rangepicker"
                                    data-target-inicio="#bloqueo-fecha-inicio"
@@ -388,7 +391,7 @@ declare(strict_types=1);
                     <!-- Tipo de Bloqueo -->
                     <div class="mb-3">
                         <label for="bloqueo-tipo" class="form-label f-s-13 f-w-600">Tipo de Bloqueo <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="bloqueo-tipo" name="tipo" required>
+                        <select class="form-select basic-select2" id="bloqueo-tipo" name="tipo" required>
                             <option value="BLOQUEO_MANUAL">Bloqueo Manual / Administrativo</option>
                             <option value="MANTENIMIENTO">Mantenimiento Técnico o Reparación</option>
                         </select>
@@ -397,8 +400,11 @@ declare(strict_types=1);
                     <!-- Motivo -->
                     <div class="mb-2">
                         <label for="bloqueo-motivo" class="form-label f-s-13 f-w-600">Motivo del Bloqueo <span class="text-danger">*</span></label>
-                        <textarea class="form-control form-control-sm" id="bloqueo-motivo" name="motivo" rows="2"
-                                  placeholder="Detalle la razón del bloqueo para auditoría y trazabilidad..." required maxlength="255"></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="bloqueo-motivo" name="motivo" rows="2"
+                                      placeholder="Detalle la razón del bloqueo para auditoría y trazabilidad..." required maxlength="255"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2 bg-light">

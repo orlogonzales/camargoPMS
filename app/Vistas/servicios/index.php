@@ -151,13 +151,13 @@ declare(strict_types=1);
                         <!-- Filtros de Contratados -->
                         <div class="row g-2 align-items-center mb-3">
                             <div class="col-md-3 col-12">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                                    <input type="text" class="form-control" id="filtro-contratados-q" placeholder="Buscar código, servicio, reserva o titular...">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" class="form-control ps-5" id="filtro-contratados-q" placeholder="Buscar código, servicio, reserva o titular...">
                                 </div>
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
-                                <select class="form-select form-select-sm" id="filtro-contratados-estado">
+                                <select class="form-select basic-select2" id="filtro-contratados-estado" data-placeholder="Todos los Estados">
                                     <option value="">Todos los Estados</option>
                                     <option value="SOLICITADO">SOLICITADO</option>
                                     <option value="CONFIRMADO">CONFIRMADO</option>
@@ -166,16 +166,22 @@ declare(strict_types=1);
                                 </select>
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
-                                <select class="form-select form-select-sm" id="filtro-contratados-proveedor">
+                                <select class="form-select basic-select2" id="filtro-contratados-proveedor" data-placeholder="Operación / Proveedor">
                                     <option value="">Operación / Proveedor</option>
                                     <option value="interno">Operación Interna (Camargo)</option>
                                 </select>
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
-                                <input type="text" class="form-control form-control-sm" id="filtro-contratados-fecha-desde" placeholder="Fecha desde...">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-calendar position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" class="form-control ps-5" id="filtro-contratados-fecha-desde" placeholder="Fecha desde...">
+                                </div>
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
-                                <input type="text" class="form-control form-control-sm" id="filtro-contratados-fecha-hasta" placeholder="Fecha hasta...">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-calendar position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" class="form-control ps-5" id="filtro-contratados-fecha-hasta" placeholder="Fecha hasta...">
+                                </div>
                             </div>
                             <div class="col-md-1 col-12 text-end">
                                 <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btn-limpiar-filtros-contratados" title="Limpiar filtros">
@@ -218,13 +224,13 @@ declare(strict_types=1);
                         <!-- Filtros del Catálogo -->
                         <div class="row g-2 align-items-center mb-3">
                             <div class="col-md-4 col-12">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                                    <input type="text" class="form-control" id="filtro-catalogo-q" placeholder="Buscar código o nombre del servicio...">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" class="form-control ps-5" id="filtro-catalogo-q" placeholder="Buscar código o nombre del servicio...">
                                 </div>
                             </div>
                             <div class="col-md-3 col-sm-6 col-12">
-                                <select class="form-select form-select-sm" id="filtro-catalogo-categoria">
+                                <select class="form-select basic-select2" id="filtro-catalogo-categoria" data-placeholder="Todas las Categorías">
                                     <option value="">Todas las Categorías</option>
                                     <?php foreach ($categorias as $cat): ?>
                                         <option value="<?= $cat->obtenerId() ?>"><?= e($cat->obtenerNombre()) ?></option>
@@ -232,7 +238,7 @@ declare(strict_types=1);
                                 </select>
                             </div>
                             <div class="col-md-3 col-sm-6 col-12">
-                                <select class="form-select form-select-sm" id="filtro-catalogo-estado">
+                                <select class="form-select basic-select2" id="filtro-catalogo-estado" data-placeholder="Todos los Estados">
                                     <option value="">Todos los Estados</option>
                                     <option value="ACTIVO">ACTIVO</option>
                                     <option value="INACTIVO">INACTIVO</option>
@@ -279,20 +285,20 @@ declare(strict_types=1);
                         <!-- Filtros Proveedores -->
                         <div class="row g-2 align-items-center mb-3">
                             <div class="col-md-5 col-12">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                                    <input type="text" class="form-control" id="filtro-proveedor-q" placeholder="Buscar razón social, nombre comercial o RUC...">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" class="form-control ps-5" id="filtro-proveedor-q" placeholder="Buscar razón social, nombre comercial o RUC...">
                                 </div>
                             </div>
                             <div class="col-md-3 col-sm-6 col-12">
-                                <select class="form-select form-select-sm" id="filtro-proveedor-tipo">
+                                <select class="form-select basic-select2" id="filtro-proveedor-tipo" data-placeholder="Todos los Tipos">
                                     <option value="">Todos los Tipos</option>
                                     <option value="EMPRESA">EMPRESA</option>
                                     <option value="PERSONA_NATURAL">PERSONA NATURAL</option>
                                 </select>
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
-                                <select class="form-select form-select-sm" id="filtro-proveedor-estado">
+                                <select class="form-select basic-select2" id="filtro-proveedor-estado" data-placeholder="Todos los Estados">
                                     <option value="">Todos los Estados</option>
                                     <option value="ACTIVO">ACTIVO</option>
                                     <option value="INACTIVO">INACTIVO</option>
@@ -390,7 +396,7 @@ declare(strict_types=1);
                         <!-- Reserva Comercial Titular (Obligatoria) -->
                         <div class="col-md-7 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Reserva Comercial Titular <span class="text-danger">*</span></label>
-                            <select class="form-select" id="contratar-reserva-id" name="reserva_id" required>
+                            <select class="form-select basic-select2" id="contratar-reserva-id" name="reserva_id" data-placeholder="Seleccione reserva comercial..." required>
                                 <option value="">Seleccione reserva comercial...</option>
                             </select>
                             <div class="form-text f-s-11 text-muted">La reserva comercial es la fuente de verdad del folio de cobro.</div>
@@ -399,7 +405,7 @@ declare(strict_types=1);
                         <!-- Estadía Física Opcional -->
                         <div class="col-md-5 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Estadía / Habitación (Opcional)</label>
-                            <select class="form-select" id="contratar-estadia-id" name="estadia_id">
+                            <select class="form-select basic-select2" id="contratar-estadia-id" name="estadia_id" data-placeholder="Sin imputar a habitación">
                                 <option value="">Sin imputar a habitación específica</option>
                             </select>
                             <div class="form-text f-s-11 text-muted">Seleccione si fue consumido in situ en una unidad ocupada.</div>
@@ -408,7 +414,7 @@ declare(strict_types=1);
                         <!-- Concepto del Catálogo -->
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Concepto de Servicio <span class="text-danger">*</span></label>
-                            <select class="form-select" id="contratar-servicio-id" name="servicio_id" required>
+                            <select class="form-select basic-select2" id="contratar-servicio-id" name="servicio_id" data-placeholder="Seleccione servicio del catálogo..." required>
                                 <option value="">Seleccione servicio del catálogo...</option>
                             </select>
                         </div>
@@ -417,14 +423,14 @@ declare(strict_types=1);
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Modalidad Operativa <span class="text-danger">*</span></label>
                             <div class="d-flex gap-3 pt-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="tipo_operacion" id="op-interna" value="interna" checked>
+                                <div class="form-check d-flex align-items-center gap-1">
+                                    <input class="form-check-input f-s-18 mb-1" type="radio" name="tipo_operacion" id="op-interna" value="interna" checked>
                                     <label class="form-check-label f-s-13" for="op-interna">
                                         <i class="fa-solid fa-house-chimney-user me-1 text-primary"></i> Operación Interna
                                     </label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="tipo_operacion" id="op-externa" value="externa">
+                                <div class="form-check d-flex align-items-center gap-1">
+                                    <input class="form-check-input f-s-18 mb-1" type="radio" name="tipo_operacion" id="op-externa" value="externa">
                                     <label class="form-check-label f-s-13" for="op-externa">
                                         <i class="fa-solid fa-truck me-1 text-secondary"></i> Proveedor Externo
                                     </label>
@@ -435,7 +441,7 @@ declare(strict_types=1);
                         <!-- Proveedor Asignado (Visible si es externo) -->
                         <div class="col-12 d-none" id="bloque-proveedor-externo">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Proveedor Asignado <span class="text-danger">*</span></label>
-                            <select class="form-select" id="contratar-proveedor-id" name="proveedor_id">
+                            <select class="form-select basic-select2" id="contratar-proveedor-id" name="proveedor_id" data-placeholder="Seleccione proveedor homologado...">
                                 <option value="">Seleccione proveedor homologado...</option>
                             </select>
                         </div>
@@ -443,33 +449,51 @@ declare(strict_types=1);
                         <!-- Valores Económicos -->
                         <div class="col-md-3 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Cantidad <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" id="contratar-cantidad" name="cantidad" value="1.00" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calculator position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="number" step="0.01" min="0.01" class="form-control ps-5" id="contratar-cantidad" name="cantidad" value="1.00" required>
+                            </div>
                         </div>
                         <div class="col-md-3 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Precio Unit. (PEN) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.00" class="form-control" id="contratar-precio-unitario" name="precio_unitario" value="0.00" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-tag position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="number" step="0.01" min="0.00" class="form-control ps-5" id="contratar-precio-unitario" name="precio_unitario" value="0.00" required>
+                            </div>
                         </div>
                         <div class="col-md-3 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Costo Unit. (PEN)</label>
-                            <input type="number" step="0.01" min="0.00" class="form-control" id="contratar-costo-unitario" name="costo_unitario" value="0.00">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-coins position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="number" step="0.01" min="0.00" class="form-control ps-5" id="contratar-costo-unitario" name="costo_unitario" value="0.00">
+                            </div>
                         </div>
                         <div class="col-md-3 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Total Calculado</label>
-                            <input type="text" class="form-control bg-light f-w-700 text-primary" id="contratar-total-calculado" value="PEN 0.00" readonly>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-receipt position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5 bg-light f-w-700 text-primary" id="contratar-total-calculado" value="PEN 0.00" readonly>
+                            </div>
                         </div>
 
                         <!-- Fechas Operativas -->
                         <div class="col-md-4 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Fecha Prevista <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="contratar-fecha-servicio" name="fecha_servicio" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="contratar-fecha-servicio" name="fecha_servicio" required>
+                            </div>
                         </div>
                         <div class="col-md-4 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Hora Prevista</label>
-                            <input type="time" class="form-control" id="contratar-hora-servicio" name="hora_servicio">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-clock position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="time" class="form-control ps-5" id="contratar-hora-servicio" name="hora_servicio">
+                            </div>
                         </div>
                         <div class="col-md-4 col-sm-12 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Estado Inicial</label>
-                            <select class="form-select" id="contratar-estado-inicial" name="estado">
+                            <select class="form-select basic-select2" id="contratar-estado-inicial" name="estado">
                                 <option value="SOLICITADO">SOLICITADO</option>
                                 <option value="CONFIRMADO">CONFIRMADO</option>
                             </select>
@@ -485,46 +509,73 @@ declare(strict_types=1);
                                 <div class="row g-2">
                                     <div class="col-md-4 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Tipo de Traslado <span class="text-danger">*</span></label>
-                                        <select class="form-select form-select-sm" id="traslado-tipo" name="traslado[tipo_traslado]">
+                                        <select class="form-select basic-select2" id="traslado-tipo" name="traslado[tipo_traslado]">
                                             <option value="LLEGADA">LLEGADA (Al predio)</option>
                                             <option value="SALIDA">SALIDA (Hacia terminal/aeropuerto)</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Origen <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-origen" name="traslado[origen]" placeholder="Ej. Aeropuerto Jorge Chávez">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-origen" name="traslado[origen]" placeholder="Ej. Aeropuerto Jorge Chávez">
+                                        </div>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Destino <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-destino" name="traslado[destino]" placeholder="Ej. Propiedad / Hotel">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-hotel position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-destino" name="traslado[destino]" placeholder="Ej. Propiedad / Hotel">
+                                        </div>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Fecha y Hora Recogida <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-fecha-hora" name="traslado[fecha_hora_recogida]" placeholder="YYYY-MM-DD HH:MM">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-fecha-hora" name="traslado[fecha_hora_recogida]" placeholder="YYYY-MM-DD HH:MM">
+                                        </div>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Aerolínea / Empresa</label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-aerolinea" name="traslado[aerolinea_empresa]" placeholder="Ej. LATAM">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-plane position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-aerolinea" name="traslado[aerolinea_empresa]" placeholder="Ej. LATAM">
+                                        </div>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">N° Vuelo / Viaje</label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-vuelo" name="traslado[numero_vuelo_viaje]" placeholder="Ej. LA2045">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-ticket position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-vuelo" name="traslado[numero_vuelo_viaje]" placeholder="Ej. LA2045">
+                                        </div>
                                     </div>
                                     <div class="col-md-3 col-6">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">N° Pasajeros <span class="text-danger">*</span></label>
-                                        <input type="number" min="1" class="form-control form-control-sm" id="traslado-pasajeros" name="traslado[cantidad_pasajeros]" value="1">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-users position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="number" min="1" class="form-control ps-5" id="traslado-pasajeros" name="traslado[cantidad_pasajeros]" value="1">
+                                        </div>
                                     </div>
                                     <div class="col-md-3 col-6">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">N° Maletas</label>
-                                        <input type="number" min="0" class="form-control form-control-sm" id="traslado-maletas" name="traslado[cantidad_maletas]" value="0">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-suitcase-rolling position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="number" min="0" class="form-control ps-5" id="traslado-maletas" name="traslado[cantidad_maletas]" value="0">
+                                        </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Conductor / Móvil</label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-conductor" name="traslado[datos_conductor_vehiculo]" placeholder="Chofer, teléfono y placa">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-conductor" name="traslado[datos_conductor_vehiculo]" placeholder="Chofer, teléfono y placa">
+                                        </div>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label f-s-11 text-secondary text-uppercase">Instrucciones de Encuentro</label>
-                                        <input type="text" class="form-control form-control-sm" id="traslado-instrucciones" name="traslado[instrucciones_recogida]" placeholder="Ej. Cartel con apellido en puerta 4">
+                                        <div class="icon-control position-relative">
+                                            <i class="fa-solid fa-circle-info position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                            <input type="text" class="form-control ps-5" id="traslado-instrucciones" name="traslado[instrucciones_recogida]" placeholder="Ej. Cartel con apellido en puerta 4">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -533,7 +584,10 @@ declare(strict_types=1);
                         <!-- Observaciones generales -->
                         <div class="col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Observaciones / Notas Internas</label>
-                            <textarea class="form-control" id="contratar-observaciones" name="observaciones" rows="2" placeholder="Indicaciones para staff o recepción..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                                <textarea class="form-control ps-5" id="contratar-observaciones" name="observaciones" rows="2" placeholder="Indicaciones para staff o recepción..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -566,15 +620,21 @@ declare(strict_types=1);
                     <div class="row g-3">
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Código del Servicio</label>
-                            <input type="text" class="form-control" id="servicio-codigo" name="codigo" placeholder="Autogenerado si está vacío">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-barcode position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="servicio-codigo" name="codigo" placeholder="Autogenerado si está vacío">
+                            </div>
                         </div>
                         <div class="col-md-8 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Nombre del Servicio <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="servicio-nombre" name="nombre" placeholder="Ej. Traslado Aeropuerto - Hotel (Van)" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-bell-concierge position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="servicio-nombre" name="nombre" placeholder="Ej. Traslado Aeropuerto - Hotel (Van)" required>
+                            </div>
                         </div>
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Categoría <span class="text-danger">*</span></label>
-                            <select class="form-select" id="servicio-categoria-id" name="categoria_id" required>
+                            <select class="form-select basic-select2" id="servicio-categoria-id" name="categoria_id" data-placeholder="Seleccione categoría..." required>
                                 <option value="">Seleccione categoría...</option>
                                 <?php foreach ($categorias as $cat): ?>
                                     <option value="<?= $cat->obtenerId() ?>" data-codigo="<?= e($cat->obtenerCodigo()) ?>">
@@ -585,7 +645,7 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Modalidad de Cobro <span class="text-danger">*</span></label>
-                            <select class="form-select" id="servicio-modalidad-id" name="modalidad_cobro_id" required>
+                            <select class="form-select basic-select2" id="servicio-modalidad-id" name="modalidad_cobro_id" data-placeholder="Seleccione modalidad..." required>
                                 <option value="">Seleccione modalidad...</option>
                                 <?php foreach ($modalidades as $mod): ?>
                                     <option value="<?= $mod->obtenerId() ?>"><?= e($mod->obtenerNombre()) ?></option>
@@ -594,15 +654,21 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Precio Referencial (PEN) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.00" class="form-control" id="servicio-precio" name="precio_venta_referencial" value="0.00" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-tag position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="number" step="0.01" min="0.00" class="form-control ps-5" id="servicio-precio" name="precio_venta_referencial" value="0.00" required>
+                            </div>
                         </div>
                         <div class="col-md-4 col-sm-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Costo Referencial (PEN)</label>
-                            <input type="number" step="0.01" min="0.00" class="form-control" id="servicio-costo" name="costo_referencial" value="0.00">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-coins position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="number" step="0.01" min="0.00" class="form-control ps-5" id="servicio-costo" name="costo_referencial" value="0.00">
+                            </div>
                         </div>
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Propiedad Específica</label>
-                            <select class="form-select" id="servicio-propiedad-id" name="propiedad_id">
+                            <select class="form-select basic-select2" id="servicio-propiedad-id" name="propiedad_id" data-placeholder="Aplica a todas las propiedades">
                                 <option value="">Aplica a todas las propiedades</option>
                                 <?php foreach ($propiedades as $p): ?>
                                     <option value="<?= $p->obtenerId() ?>"><?= e($p->obtenerNombre()) ?></option>
@@ -610,16 +676,16 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-6 col-12">
-                            <div class="form-check mt-3">
-                                <input class="form-check-input" type="checkbox" id="servicio-es-interna" name="es_operacion_interna_habitual" value="1">
+                            <div class="form-check d-flex align-items-center gap-1 mt-3">
+                                <input class="form-check-input f-s-18 mb-1" type="checkbox" id="servicio-es-interna" name="es_operacion_interna_habitual" value="1">
                                 <label class="form-check-label f-s-13" for="servicio-es-interna">
                                     Prestado habitualmente con personal interno (Camargo)
                                 </label>
                             </div>
                         </div>
                         <div class="col-md-6 col-12">
-                            <div class="form-check mt-3">
-                                <input class="form-check-input" type="checkbox" id="servicio-requiere-traslado" name="requiere_traslado_detalle" value="1">
+                            <div class="form-check d-flex align-items-center gap-1 mt-3">
+                                <input class="form-check-input f-s-18 mb-1" type="checkbox" id="servicio-requiere-traslado" name="requiere_traslado_detalle" value="1">
                                 <label class="form-check-label f-s-13" for="servicio-requiere-traslado">
                                     Exige captura logística de traslado (origen, destino, vuelo)
                                 </label>
@@ -627,7 +693,10 @@ declare(strict_types=1);
                         </div>
                         <div class="col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Descripción</label>
-                            <textarea class="form-control" id="servicio-descripcion" name="descripcion" rows="2" placeholder="Detalles comerciales del servicio..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                                <textarea class="form-control ps-5" id="servicio-descripcion" name="descripcion" rows="2" placeholder="Detalles comerciales del servicio..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -660,42 +729,66 @@ declare(strict_types=1);
                     <div class="row g-3">
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Tipo de Proveedor <span class="text-danger">*</span></label>
-                            <select class="form-select" id="proveedor-tipo" name="tipo" required>
+                            <select class="form-select basic-select2" id="proveedor-tipo" name="tipo" required>
                                 <option value="EMPRESA">EMPRESA</option>
                                 <option value="PERSONA_NATURAL">PERSONA NATURAL</option>
                             </select>
                         </div>
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Código del Proveedor</label>
-                            <input type="text" class="form-control" id="proveedor-codigo" name="codigo" placeholder="Autogenerado si está vacío">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-barcode position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="proveedor-codigo" name="codigo" placeholder="Autogenerado si está vacío">
+                            </div>
                         </div>
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">RUC / N° Documento</label>
-                            <input type="text" class="form-control" id="proveedor-documento" name="numero_documento" placeholder="RUC de 11 dígitos u otro">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="proveedor-documento" name="numero_documento" placeholder="RUC de 11 dígitos u otro">
+                            </div>
                         </div>
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Razón Social / Nombre Legal <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="proveedor-razon-social" name="razon_social" placeholder="Nombre legal completo" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-building position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="proveedor-razon-social" name="razon_social" placeholder="Nombre legal completo" required>
+                            </div>
                         </div>
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Nombre Comercial / Marca</label>
-                            <input type="text" class="form-control" id="proveedor-nombre-comercial" name="nombre_comercial" placeholder="Nombre comercial de fantasía">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-shop position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="proveedor-nombre-comercial" name="nombre_comercial" placeholder="Nombre comercial de fantasía">
+                            </div>
                         </div>
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="proveedor-email" name="email" placeholder="contacto@proveedor.com">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="email" class="form-control ps-5" id="proveedor-email" name="email" placeholder="contacto@proveedor.com">
+                            </div>
                         </div>
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Teléfono / WhatsApp</label>
-                            <input type="text" class="form-control" id="proveedor-telefono" name="telefono" placeholder="+51 999 999 999">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="proveedor-telefono" name="telefono" placeholder="+51 999 999 999">
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Dirección Física</label>
-                            <input type="text" class="form-control" id="proveedor-direccion" name="direccion" placeholder="Calle, número, distrito, ciudad">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-map-location-dot position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" class="form-control ps-5" id="proveedor-direccion" name="direccion" placeholder="Calle, número, distrito, ciudad">
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Observaciones</label>
-                            <textarea class="form-control" id="proveedor-observaciones" name="observaciones" rows="2" placeholder="Condiciones de pago, horarios o notas..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                                <textarea class="form-control ps-5" id="proveedor-observaciones" name="observaciones" rows="2" placeholder="Condiciones de pago, horarios o notas..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -727,25 +820,34 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Servicio</label>
-                        <input type="text" class="form-control bg-light f-w-600" id="homologar-servicio-nombre" readonly>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-bell-concierge position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5 bg-light f-w-600" id="homologar-servicio-nombre" readonly>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Proveedor <span class="text-danger">*</span></label>
-                        <select class="form-select" id="homologar-proveedor-id" name="proveedor_id" required>
+                        <select class="form-select basic-select2" id="homologar-proveedor-id" name="proveedor_id" data-placeholder="Seleccione proveedor..." required>
                             <option value="">Seleccione proveedor...</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Costo Pactado de Compra (PEN)</label>
-                        <input type="number" step="0.01" min="0.00" class="form-control" id="homologar-costo-pactado" name="costo_pactado" placeholder="0.00">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-coins position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0.00" class="form-control ps-5" id="homologar-costo-pactado" name="costo_pactado" placeholder="0.00">
+                        </div>
                         <div class="form-text f-s-11 text-muted">Costo acordado específicamente con este proveedor.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Horas Mínimas de Anticipación</label>
-                        <input type="number" min="0" class="form-control" id="homologar-preaviso" name="tiempo_anticipacion_horas" value="0">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-hourglass-half position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" min="0" class="form-control ps-5" id="homologar-preaviso" name="tiempo_anticipacion_horas" value="0">
+                        </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="homologar-es-preferente" name="es_preferente" value="1">
+                    <div class="form-check d-flex align-items-center gap-1">
+                        <input class="form-check-input f-s-18 mb-1" type="checkbox" id="homologar-es-preferente" name="es_preferente" value="1">
                         <label class="form-check-label f-s-13" for="homologar-es-preferente">
                             Marcar como Proveedor Preferente (sugerido por defecto)
                         </label>
@@ -782,8 +884,11 @@ declare(strict_types=1);
                         Esta acción registrará auditoría inmutable.
                     </p>
                     <div class="mb-3">
-                        <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Motivo Obligatorio de Cancelación <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="cancelar-motivo" name="motivo" rows="3" placeholder="Explique la causa de la cancelación..." required></textarea>
+                        <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">Motivo de Cancelación <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="cancelar-motivo" name="motivo" rows="3" placeholder="Explique la causa de la cancelación..." required></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2">

@@ -318,7 +318,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si hay una propiedad preseleccionada en el filtro, asignarla
         if (estadoModulo.propiedadId) {
             const selectProp = document.getElementById('unidad-propiedad-id');
-            if (selectProp) selectProp.value = estadoModulo.propiedadId;
+            if (selectProp) {
+                selectProp.value = estadoModulo.propiedadId;
+                selectProp.dispatchEvent(new Event('change'));
+            }
         }
 
         pristine?.reset();
@@ -353,8 +356,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const u = data.unidad;
             document.getElementById('unidad-id').value = u.id;
-            document.getElementById('unidad-propiedad-id').value = u.propiedad_id;
-            document.getElementById('unidad-tipo-id').value = u.tipo_unidad_id;
+            const selProp = document.getElementById('unidad-propiedad-id');
+            if (selProp) {
+                selProp.value = u.propiedad_id;
+                selProp.dispatchEvent(new Event('change'));
+            }
+            const selTipo = document.getElementById('unidad-tipo-id');
+            if (selTipo) {
+                selTipo.value = u.tipo_unidad_id;
+                selTipo.dispatchEvent(new Event('change'));
+            }
             document.getElementById('unidad-codigo').value = u.codigo;
             document.getElementById('unidad-nombre').value = u.nombre;
             document.getElementById('unidad-piso-nivel').value = u.piso_nivel || '';

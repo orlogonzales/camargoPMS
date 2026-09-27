@@ -55,7 +55,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
-                        <select class="form-select form-select-sm" id="filtro-estado-usuario">
+                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-estado-usuario" data-placeholder="Todos los estados">
                             <option value="">Todos los estados</option>
                             <option value="ACTIVO">ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
@@ -63,7 +63,7 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-3 col-6">
-                        <select class="form-select form-select-sm" id="filtro-rol-usuario">
+                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-rol-usuario" data-placeholder="Todos los roles">
                             <option value="">Todos los roles</option>
                             <?php foreach ($roles as $r): ?>
                                 <option value="<?= $r['id'] ?>"><?= e($r['nombre']) ?></option>
@@ -141,7 +141,8 @@ declare(strict_types=1);
                         <label for="crear-persona-id" class="form-label f-s-13 f-w-600">
                             Persona Natural <span class="text-danger">*</span>
                         </label>
-                        <select class="form-select form-select-sm" id="crear-persona-id" name="persona_id" required>
+                        <select class="form-select form-select-sm basic-select2" id="crear-persona-id" name="persona_id" required
+                                data-placeholder="Seleccionar Persona disponible...">
                             <option value="">-- Seleccionar Persona disponible --</option>
                         </select>
                         <div class="form-text f-s-11 text-muted">
@@ -154,9 +155,12 @@ declare(strict_types=1);
                         <label for="crear-nombre-usuario" class="form-label f-s-13 f-w-600">
                             Nombre de Usuario <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control form-control-sm" id="crear-nombre-usuario" name="nombre_usuario"
-                               required minlength="3" maxlength="50" pattern="^[a-z0-9._-]+$"
-                               placeholder="ej. juan.perez" autocomplete="off">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="text" class="form-control form-control-sm ps-5" id="crear-nombre-usuario" name="nombre_usuario"
+                                   required minlength="3" maxlength="50" pattern="^[a-z0-9._-]+$"
+                                   placeholder="ej. juan.perez" autocomplete="off">
+                        </div>
                         <div class="form-text f-s-11 text-muted">
                             De 3 a 50 caracteres (letras minúsculas, números, puntos, guiones y guiones bajos).
                         </div>
@@ -167,9 +171,12 @@ declare(strict_types=1);
                         <label for="crear-contrasena" class="form-label f-s-13 f-w-600">
                             Contraseña Inicial <span class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control form-control-sm" id="crear-contrasena" name="contrasena"
-                               required minlength="12" maxlength="1024"
-                               placeholder="Mínimo 12 caracteres" autocomplete="new-password">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-lock position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="password" class="form-control form-control-sm ps-5" id="crear-contrasena" name="contrasena"
+                                   required minlength="12" maxlength="1024"
+                                   placeholder="Mínimo 12 caracteres" autocomplete="new-password">
+                        </div>
                         <div class="form-text f-s-11 text-muted">
                             Longitud mínima: 12 caracteres (se admiten espacios y símbolos UTF-8; hash PASSWORD_DEFAULT).
                         </div>
@@ -180,9 +187,12 @@ declare(strict_types=1);
                         <label for="crear-confirmar-contrasena" class="form-label f-s-13 f-w-600">
                             Confirmar Contraseña <span class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control form-control-sm" id="crear-confirmar-contrasena" name="confirmar_contrasena"
-                               required minlength="12" maxlength="1024"
-                               placeholder="Reingrese la contraseña" autocomplete="new-password">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-shield-halved position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="password" class="form-control form-control-sm ps-5" id="crear-confirmar-contrasena" name="confirmar_contrasena"
+                                   required minlength="12" maxlength="1024"
+                                   placeholder="Reingrese la contraseña" autocomplete="new-password">
+                        </div>
                     </div>
 
                     <!-- Rol Inicial Opcional -->
@@ -190,7 +200,8 @@ declare(strict_types=1);
                         <label for="crear-rol-inicial" class="form-label f-s-13 f-w-600">
                             Rol Inicial (Opcional)
                         </label>
-                        <select class="form-select form-select-sm" id="crear-rol-inicial" name="rol_id">
+                        <select class="form-select form-select-sm basic-select2" id="crear-rol-inicial" name="rol_id"
+                                data-placeholder="Sin rol inicial (Asignar posteriormente)">
                             <option value="">-- Sin rol inicial (Asignar posteriormente) --</option>
                             <?php foreach ($roles as $r): ?>
                                 <option value="<?= $r['id'] ?>"><?= e($r['nombre']) ?></option>
@@ -201,7 +212,7 @@ declare(strict_types=1);
                     <!-- Estado Inicial -->
                     <div class="mb-2">
                         <label for="crear-estado" class="form-label f-s-13 f-w-600">Estado Inicial</label>
-                        <select class="form-select form-select-sm" id="crear-estado" name="estado">
+                        <select class="form-select form-select-sm basic-select2" id="crear-estado" name="estado">
                             <option value="ACTIVO" selected>ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
                         </select>
@@ -243,9 +254,12 @@ declare(strict_types=1);
                         <label for="reset-nueva-contrasena" class="form-label f-s-13 f-w-600">
                             Nueva Contraseña <span class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control form-control-sm" id="reset-nueva-contrasena" name="nueva_contrasena"
-                               required minlength="12" maxlength="1024"
-                               placeholder="Mínimo 12 caracteres" autocomplete="new-password">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-lock position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="password" class="form-control form-control-sm ps-5" id="reset-nueva-contrasena" name="nueva_contrasena"
+                                   required minlength="12" maxlength="1024"
+                                   placeholder="Mínimo 12 caracteres" autocomplete="new-password">
+                        </div>
                         <div class="form-text f-s-11 text-muted">
                             Mínimo 12 caracteres (Unicode y espacios preservados; PASSWORD_DEFAULT).
                         </div>
@@ -256,9 +270,12 @@ declare(strict_types=1);
                         <label for="reset-confirmar-contrasena" class="form-label f-s-13 f-w-600">
                             Confirmar Nueva Contraseña <span class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control form-control-sm" id="reset-confirmar-contrasena" name="confirmar_contrasena"
-                               required minlength="12" maxlength="1024"
-                               placeholder="Reingrese la nueva contraseña" autocomplete="new-password">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-shield-halved position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="password" class="form-control form-control-sm ps-5" id="reset-confirmar-contrasena" name="confirmar_contrasena"
+                                   required minlength="12" maxlength="1024"
+                                   placeholder="Reingrese la nueva contraseña" autocomplete="new-password">
+                        </div>
                     </div>
                 </div>
 
@@ -298,7 +315,8 @@ declare(strict_types=1);
                     <h6 class="f-s-13 f-w-700 text-uppercase text-secondary mb-2">Asignar Rol Adicional</h6>
                     <form id="form-asignar-rol" class="row g-2 align-items-center">
                         <div class="col-8">
-                            <select class="form-select form-select-sm" id="select-nuevo-rol" required>
+                            <select class="form-select form-select-sm basic-select2" id="select-nuevo-rol" required
+                                    data-placeholder="Seleccionar Rol...">
                                 <option value="">-- Seleccionar Rol --</option>
                             </select>
                         </div>

@@ -152,15 +152,13 @@ declare(strict_types=1);
                         <!-- Filtros del Listado -->
                         <div class="row g-2 mb-3 align-items-center">
                             <div class="col-md-5 col-12">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control form-control-sm border-start-0" id="filtro-q" placeholder="Buscar por código de folio, reserva, nombre o documento del huésped...">
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" class="form-control ps-5" id="filtro-q" placeholder="Buscar por código de folio, reserva, nombre o documento del huésped...">
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
-                                <select class="form-select form-select-sm" id="filtro-estado">
+                                <select class="form-select basic-select2" id="filtro-estado" data-placeholder="Todos los Estados">
                                     <option value="">Todos los Estados</option>
                                     <option value="ABIERTA">Folio ABIERTO</option>
                                     <option value="CERRADA">Folio CERRADO</option>
@@ -234,7 +232,7 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="apertura-caja-id" class="form-label f-s-12 f-w-600">Caja Física <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="apertura-caja-id" name="caja_fisica_id" required>
+                        <select class="form-select basic-select2" id="apertura-caja-id" name="caja_fisica_id" required>
                             <?php foreach ($cajas_fisicas as $cf): ?>
                                 <option value="<?= e((string) $cf->obtenerId()) ?>"><?= e($cf->obtenerCodigo()) ?> — <?= e($cf->obtenerNombre()) ?></option>
                             <?php endforeach; ?>
@@ -242,15 +240,18 @@ declare(strict_types=1);
                     </div>
                     <div class="mb-3">
                         <label for="apertura-monto" class="form-label f-s-12 f-w-600">Monto de Apertura / Fondo de Cambio (PEN) <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light">S/</span>
-                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="apertura-monto" name="monto_apertura" value="0.00" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-coins position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0" class="form-control ps-5" id="apertura-monto" name="monto_apertura" value="0.00" required>
                         </div>
-                        <small class="text-muted f-s-11">Efectivo inicial disponible en gaveta para cambio a huéspedes.</small>
+                        <small class="text-muted f-s-11 mt-1 d-block">Efectivo inicial disponible en gaveta para cambio a huéspedes.</small>
                     </div>
                     <div class="mb-3">
                         <label for="apertura-observaciones" class="form-label f-s-12 f-w-600">Observaciones de Apertura</label>
-                        <textarea class="form-control form-control-sm" id="apertura-observaciones" name="observaciones" rows="2" placeholder="Notas sobre el estado físico de la gaveta o turno..."></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="apertura-observaciones" name="observaciones" rows="2" placeholder="Notas sobre el estado físico de la gaveta o turno..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2 border-top">
@@ -304,9 +305,9 @@ declare(strict_types=1);
 
                     <div class="mb-3">
                         <label for="cierre-monto-declarado" class="form-label f-s-12 f-w-600">Efectivo Contado Declarado (Real en Gaveta) <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light">S/</span>
-                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="cierre-monto-declarado" name="monto_contado_declarado" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-coins position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0" class="form-control ps-5" id="cierre-monto-declarado" name="monto_contado_declarado" required>
                         </div>
                     </div>
 
@@ -324,7 +325,10 @@ declare(strict_types=1);
 
                     <div class="mb-3">
                         <label for="cierre-observaciones" class="form-label f-s-12 f-w-600" id="label-cierre-obs">Observaciones / Justificación</label>
-                        <textarea class="form-control form-control-sm" id="cierre-observaciones" name="observaciones_cierre" rows="2" placeholder="Si hay sobrante o faltante, la justificación es obligatoria..."></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="cierre-observaciones" name="observaciones_cierre" rows="2" placeholder="Si hay sobrante o faltante, la justificación es obligatoria..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2 border-top">
@@ -352,21 +356,24 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="mov-tipo" class="form-label f-s-12 f-w-600">Tipo de Movimiento <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="mov-tipo" name="tipo" required>
+                        <select class="form-select basic-select2" id="mov-tipo" name="tipo" required>
                             <option value="INGRESO_MANUAL">Ingreso Extraordinario de Efectivo (+)</option>
                             <option value="EGRESO_MANUAL">Egreso / Gasto Menor de Efectivo (-)</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="mov-monto" class="form-label f-s-12 f-w-600">Monto (PEN) <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light">S/</span>
-                            <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="mov-monto" name="monto" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-money-bill-wave position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0.01" class="form-control ps-5" id="mov-monto" name="monto" required>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="mov-concepto" class="form-label f-s-12 f-w-600">Concepto Justificado <span class="text-danger">*</span></label>
-                        <textarea class="form-control form-control-sm" id="mov-concepto" name="concepto" rows="2" placeholder="Motivo o detalle del movimiento..." required></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-file-lines position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="mov-concepto" name="concepto" rows="2" placeholder="Motivo o detalle del movimiento..." required></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2 border-top">
@@ -543,7 +550,7 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="cobro-metodo-id" class="form-label f-s-12 f-w-600">Método de Pago <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="cobro-metodo-id" name="metodo_pago_id" required>
+                        <select class="form-select basic-select2" id="cobro-metodo-id" name="metodo_pago_id" data-placeholder="Seleccione un método..." required>
                             <option value="">Seleccione un método...</option>
                             <?php foreach ($metodos_pago as $mp): ?>
                                 <option value="<?= e((string) $mp->obtenerId()) ?>" 
@@ -556,16 +563,16 @@ declare(strict_types=1);
 
                     <div class="mb-3">
                         <label for="cobro-monto" class="form-label f-s-12 f-w-600">Monto del Cobro (PEN) <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light">S/</span>
-                            <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="cobro-monto" name="monto_total" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-money-bill-wave position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0.01" class="form-control ps-5" id="cobro-monto" name="monto_total" required>
                         </div>
                     </div>
 
                     <!-- Si el método es transferencia bancaria -->
                     <div class="mb-3 d-none" id="grupo-cuenta-bancaria">
                         <label for="cobro-cuenta-bancaria-id" class="form-label f-s-12 f-w-600">Cuenta Bancaria de Destino <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="cobro-cuenta-bancaria-id" name="cuenta_bancaria_id">
+                        <select class="form-select basic-select2" id="cobro-cuenta-bancaria-id" name="cuenta_bancaria_id" data-placeholder="Seleccione la cuenta receptora...">
                             <option value="">Seleccione la cuenta receptora...</option>
                             <?php foreach ($cuentas_bancarias as $cb): ?>
                                 <option value="<?= e((string) $cb->obtenerId()) ?>"><?= e($cb->obtenerBancoNombre()) ?> — <?= e($cb->obtenerNumeroCuenta()) ?> (<?= e($cb->obtenerMonedaCodigo()) ?>)</option>
@@ -583,16 +590,19 @@ declare(strict_types=1);
 
                     <div class="mb-3">
                         <label for="cobro-referencia" class="form-label f-s-12 f-w-600">Número de Operación / Voucher / Referencia</label>
-                        <input type="text" class="form-control form-control-sm" id="cobro-referencia" name="referencia_operacion" placeholder="Ej: OP-839218 o voucher POS...">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-receipt position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5" id="cobro-referencia" name="referencia_operacion" placeholder="Ej: OP-839218 o voucher POS...">
+                        </div>
                     </div>
 
                     <!-- Auto-aplicación opcional a cargo pendiente -->
                     <div class="mb-3">
                         <label for="cobro-cargo-autoaplica" class="form-label f-s-12 f-w-600">Aplicar Inmediatamente a Cargo (Opcional)</label>
-                        <select class="form-select form-select-sm" id="cobro-cargo-autoaplica" name="cargo_id_autoaplica">
+                        <select class="form-select select-clear" id="cobro-cargo-autoaplica" name="cargo_id_autoaplica" data-placeholder="No aplicar ahora (dejar como saldo a favor)">
                             <option value="">No aplicar ahora (dejar como saldo a favor disponible)</option>
                         </select>
-                        <small class="text-muted f-s-11">Si selecciona un cargo, el cobro amortizará su saldo pendiente en la misma transacción.</small>
+                        <small class="text-muted f-s-11 mt-1 d-block">Si selecciona un cargo, el cobro amortizará su saldo pendiente en la misma transacción.</small>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2 border-top">
@@ -621,19 +631,22 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label f-s-12 f-w-600">Cargo a Amortizar</label>
-                        <input type="text" class="form-control form-control-sm bg-light" id="aplicar-cargo-info" readonly>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-file-invoice position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5 bg-light" id="aplicar-cargo-info" readonly>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="aplicar-pago-id" class="form-label f-s-12 f-w-600">Seleccionar Pago con Saldo Disponible <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="aplicar-pago-id" name="pago_id" required>
+                        <select class="form-select basic-select2" id="aplicar-pago-id" name="pago_id" data-placeholder="Seleccione el pago..." required>
                             <option value="">Seleccione el pago...</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="aplicar-monto" class="form-label f-s-12 f-w-600">Monto a Imputar (PEN) <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light">S/</span>
-                            <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="aplicar-monto" name="monto_aplicar" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-hand-holding-dollar position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0.01" class="form-control ps-5" id="aplicar-monto" name="monto_aplicar" required>
                         </div>
                     </div>
                 </div>
@@ -664,11 +677,14 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label f-s-12 f-w-600">Pago Origen del Reembolso</label>
-                        <input type="text" class="form-control form-control-sm bg-light" id="dev-pago-info" readonly>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-receipt position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5 bg-light" id="dev-pago-info" readonly>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="dev-metodo-id" class="form-label f-s-12 f-w-600">Método de Devolución / Egreso <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" id="dev-metodo-id" name="metodo_pago_id" required>
+                        <select class="form-select basic-select2" id="dev-metodo-id" name="metodo_pago_id" data-placeholder="Seleccione método..." required>
                             <option value="">Seleccione método...</option>
                             <?php foreach ($metodos_pago as $mp): ?>
                                 <option value="<?= e((string) $mp->obtenerId()) ?>" data-tipo-destino="<?= e($mp->obtenerTipoDestino()) ?>">
@@ -679,14 +695,17 @@ declare(strict_types=1);
                     </div>
                     <div class="mb-3">
                         <label for="dev-monto" class="form-label f-s-12 f-w-600">Monto a Devolver (PEN) <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light">S/</span>
-                            <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="dev-monto" name="monto_devolucion" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-arrow-rotate-left position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0.01" class="form-control ps-5" id="dev-monto" name="monto_devolucion" required>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="dev-motivo" class="form-label f-s-12 f-w-600">Motivo de Devolución Justificado <span class="text-danger">*</span></label>
-                        <textarea class="form-control form-control-sm" id="dev-motivo" name="motivo" rows="2" placeholder="Explicación detallada del reembolso..." required></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="dev-motivo" name="motivo" rows="2" placeholder="Explicación detallada del reembolso..." required></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2 border-top">

@@ -52,17 +52,14 @@ declare(strict_types=1);
             <div class="card-body p-3 bg-light-subtle border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-3 col-12">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input type="text" class="form-control" id="filtro-busqueda-reserva"
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5" id="filtro-busqueda-reserva"
                                    placeholder="Código, titular, documento..." autocomplete="off">
-                            <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" title="Limpiar">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
                         </div>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm" id="filtro-estado-reserva">
+                        <select class="form-select basic-select2" id="filtro-estado-reserva" data-placeholder="Todos los estados">
                             <option value="">Todos los estados</option>
                             <option value="PENDIENTE">PENDIENTE (Hold activo)</option>
                             <option value="CONFIRMADA">CONFIRMADA</option>
@@ -71,7 +68,7 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm" id="filtro-propiedad-reserva">
+                        <select class="form-select basic-select2" id="filtro-propiedad-reserva" data-placeholder="Todas las propiedades">
                             <option value="">Todas las propiedades</option>
                             <?php foreach ($propiedades as $p): ?>
                                 <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?></option>
@@ -79,17 +76,14 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-4 col-12">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
-                            <input type="text" class="form-control" id="filtro-rango-fechas"
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+                            <input type="text" class="form-control ps-5" id="filtro-rango-fechas"
                                    placeholder="Filtrar por rango de fechas..."
                                    data-provider="rangepicker"
                                    data-target-inicio="#filtro-fecha-desde"
                                    data-target-fin="#filtro-fecha-hasta"
                                    autocomplete="off" readonly>
-                            <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-filtro-fechas" title="Limpiar fechas">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
                         </div>
                         <input type="hidden" id="filtro-fecha-desde">
                         <input type="hidden" id="filtro-fecha-hasta">
@@ -162,7 +156,7 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 mb-1" for="crear-titular-id">
                                 Persona Titular de la Reserva <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm" id="crear-titular-id" name="persona_titular_id" required>
+                            <select class="form-select basic-select2" id="crear-titular-id" name="persona_titular_id" data-placeholder="Seleccione o busque una persona..." required>
                                 <option value="">Seleccione o busque una persona registrada...</option>
                             </select>
                             <div class="form-text f-s-11">
@@ -175,9 +169,9 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 mb-1" for="crear-rango-fechas">
                                 <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo de Estadía (Check-in → Check-out) <span class="text-danger">*</span>
                             </label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
-                                <input type="text" class="form-control" id="crear-rango-fechas"
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+                                <input type="text" class="form-control ps-5" id="crear-rango-fechas"
                                        placeholder="Seleccione fecha de entrada y salida..."
                                        data-provider="rangepicker"
                                        data-target-inicio="#crear-fecha-entrada"
@@ -241,7 +235,7 @@ declare(strict_types=1);
                                 <label class="form-label f-s-12 f-w-600 mb-1" for="crear-estado">
                                     Estado Inicial de la Reserva
                                 </label>
-                                <select class="form-select form-select-sm" id="crear-estado" name="estado">
+                                <select class="form-select basic-select2" id="crear-estado" name="estado">
                                     <option value="PENDIENTE" selected>PENDIENTE (Retiene hold de inventario)</option>
                                     <option value="CONFIRMADA">CONFIRMADA (Reserva garantizada)</option>
                                 </select>
@@ -251,7 +245,7 @@ declare(strict_types=1);
                             </div>
                             <div>
                                 <label class="form-label f-s-12 f-w-600 mb-1" for="crear-canal">Canal de Venta</label>
-                                <select class="form-select form-select-sm" id="crear-canal" name="canal">
+                                <select class="form-select basic-select2" id="crear-canal" name="canal">
                                     <option value="PMS" selected>PMS (Recepción / Mostrador)</option>
                                     <option value="WEB">Web Directa</option>
                                     <option value="APP">App Móvil</option>
@@ -263,8 +257,11 @@ declare(strict_types=1);
                         <!-- Observaciones -->
                         <div class="col-12">
                             <label class="form-label f-s-12 f-w-600 mb-1" for="crear-observaciones">Observaciones / Notas Internas</label>
-                            <textarea class="form-control form-control-sm" id="crear-observaciones" name="observaciones" rows="2"
-                                      placeholder="Peticiones especiales, horario estimado de llegada, notas comerciales..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" id="crear-observaciones" name="observaciones" rows="2"
+                                          placeholder="Peticiones especiales, horario estimado de llegada, notas comerciales..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -415,8 +412,11 @@ declare(strict_types=1);
                         <label class="form-label f-s-12 f-w-600 mb-1" for="cancelar-motivo">
                             Motivo de Cancelación <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control form-control-sm" id="cancelar-motivo" rows="2"
-                                  placeholder="Indique la causa de la cancelación..." required maxlength="255"></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="cancelar-motivo" rows="2"
+                                      placeholder="Indique la causa de la cancelación..." required maxlength="255"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2">

@@ -36,9 +36,13 @@ declare(strict_types=1);
 <!-- Selector de fechas oficial: Flatpickr (Alina) -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/flatpickr/flatpickr.min.css') ?>">
 
+<!-- Selector enriquecido oficial: Select2 (Alina) -->
+<link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/select/select2.min.css') ?>">
+
 <!-- Estilos base de la plantilla Alina -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('css/style.css') ?>">
 <link rel="stylesheet" type="text/css" href="<?= url_asset('css/responsive.css') ?>">
 
 <!-- Ajustes y estilos propios de Camargo PMS -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('css/camargo.css') ?>">
+

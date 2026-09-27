@@ -189,7 +189,7 @@ declare(strict_types=1);
                                                                <?= !$esEditable || empty($capacidades['puede_editar']) ? 'readonly disabled' : '' ?>>
                                                     </div>
                                                 <?php elseif ($clave === 'sistema.idioma'): ?>
-                                                    <select class="form-select form-select-sm campo-configuracion"
+                                                    <select class="form-select form-select-sm campo-configuracion basic-select2"
                                                             id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
                                                             name="configuraciones[<?= e($clave) ?>]"
                                                             <?= !$esEditable || empty($capacidades['puede_editar']) ? 'disabled' : '' ?>>
@@ -254,7 +254,7 @@ declare(strict_types=1);
                                             <div class="mb-2">
                                                 <?php if ($tipo === 'BOOLEANO'): ?>
                                                     <div class="form-check form-switch pt-1">
-                                                        <input class="form-check-input campo-configuracion"
+                                                        <input class="form-check-input f-s-18 campo-configuracion"
                                                                type="checkbox"
                                                                role="switch"
                                                                id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"

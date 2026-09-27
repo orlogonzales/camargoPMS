@@ -70,24 +70,30 @@ declare(strict_types=1);
                             <?php endif; ?>
 
                             <div class="col-12">
-                                <div class="form-floating mb-3">
-                                    <input class="form-control" id="nombre_usuario" name="nombre_usuario"
-                                           placeholder="Nombre de usuario" type="text"
-                                           value="<?= e($nombreUsuarioPrevio ?? '') ?>" required autofocus autocomplete="username">
-                                    <label for="nombre_usuario">Nombre de usuario</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="nombre_usuario">Nombre de usuario</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                        <input class="form-control ps-5" id="nombre_usuario" name="nombre_usuario"
+                                               placeholder="Nombre de usuario" type="text"
+                                               value="<?= e($nombreUsuarioPrevio ?? '') ?>" required autofocus autocomplete="username">
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="col-12">
-                                <div class="form-floating mb-3">
-                                    <input class="form-control" id="contrasena" name="contrasena"
-                                           placeholder="Contraseña" type="password" required autocomplete="current-password">
-                                    <label for="contrasena">Contraseña</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="contrasena">Contraseña</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-lock position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                        <input class="form-control ps-5" id="contrasena" name="contrasena"
+                                               placeholder="Contraseña" type="password" required autocomplete="current-password">
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="col-12 mt-3">
-                                <button type="submit" class="btn bg-gradient-primary btn-lg b-r-16 w-100">
+                                <button type="submit" class="btn btn-primary btn-lg b-r-16 w-100 text-white">
                                     Iniciar Sesión
                                 </button>
                             </div>

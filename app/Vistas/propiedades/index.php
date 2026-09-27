@@ -55,7 +55,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
-                        <select class="form-select form-select-sm" id="filtro-pais-propiedad">
+                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-pais-propiedad" data-placeholder="Todos los países">
                             <option value="">Todos los países</option>
                             <?php foreach ($paises as $p): ?>
                                 <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?> (<?= e($p['codigo_iso2']) ?>)</option>
@@ -63,7 +63,7 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm" id="filtro-estado-propiedad">
+                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-estado-propiedad" data-placeholder="Todos los estados">
                             <option value="">Todos los estados</option>
                             <option value="ACTIVO">ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
@@ -141,22 +141,28 @@ declare(strict_types=1);
                             <label for="propiedad-codigo" class="form-label f-s-13 f-w-600">
                                 Código Inmueble <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm text-uppercase" id="propiedad-codigo" name="codigo"
-                                   required minlength="2" maxlength="30" placeholder="Ej: AYUDA-MUTUA"
-                                   data-pristine-required-message="El código es obligatorio."
-                                   data-pristine-minlength-message="Mínimo 2 caracteres."
-                                   data-pristine-maxlength-message="Máximo 30 caracteres.">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-barcode position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5 text-uppercase" id="propiedad-codigo" name="codigo"
+                                       required minlength="2" maxlength="30" placeholder="Ej: AYUDA-MUTUA"
+                                       data-pristine-required-message="El código es obligatorio."
+                                       data-pristine-minlength-message="Mínimo 2 caracteres."
+                                       data-pristine-maxlength-message="Máximo 30 caracteres.">
+                            </div>
                             <div class="form-text f-s-11 text-muted">Clave técnica única del inmueble.</div>
                         </div>
                         <div class="col-md-8">
                             <label for="propiedad-nombre" class="form-label f-s-13 f-w-600">
                                 Nombre del Inmueble / Edificio <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-nombre" name="nombre"
-                                   required minlength="3" maxlength="150" placeholder="Ej: Edificio Ayuda Mutua"
-                                   data-pristine-required-message="El nombre es obligatorio."
-                                   data-pristine-minlength-message="Mínimo 3 caracteres."
-                                   data-pristine-maxlength-message="Máximo 150 caracteres.">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-building position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="propiedad-nombre" name="nombre"
+                                       required minlength="3" maxlength="150" placeholder="Ej: Edificio Ayuda Mutua"
+                                       data-pristine-required-message="El nombre es obligatorio."
+                                       data-pristine-minlength-message="Mínimo 3 caracteres."
+                                       data-pristine-maxlength-message="Máximo 150 caracteres.">
+                            </div>
                         </div>
 
                         <!-- País y Localización Política -->
@@ -164,7 +170,8 @@ declare(strict_types=1);
                             <label for="propiedad-pais-id" class="form-label f-s-13 f-w-600">
                                 País <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm" id="propiedad-pais-id" name="pais_id" required
+                            <select class="form-select form-select-sm basic-select2" id="propiedad-pais-id" name="pais_id" required
+                                    data-placeholder="Seleccionar país..."
                                     data-pristine-required-message="Debe seleccionar un país.">
                                 <option value="">-- Seleccionar --</option>
                                 <?php foreach ($paises as $p): ?>
@@ -174,56 +181,83 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-departamento" class="form-label f-s-13 f-w-600">Departamento / Región</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-departamento" name="departamento"
-                                   maxlength="100" placeholder="Ej: Cusco">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-map position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="propiedad-departamento" name="departamento"
+                                       maxlength="100" placeholder="Ej: Cusco">
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-provincia" class="form-label f-s-13 f-w-600">Provincia</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-provincia" name="provincia"
-                                   maxlength="100" placeholder="Ej: La Convención">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-city position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="propiedad-provincia" name="provincia"
+                                       maxlength="100" placeholder="Ej: La Convención">
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-distrito" class="form-label f-s-13 f-w-600">Distrito</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-distrito" name="distrito"
-                                   maxlength="100" placeholder="Ej: Santa Ana">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="propiedad-distrito" name="distrito"
+                                       maxlength="100" placeholder="Ej: Santa Ana">
+                            </div>
                         </div>
 
                         <!-- Dirección Física y Referencia -->
                         <div class="col-md-7">
                             <label for="propiedad-direccion" class="form-label f-s-13 f-w-600">Dirección Física</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-direccion" name="direccion"
-                                   maxlength="255" placeholder="Ej: Jirón Independencia 245">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-road position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="propiedad-direccion" name="direccion"
+                                       maxlength="255" placeholder="Ej: Jirón Independencia 245">
+                            </div>
                         </div>
                         <div class="col-md-5">
                             <label for="propiedad-referencia" class="form-label f-s-13 f-w-600">Referencia de Acceso</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-referencia" name="referencia"
-                                   maxlength="255" placeholder="Ej: Frente a la plaza de armas">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-signs-post position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="propiedad-referencia" name="referencia"
+                                       maxlength="255" placeholder="Ej: Frente a la plaza de armas">
+                            </div>
                         </div>
 
                         <!-- Georreferenciación GPS -->
                         <div class="col-md-6">
                             <label for="propiedad-latitud" class="form-label f-s-13 f-w-600">Latitud GPS</label>
-                            <input type="number" step="0.0000001" min="-90" max="90" class="form-control form-control-sm"
-                                   id="propiedad-latitud" name="latitud" placeholder="Ej: -12.8661234">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-compass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.0000001" min="-90" max="90" class="form-control form-control-sm ps-5"
+                                       id="propiedad-latitud" name="latitud" placeholder="Ej: -12.8661234">
+                            </div>
                             <div class="form-text f-s-11 text-muted">Coordenada decimal entre -90.0 y 90.0</div>
                         </div>
                         <div class="col-md-6">
                             <label for="propiedad-longitud" class="form-label f-s-13 f-w-600">Longitud GPS</label>
-                            <input type="number" step="0.0000001" min="-180" max="180" class="form-control form-control-sm"
-                                   id="propiedad-longitud" name="longitud" placeholder="Ej: -72.6951234">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-compass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.0000001" min="-180" max="180" class="form-control form-control-sm ps-5"
+                                       id="propiedad-longitud" name="longitud" placeholder="Ej: -72.6951234">
+                            </div>
                             <div class="form-text f-s-11 text-muted">Coordenada decimal entre -180.0 y 180.0</div>
                         </div>
 
                         <!-- Descripción e Información Adicional -->
                         <div class="col-12">
                             <label for="propiedad-descripcion" class="form-label f-s-13 f-w-600">Descripción General</label>
-                            <textarea class="form-control form-control-sm" id="propiedad-descripcion" name="descripcion"
-                                      rows="2" placeholder="Resumen arquitectónico o características del inmueble..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-align-left position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
+                                <textarea class="form-control form-control-sm ps-5" id="propiedad-descripcion" name="descripcion"
+                                          rows="2" placeholder="Resumen arquitectónico o características del inmueble..."></textarea>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label for="propiedad-observaciones" class="form-label f-s-13 f-w-600">Observaciones Internas</label>
-                            <textarea class="form-control form-control-sm" id="propiedad-observaciones" name="observaciones"
-                                      rows="2" placeholder="Notas operativas privadas de administración..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
+                                <textarea class="form-control form-control-sm ps-5" id="propiedad-observaciones" name="observaciones"
+                                          rows="2" placeholder="Notas operativas privadas de administración..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>

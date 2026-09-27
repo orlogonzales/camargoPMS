@@ -4,6 +4,36 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-3 — Estandarización de Formularios mediante Componentes Nativos Alina
+
+- **Vertical Form With Icon de Alina (D-075):**
+  - Implementación sistemática del patrón nativo de Alina en todas las vistas y modales operativos: contenedor `.icon-control.position-relative`, icono centrado verticalmente con clase `ms-3`, e input identado `.ps-5`.
+  - Regla CSS defensiva en `camargo.css`: `.icon-control > i { pointer-events: none; }` para asegurar transferencia inmediata del foco al campo al hacer clic en el icono.
+  - Estandarización integral en 11 vistas: `/login`, `/caja` (7 modales financieros), `/servicios` (3 pestañas operativas y modales), `/estadias`, `/reservas`, `/disponibilidad`, `/unidades`, `/propiedades`, `/usuarios`, `/configuracion/roles` y `/configuracion/menu`.
+- **Select2 4.0.13 y jQuery 3.7.1 100% Locales (Cero CDN):**
+  - Copia de librerías locales desde `admin-dashboard/alina/` hacia `public/assets/vendor/jquery/jquery.min.js`, `public/assets/vendor/select/select2.min.css` y `public/assets/vendor/select/select2.min.js`.
+  - Cero dependencias externas / CDN en toda la infraestructura de carga (`head.php` y `scripts.php`).
+  - Confinamiento estricto de jQuery a inicializar Select2: 0 llamadas `$.ajax()`, 0 manipulaciones DOM en lógica de negocio, 100% Vanilla JS + Fetch API.
+- **Controlador Reactivo `camargo-select.js`:**
+  - Creación de wrapper global modular `window.CamargoSelect` con métodos defensivos (`init`, `initElement`, `reinit`, `setValue`).
+  - Configuración mandatoria de `dropdownParent: $el.closest('.modal')` para prevenir recortes de dropdown y trampas de foco en modales Bootstrap 5.
+  - Sincronización automática con PristineJS mediante redespacho de eventos nativos `input` y `change` (`bubbles: true`).
+  - Detección de mutaciones dinámicas en el DOM mediante `MutationObserver` y soporte reactivo en eventos `shown.bs.modal`.
+- **Estilos Visuales de Select2 en `camargo.css`:**
+  - Sustitución de Tabler Icons por flecha Font Awesome 6 (`\f078` fa-chevron-down).
+  - Altura estandarizada a 2.35rem alineada con inputs nativos Alina.
+  - Eliminación de bordes punteados (`dashed`/`dotted`) en selecciones simples y múltiples.
+  - Integración de bordes de error con PristineJS (`.has-danger .select2-selection`).
+- **Radios, Checkboxes y Switches Nativos:**
+  - Homogeneización de controles mediante clases nativas Alina: `.form-check.d-flex.align-items-center.gap-1` y `.form-check-input.f-s-18.mb-1` en matrices de permisos, interruptores de configuración del sistema y filtros.
+- **Erradicación Absoluta de Degradados:**
+  - Eliminación del 100% de clases `btn-gradient-*` y `bg-gradient-*` en todo `app/Vistas/` (0 coincidencias en auditoría de código).
+  - Reemplazo por estilos canónicos sólidos / outline de Bootstrap 5 / Alina e insignias suaves `bg-light-*` con texto `f-w-500` / `f-w-600`.
+- **Verificación Automatizada y Preservación de Negocio:**
+  - Suite de verificación automatizada `test_ui3_matriz_25.php` (25/25 PASS).
+  - Regresión consolidada multi-fase completa: 363/363 PASS.
+  - Gran total verificado: 388/388 PASS (100%).
+
 ### Microfase FINANCIERO-2 — Cuentas de Folios, Cargos, Pagos, Aplicaciones, Devoluciones y Caja Física
 
 - **Tríada Financiera y Desacoplamiento de Cobros (D-074):**

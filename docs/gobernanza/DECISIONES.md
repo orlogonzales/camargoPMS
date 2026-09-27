@@ -833,6 +833,45 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Trazabilidad y autoría D-061 (`ACTOR ≠ USUARIO`) registrada en todas las aperturas, cierres, cobros, aplicaciones y devoluciones.
    - Interfaz Alina D-071: Font Awesome 6.3.0 exclusivo, Flatpickr, Variants of badge de Alina (`bg-light-*`), 0 dotted, 0 dashed, Vanilla JS nativo, PristineJS y SweetAlert2.
 
+### D-075 — Estandarización de Formularios, Select2 Local, Controles Nativos Alina y Erradicación de Degradados (UI-3)
+
+1. **Vertical Form With Icon de Alina:**
+   - Adopción sistemática y homogénea del patrón oficial de Alina para inputs y textareas en formularios y modales:
+     ```html
+     <div class="icon-control position-relative">
+       <i class="fa-solid fa-tag text-muted position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+       <input type="text" class="form-control ps-5" ...>
+     </div>
+     ```
+   - Regla CSS defensiva en `camargo.css`: `.icon-control > i { pointer-events: none; }` para asegurar que el clic sobre el icono no bloquee la transferencia del foco hacia el elemento `<input>` o `<textarea>`.
+
+2. **Select2 4.0.13 y jQuery 3.7.1 100% Locales (Cero Dependencias Externas / Cero CDN):**
+   - Se prohíbe terminantemente el uso de enlaces CDN (`cdnjs`, `jsdelivr`, `unpkg`, etc.) en toda la aplicación.
+   - Select2 (`select2.min.css`, `select2.min.js`) y jQuery (`jquery.min.js`) se alojan y sirven exclusivamente desde `public/assets/vendor/select/` y `public/assets/vendor/jquery/` copiados de los originales inmutables de Alina (`admin-dashboard/alina/`).
+   - **Confinamiento Estricto de jQuery a Select2:** Se ratifica el principio rector de UI-2. jQuery se utiliza única y exclusivamente como dependencia de bajo nivel para la inicialización y manipulación del plugin Select2. Queda prohibido el uso de `$.ajax()`, manipulaciones DOM en lógica de negocio o implementaciones CRUD con jQuery. Toda la lógica de negocio, Fetch API y controladores de interfaz se mantienen al 100% en Vanilla JavaScript moderno.
+
+3. **Arquitectura y Reactividad de Select2 (`camargo-select.js`):**
+   - API modular global `window.CamargoSelect` con métodos `init()`, `initElement()`, `reinit()` y `setValue()`.
+   - **Prevención de Recorte y Trampas de Foco en Modales:** Configuración obligatoria de `dropdownParent: $el.closest('.modal')` cuando el select se encuentra dentro de un diálogo modal de Bootstrap 5, evitando colisiones con el focus-trap del modal y asegurando el z-index adecuado.
+   - **Compatibilidad con PristineJS y Sincronización Reactiva:** Select2 intercepta los eventos nativos. `camargo-select.js` re-despacha automáticamente eventos `input` y `change` nativos con bubbling al cambiar la selección (`this.dispatchEvent(new Event('input', { bubbles: true }))`), garantizando que las validaciones de PristineJS se activen instantáneamente y que los formularios reconozcan las mutaciones.
+   - **Observador de Mutaciones DOM:** Implementación de `MutationObserver` para detectar adiciones dinámicas de elementos `.basic-select2` o `.select-clear` en el DOM sin requerir llamadas manuales acopladas.
+
+4. **Estilos de Select2 y Compatibilidad Visual Alina (`camargo.css`):**
+   - Flecha de apertura estandarizada con Font Awesome 6 (`content: "\f078" !important; font-family: "Font Awesome 6 Free" !important;`), eliminando cualquier vestigio de Tabler Icons.
+   - Altura de control ajustada a `2.35rem` con alineación vertical perfecta para emparejar la escala de los inputs estándar de Alina.
+   - Erradicación absoluta de bordes punteados (`dashed` / `dotted`) en cajas de selección simple y múltiple, estableciendo bordes sólidos sutiles acordes a la paleta Alina.
+   - Integración nativa con estados de validación: `.has-danger .select2-selection` adopta borde rojo y sombra de foco coherente con PristineJS.
+
+5. **Radios, Checkboxes y Switches Nativos de Alina:**
+   - Estandarización de checkboxes y radios bajo el contenedor `.form-check.d-flex.align-items-center.gap-1` con el input estilizado mediante `.form-check-input.f-s-18.mb-1` para garantizar alineación milimétrica y legibilidad táctil/visual óptima.
+
+6. **Erradicación Absoluta de Degradados (Flat Design Coherente):**
+   - Prohibición formal y eliminación total de clases `btn-gradient-*` y `bg-gradient-*` en todo el directorio `app/Vistas/`.
+   - Sustitución por botones sólidos o con contorno canónicos de Bootstrap 5 / Alina (`btn-primary`, `btn-outline-secondary`, etc.) e insignias suaves de Alina (`bg-light-primary`, `bg-light-success`, `bg-light-warning`, `bg-light-danger`) con texto de alto contraste semántico (`f-w-500` / `f-w-600`).
+
+7. **Preservación de Lógica y Datos:**
+   - Cero alteraciones en esquemas SQL, cero migraciones añadidas, cero cambios en contratos de modelos, servicios o repositorios backend.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

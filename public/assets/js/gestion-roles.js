@@ -532,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
             inputEditarNombre.value = rol.nombre;
             inputEditarDescripcion.value = rol.descripcion || '';
             selectEditarEstado.value = rol.estado;
+            selectEditarEstado.dispatchEvent(new Event('change'));
 
             // Protección de Superadministrador y Roles de Sistema
             if (rol.es_superadministrador) {
@@ -752,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card mb-3 border shadow-none modulo-permisos-card" data-modulo="${moduloNombre}">
                     <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <input class="form-check-input me-2 check-modulo-master" type="checkbox" id="master-${moduloIdSeguro}" data-modulo="${moduloNombre}">
+                            <input class="form-check-input f-s-18 me-2 check-modulo-master" type="checkbox" id="master-${moduloIdSeguro}" data-modulo="${moduloNombre}">
                             <label class="form-check-label f-w-700 f-s-13 text-uppercase text-dark mb-0" for="master-${moduloIdSeguro}">
                                 Módulo: ${escapeHtml(moduloNombre)}
                             </label>
@@ -773,8 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += `
                     <div class="col-md-6 col-12">
                         <div class="border rounded p-2 h-100 bg-white d-flex align-items-start ${esCritico ? 'border-warning bg-warning-subtle' : ''}">
-                            <div class="form-check mb-0">
-                                <input class="form-check-input check-permiso" type="checkbox"
+                            <div class="form-check d-flex align-items-start gap-2 mb-0">
+                                <input class="form-check-input f-s-18 mt-1 check-permiso" type="checkbox"
                                        value="${p.id}" id="permiso-${p.id}"
                                        data-modulo="${moduloNombre}"
                                        data-codigo="${escapeHtml(p.codigo)}"

@@ -327,6 +327,19 @@ Implementación de la Tríada Financiera, tesorería operativa, folios comercial
 
 Estado: completada (candidata a micro-baseline).
 
+## UI-3 — Estandarización de Formularios mediante Componentes Nativos Alina
+
+Estandarización transversal de todos los formularios, modales y filtros de Camargo PMS alineándolos con los patrones oficiales de Alina (D-075):
+- **Vertical Form With Icon de Alina:** Adopción sistemática del contenedor `.icon-control.position-relative` con icono decorativo (`ms-3`) e input identado (`.ps-5`) en 11 vistas y más de 20 modales operativos.
+- **Select2 4.0.13 y jQuery 3.7.1 100% Locales:** Assets servidos exclusivamente desde `public/assets/vendor/` local, eliminando cualquier dependencia de CDN externa o remota. Confinamiento estricto de jQuery a inicializar Select2 (`0 $.ajax()`, `0 CRUD` en scripts de negocio, 100% Vanilla JS + Fetch API).
+- **Controlador Reactivo `camargo-select.js`:** Integración modular defensiva con soporte para `dropdownParent: $el.closest('.modal')` (evitando recortes y bloqueos de foco en modales Bootstrap 5), despacho automático de eventos nativos `input` y `change` para PristineJS, sincronización DOM vía `MutationObserver` y soporte para eventos de apertura modal.
+- **Estilos Alina en `camargo.css`:** Sustitución de Tabler Icons por flecha Font Awesome 6 (`\f078` fa-chevron-down), altura estandarizada de 2.35rem, eliminación de bordes punteados (dotted/dashed) en multi-selects y estilización de bordes de error para PristineJS (`.has-danger`).
+- **Radios, Checkboxes y Switches Nativos:** Estandarización dimensional mediante clases oficiales de Alina `.form-check.d-flex.align-items-center.gap-1` y `.form-check-input.f-s-18.mb-1`.
+- **Erradicación Absoluta de Degradados:** Cero clases `btn-gradient-*` y `bg-gradient-*` en todo el árbol de vistas, sustituidas por estilos planos canónicos de Bootstrap 5 / Alina (`btn-primary`, `btn-outline-*`) e insignias suaves `bg-light-*` con texto semántico (`f-w-500` / `f-w-600`).
+- **Preservación Integral:** Cero cambios en la base de datos o lógica de negocio (388/388 PASS verificados: 363 consolidado + 25 UI-3).
+
+Estado: completada (candidata a micro-baseline).
+
 ## Dominio operativo
 
 1. propiedades, niveles y unidades;

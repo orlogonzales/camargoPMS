@@ -55,7 +55,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="col-md-3 col-8">
-                        <select class="form-select form-select-sm" id="filtro-estado-rol">
+                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-estado-rol" data-placeholder="Todos los estados">
                             <option value="">Todos los estados</option>
                             <option value="ACTIVO">ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
@@ -118,11 +118,14 @@ declare(strict_types=1);
                         <label for="crear-rol-codigo" class="form-label f-s-13 f-w-600">
                             Clave Técnica <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control text-uppercase" id="crear-rol-codigo" name="codigo"
-                               placeholder="EJ: AUDITOR_FINANCIERO" required
-                               pattern="^[A-Za-z0-9_]{3,50}$"
-                               data-pristine-pattern-message="La clave debe tener 3 a 50 letras mayúsculas, números o guiones bajos."
-                               data-pristine-required-message="La clave técnica es obligatoria." autocomplete="off">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-key position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="text" class="form-control form-control-sm ps-5 text-uppercase" id="crear-rol-codigo" name="codigo"
+                                   placeholder="EJ: AUDITOR_FINANCIERO" required
+                                   pattern="^[A-Za-z0-9_]{3,50}$"
+                                   data-pristine-pattern-message="La clave debe tener 3 a 50 letras mayúsculas, números o guiones bajos."
+                                   data-pristine-required-message="La clave técnica es obligatoria." autocomplete="off">
+                        </div>
                         <div class="form-text f-s-11 text-muted">Identificador único inmutable en mayúsculas (letras, números y guión bajo).</div>
                     </div>
 
@@ -130,22 +133,28 @@ declare(strict_types=1);
                         <label for="crear-rol-nombre" class="form-label f-s-13 f-w-600">
                             Nombre del Rol <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control" id="crear-rol-nombre" name="nombre"
-                               placeholder="EJ: Auditor Financiero" required minlength="2" maxlength="100"
-                               data-pristine-required-message="El nombre del rol es obligatorio."
-                               data-pristine-minlength-message="El nombre debe tener al menos 2 caracteres."
-                               data-pristine-maxlength-message="El nombre no puede exceder 100 caracteres." autocomplete="off">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-shield-halved position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="text" class="form-control form-control-sm ps-5" id="crear-rol-nombre" name="nombre"
+                                   placeholder="EJ: Auditor Financiero" required minlength="2" maxlength="100"
+                                   data-pristine-required-message="El nombre del rol es obligatorio."
+                                   data-pristine-minlength-message="El nombre debe tener al menos 2 caracteres."
+                                   data-pristine-maxlength-message="El nombre no puede exceder 100 caracteres." autocomplete="off">
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="crear-rol-descripcion" class="form-label f-s-13 f-w-600">Descripción</label>
-                        <textarea class="form-control" id="crear-rol-descripcion" name="descripcion" rows="3"
-                                  maxlength="255" placeholder="Propósito funcional del rol y alcance de sus atribuciones..."></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-align-left position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
+                            <textarea class="form-control form-control-sm ps-5" id="crear-rol-descripcion" name="descripcion" rows="3"
+                                      maxlength="255" placeholder="Propósito funcional del rol y alcance de sus atribuciones..."></textarea>
+                        </div>
                     </div>
 
                     <div class="mb-2">
                         <label for="crear-rol-estado" class="form-label f-s-13 f-w-600">Estado Inicial</label>
-                        <select class="form-select" id="crear-rol-estado" name="estado">
+                        <select class="form-select form-select-sm basic-select2" id="crear-rol-estado" name="estado">
                             <option value="ACTIVO" selected>ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
                         </select>
@@ -177,7 +186,10 @@ declare(strict_types=1);
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="editar-rol-codigo" class="form-label f-s-13 f-w-600">Clave Técnica</label>
-                        <input type="text" class="form-control text-uppercase" id="editar-rol-codigo" name="codigo" readonly>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-key position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="text" class="form-control form-control-sm ps-5 text-uppercase" id="editar-rol-codigo" name="codigo" readonly>
+                        </div>
                         <div class="form-text f-s-11 text-muted" id="editar-rol-codigo-ayuda">La clave técnica identifica las comprobaciones de código.</div>
                     </div>
 
@@ -185,20 +197,26 @@ declare(strict_types=1);
                         <label for="editar-rol-nombre" class="form-label f-s-13 f-w-600">
                             Nombre del Rol <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control" id="editar-rol-nombre" name="nombre" required minlength="2" maxlength="100"
-                               data-pristine-required-message="El nombre del rol es obligatorio."
-                               data-pristine-minlength-message="El nombre debe tener al menos 2 caracteres."
-                               data-pristine-maxlength-message="El nombre no puede exceder 100 caracteres." autocomplete="off">
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-shield-halved position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="text" class="form-control form-control-sm ps-5" id="editar-rol-nombre" name="nombre" required minlength="2" maxlength="100"
+                                   data-pristine-required-message="El nombre del rol es obligatorio."
+                                   data-pristine-minlength-message="El nombre debe tener al menos 2 caracteres."
+                                   data-pristine-maxlength-message="El nombre no puede exceder 100 caracteres." autocomplete="off">
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="editar-rol-descripcion" class="form-label f-s-13 f-w-600">Descripción</label>
-                        <textarea class="form-control" id="editar-rol-descripcion" name="descripcion" rows="3" maxlength="255"></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-align-left position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
+                            <textarea class="form-control form-control-sm ps-5" id="editar-rol-descripcion" name="descripcion" rows="3" maxlength="255"></textarea>
+                        </div>
                     </div>
 
                     <div class="mb-2">
                         <label for="editar-rol-estado" class="form-label f-s-13 f-w-600">Estado Administrativo</label>
-                        <select class="form-select" id="editar-rol-estado" name="estado">
+                        <select class="form-select form-select-sm basic-select2" id="editar-rol-estado" name="estado">
                             <option value="ACTIVO">ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
                         </select>

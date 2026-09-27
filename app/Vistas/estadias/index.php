@@ -98,17 +98,14 @@ declare(strict_types=1);
             <div class="card-body p-3 bg-white border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-3 col-12">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input type="text" class="form-control" id="filtro-busqueda-estadia"
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5" id="filtro-busqueda-estadia"
                                    placeholder="Estadía, reserva, unidad, huésped..." autocomplete="off">
-                            <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" title="Limpiar">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
                         </div>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm" id="filtro-estado-estadia">
+                        <select class="form-select basic-select2" id="filtro-estado-estadia" data-placeholder="Todos los estados">
                             <option value="">Todos los estados</option>
                             <option value="EN_CURSO">EN CURSO (Huésped en unidad)</option>
                             <option value="FINALIZADA">FINALIZADA (Check-out realizado)</option>
@@ -116,7 +113,7 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm" id="filtro-propiedad-estadia">
+                        <select class="form-select basic-select2" id="filtro-propiedad-estadia" data-placeholder="Todas las propiedades">
                             <option value="">Todas las propiedades</option>
                             <?php foreach ($propiedades as $p): ?>
                                 <option value="<?= (int) $p['id'] ?>"><?= e($p['nombre']) ?></option>
@@ -124,17 +121,14 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-4 col-12">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light"><i class="fa-solid fa-calendar-days text-primary"></i></span>
-                            <input type="text" class="form-control" id="filtro-rango-fechas"
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+                            <input type="text" class="form-control ps-5" id="filtro-rango-fechas"
                                    placeholder="Filtrar por rango de fechas..."
                                    data-provider="rangepicker"
                                    data-target-inicio="#filtro-fecha-desde"
                                    data-target-fin="#filtro-fecha-hasta"
                                    autocomplete="off" readonly>
-                            <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-filtro-fechas" title="Limpiar fechas">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
                         </div>
                         <input type="hidden" id="filtro-fecha-desde">
                         <input type="hidden" id="filtro-fecha-hasta">
@@ -209,7 +203,7 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 mb-1" for="checkin-reserva-id">
                                 Reserva Confirmada Comercial <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm" id="checkin-reserva-id" name="reserva_id" required>
+                            <select class="form-select basic-select2" id="checkin-reserva-id" name="reserva_id" data-placeholder="Seleccione una reserva confirmada..." required>
                                 <option value="">Seleccione una reserva confirmada...</option>
                             </select>
                             <div class="form-text f-s-11">
@@ -222,7 +216,7 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 mb-1" for="checkin-reserva-unidad-id">
                                 Unidad Alojable <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm" id="checkin-reserva-unidad-id" name="reserva_unidad_id" required disabled>
+                            <select class="form-select basic-select2" id="checkin-reserva-unidad-id" name="reserva_unidad_id" data-placeholder="Primero seleccione reserva..." required disabled>
                                 <option value="">Primero seleccione una reserva...</option>
                             </select>
                             <div class="form-text f-s-11" id="ayuda-capacidad-unidad">
@@ -235,20 +229,29 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 mb-1" for="checkin-fecha-entrada">
                                 Fecha Entrada (Hotelera) <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="checkin-fecha-entrada" name="fecha_entrada" readonly required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-check position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="checkin-fecha-entrada" name="fecha_entrada" readonly required>
+                            </div>
                         </div>
                         <div class="col-md-4 col-6">
                             <label class="form-label f-s-12 f-w-600 mb-1" for="checkin-fecha-salida">
                                 Fecha Salida Prevista <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="checkin-fecha-salida" name="fecha_salida_prevista" readonly required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-xmark position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="checkin-fecha-salida" name="fecha_salida_prevista" readonly required>
+                            </div>
                         </div>
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 f-w-600 mb-1" for="checkin-identificador-llave">
                                 <i class="fa-solid fa-key me-1 text-secondary"></i> Identificador de Llave / Tarjeta
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="checkin-identificador-llave"
-                                   name="identificador_llave" placeholder="Ej. Tarjeta #104 o Llave A-2" maxlength="50">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-key position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="checkin-identificador-llave"
+                                       name="identificador_llave" placeholder="Ej. Tarjeta #104 o Llave A-2" maxlength="50">
+                            </div>
                         </div>
 
                         <!-- Panel de Huéspedes y Capacidad Física -->
@@ -297,8 +300,11 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 mb-1" for="checkin-observaciones">
                                 Observaciones de Recepción (Check-in)
                             </label>
-                            <textarea class="form-control form-control-sm" id="checkin-observaciones" name="observaciones_checkin"
-                                      rows="2" placeholder="Equipaje, peticiones especiales, hora estimada de llegada, etc..."></textarea>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" id="checkin-observaciones" name="observaciones_checkin"
+                                          rows="2" placeholder="Equipaje, peticiones especiales, hora estimada de llegada, etc..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -355,8 +361,11 @@ declare(strict_types=1);
                         <label class="form-label f-s-12 f-w-600 mb-1" for="checkout-observaciones">
                             Observaciones de Salida y Estado de Unidad
                         </label>
-                        <textarea class="form-control form-control-sm" id="checkout-observaciones" rows="2"
-                                  placeholder="Devolución de llave, estado físico de la unidad, observaciones finales..."></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="checkout-observaciones" rows="2"
+                                      placeholder="Devolución de llave, estado físico de la unidad, observaciones finales..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2">
@@ -397,8 +406,11 @@ declare(strict_types=1);
                         <label class="form-label f-s-12 f-w-600 mb-1" for="anular-motivo">
                             Motivo Justificado de Anulación <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control form-control-sm" id="anular-motivo" rows="2"
-                                  placeholder="Indique con claridad la causa de la anulación..." required maxlength="255"></textarea>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="anular-motivo" rows="2"
+                                      placeholder="Indique con claridad la causa de la anulación..." required maxlength="255"></textarea>
+                        </div>
                         <div class="form-text f-s-11">Máximo 255 caracteres obligatorios.</div>
                     </div>
                 </div>

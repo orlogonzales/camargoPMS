@@ -431,8 +431,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 opciones += `<option value="${p.id}">${escapeHtml(p.nombre_completo)}${doc} [ID: ${p.id}]</option>`;
             });
             selectPersonaCrear.innerHTML = opciones;
+            selectPersonaCrear.dispatchEvent(new Event('change'));
         } catch (e) {
             selectPersonaCrear.innerHTML = `<option value="">Error: ${escapeHtml(e.message)}</option>`;
+            selectPersonaCrear.dispatchEvent(new Event('change'));
         }
     }
 
@@ -646,6 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     selectNuevoRol.innerHTML = opciones;
                 }
+                selectNuevoRol.dispatchEvent(new Event('change'));
             }
         } catch (e) {
             if (divRolesAsignados) {

@@ -62,3 +62,119 @@
     padding: 0.35em 0.65em;
     border-radius: 0.5rem;
 }
+
+/* ==========================================================================
+   UI-3 — COMPONENTES NATIVOS ALINA Y ESTANDARIZACIÓN DE FORMULARIOS
+   ========================================================================== */
+
+/* Vertical Form With Icon: comportamiento y alineación */
+.icon-control > i {
+    pointer-events: none;
+    z-index: 4;
+    color: var(--bs-secondary, #6c757d);
+    font-size: 0.9rem;
+}
+
+.icon-control > .form-control.ps-5 {
+    padding-left: 2.75rem !important;
+}
+
+/* Select2 Alina: Estandarización de flecha con Font Awesome 6 (0 Tabler Icons) */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border: 0 !important;
+    margin-left: -16px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b:after,
+.app-form .select2-container--default .select2-selection--single .select2-selection__arrow b:after {
+    content: "\f078" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-size: 0.7rem !important;
+    color: var(--bs-secondary, #6c757d) !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+/* Select2 Alina: Altura, bordes y tipografía consistentes */
+.select2-container--default .select2-selection--single {
+    height: calc(2.35rem + 2px) !important;
+    border: 1px solid var(--bs-border-color, #dee2e6) !important;
+    border-radius: 0.375rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--bs-body-color, #212529) !important;
+    font-size: 0.875rem !important;
+    line-height: normal !important;
+    padding-left: 0.75rem !important;
+    padding-right: 2rem !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    margin-right: 1.5rem !important;
+    color: var(--bs-danger, #dc3545) !important;
+    font-weight: bold !important;
+}
+
+/* Select2 Multiple: Eliminación estricta de bordes punteados (0 dashed/dotted) */
+.select2-container--default .select2-selection--multiple {
+    border: 1px solid var(--bs-border-color, #dee2e6) !important;
+    border-radius: 0.375rem !important;
+    min-height: calc(2.35rem + 2px) !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice,
+.app-form .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border-style: solid !important;
+    border-width: 1px !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.8rem !important;
+}
+
+/* Dropdown Select2: Sombra, z-index y bordes alineados a Bootstrap 5 / Alina */
+.select2-dropdown {
+    border: 1px solid var(--bs-border-color, #dee2e6) !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    z-index: 1060 !important;
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: var(--bs-primary, #0d6efd) !important;
+    color: #fff !important;
+}
+
+/* Integración de Select2 con PristineJS y validación nativa */
+.has-danger .select2-container--default .select2-selection,
+.is-invalid + .select2-container--default .select2-selection,
+.was-validated select:invalid + .select2-container--default .select2-selection {
+    border-color: var(--bs-danger, #dc3545) !important;
+}
+
+.has-success .select2-container--default .select2-selection,
+.is-valid + .select2-container--default .select2-selection,
+.was-validated select:valid + .select2-container--default .select2-selection {
+    border-color: var(--bs-success, #198754) !important;
+}
+
+.form-group.has-danger .pristine-error {
+    color: var(--bs-danger, #dc3545);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* Radio & Checkbox Styles de Alina */
+.form-check-input.f-s-18 {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.form-check.d-flex.align-items-center.gap-1 {
+    min-height: 1.5rem;
+}
+

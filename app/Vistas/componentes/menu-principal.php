@@ -39,7 +39,7 @@ $menuItems = $menu ?? $menuEstatico ?? [];
     <div class="mt-auto pb-3 text-center">
         <span class="bg-primary-800 h-45 w-45 d-flex-center b-r-30 position-relative mx-auto" title="Camargo PMS">
             <img alt="avatar" class="img-fluid b-r-30" src="<?= url_asset('images/avatar/01.png') ?>">
-            <span class="position-absolute top-0 end-0 p-1 bg-gradient-success border border-light rounded-circle"></span>
+            <span class="position-absolute top-0 end-0 p-1 bg-success border border-light rounded-circle"></span>
         </span>
     </div>
 </div>

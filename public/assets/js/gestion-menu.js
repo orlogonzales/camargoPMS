@@ -235,6 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitulo.textContent = 'Nueva Categoría Principal';
         }
 
+        if (selectPadre) selectPadre.dispatchEvent(new Event('change'));
+        if (selectPermiso) selectPermiso.dispatchEvent(new Event('change'));
+        if (selectEstado) selectEstado.dispatchEvent(new Event('change'));
+
         const validador = inicializarPristine();
         if (validador) {
             validador.reset();
@@ -265,6 +269,10 @@ document.addEventListener('DOMContentLoaded', () => {
         selectPermiso.value = datos.permiso_id ? String(datos.permiso_id) : '';
         inputOrden.value = datos.orden || 1;
         selectEstado.value = datos.estado || 'ACTIVO';
+
+        if (selectPadre) selectPadre.dispatchEvent(new Event('change'));
+        if (selectPermiso) selectPermiso.dispatchEvent(new Event('change'));
+        if (selectEstado) selectEstado.dispatchEvent(new Event('change'));
 
         // Elementos de sistema protegen clave y nivel
         const esSistema = Boolean(datos.es_sistema);

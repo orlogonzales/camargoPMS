@@ -364,6 +364,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputPropiedadId) inputPropiedadId.value = '';
         if (modalAccionTxt) modalAccionTxt.textContent = 'Nueva';
         if (inputCodigo) inputCodigo.removeAttribute('readonly');
+        if (selectPaisForm) {
+            selectPaisForm.value = '';
+            selectPaisForm.dispatchEvent(new Event('change'));
+        }
 
         if (validadorPristine) {
             validadorPristine.reset();
@@ -407,7 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalAccionTxt) modalAccionTxt.textContent = 'Editar';
             if (inputCodigo) inputCodigo.value = prop.codigo || '';
             if (inputNombre) inputNombre.value = prop.nombre || '';
-            if (selectPaisForm) selectPaisForm.value = prop.pais_id || '';
+            if (selectPaisForm) {
+                selectPaisForm.value = prop.pais_id || '';
+                selectPaisForm.dispatchEvent(new Event('change'));
+            }
             if (inputDepartamento) inputDepartamento.value = prop.departamento || '';
             if (inputProvincia) inputProvincia.value = prop.provincia || '';
             if (inputDistrito) inputDistrito.value = prop.distrito || '';
