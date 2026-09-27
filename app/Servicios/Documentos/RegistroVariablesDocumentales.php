@@ -61,6 +61,36 @@ class RegistroVariablesDocumentales
             'bloque.inventario_dotacion' => ['tipo' => 'html', 'requerido' => false],
             'bloque.firmas_partes' => ['tipo' => 'html', 'requerido' => false],
         ],
+        'COMPRA' => [
+            // Identificación y Emisión
+            'documento.folio' => ['tipo' => 'string', 'requerido' => false],
+            'orden.codigo' => ['tipo' => 'string', 'requerido' => true],
+            'orden.fecha' => ['tipo' => 'date', 'requerido' => true],
+            'orden.fecha_entrega' => ['tipo' => 'string', 'requerido' => false],
+            'orden.condicion_pago' => ['tipo' => 'string', 'requerido' => true],
+            'orden.notas' => ['tipo' => 'string', 'requerido' => false],
+            'emision.fecha' => ['tipo' => 'date', 'requerido' => false],
+
+            // Proveedor
+            'proveedor.razon_social' => ['tipo' => 'string', 'requerido' => true],
+            'proveedor.numero_documento' => ['tipo' => 'string', 'requerido' => true],
+            'proveedor.contacto' => ['tipo' => 'string', 'requerido' => false],
+            'proveedor.telefono' => ['tipo' => 'string', 'requerido' => false],
+            'proveedor.email' => ['tipo' => 'string', 'requerido' => false],
+            'proveedor.direccion' => ['tipo' => 'string', 'requerido' => false],
+
+            // Almacén / Entrega
+            'almacen.nombre' => ['tipo' => 'string', 'requerido' => false],
+            'almacen.direccion' => ['tipo' => 'string', 'requerido' => false],
+
+            // Detalle y Totales
+            'tabla_lineas' => ['tipo' => 'html', 'requerido' => true],
+            'totales.moneda' => ['tipo' => 'string', 'requerido' => true],
+            'totales.subtotal' => ['tipo' => 'money', 'requerido' => true],
+            'totales.impuesto' => ['tipo' => 'money', 'requerido' => true],
+            'totales.total' => ['tipo' => 'money', 'requerido' => true],
+            'totales.texto' => ['tipo' => 'string', 'requerido' => true],
+        ],
     ];
 
     /**

@@ -1050,6 +1050,34 @@ Se formaliza el diseño arquitectónico del motor documental y se cierra definit
 18. **CSS Documental Print-Oriented:** Estilos específicos para Dompdf (`@page`, bloques, tablas). Cero dependencias de Flexbox, CSS Grid o clases Alina/Bootstrap.
 19. **Alcance Inicial:** Primera vertical completa: Motor documental + plantillas versionadas + contrato de arrendamiento (`DOCUMENTOS-1`).
 
+### D-080 — Arquitectura y Ontología de Compras, Abastecimiento y Cuentas por Pagar (GATE COMPRAS-1)
+
+Se formaliza el diseño arquitectónico del dominio de abastecimiento y cuentas por pagar de Camargo PMS:
+
+1. **Axioma Ontológico Hexagonal:** $\text{SOLICITUD} \neq \text{ORDEN DE COMPRA} \neq \text{RECEPCIÓN/CONFORMIDAD} \neq \text{COMPROBANTE PROVEEDOR} \neq \text{CUENTA POR PAGAR} \neq \text{PAGO}$. Se prohíbe tajantemente la falsa equivalencia $\text{COMPRA} = \text{ENTRADA DE INVENTARIO} = \text{GASTO} = \text{PAGO}$.
+2. **Desacople entre Orden e Inventario:** Una Orden de Compra representa exclusivamente un compromiso comercial y jurídico; jamás genera movimientos en el Kardex ni altera existencias físicas.
+3. **Líneas Fuertemente Tipadas (Bienes vs. Servicios):** Se prohíbe el polimorfismo genérico débil (`tipo_entidad`/`entidad_id`). Las líneas de compra (`compra_orden_lineas`) definen `tipo_linea` ENUM (`BIEN`, `SERVICIO`). Los bienes exigen FK obligatoria a `inventario_articulos(id)`. Los servicios exigen descripción formal del concepto adquirido, sin reutilizar ciegamente el catálogo de `servicios` al huésped de `SERVICIOS-1`.
+4. **Semántica Diferenciada de Cumplimiento:**
+   - Líneas de `BIEN` $\rightarrow$ Exigen **Recepción Física** en almacén.
+   - Líneas de `SERVICIO` $\rightarrow$ Exigen **Acta de Conformidad de Servicio**, sin tocar almacenes ni generar Kardex.
+5. **Aceptado ≠ Recibido Físicamente:** $\text{cantidad\_recibida} = \text{cantidad\_aceptada} + \text{cantidad\_rechazada}$. Exclusivamente la `cantidad_aceptada` genera `ENTRADA_COMPRA` en el Kardex. El material rechazado (mermas, roturas o no conformidades) se audita con motivo justificado y no ingresa a existencias.
+6. **Moneda Funcional Exclusiva en PEN:** COMPRAS-1 opera únicamente en la moneda funcional oficial `PEN`, derivada de la configuración del sistema sin literales quemados. Se excluyen monedas extranjeras, tipos de cambio o diferenciales cambiarios en esta fase.
+7. **Control de Acceso RBAC Centralizado:** Permisos explícitos `compras.*`. Umbrales monetarios multinivel quedan postergados para un motor configurable futuro sin hardcodeos en código.
+8. **Solicitud Opcional vs. Orden Directa:** El sistema admite compras nacidas de solicitudes internas y órdenes directas autorizadas para agilidad operativa.
+9. **Inmutabilidad de la Orden Aprobada:** Al aprobarse una orden se congelan inmutablemente proveedor, líneas, cantidades, precios y condiciones. Cero `UPDATE` destructivo. Modificaciones materiales exigen anulación justificada y emisión de nueva orden.
+10. **Estados Ortogonales por Dimensión:** Se separa el estado comercial (`BORRADOR`, `APROBADA`, `CERRADA`, `CANCELADA`) de los estados de recepción (`SIN_RECEPCION`, `RECEPCION_PARCIAL`, `RECEPCION_TOTAL`), facturación (`SIN_FACTURAR`, `FACTURADA_PARCIAL`, `FACTURADA_TOTAL`) y pago (`PENDIENTE`, `PAGADO_PARCIAL`, `PAGADO_TOTAL`).
+11. **Recepciones Parciales por Línea:** Cada línea mantiene su propio cómputo de saldo pendiente respecto a entregas escalonadas.
+12. **3-Way Matching Adaptativo:** Cotejo tripartito entre Orden de Compra, Recepción Física/Conformidad y Comprobante Fiscal, con estados de matching `CONFORME`, `CON_DIFERENCIA`, `OBSERVADO`.
+13. **Preservación Histórica de Precios e Impuestos:** Cálculos con `BCMath` en `DECIMAL(15,2)` sin asumir tasas universales (cero 18% hardcodeado).
+14. **Unicidad Fiscal de Comprobantes:** `UNIQUE KEY (proveedor_id, tipo_comprobante, serie, numero)` para evitar doble registro accidental de facturas.
+15. **Relación M:N Comprobante / Recepciones:** Una factura puede liquidar múltiples recepciones parciales mediante tabla de aplicación.
+16. **Desacople entre Comprobante, Pasivo y Pago:** El comprobante es la evidencia fiscal; la Cuenta por Pagar es el pasivo devengado con saldo reconstructible; el Pago es el egreso financiero real que puede amortizar una o varias obligaciones.
+17. **Cero Duplicación de Dominios Homologados:**
+    - Entradas de inventario se delegan a `InventarioServicio::registrarEntradaCompra()` bajo `D-078`, congelando costo unitario `DECIMAL(15,4)` y total `DECIMAL(15,2)`.
+    - Salidas de efectivo se delegan a `CajaServicio::registrarMovimiento()` bajo `FINANCIERO-2`.
+18. **Integración Documental:** La orden de compra aprobada emite su PDF A4 oficial mediante `DOCUMENTOS-1` (Dompdf 3.1.6) con snapshot inmutable y hash SHA-256.
+19. **Auditoría D-061 y Prohibición de Borrado:** Cero `DELETE` físico. Auditoría integral con actor humano/sistema y `correlacion_id`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

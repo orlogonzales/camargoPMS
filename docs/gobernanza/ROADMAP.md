@@ -417,7 +417,24 @@ Implementación del motor central de generación documental, plantillas versiona
 - **Vertical Inicial de Contrato de Arrendamiento:** Generación completa del contrato legal formal A4 a partir de `arrendamiento_contratos`, sus partes, cánones, garantías y anexo de dotación física.
 - **Persistencia Relacional (Migración 021):** Tablas `documento_secuencias`, `documento_plantillas`, `documento_plantilla_versiones`, `documentos_emitidos`, `documento_incidencias` y permisos RBAC (`documentos.*`).
 
-Estado: en progreso.
+Estado: homologada (micro-baseline oficial c35e7d6).
+
+## COMPRAS-1 — Abastecimiento, Órdenes de Compra, Recepción Física, Conformidad de Servicios, Comprobantes de Proveedor y Cuentas por Pagar
+
+Implementación del dominio de compras, abastecimiento y cuentas por pagar bajo la decisión vinculante D-080:
+- **Axioma Ontológico Hexagonal:** $\text{SOLICITUD} \neq \text{ORDEN DE COMPRA} \neq \text{RECEPCIÓN/CONFORMIDAD} \neq \text{COMPROBANTE PROVEEDOR} \neq \text{CUENTA POR PAGAR} \neq \text{PAGO}$.
+- **Desacople entre Orden e Inventario:** Una Orden de Compra representa un compromiso comercial y no altera existencias de inventario ni mueve el Kardex.
+- **Líneas Tipadas Fuertes (BIEN vs. SERVICIO):** Líneas de `BIEN` exigen `inventario_articulos(id)` y recepción física; líneas de `SERVICIO` exigen descripción técnica y Acta de Conformidad, sin tocar almacén ni catálogo de servicios al huésped.
+- **Aceptado ≠ Recibido Físicamente:** Solo la cantidad aceptada conforme ingresa al Kardex (`ENTRADA_COMPRA`). El rechazo físico conserva evidencia y motivo formal sin entrar a existencias.
+- **Moneda Funcional:** Exclusivamente `PEN` en esta fase, derivada de la configuración monetaria existente sin literales quemados.
+- **Inmutabilidad de la Orden Aprobada:** Proveedor, líneas, cantidades, precios y condiciones quedan congelados. Cero `UPDATE` destructivo.
+- **Estados Ortogonales:** Dimensiones separadas para estado comercial, recepción física, facturación y pago.
+- **Recepciones Parciales y Matching M:N:** Comprobantes tributarios pueden liquidar múltiples recepciones parciales mediante 3-Way Matching (`CONFORME`, `CON_DIFERENCIA`, `OBSERVADO`).
+- **Desacople Comprobante, Pasivo y Pago:** La factura es la evidencia fiscal; la Cuenta por Pagar es el pasivo devengado; el Pago es el egreso financiero real de caja (`FINANCIERO-2`) o banco.
+- **Integración Documental:** La orden aprobada emite su PDF A4 oficial mediante `DOCUMENTOS-1` (Dompdf 3.1.6).
+- **Persistencia Relacional (Migración 022):** Tablas `compra_solicitudes`, `compra_solicitud_lineas`, `compra_ordenes`, `compra_orden_lineas`, `compra_recepciones`, `compra_recepcion_lineas`, `compra_conformidades`, `compra_comprobantes`, `compra_comprobante_aplicaciones`, `cuentas_por_pagar`, `cxp_pagos`, `compra_historial_estados` y permisos RBAC (`compras.*`).
+
+Estado: candidata pre-commit (60/60 pruebas específicas PASS, 758/758 regresión activa PASS).
 
 ## Dominio operativo
 

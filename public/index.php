@@ -756,6 +756,98 @@ $enrutador->post('/api/documentos/{id}/anular', [\CamargoPMS\Controladores\Docum
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.anular'),
 ]);
 
+// =========================================================================
+// Rutas de Abastecimiento, Compras y Cuentas por Pagar (COMPRAS-1 / D-080)
+// =========================================================================
+
+// Vista principal Alina D-075
+$enrutador->get('/compras', [\CamargoPMS\Controladores\CompraControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+
+// API: Catálogos
+$enrutador->get('/api/compras/catalogos', [\CamargoPMS\Controladores\CompraControlador::class, 'apiCatalogos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+
+// API: Solicitudes de Compra
+$enrutador->get('/api/compras/solicitudes', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarSolicitudes'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/solicitudes', [\CamargoPMS\Controladores\CompraControlador::class, 'apiCrearSolicitud'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.solicitudes.crear'),
+]);
+$enrutador->get('/api/compras/solicitudes/{id}', [\CamargoPMS\Controladores\CompraControlador::class, 'apiObtenerSolicitud'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/solicitudes/{id}/aprobar', [\CamargoPMS\Controladores\CompraControlador::class, 'apiAprobarSolicitud'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.solicitudes.aprobar'),
+]);
+$enrutador->post('/api/compras/solicitudes/{id}/rechazar', [\CamargoPMS\Controladores\CompraControlador::class, 'apiRechazarSolicitud'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.solicitudes.aprobar'),
+]);
+
+// API: Órdenes de Compra
+$enrutador->get('/api/compras/ordenes', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarOrdenes'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/ordenes', [\CamargoPMS\Controladores\CompraControlador::class, 'apiCrearOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ordenes.crear'),
+]);
+$enrutador->get('/api/compras/ordenes/{id}', [\CamargoPMS\Controladores\CompraControlador::class, 'apiObtenerOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/ordenes/{id}/aprobar', [\CamargoPMS\Controladores\CompraControlador::class, 'apiAprobarOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ordenes.aprobar'),
+]);
+$enrutador->post('/api/compras/ordenes/{id}/cancelar', [\CamargoPMS\Controladores\CompraControlador::class, 'apiCancelarOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.anular'),
+]);
+$enrutador->get('/api/compras/ordenes/{id}/pdf', [\CamargoPMS\Controladores\CompraControlador::class, 'descargarPdfOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+
+// API: Recepciones Físicas en Almacén
+$enrutador->get('/api/compras/ordenes/{id}/recepciones', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarRecepciones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/recepciones', [\CamargoPMS\Controladores\CompraControlador::class, 'apiRegistrarRecepcion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.recepciones.registrar'),
+]);
+$enrutador->get('/api/compras/recepciones/{id}', [\CamargoPMS\Controladores\CompraControlador::class, 'apiObtenerRecepcion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+
+// API: Conformidades de Servicio
+$enrutador->get('/api/compras/ordenes/{id}/conformidades', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarConformidades'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/conformidades', [\CamargoPMS\Controladores\CompraControlador::class, 'apiRegistrarConformidad'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.conformidad.registrar'),
+]);
+
+// API: Comprobantes y Matching
+$enrutador->get('/api/compras/ordenes/{id}/comprobantes', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarComprobantes'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.ver'),
+]);
+$enrutador->post('/api/compras/comprobantes', [\CamargoPMS\Controladores\CompraControlador::class, 'apiRegistrarComprobante'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.comprobantes.registrar'),
+]);
+
+// API: Cuentas por Pagar y Pagos
+$enrutador->get('/api/compras/cuentas-por-pagar', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarCuentasPorPagar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.cuentas_pagar.ver'),
+]);
+$enrutador->get('/api/compras/cuentas-por-pagar/{id}', [\CamargoPMS\Controladores\CompraControlador::class, 'apiObtenerCuentaPorPagar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.cuentas_pagar.ver'),
+]);
+$enrutador->get('/api/compras/cuentas-por-pagar/{id}/pagos', [\CamargoPMS\Controladores\CompraControlador::class, 'apiListarPagosCxp'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.cuentas_pagar.ver'),
+]);
+$enrutador->post('/api/compras/cuentas-por-pagar/{id}/pagos', [\CamargoPMS\Controladores\CompraControlador::class, 'apiRegistrarPagoCxp'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.pagos.registrar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

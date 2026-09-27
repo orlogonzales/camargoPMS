@@ -287,6 +287,189 @@ class DocumentoServicio
         ];
     }
 
+    /**
+     * Emite una Orden de Compra oficial en PDF A4 bajo el motor homologado Dompdf.
+     *
+     * @param int $ordenId
+     * @param int $actorId
+     * @param int|null $versionId
+     * @param bool $esBorrador
+     * @return array{documento: ?DocumentoEmitido, binario_pdf: string, nombre_archivo: string}
+     */
+    public function emitirOrdenCompra(
+        int $ordenId,
+        int $actorId,
+        ?int $versionId = null,
+        bool $esBorrador = false
+    ): array {
+        // 1. Obtener plantilla y versión
+        $plantilla = $this->docRepo->obtenerPlantillaPorCodigo('ORDEN_COMPRA');
+        if (!$plantilla || !$plantilla->estaActivo()) {
+            throw new PlantillaNoEncontradaExcepcion('Plantilla activa [ORDEN_COMPRA]');
+        }
+
+        if ($versionId !== null) {
+            $version = $this->docRepo->obtenerVersionPorId($versionId);
+        } else {
+            $version = $this->docRepo->obtenerVersionActivaPorPlantillaId((int) $plantilla->obtenerId());
+        }
+
+        if (!$version) {
+            throw new PlantillaNoEncontradaExcepcion("No existe versión activa para la plantilla [{$plantilla->obtenerCodigo()}].");
+        }
+
+        // 2. Preparar folio
+        $fechaActual = new DateTimeImmutable();
+        if ($esBorrador) {
+            $codigoFolio = 'BORRADOR-OC-' . $ordenId;
+        } else {
+            $codigoFolio = $this->docRepo->obtenerSiguienteFolio('ORDEN_COMPRA', 'OC-DOC', $fechaActual);
+        }
+
+        // 3. Extraer datos tipados de la orden y sus líneas
+        $datosOrden = $this->extraerDatosOrdenCompra($ordenId, $codigoFolio, $fechaActual);
+
+        // 4. Resolver ruta del membrete
+        $rutaMembrete = null;
+        if ($plantilla->requiereMembrete() && $plantilla->obtenerArchivoMembreteFondo()) {
+            $rutaMembrete = $this->storagePath . DIRECTORY_SEPARATOR . 'membretes' . DIRECTORY_SEPARATOR . $plantilla->obtenerArchivoMembreteFondo();
+        }
+
+        // 5. Compilar HTML y generar snapshot inmutable
+        $marcaAgua = $esBorrador ? 'BORRADOR - SIN VALIDEZ' : null;
+        $compilacion = $this->compilador->compilar(
+            $plantilla,
+            $version,
+            $datosOrden,
+            $marcaAgua,
+            $rutaMembrete
+        );
+
+        // 6. Renderizar PDF con Dompdf
+        $renderPdf = $this->generadorPdf->renderizar($compilacion['snapshot_html'], true);
+        $nombreArchivo = "{$codigoFolio}.pdf";
+
+        if ($esBorrador) {
+            return [
+                'documento' => null,
+                'binario_pdf' => $renderPdf['binario_pdf'],
+                'nombre_archivo' => $nombreArchivo,
+            ];
+        }
+
+        // 7. Persistencia física
+        $subcarpetaYm = $fechaActual->format('Y') . DIRECTORY_SEPARATOR . $fechaActual->format('m');
+        $directorioDestino = $this->storagePath . DIRECTORY_SEPARATOR . 'documentos' . DIRECTORY_SEPARATOR . $subcarpetaYm;
+
+        if (!is_dir($directorioDestino)) {
+            mkdir($directorioDestino, 0775, true);
+        }
+
+        $rutaFisicaAbsoluta = $directorioDestino . DIRECTORY_SEPARATOR . $nombreArchivo;
+        file_put_contents($rutaFisicaAbsoluta, $renderPdf['binario_pdf']);
+
+        $rutaRelativaStorage = 'documentos/' . $fechaActual->format('Y') . '/' . $fechaActual->format('m') . '/' . $nombreArchivo;
+
+        // 8. Persistir documento emitido
+        $docEmitido = new DocumentoEmitido(
+            null,
+            $codigoFolio,
+            (int) $plantilla->obtenerId(),
+            (int) $version->obtenerId(),
+            'COMPRA',
+            $ordenId,
+            $compilacion['snapshot_datos_json'],
+            $compilacion['snapshot_html'],
+            $rutaRelativaStorage,
+            $renderPdf['tamano_bytes'],
+            $renderPdf['hash_pdf_sha256'],
+            $compilacion['hash_snapshot_sha256'],
+            $renderPdf['numero_paginas'],
+            $actorId,
+            $fechaActual->format('Y-m-d H:i:s')
+        );
+
+        $docId = $this->docRepo->crearDocumentoEmitido($docEmitido);
+        $documentoPersistido = $this->docRepo->obtenerDocumentoEmitidoPorId($docId);
+
+        return [
+            'documento' => $documentoPersistido,
+            'binario_pdf' => $renderPdf['binario_pdf'],
+            'nombre_archivo' => $nombreArchivo,
+        ];
+    }
+
+    private function extraerDatosOrdenCompra(int $ordenId, string $codigoFolio, DateTimeImmutable $fechaActual): array
+    {
+        $pdo = $this->docRepo->obtenerPdo();
+        $stmt = $pdo->prepare(
+            'SELECT o.*, p.razon_social, p.numero_documento, p.telefono AS proveedor_telefono, p.email AS proveedor_email, p.direccion AS proveedor_dir,
+                    u.nombre AS almacen_nombre, prop.direccion AS almacen_dir
+             FROM compra_ordenes o
+             JOIN proveedores p ON p.id = o.proveedor_id
+             LEFT JOIN inventario_ubicaciones u ON u.id = o.almacen_entrega_id
+             LEFT JOIN propiedades prop ON prop.id = u.propiedad_id
+             WHERE o.id = :id'
+        );
+        $stmt->execute(['id' => $ordenId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            throw new ValidacionExcepcion("Orden de compra [{$ordenId}] no encontrada.");
+        }
+
+        $stmtL = $pdo->prepare(
+            'SELECT col.*, ia.nombre AS articulo_nombre, ia.codigo_sku
+             FROM compra_orden_lineas col
+             LEFT JOIN inventario_articulos ia ON ia.id = col.articulo_id
+             WHERE col.orden_compra_id = :id
+             ORDER BY col.id ASC'
+        );
+        $stmtL->execute(['id' => $ordenId]);
+        $lineas = $stmtL->fetchAll(PDO::FETCH_ASSOC);
+
+        $tablaHtml = '<table class="tabla-lineas-doc"><thead><tr><th>Item</th><th>Tipo</th><th>Descripción / Artículo</th><th>Cantidad</th><th>P. Unitario</th><th>Subtotal</th><th>Impuesto</th><th>Total</th></tr></thead><tbody>';
+        $item = 1;
+        foreach ($lineas as $l) {
+            $desc = $l['tipo_linea'] === 'BIEN' ? "{$l['articulo_nombre']} (SKU: {$l['codigo_sku']})" : (string) $l['descripcion_servicio'];
+            $descHtml = htmlspecialchars($desc, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $cantHtml = number_format((float) $l['cantidad_pactada'], 2, '.', ',');
+            $pUnitHtml = number_format((float) $l['precio_unitario'], 2, '.', ',');
+            $subtHtml = number_format((float) $l['subtotal_linea'], 2, '.', ',');
+            $impHtml = number_format((float) $l['impuesto_linea'], 2, '.', ',');
+            $totHtml = number_format((float) $l['total_linea'], 2, '.', ',');
+            $tablaHtml .= "<tr><td style=\"text-align:center;\">{$item}</td><td style=\"text-align:center;\">{$l['tipo_linea']}</td><td>{$descHtml}</td><td style=\"text-align:right;\">{$cantHtml}</td><td style=\"text-align:right;\">{$pUnitHtml}</td><td style=\"text-align:right;\">{$subtHtml}</td><td style=\"text-align:right;\">{$impHtml}</td><td style=\"text-align:right;\">{$totHtml}</td></tr>";
+            $item++;
+        }
+        $tablaHtml .= '</tbody></table>';
+
+        $creadoEn = new DateTimeImmutable($row['creado_en']);
+        $entregaEsperada = $row['fecha_entrega_esperada'] ? (new DateTimeImmutable($row['fecha_entrega_esperada']))->format('d/m/Y') : 'Por acordar';
+
+        return [
+            'documento.folio' => $codigoFolio,
+            'orden.codigo' => $row['codigo'],
+            'orden.fecha' => $creadoEn->format('d/m/Y'),
+            'orden.fecha_entrega' => $entregaEsperada,
+            'orden.condicion_pago' => str_replace('_', ' ', $row['condicion_pago']),
+            'proveedor.razon_social' => $row['razon_social'],
+            'proveedor.numero_documento' => $row['numero_documento'],
+            'proveedor.contacto' => $row['razon_social'],
+            'proveedor.telefono' => $row['proveedor_telefono'] ?? 'S/T',
+            'proveedor.email' => $row['proveedor_email'] ?? 'S/E',
+            'proveedor.direccion' => $row['proveedor_dir'] ?? 'Dirección no consignada',
+            'almacen.nombre' => $row['almacen_nombre'] ?? 'Almacén Central',
+            'almacen.direccion' => $row['almacen_dir'] ?? 'Sede Principal',
+            'tabla_lineas' => $tablaHtml,
+            'totales.moneda' => $row['moneda_codigo'],
+            'totales.subtotal' => number_format((float) $row['subtotal'], 2, '.', ','),
+            'totales.impuesto' => number_format((float) $row['impuesto_total'], 2, '.', ','),
+            'totales.total' => number_format((float) $row['total'], 2, '.', ','),
+            'totales.texto' => $this->convertirMontoATexto((string) $row['total'], $row['moneda_codigo']),
+            'orden.notas' => !empty($row['notas_comerciales']) ? htmlspecialchars($row['notas_comerciales'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : 'Sin observaciones adicionales',
+            'emision.fecha' => $fechaActual->format('d/m/Y'),
+        ];
+    }
+
     // =========================================================================
     // 3. DESCARGA Y VERIFICACIÓN DE INTEGRIDAD CRIPTOGRÁFICA (D-079 #7, #8, #9)
     // =========================================================================

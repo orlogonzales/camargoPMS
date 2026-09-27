@@ -4,6 +4,42 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase COMPRAS-1 — Abastecimiento, Órdenes de Compra, Recepción Física, Conformidad de Servicios, Comprobantes de Proveedor y Cuentas por Pagar (D-080)
+
+- **Axioma Ontológico Hexagonal y Desacople de Dominio:**
+  - Consagración del axioma $\text{SOLICITUD} \neq \text{ORDEN DE COMPRA} \neq \text{RECEPCIÓN / CONFORMIDAD} \neq \text{COMPROBANTE PROVEEDOR} \neq \text{CUENTA POR PAGAR} \neq \text{PAGO}$.
+  - Principio de separación patrimonial: $\text{ORDEN DE COMPRA} \neq \text{MOVIMIENTO DE INVENTARIO} \neq \text{GASTO} \neq \text{PAGO}$. La orden representa un compromiso comercial formal y no afecta existencias físicas ni devenga gasto financiero.
+- **Líneas Fuertemente Tipadas (BIEN vs SERVICIO):**
+  - Líneas de tipo `BIEN`: exigen estrictamente `articulo_id` de inventario (`inventario_articulos`). Solo se materializan físicamente en almacén mediante Recepción Física.
+  - Líneas de tipo `SERVICIO`: exigen estrictamente `descripcion_servicio` no vacía y `articulo_id = NULL`. Quedan confinadas ontológicamente a compras y no se mezclan con el catálogo de servicios de cara al huésped. Cero Kardex; su conformidad se acredita mediante Acta Técnica de Conformidad.
+- **Recepciones Físicas en Almacén e Integración con Kardex (`INVENTARIO-1`):**
+  - Regla ontológica D-080 #7: $\text{Aceptado} \neq \text{Recibido Físicamente}$. Solo las unidades marcadas como aceptadas generan movimiento soberano `ENTRADA_COMPRA` en Kardex. Las unidades rechazadas exigen motivo formal obligatorio y no entran a existencias.
+  - Protección de saldo pendiente de recepción: bloqueo pesimista ante intentos de recibir cantidades superiores al saldo pactado.
+- **Actas de Conformidad de Servicios:**
+  - Emisión de actas técnicas con folio atómico `CONF-YYYYMM-XXXX`, informe de trabajo obligatorio y cero afectación en el inventario físico. Bloqueo contra doble conformidad sobre la misma línea.
+- **Comprobantes Tributarios del Proveedor y 3-Way Matching:**
+  - Registro de facturas, boletas y recibos por honorarios con clave de unicidad relacional `UNIQUE(proveedor_id, tipo_comprobante, serie, numero)` que impide duplicidad tributaria.
+  - Motor de 3-Way Matching automatizado que evalúa coincidencias de cantidades, precios y montos entre Orden, Recepciones/Conformidades y Comprobante, clasificando en `CONFORME`, `CON_DIFERENCIA` u `OBSERVADO`.
+- **Cuentas por Pagar, Amortizaciones y Enlace Financiero (`FINANCIERO-2`):**
+  - Devengo automático de Cuenta por Pagar (`CXP-YYYYMM-XXXX`) al registrar el comprobante tributario.
+  - Invariante contable reconstructible: $\text{monto\_total} - \sum(\text{cxp\_pagos.monto}) \equiv \text{saldo\_pendiente} \ge 0.00$.
+  - Amortizaciones con medios de pago `EFECTIVO_CAJA` (egreso en caja chica de FINANCIERO-2) o `TRANSFERENCIA_BANCARIA` con bloqueo pesimista contra sobregiros.
+- **Emisión Oficial de Órdenes de Compra en PDF A4 (`DOCUMENTOS-1`):**
+  - Plantilla oficial `ORDEN_COMPRA` con snapshot inmutable determinista, hash SHA-256 congelado y membrete institucional A4 emitido mediante Dompdf 3.1.6.
+- **Persistencia Relacional (Migración 022_compras.sql):**
+  - 12 tablas estructuradas (tablas 61 a 72 del esquema canónico): `compra_solicitudes`, `compra_solicitud_lineas`, `compra_ordenes`, `compra_orden_lineas`, `compra_recepciones`, `compra_recepcion_lineas`, `compra_conformidades`, `compra_comprobantes`, `compra_comprobante_aplicaciones`, `cuentas_por_pagar`, `cxp_pagos`, `compra_historial_estados`.
+  - Folios atómicos concurrency-safe (`SOL`, `OC`, `REC`, `CONF`, `CXP`) gestionados mediante `documento_secuencias` con `SELECT ... FOR UPDATE`.
+  - Permisos RBAC granulares (`compras.*`) y opción de menú bajo Operaciones.
+- **Interfaz Alina Conforme a D-075 y D-076:**
+  - Módulo en `/compras` con 4 KPIs dinámicos, navegación en 5 pestañas operativas (Órdenes, Solicitudes, Recepciones/Conformidades, Comprobantes/3-Way Matching, Cuentas por Pagar), modales nativos `app-form app-icon-form` con bordes `b-r-20` y Select2 42px.
+  - Controlador JavaScript modular `public/assets/js/gestion-compras.js` en Vanilla Fetch y SweetAlert2.
+- **Verificación Automatizada Exhaustiva (60/60 PASS):**
+  - Matriz de dominio y reglas de negocio: `tests/test_compras_matriz_40.php` (40/40 PASS).
+  - Concurrencia e integridad transaccional: `tests/test_compras_concurrencia.php` (6/6 PASS).
+  - Flujo HTTP E2E real contra Apache HTTPS: `tests/test_e2e_compras.php` (14/14 PASS).
+
+## [c35e7d6] - 2026-09-27
+
 ### Microfase DOCUMENTOS-1 — Motor documental, plantillas versionadas y generación PDF (D-079)
 
 - **Motor Documental y Dompdf Confinado:**
