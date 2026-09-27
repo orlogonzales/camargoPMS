@@ -603,6 +603,106 @@ $enrutador->get('/api/mantenimiento/{tipo}/{id}/historial', [\CamargoPMS\Control
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
 ]);
 
+// =========================================================================
+// Rutas de Inventario Físico, Existencias, Kardex y Activos (INVENTARIO-1 / D-078)
+// =========================================================================
+$enrutador->get('/inventario', [\CamargoPMS\Controladores\InventarioControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+
+// Artículos
+$enrutador->get('/api/inventario/articulos', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiListarArticulos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+$enrutador->post('/api/inventario/articulos', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiCrearArticulo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.articulos.gestionar'),
+]);
+$enrutador->put('/api/inventario/articulos/{id}', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiActualizarArticulo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.articulos.gestionar'),
+]);
+$enrutador->post('/api/inventario/articulos/{id}', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiActualizarArticulo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.articulos.gestionar'),
+]);
+
+// Ubicaciones
+$enrutador->get('/api/inventario/ubicaciones', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiListarUbicaciones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+$enrutador->post('/api/inventario/ubicaciones', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiCrearUbicacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ubicaciones.gestionar'),
+]);
+$enrutador->put('/api/inventario/ubicaciones/{id}', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiActualizarUbicacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ubicaciones.gestionar'),
+]);
+$enrutador->post('/api/inventario/ubicaciones/{id}', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiActualizarUbicacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ubicaciones.gestionar'),
+]);
+
+// Existencias
+$enrutador->get('/api/inventario/existencias', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiListarExistencias'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+
+// Movimientos y Kardex
+$enrutador->get('/api/inventario/movimientos', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiListarMovimientos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+$enrutador->post('/api/inventario/movimientos/saldo-inicial', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiRegistrarSaldoInicial'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.movimientos.registrar'),
+]);
+$enrutador->post('/api/inventario/movimientos/entrada', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiRegistrarEntrada'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.movimientos.registrar'),
+]);
+$enrutador->post('/api/inventario/movimientos/consumo', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiRegistrarConsumo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.movimientos.registrar'),
+]);
+$enrutador->post('/api/inventario/movimientos/mantenimiento', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiRegistrarMantenimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.movimientos.registrar'),
+]);
+$enrutador->post('/api/inventario/movimientos/traslado', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiRegistrarTraslado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.traslados.ejecutar'),
+]);
+$enrutador->post('/api/inventario/movimientos/ajuste', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiRegistrarAjuste'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.movimientos.registrar'),
+]);
+$enrutador->post('/api/inventario/movimientos/{id}/reverso', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiReversarMovimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.movimientos.registrar'),
+]);
+
+// Activos Serializados
+$enrutador->get('/api/inventario/activos', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiListarActivos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+$enrutador->post('/api/inventario/activos', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiCrearActivo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.activos.gestionar'),
+]);
+$enrutador->post('/api/inventario/activos/{id}/asignar', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiAsignarActivo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.activos.gestionar'),
+]);
+$enrutador->post('/api/inventario/activos/{id}/transferir', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiTransferirActivo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.activos.gestionar'),
+]);
+$enrutador->post('/api/inventario/activos/{id}/baja', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiDarDeBajaActivo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.activos.gestionar'),
+]);
+
+// Dotaciones Estándar
+$enrutador->get('/api/inventario/dotaciones', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiListarDotaciones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+$enrutador->post('/api/inventario/dotaciones', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiGuardarDotacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.dotaciones.gestionar'),
+]);
+$enrutador->delete('/api/inventario/dotaciones/{id}', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiEliminarDotacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.dotaciones.gestionar'),
+]);
+$enrutador->post('/api/inventario/dotaciones/{id}/eliminar', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiEliminarDotacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.dotaciones.gestionar'),
+]);
+$enrutador->get('/api/inventario/dotaciones/auditoria/{unidadId}', [\CamargoPMS\Controladores\InventarioControlador::class, 'apiAuditarDotacionUnidad'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

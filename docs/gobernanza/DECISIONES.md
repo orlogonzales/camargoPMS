@@ -957,8 +957,74 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 
 10. **Trazabilidad y Manejo Canónico de Excepciones:**
     - Registro inmutable en `mantenimiento_historial_estados` conforme a D-061 (`ACTOR ≠ USUARIO`).
-    - Bloqueo pesimista `FOR UPDATE` ordenado por fecha y traducción de errores 1062, 1205 y 1213 a `ConflictoDisponibilidadExcepcion` (HTTP 409).
     - Interfaz Alina bajo D-075 en `/mantenimiento` con formulario píldora 20px, Select2 42px, badges suaves y validación con PristineJS.
+
+### D-078 — Dominio de Inventario, Ubicaciones Polimórficas, Kardex Inmutable y Activos Serializables
+
+Se establece la arquitectura del dominio de inventario físico de Camargo PMS bajo el principio ontológico fundamental:
+
+$$\mathbf{ARTÍCULO} \quad \neq \quad \mathbf{EXISTENCIA\ (STOCK)} \quad \neq \quad \mathbf{MOVIMIENTO\ (KARDEX)} \quad \neq \quad \mathbf{ACTIVO\ INDIVIDUAL}$$
+
+1. **Proyección Materializada vs. Verdad Histórica:**
+   - La verdad histórica inmutable reside estrictamente en `inventario_movimientos`.
+   - `inventario_existencias.cantidad_actual` actúa como proyección operacional materializada para lectura ágil y bloqueo pesimista (`FOR UPDATE`). Se prohíbe la edición directa de existencias mediante CRUD.
+   - Reconciliación: $\text{stock\_inicial} + \sum \text{entradas} + \sum \text{ajustes\_pos} + \sum \text{traslados\_ent} - \sum \text{salidas} - \sum \text{ajustes\_neg} - \sum \text{traslados\_sal} = \text{cantidad\_actual}$.
+
+2. **Traslado Atómico de Dos Patas:**
+   - Todo traslado entre ubicaciones genera atómicamente dentro de la misma transacción: `TRASLADO_SALIDA` en la ubicación de origen y `TRASLADO_ENTRADA` en la ubicación de destino.
+   - Ambos movimientos comparten el mismo `correlativo_operacion` y vinculación referencial, respondiendo inequívocamente al Kardex de cada ubicación.
+
+3. **Normalización de Unidades de Medida:**
+   - Maestro `inventario_unidades_medida` (`codigo`, `nombre`, `simbolo`, `admite_decimales`).
+   - Separación conceptual: Unidad de Stock/Almacenamiento base $\neq$ Presentación de Compra.
+
+4. **Precisión Numérica en Cantidades:**
+   - Cantidades y existencias modeladas exclusivamente en `DECIMAL(15,4)` (cero `FLOAT/DOUBLE`).
+
+5. **Precisión Financiera Diferenciada (D-069 Compatible):**
+   - `costo_unitario_historico DECIMAL(15,4)` para micro-costeo exacto.
+   - `costo_total_historico DECIMAL(15,2)` procesado estrictamente con `BCMath` y redondeo `ROUND_HALF_UP`.
+
+6. **Moneda Funcional No Harcodeada:**
+   - `moneda_codigo VARCHAR(3)` derivada de la configuración monetaria del sistema (`PEN`).
+
+7. **Ubicaciones Polimórficas (`inventario_ubicaciones`):**
+   - Tipos de ubicación: `ALMACEN` (bodega central, almacén de piso), `UNIDAD` (habitación vinculada a `unidades.id`), `CUSTODIA_EXTERNA` (taller o lavandería vinculada a `proveedores.id` de `SERVICIOS-1`).
+   - Permite que la lencería rote cíclicamente (`ALMACEN_LIMPIO` $\leftrightarrow$ `UNIDAD` $\leftrightarrow$ `CUSTODIA_EXTERNA`) mediante traslados sin inventar almacenes falsos ni transferir la propiedad.
+
+8. **Activos Serializables Desacoplados del Stock Cuantitativo:**
+   - Artículos con categoría `ACTIVO_SERIALIZABLE` **no poseen stock cuantitativo** en `inventario_existencias`. Cada ejemplar vive individualmente en `inventario_activos` con placa, serie y ubicación. Cero doble contador.
+   - Bienes cuantificables (`CONSUMIBLE_OPERATIVO`, `LENCERIA_BLANCOS`, `REPUESTO_MANTENIMIENTO`) operan bajo stock cuantitativo en existencias.
+
+9. **Ciclo de Vida Propio de Activos:**
+   - Estados: `DISPONIBLE`, `ASIGNADO`, `EN_MANTENIMIENTO`, `DE_BAJA`. Cero eliminación física (`DELETE`); las bajas se justifican con trazabilidad.
+
+10. **Dotación de Unidades: Estándar vs Realidad:**
+    - `inventario_dotaciones_estandar` modela la dotación esperada/reglamentaria por tipo de unidad o unidad individual.
+    - La dotación real se consulta dinámicamente mediante `inventario_activos.ubicacion_id` y las existencias en la ubicación de tipo `UNIDAD`.
+
+11. **Desacoplamiento de Checkout en V1:**
+    - Cero mutaciones automáticas de inventario en estadías o arrendamientos en esta fase.
+
+12. **Integración con MANTENIMIENTO-1 No Incremental:**
+    - Salidas para mantenimiento registran `tipo_movimiento = 'SALIDA_MANTENIMIENTO'`, `referencia_tipo = 'MANTENIMIENTO_ORDEN'`, `referencia_id = orden_id`.
+    - El costo de materiales de la orden se recalcula como la sumatoria soberana de movimientos válidos vinculados: $\text{costo\_materiales} = \sum \text{costo\_total(movimientos)}$, evitando sumas incrementales desincronizables.
+
+13. **Kardex Append-Only, Reverso vs Ajuste:**
+    - Cero `UPDATE` o `DELETE` sobre movimientos de inventario.
+    - `AJUSTE_POSITIVO` / `AJUSTE_NEGATIVO` registran diferencias de conteo físico o mermas.
+    - `REVERSO` neutraliza un movimiento previo erróneo referenciando `movimiento_referencia_id`.
+
+14. **Stock Inicial Vía Movimiento:**
+    - Todo stock inicial nace de un movimiento formal `SALDO_INICIAL`. Cero inserciones directas a existencias.
+
+15. **Concurrencia Determinista en Traslados:**
+    - Bloqueo pesimista `SELECT ... FOR UPDATE` ordenado por ID (`ORDER BY id ASC`) para evitar deadlocks entre ubicaciones concurrentes.
+
+16. **Prohibición Absoluta de Stock Negativo y Manejo de Errores:**
+    - Restricción DDL `CHECK (cantidad_actual >= 0)`.
+    - Validación en servicio que genera `StockInsuficienteExcepcion` (HTTP 422).
+    - Conflictos de bloqueo o deadlocks (1205, 1213) traducidos a `ConflictoInventarioExcepcion` (HTTP 409).
 
 ## Pendientes de decisión
 

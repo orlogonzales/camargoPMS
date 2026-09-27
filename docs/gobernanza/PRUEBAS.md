@@ -239,7 +239,10 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **MANTENIMIENTO-1** | `test_mantenimiento_matriz_40.php` (MNT-01..40) | 40 | — | 40/40 PASS |
 | **MANTENIMIENTO-1** | `test_mantenimiento_concurrencia.php` (MNT-C01..C06) | 6 | — | 6/6 PASS |
 | **MANTENIMIENTO-1** | `test_e2e_mantenimiento.php` (E2E-MNT-01..14) | — | 14 (`E2E-MNT`) | 14/14 PASS |
-| **TOTALES CANÓNICOS**| **38 suites ejecutadas** | **998** | **182** | **1180 casos PASS (100%)** |
+| **INVENTARIO-1**    | `test_inventario_matriz_40.php` (INV-01..40) | 40 | — | 40/40 PASS |
+| **INVENTARIO-1**    | `test_inventario_concurrencia.php` (INV-C01..C06) | 6 | — | 6/6 PASS |
+| **INVENTARIO-1**    | `test_e2e_inventario.php` (E2E-INV-01..14) | — | 14 (`E2E-INV`) | 14/14 PASS |
+| **TOTALES CANÓNICOS**| **41 suites ejecutadas** | **1044** | **196** | **1240 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
     - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
@@ -250,5 +253,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Financiero-2 Matriz (40) + Concurrencia Financiero-2 (6) + E2E Financiero-2 (15) = 61 casos
     - Arrendamientos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Mantenimiento-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - **Total Consolidado de Regresión Activa: 578/578 PASS (100%)**.
+    - Inventario-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
+    - **Total Consolidado de Regresión Activa: 638/638 PASS (100%)**.
 

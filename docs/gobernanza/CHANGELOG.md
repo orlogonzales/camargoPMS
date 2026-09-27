@@ -4,6 +4,38 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase INVENTARIO-1 — Catálogo de artículos, almacenes/ubicaciones, existencias, movimientos, activos y dotaciones (D-078)
+
+- **Ontología y Modelo de Dominio de Inventario:**
+  - Consagración del principio vinculante $\text{ARTÍCULO} \neq \text{EXISTENCIA} \neq \text{MOVIMIENTO} \neq \text{ACTIVO INDIVIDUAL}$.
+  - Entidades de dominio `InventarioUnidadMedida`, `InventarioUbicacion`, `InventarioArticulo`, `InventarioExistencia`, `InventarioMovimiento`, `InventarioActivo` e `InventarioDotacionEstandar`.
+  - Taxonomía hotelera de artículos: `CONSUMIBLE_OPERATIVO`, `LENCERIA_BLANCOS`, `REPUESTO_MANTENIMIENTO` y `ACTIVO_SERIALIZABLE`.
+- **Kardex Inmutable Append-Only vs Proyección Materializada:**
+  - `inventario_existencias` opera como proyección operacional rápida materializada con columna `cantidad_actual DECIMAL(15,4)` y restricción relacional `CHECK (cantidad_actual >= 0)`.
+  - Kardex inmutable `inventario_movimientos` soberano sin `UPDATE` ni `DELETE`. Tipos de movimiento: `SALDO_INICIAL`, `ENTRADA_COMPRA`, `SALIDA_CONSUMO`, `SALIDA_MANTENIMIENTO`, `TRASLADO_SALIDA`, `TRASLADO_ENTRADA`, `AJUSTE_POSITIVO`, `AJUSTE_NEGATIVO` y `REVERSO`.
+  - Método nativo de auditoría `verificarReconciliacionExistencia()` que valida al milésimo la suma algebraica exacta del Kardex contra las existencias proyectadas.
+- **Traslados Atómicos de Dos Patas:**
+  - Correlativo único compartido (`TRS-YYYYMMDD-XXXX`) emitido para ambas patas (`TRASLADO_SALIDA` y `TRASLADO_ENTRADA`) con enlace referencial directo `movimiento_relacionado_id`.
+  - Mitigación pesimista de interbloqueos (deadlocks) ordenando determinísticamente las existencias bloqueadas por ID físico (`ORDER BY id ASC FOR UPDATE`).
+- **Integración No Incremental con Mantenimiento-1:**
+  - Salidas de repuestos con `referencia_tipo = 'MANTENIMIENTO_ORDEN'` y `referencia_id = orden_trabajo_id`.
+  - Recálculo soberano no incremental del costo de materiales de la orden de trabajo mediante sumatoria histórica (`sumarCostoMovimientosPorReferencia`), evitando drift aritmético o errores por reintentos.
+- **Activos Serializables y Dotaciones Estándar:**
+  - Activos serializados individuales desacoplados de existencias cuantitativas (cero doble contador en existencias). Ciclo de vida por estados (`DISPONIBLE`, `ASIGNADO`, `EN_MANTENIMIENTO`, `DE_BAJA`), con asignación física a habitaciones (`tipo = 'UNIDAD'`) y bajas formalmente justificadas (cero eliminación física).
+  - Dotaciones estándar por tipo de unidad o unidad habitacional específica, con motor de auditoría (`obtenerDotacionRealVsEstandarPorUnidad`) que contrasta el estándar teórico contra la realidad física de inventario y activos asignados.
+- **Persistencia Relacional y Migración 020:**
+  - Script `SQL/migraciones/020_inventario.sql` y esquema maestro `SQL/camargo_pms.sql` sincronizados (tablas 49 a 55).
+  - RBAC: 7 permisos granulares (`inventario.ver`, `inventario.articulos.gestionar`, `inventario.ubicaciones.gestionar`, `inventario.movimientos.registrar`, `inventario.traslados.ejecutar`, `inventario.activos.gestionar`, `inventario.dotaciones.gestionar`). Menú dinámico `/inventario` bajo categoría Operaciones.
+- **Interfaz Alina Conforme a D-075 y D-076:**
+  - Vista `/inventario` con 4 tarjetas KPI, navegación por 6 pestañas operativas (Existencias, Artículos, Kardex, Activos, Ubicaciones, Dotaciones), 7 modales nativos Alina (`app-form app-icon-form`, Select2 42px píldora `b-r-20`).
+  - Controlador JS modular `public/assets/js/gestion-inventario.js` (Vanilla JS, 0 jQuery en negocio, PristineJS y SweetAlert2).
+- **Verificación Automatizada Exhaustiva (60/60 PASS):**
+  - Matriz de dominio: `tests/test_inventario_matriz_40.php` (40/40 PASS).
+  - Suite de concurrencia e integridad: `tests/test_inventario_concurrencia.php` (6/6 PASS).
+  - Suite HTTP E2E real contra Apache: `tests/test_e2e_inventario.php` (14/14 PASS).
+
+## [34988e8] - 2026-09-27
+
 ### Microfase MANTENIMIENTO-1 — Incidencias, Órdenes de Trabajo y Bloqueo Operativo de Unidades (D-077)
 
 - **Separación Ontológica y Modelo de Dominio:**

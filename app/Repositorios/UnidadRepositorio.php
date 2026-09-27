@@ -49,6 +49,14 @@ class UnidadRepositorio
     }
 
     /**
+     * Alias de buscarPorId para compatibilidad transversal con servicios del PMS.
+     */
+    public function obtenerPorId(int $id): ?Unidad
+    {
+        return $this->buscarPorId($id);
+    }
+
+    /**
      * Busca una unidad por propiedad y código técnico.
      */
     public function buscarPorPropiedadYCodigo(int $propiedadId, string $codigo): ?Unidad

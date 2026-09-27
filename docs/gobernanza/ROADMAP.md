@@ -381,7 +381,26 @@ Implementación del dominio integral de incidencias físicas, órdenes de trabaj
 - **Persistencia Relacional (Migración 019):** Tablas `mantenimiento_incidencias`, `mantenimiento_ordenes`, `mantenimiento_orden_incidencias`, `mantenimiento_historial_estados`, permisos RBAC (`mantenimiento.*`) y opción de menú dinámico bajo `reservas` (Operaciones).
 - **Interfaz Alina Conforme a D-075:** Módulo en `/mantenimiento` con formulario nativo Alina, Select2 píldora 20px a 42px, Flatpickr, badges suaves y PristineJS.
 
-Estado: completada (pendiente de homologación post-commit).
+Estado: homologada (micro-baseline oficial 34988e8).
+
+## INVENTARIO-1 — Catálogo de Artículos, Almacenes/Ubicaciones, Existencias, Movimientos, Activos y Dotaciones
+
+Implementación del dominio de inventario físico, existencias por ubicación, Kardex append-only, activos serializables y dotaciones de unidades bajo D-078:
+- **Separación Ontológica Estricta:** $\text{ARTÍCULO} \neq \text{EXISTENCIA\ (STOCK)} \neq \text{MOVIMIENTO\ (KARDEX)} \neq \text{ACTIVO\ INDIVIDUAL}$.
+- **Kardex Append-Only y Proyección Materializada:** La verdad histórica inmutable reside en `inventario_movimientos`. `inventario_existencias.cantidad_actual` actúa como proyección operacional materializada con locking pesimista (`FOR UPDATE`). Cero mutación vía CRUD. Reconciliación matemática garantizada.
+- **Traslado Atómico de Dos Patas:** Cada traslado genera de forma atómica dentro de la misma transacción un `TRASLADO_SALIDA` en origen y un `TRASLADO_ENTRADA` en destino, vinculados con `correlativo_operacion`.
+- **Normalización de Unidades de Medida:** Maestro `inventario_unidades_medida` (`codigo`, `nombre`, `simbolo`, `admite_decimales`). Separación de unidad base de stock vs presentación de compra.
+- **Precisión Numérica y Financiera:** Cantidades en `DECIMAL(15,4)`, costo unitario histórico en `DECIMAL(15,4)` y costo total en `DECIMAL(15,2)` computado con `BCMath` y `ROUND_HALF_UP`. Moneda funcional `PEN` desacoplada.
+- **Ubicaciones Polimórficas:** `inventario_ubicaciones` con tipos `ALMACEN`, `UNIDAD` (vinculada a `unidades.id`) y `CUSTODIA_EXTERNA` (vinculada a `proveedores.id` de `SERVICIOS-1`). Rotación de lencería limpia sin almacenes ficticios.
+- **Activos Serializables Desacoplados de Existencias:** Bienes de categoría `ACTIVO_SERIALIZABLE` no poseen stock en existencias; cada ejemplar vive en `inventario_activos` con placa, serie y ubicación. Cero doble contador.
+- **Ciclo de Vida de Activos:** Estados `DISPONIBLE`, `ASIGNADO`, `EN_MANTENIMIENTO`, `DE_BAJA` con justificación obligatoria y cero `DELETE` físico.
+- **Dotaciones Estándar vs Realidad:** `inventario_dotaciones_estandar` modela la expectativa reglamentaria; la dotación real se consulta dinámicamente mediante las asignaciones de activos y existencias en la ubicación `UNIDAD`.
+- **Integración con MANTENIMIENTO-1 No Incremental:** Salidas técnicas `SALIDA_MANTENIMIENTO` ligadas a `mantenimiento_orden_id`. Recálculo de costo de materiales como suma de movimientos válidos de la orden.
+- **Manejo de Concurrencia y Restricciones:** Bloqueo pesimista ordenado por ID en traslados para evitar deadlocks. Restricción DDL `CHECK (cantidad_actual >= 0)`. Stock insuficiente genera `StockInsuficienteExcepcion` (HTTP 422); deadlocks/locks 1205/1213 se traducen a `ConflictoInventarioExcepcion` (HTTP 409).
+- **Persistencia Relacional (Migración 020):** Tablas `inventario_unidades_medida`, `inventario_ubicaciones`, `inventario_articulos`, `inventario_existencias`, `inventario_movimientos`, `inventario_activos`, `inventario_dotaciones_estandar`, permisos RBAC (`inventario.*`) y menú bajo Operaciones.
+- **Interfaz Alina Conforme a D-075:** Módulo en `/inventario` con formulario píldora 20px, Select2 42px, Flatpickr, badges y PristineJS.
+
+Estado: en progreso.
 
 ## Dominio operativo
 
