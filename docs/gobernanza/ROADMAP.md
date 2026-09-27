@@ -229,6 +229,43 @@ Implementación del dominio transaccional de reservas directas con soporte nativ
   - Regresiones históricas: 205/205 PASS.
   - Total consolidado del sistema: 725 casos únicos / 731 ejecuciones brutas (100% PASS).
 
+Estado: homologada (micro-baseline oficial 301fa00).
+
+## UI-2 / UI-2A — Estandarización de Recursos de Interfaz (Font Awesome 6, Pickers y Badges/Chips Alina)
+
+Estandarización transversal de recursos de interfaz y controles UI bajo D-071:
+- Font Awesome 6.3.0 exclusivo y local (erradicación del 100% de Tabler icons en vistas, JavaScript y base de datos).
+- Adopción obligatoria de Date Picker y Range Picker de Alina basados en Flatpickr v4.6.13 local con preservación de campos canónicos D-066.
+- Estandarización estricta de Badges y Chips: adopción de *Variants of badge* y *Variants of chip* de Alina con prohibición absoluta de bordes `dotted`, `dashed` y clases crudas `bg-*-subtle`.
+- Infraestructura centralizada: `CamargoPMS\Nucleo\Insignia` en backend y `window.CamargoInsignia` en frontend.
+- Suites de pruebas: UI2-01..25 (25/25 PASS) y UI2A-01..20 (20/20 PASS).
+
+Estado: homologada (micro-baseline oficial a914594).
+
+## ESTADÍAS-1 — Check-in, Registro de Huéspedes y Ciclo Operativo de Estancias
+
+Implementación del dominio de ocupación física real, check-in, llaves, lista centralizada de huéspedes y check-out bajo D-072:
+- **Separación Ontológica Estricta:** `RESERVA ≠ ESTADÍA ≠ ARRENDAMIENTO`.
+- **Multiunidad Operativa (1 Reserva : N Estadías Físicas Independientes):**
+  - Cada unidad de una reserva confirmada genera una estadía independiente (`UNIQUE(reserva_unidad_id)`).
+  - Ciclo de check-in y salida autónomo por unidad.
+  - El agregado comercial `reservas` permanece inmutable; el estado de ocupación de la reserva es derivado.
+- **Walk-in Diferido:** Validación de que todo check-in requiera una reserva comercial en estado `CONFIRMADA`.
+- **Capacidad Física Estricta y Huésped Responsable:**
+  - Validación de capacidad física $1 \le \text{huéspedes} \le \text{capacidad\_personas}$ (HTTP 422 si se excede).
+  - Designación obligatoria de exactamente 1 huésped responsable por estadía.
+  - Todos los ocupantes vinculados al maestro central de `personas` con prevención de duplicados (`UNIQUE(estadia_id, persona_id)`).
+- **Ciclo de Vida Operativo e Inmutabilidad Histórica:**
+  - Estados: `EN_CURSO`, `FINALIZADA`, `ANULADA`.
+  - Principio `CHECK-OUT ≠ DELETE` y `ANULACIÓN ≠ DELETE`: cero eliminación física (`DELETE = 0`) en tablas `estadias` y `estadia_huespedes`; claves foráneas con `ON DELETE RESTRICT`.
+  - Anulación excepcional con justificación obligatoria (1-255 caracteres).
+  - Check-out anticipado o tardío con registro del instante real UTC sin recalcular noches comerciales (D-066).
+- **Interfaz Alina y Experiencia de Usuario (D-071):**
+  - Tablero de recepción en `/estadias` con KPIs en tiempo real, tabla interactiva, filtros combinados y modales de Check-in, Check-out, Anular y Detalle con gestión de huéspedes.
+  - Vanilla JS nativo, validación PristineJS, notificaciones SweetAlert2 y badges oficiales Alina.
+- **Persistencia Relacional (Migración 015):**
+  - Tablas `estadias` y `estadia_huespedes`, 5 permisos RBAC (`estadias.*`) asignados a `SUPERADMINISTRADOR` y opción de menú dinámico bajo 'reservas'.
+
 Estado: completada (candidata a micro-baseline).
 
 ## Dominio operativo

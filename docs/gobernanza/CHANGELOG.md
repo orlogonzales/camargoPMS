@@ -4,6 +4,36 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase ESTADÍAS-1 — Check-in, Registro de Huéspedes y Ciclo Operativo de Estancias
+
+- **Separación Ontológica Estricta (D-072):**
+  - Principio rector inviolable: `RESERVA ≠ ESTADÍA ≠ ARRENDAMIENTO`.
+  - La reserva formaliza el acuerdo comercial; la estadía formaliza la ocupación física real de la unidad habitacional; el arrendamiento se mantiene reservado a contratos de largo plazo.
+  - Exclusión taxativa de esta fase: pagos, caja, facturación electrónica, consumos, servicios adicionales y arrendamientos.
+- **Multiunidad Operativa (1 Reserva : N Estadías Físicas Independientes):**
+  - Cada unidad de una reserva confirmada genera una estadía física independiente con su propio check-in, llaves, lista de ocupantes y check-out.
+  - Restricción única en base de datos: `UNIQUE KEY uq_estadias_reserva_unidad (reserva_unidad_id)`.
+  - El agregado comercial `reservas` permanece en estado `CONFIRMADA`: el estado operativo de la reserva es derivado (`SIN_CHECKIN`, `PARCIAL_EN_CURSO`, `COMPLETA_EN_CURSO`, `FINALIZADA`).
+- **Validación de Walk-in Diferido:**
+  - El check-in requiere indispensablemente una reserva comercial confirmada previa. Se rechaza check-in sobre reservas `PENDIENTE`, `CANCELADA` o `EXPIRADA` con `EstadoReservaInvalidoExcepcion` (HTTP 422).
+- **Control Estricto de Capacidad y Huésped Responsable:**
+  - Bloqueo estricto de capacidad física: $1 \le \text{huéspedes} \le \text{capacidad\_personas}$ (HTTP 422 si se supera, sin sobrecapacidad autorizada).
+  - Designación obligatoria de exactamente 1 huésped responsable (`es_responsable = 1`) perteneciente a la lista de ocupantes.
+  - Todos los ocupantes vinculados al maestro central de `personas` (`estadia_huespedes.persona_id`), con prevención de duplicados (`UNIQUE(estadia_id, persona_id)`).
+- **Ciclo de Vida Operativo e Inmutabilidad Histórica:**
+  - Estados: `EN_CURSO`, `FINALIZADA`, `ANULADA`.
+  - Principio `CHECK-OUT ≠ DELETE` y `ANULACIÓN ≠ DELETE`: cero eliminación física (`DELETE = 0`) en tablas `estadias` y `estadia_huespedes`; claves foráneas con `ON DELETE RESTRICT` (cero borrado en cascada).
+  - Anulación excepcional con justificación obligatoria (1-255 caracteres) y preservación histórica para auditoría.
+  - Check-out anticipado o tardío con registro del instante real técnico UTC (`DATETIME` con `gmdate`) sin recalcular noches comerciales (D-066).
+- **Identificación de Llaves y Accesos:**
+  - Campo plano `identificador_llave VARCHAR(50) NULL`, registrando código de tarjeta magnética o número de llave física, sin acoplamiento a domótica en esta fase.
+- **Interfaz Alina y Experiencia de Usuario (D-071):**
+  - Tablero de recepción en `/estadias` con KPIs en tiempo real, tabla interactiva, filtros combinados y modales de Check-in, Check-out, Anular y Detalle con gestión de huéspedes.
+  - Vanilla JS nativo, validación PristineJS, notificaciones SweetAlert2 y badges oficiales Alina (`Variants of badge` con `bg-light-success`, `bg-light-secondary`, `bg-light-danger`).
+- **Persistencia Relacional (Migración 015):**
+  - Tablas `estadias` y `estadia_huespedes`, 5 permisos RBAC (`estadias.*`) asignados a `SUPERADMINISTRADOR` y opción de menú dinámico bajo 'reservas'.
+
+
 ### Microfase UI-2A — Estandarización obligatoria de Badges y Chips de Alina
 
 - **Estandarización de Badges y Chips Oficiales de Alina (D-071):**

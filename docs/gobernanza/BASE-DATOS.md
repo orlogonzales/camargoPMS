@@ -249,11 +249,42 @@ En RESERVAS-1 se introduce el núcleo transaccional comercial de reservas direct
 5. **Contrato fiscal y snapshot provisional (RESERVAS-1A):**
    - Al no existir aún un motor o fuente tributaria formal en Camargo PMS, toda reserva almacena provisoriamente `impuesto = 0.00` (ningún impuesto aplicado por el PMS, sin asignar clasificaciones tributarias prematuras como gravada, exonerada o inafecta) y $\text{total} = \text{subtotal}$ en `DECIMAL(15,2)`. El snapshot conserva las columnas tributarias preparadas para cuando exista un proveedor o regla impositiva formal.
 
-6. **Estado general de la base de datos:**
-   - **28 tablas** físicas.
-   - **35 Foreign Keys** referenciales inviolables.
-   - **30 permisos** RBAC en catálogo (`reservas.ver`, `reservas.crear`, `reservas.confirmar`, `reservas.cancelar`, `reservas.expirar`).
-   - **14 migraciones** aplicadas (`001` a `014`), cero pendientes.
+## Estadías, Check-in y Registro de Huéspedes (Implementado — ESTADÍAS-1 / D-072)
+
+En ESTADÍAS-1 se introduce la gestión operativa de ocupación física real, check-in, llaves, huéspedes y check-out:
+
+1. **Tabla de estadías (`estadias`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(30) NOT NULL UNIQUE`, `reserva_id BIGINT UNSIGNED NOT NULL`, `reserva_unidad_id BIGINT UNSIGNED NOT NULL UNIQUE`, `unidad_id BIGINT UNSIGNED NOT NULL`, `fecha_entrada DATE NOT NULL`, `fecha_salida_prevista DATE NOT NULL`, `estado ENUM('EN_CURSO', 'FINALIZADA', 'ANULADA') NOT NULL DEFAULT 'EN_CURSO'`, `checkin_en DATETIME NOT NULL`, `checkin_por_actor_id BIGINT UNSIGNED NOT NULL`, `checkout_en DATETIME NULL`, `checkout_por_actor_id BIGINT UNSIGNED NULL`, `identificador_llave VARCHAR(50) NULL`, `observaciones_checkin TEXT NULL`, `observaciones_checkout TEXT NULL`, `motivo_anulacion VARCHAR(255) NULL`, `anulada_en DATETIME NULL`, `anulada_por_actor_id BIGINT UNSIGNED NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - Restricciones FK:
+     - `fk_estadias_reserva`: `FOREIGN KEY (reserva_id) REFERENCES reservas(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_estadias_reserva_unidad`: `FOREIGN KEY (reserva_unidad_id) REFERENCES reserva_unidades(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_estadias_unidad`: `FOREIGN KEY (unidad_id) REFERENCES unidades(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_estadias_actor_checkin`: `FOREIGN KEY (checkin_por_actor_id) REFERENCES actores(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_estadias_actor_checkout`: `FOREIGN KEY (checkout_por_actor_id) REFERENCES actores(id) ON DELETE SET NULL ON UPDATE CASCADE`
+     - `fk_estadias_actor_anulador`: `FOREIGN KEY (anulada_por_actor_id) REFERENCES actores(id) ON DELETE SET NULL ON UPDATE CASCADE`
+   - Restricciones CHECK:
+     - `chk_estadias_codigo_no_vacio`: `CHECK (codigo <> '')`
+     - `chk_estadias_fechas`: `CHECK (fecha_salida_prevista > fecha_entrada)`
+   - Claves e Índices:
+     - `uq_estadias_codigo`: `UNIQUE KEY (codigo)`
+     - `uq_estadias_reserva_unidad`: `UNIQUE KEY (reserva_unidad_id)`
+     - `idx_estadias_reserva_id (reserva_id)`, `idx_estadias_unidad_id (unidad_id)`, `idx_estadias_estado (estado)`, `idx_estadias_fechas (fecha_entrada, fecha_salida_prevista)`, `idx_estadias_checkin_en (checkin_en)`.
+
+2. **Tabla de huéspedes de la estadía (`estadia_huespedes`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `estadia_id BIGINT UNSIGNED NOT NULL`, `persona_id BIGINT UNSIGNED NOT NULL`, `es_responsable TINYINT(1) NOT NULL DEFAULT 0`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`.
+   - Restricciones FK:
+     - `fk_estadia_huespedes_estadia`: `FOREIGN KEY (estadia_id) REFERENCES estadias(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_estadia_huespedes_persona`: `FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+   - Clave única de prevención de duplicados:
+     - `uq_estadia_persona`: `UNIQUE KEY (estadia_id, persona_id)`
+   - Índices: `idx_estadia_huespedes_estadia (estadia_id)`, `idx_estadia_huespedes_persona (persona_id)`.
+
+3. **Estado general de la base de datos tras ESTADÍAS-1:**
+   - **30 tablas** físicas consolidadas.
+   - **43 Foreign Keys** referenciales inviolables (todas con `RESTRICT` o `SET NULL` justificado, cero cascada destructiva en entidades centrales).
+   - **35 permisos** RBAC en catálogo (`estadias.ver`, `estadias.checkin`, `estadias.checkout`, `estadias.huespedes`, `estadias.anular`).
+   - **15 migraciones** aplicadas (`001` a `015`), cero pendientes.
+
 
 
 ## Migraciones

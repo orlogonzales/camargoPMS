@@ -701,6 +701,47 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
      - Backend: Clase `\CamargoPMS\Nucleo\Insignia` y funciones globales `insignia_badge()`, `insignia_chip()` e `insignia_estado()`.
      - Frontend: Objeto global Vanilla JS `window.CamargoInsignia` (`badge()`, `chip()`, `estado()`, `resolverClase()`) en `camargo-layout.js`.
 
+### D-072 — Núcleo Operativo de Estadías, Check-in y Huéspedes (ESTADÍAS-1)
+
+1. **Delimitación Ontológica Estricta de Dominio:**
+   - Principio fundamental: `RESERVA ≠ ESTADÍA ≠ ARRENDAMIENTO`.
+   - La reserva formaliza el acuerdo comercial directo de alojamiento; la estadía formaliza la ocupación física real de una unidad hotelera.
+   - El arrendamiento es un contrato patrimonial de mediano o largo plazo regido por normativa inmobiliaria y lógica contractual independiente.
+   - Se excluyen taxativamente de esta fase: pagos, cobros, caja, pasarelas, facturación electrónica, consumos, servicios adicionales y arrendamientos.
+
+2. **Multiunidad Operativa (1 Reserva : N Estadías Físicas Independientes):**
+   - Una reserva multiunidad genera **una estadía física independiente por cada unidad alojable asignada** (`reserva_unidades`).
+   - Restricción única en base de datos: `UNIQUE KEY uq_estadias_reserva_unidad (reserva_unidad_id)`, garantizando que cada unidad de reserva genere a lo sumo una estadía histórica.
+   - Cada unidad asignada posee su propio momento de check-in, asignación de llave física, lista de ocupantes y check-out. Si una familia o grupo ocupa múltiples unidades y unos huéspedes llegan antes que otros, cada unidad opera su ciclo de manera autónoma (`Dpto 101 → EN_CURSO` mientras `Dpto 102 → pendiente de check-in`).
+   - El agregado comercial `reservas` permanece inmutable en estado `CONFIRMADA`: el estado operativo de la reserva es derivado (consultando sus estadías: `SIN_CHECKIN`, `PARCIAL_EN_CURSO`, `COMPLETA_EN_CURSO`, `FINALIZADA`).
+
+3. **Walk-in Diferido:**
+   - Se aprueba conceptualmente el principio `WALK-IN → RESERVA CONFIRMADA → ESTADÍA`.
+   - No se implementa walk-in automático en esta fase: todo check-in requiere obligatoriamente una `reserva_unidad` de una reserva comercial en estado `CONFIRMADA`. Intentos de check-in sobre reservas `PENDIENTE`, `CANCELADA` o `EXPIRADA` son rechazados con `EstadoReservaInvalidoExcepcion` (HTTP 422).
+
+4. **Bloqueo Estricto de Capacidad y Huésped Responsable:**
+   - **Capacidad Física Estricta:** Se valida inexorablemente que $1 \le \text{count}(\text{huéspedes}) \le \text{unidad.capacidad\_personas}$. Si la cantidad de huéspedes excede la capacidad máxima de la unidad, la operación se rechaza con `CapacidadExcedidaExcepcion` (HTTP 422), sin sobrecapacidad autorizada.
+   - Si la lista de huéspedes está vacía, se rechaza con `HuespedInvalidoExcepcion` (HTTP 422).
+   - **Exactamente Un Huésped Responsable:** Toda estadía debe contar obligatoriamente con **exactamente 1 huésped responsable** (`es_responsable = 1`) perteneciente a la lista de ocupantes de la estadía. Configuraciones con 0 o >1 responsables son rechazadas con `HuespedInvalidoExcepcion` (HTTP 422).
+   - **Vínculo al Maestro Central de Personas:** Todos los huéspedes se vinculan a personas naturales registradas (`estadia_huespedes.persona_id`). Se prohíbe duplicar a la misma persona dentro de una misma estadía (`UNIQUE(estadia_id, persona_id)`).
+
+5. **Ciclo de Vida Operativo e Inmutabilidad Histórica:**
+   - Estados válidos: `EN_CURSO`, `FINALIZADA`, `ANULADA`.
+   - Principios: `CHECK-OUT ≠ DELETE`, `ANULACIÓN ≠ DELETE`. Cero eliminación física (`DELETE = 0`) sobre `estadias` y `estadia_huespedes`; restricciones de clave foránea con `ON DELETE RESTRICT` (cero borrado en cascada).
+   - La anulación de una estadía es excepcional, exige un motivo justificativo obligatorio (1 a 255 caracteres) y preserva el registro histórico para auditoría.
+
+6. **Semántica Temporal y Check-out Anticipado/Tardío (D-066):**
+   - `fecha_entrada` y `fecha_salida_prevista` representan fechas hoteleras locales de tipo `DATE`.
+   - `checkin_en`, `checkout_en` y `anulada_en` representan instantes técnicos reales en UTC (`DATETIME` con `gmdate('Y-m-d H:i:s')`).
+   - Check-out anticipado o tardío: registra el instante técnico real físico de salida sin recalcular noches comerciales, tarifas, snapshots económicos ni devoluciones financieras.
+
+7. **Identificación de Llaves y Accesos:**
+   - Campo plano `identificador_llave VARCHAR(50) NULL`, registrando código de tarjeta magnética o número de llave física, sin acoplamiento a domótica o cerraduras electrónicas en esta fase.
+
+8. **Trazabilidad Transversal de Autoría (D-061) y Seguridad RBAC:**
+   - Todas las mutaciones de check-in, check-out, anulación y modificación de huéspedes registran eventos de auditoría (`ESTADIA_CHECKIN`, `ESTADIA_CHECKOUT`, `ESTADIA_ANULADA`, `ESTADIA_HUESPEDES_ACTUALIZADOS`) vinculando al actor ejecutor humano correspondiente (`checkin_por_actor_id`, etc.).
+   - Permisos RBAC granulares: `estadias.ver`, `estadias.checkin`, `estadias.checkout`, `estadias.huespedes`, `estadias.anular`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

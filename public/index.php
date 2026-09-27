@@ -309,6 +309,38 @@ $enrutador->post('/reservas/{id}/cancelar', [\CamargoPMS\Controladores\ReservaCo
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.cancelar'),
 ]);
 
+// Rutas de Estadías y Ocupación Física (ESTADÍAS-1)
+$enrutador->get('/estadias', [\CamargoPMS\Controladores\EstadiaControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.ver'),
+]);
+$enrutador->get('/estadias/datos', [\CamargoPMS\Controladores\EstadiaControlador::class, 'datos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.ver'),
+]);
+$enrutador->get('/estadias/auxiliares', [\CamargoPMS\Controladores\EstadiaControlador::class, 'auxiliares'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.ver'),
+]);
+$enrutador->get('/estadias/elegibles/{reservaId}', [\CamargoPMS\Controladores\EstadiaControlador::class, 'elegibles'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.ver'),
+]);
+$enrutador->get('/estadias/resumen-reserva/{reservaId}', [\CamargoPMS\Controladores\EstadiaControlador::class, 'resumenReserva'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.ver'),
+]);
+$enrutador->post('/estadias/checkin', [\CamargoPMS\Controladores\EstadiaControlador::class, 'checkin'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.checkin'),
+]);
+$enrutador->get('/estadias/{id}', [\CamargoPMS\Controladores\EstadiaControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.ver'),
+]);
+$enrutador->post('/estadias/{id}/checkout', [\CamargoPMS\Controladores\EstadiaControlador::class, 'checkout'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.checkout'),
+]);
+$enrutador->post('/estadias/{id}/anular', [\CamargoPMS\Controladores\EstadiaControlador::class, 'anular'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.anular'),
+]);
+$enrutador->post('/estadias/{id}/huespedes', [\CamargoPMS\Controladores\EstadiaControlador::class, 'actualizarHuespedes'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.huespedes'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

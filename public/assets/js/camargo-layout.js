@@ -346,6 +346,9 @@
             'CONFIRMADA': { variante: 'success', icono: 'fa-solid fa-check', texto: 'CONFIRMADA' },
             'CANCELADA': { variante: 'danger', icono: 'fa-solid fa-xmark', texto: 'CANCELADA' },
             'EXPIRADA': { variante: 'secondary', icono: 'fa-solid fa-hourglass-half', texto: 'EXPIRADA' },
+            'EN_CURSO': { variante: 'success', icono: 'fa-solid fa-bell-concierge', texto: 'EN CURSO' },
+            'FINALIZADA': { variante: 'secondary', icono: 'fa-solid fa-flag-checkered', texto: 'FINALIZADA' },
+            'ANULADA': { variante: 'danger', icono: 'fa-solid fa-ban', texto: 'ANULADA' },
             'ACTIVO': { variante: 'success', icono: 'fa-solid fa-circle-check', texto: 'Activo' },
             'INACTIVO': { variante: 'secondary', icono: 'fa-solid fa-circle-xmark', texto: 'Inactivo' },
             'SUSPENDIDO': { variante: 'danger', icono: 'fa-solid fa-ban', texto: 'Suspendido' }

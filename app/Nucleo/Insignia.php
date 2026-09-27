@@ -68,6 +68,23 @@ final class Insignia
             'texto' => 'EXPIRADA',
         ],
 
+        // Estados del ciclo operativo de Estadías (ESTADÍAS-1)
+        'EN_CURSO' => [
+            'variante' => 'success',
+            'icono' => 'fa-solid fa-bell-concierge',
+            'texto' => 'EN CURSO',
+        ],
+        'FINALIZADA' => [
+            'variante' => 'secondary',
+            'icono' => 'fa-solid fa-flag-checkered',
+            'texto' => 'FINALIZADA',
+        ],
+        'ANULADA' => [
+            'variante' => 'danger',
+            'icono' => 'fa-solid fa-ban',
+            'texto' => 'ANULADA',
+        ],
+
         // Estados de entidades maestras (Propiedades, Unidades, Usuarios, Roles)
         'ACTIVO' => [
             'variante' => 'success',
