@@ -1,0 +1,644 @@
+<?php
+
+declare(strict_types=1);
+
+namespace CamargoPMS\Servicios;
+
+use CamargoPMS\Excepciones\ConflictoDocumentalExcepcion;
+use CamargoPMS\Excepciones\DocumentoCorruptoExcepcion;
+use CamargoPMS\Excepciones\PlantillaNoEncontradaExcepcion;
+use CamargoPMS\Excepciones\ValidacionExcepcion;
+use CamargoPMS\Modelos\Arrendamiento;
+use CamargoPMS\Modelos\DocumentoEmitido;
+use CamargoPMS\Modelos\DocumentoIncidencia;
+use CamargoPMS\Modelos\DocumentoPlantilla;
+use CamargoPMS\Modelos\DocumentoPlantillaVersion;
+use CamargoPMS\Repositorios\ArrendamientoRepositorio;
+use CamargoPMS\Repositorios\DocumentoRepositorio;
+use CamargoPMS\Servicios\Documentos\CompiladorDocumental;
+use CamargoPMS\Servicios\Documentos\GeneradorPdf;
+use CamargoPMS\Servicios\Documentos\RegistroVariablesDocumentales;
+use CamargoPMS\Servicios\Documentos\ValidadorHtmlDocumental;
+use DateTimeImmutable;
+use PDO;
+
+/**
+ * Servicio de dominio central para la gestión documental, plantillas versionadas y generación PDF (D-079).
+ */
+class DocumentoServicio
+{
+    private DocumentoRepositorio $docRepo;
+    private ?ArrendamientoRepositorio $arrendamientoRepo;
+    private CompiladorDocumental $compilador;
+    private GeneradorPdf $generadorPdf;
+    private ValidadorHtmlDocumental $validadorHtml;
+    private RegistroVariablesDocumentales $registroVariables;
+    private string $storagePath;
+
+    public function __construct(
+        DocumentoRepositorio $docRepo,
+        ?ArrendamientoRepositorio $arrendamientoRepo = null,
+        ?CompiladorDocumental $compilador = null,
+        ?GeneradorPdf $generadorPdf = null,
+        ?ValidadorHtmlDocumental $validadorHtml = null,
+        ?RegistroVariablesDocumentales $registroVariables = null,
+        ?string $basePath = null
+    ) {
+        $this->docRepo = $docRepo;
+        $this->arrendamientoRepo = $arrendamientoRepo;
+        $this->validadorHtml = $validadorHtml ?? new ValidadorHtmlDocumental();
+        $this->registroVariables = $registroVariables ?? new RegistroVariablesDocumentales();
+        $this->compilador = $compilador ?? new CompiladorDocumental($this->validadorHtml, $this->registroVariables);
+        $this->generadorPdf = $generadorPdf ?? new GeneradorPdf($basePath);
+
+        $base = $basePath ?? dirname(__DIR__, 2);
+        $this->storagePath = rtrim($base, '/\\') . DIRECTORY_SEPARATOR . 'storage';
+    }
+
+    public function obtenerRepositorio(): DocumentoRepositorio
+    {
+        return $this->docRepo;
+    }
+
+    // =========================================================================
+    // 1. GESTIÓN DE PLANTILLAS Y VERSIONES (D-079 #12, #13)
+    // =========================================================================
+
+    public function crearPlantilla(array $datos): DocumentoPlantilla
+    {
+        $codigo = strtoupper(trim($datos['codigo'] ?? ''));
+        $nombre = trim($datos['nombre'] ?? '');
+        $origenTipo = strtoupper(trim($datos['origen_tipo_permitido'] ?? 'ARRENDAMIENTO'));
+
+        if ($codigo === '' || $nombre === '') {
+            throw new ValidacionExcepcion(['codigo' => 'El código y nombre de la plantilla son obligatorios.']);
+        }
+
+        if ($this->docRepo->obtenerPlantillaPorCodigo($codigo) !== null) {
+            throw new ConflictoDocumentalExcepcion("Ya existe una plantilla documental con el código [{$codigo}].");
+        }
+
+        $plantilla = new DocumentoPlantilla(
+            null,
+            $codigo,
+            $nombre,
+            $datos['descripcion'] ?? null,
+            $origenTipo,
+            $datos['orientacion'] ?? 'PORTRAIT',
+            $datos['tamano_papel'] ?? 'A4',
+            (bool) ($datos['requiere_membrete'] ?? true),
+            $datos['archivo_membrete_fondo'] ?? 'membrete_a4_canonica_v1.png',
+            (int) ($datos['margen_superior_mm'] ?? 35),
+            (int) ($datos['margen_inferior_mm'] ?? 28),
+            (int) ($datos['margen_izquierdo_mm'] ?? 20),
+            (int) ($datos['margen_derecho_mm'] ?? 20),
+            $datos['estado'] ?? DocumentoPlantilla::ESTADO_ACTIVO
+        );
+
+        $id = $this->docRepo->crearPlantilla($plantilla);
+
+        return $this->docRepo->obtenerPlantillaPorId($id);
+    }
+
+    public function crearVersionPlantilla(
+        int $plantillaId,
+        string $tituloDocumento,
+        string $cuerpoHtml,
+        ?string $estilosCss = null,
+        ?string $notasVersion = null,
+        bool $activarInmediatamente = false,
+        int $actorId = 1
+    ): DocumentoPlantillaVersion {
+        $plantilla = $this->docRepo->obtenerPlantillaPorId($plantillaId);
+        if (!$plantilla) {
+            throw new PlantillaNoEncontradaExcepcion("Plantilla ID [{$plantillaId}]");
+        }
+
+        // 1. Validar seguridad estricta del HTML y CSS
+        $this->validadorHtml->validar($cuerpoHtml);
+        $this->validadorHtml->validarCss($estilosCss);
+
+        // 2. Validar que los shortcodes correspondan al origen de la plantilla
+        $this->registroVariables->validarShortcodesEnHtml(
+            $cuerpoHtml,
+            $plantilla->obtenerOrigenTipoPermitido(),
+            $plantilla->obtenerCodigo()
+        );
+
+        $siguienteVersion = $this->docRepo->obtenerUltimoNumeroVersion($plantillaId) + 1;
+
+        $version = new DocumentoPlantillaVersion(
+            null,
+            $plantillaId,
+            $siguienteVersion,
+            $tituloDocumento,
+            $cuerpoHtml,
+            $estilosCss,
+            $notasVersion,
+            false, // Siempre se inserta inactiva primero
+            $actorId
+        );
+
+        $versionId = $this->docRepo->crearVersion($version);
+
+        if ($activarInmediatamente) {
+            $this->activarVersionPlantilla($plantillaId, $versionId);
+        }
+
+        return $this->docRepo->obtenerVersionPorId($versionId);
+    }
+
+    public function activarVersionPlantilla(int $plantillaId, int $versionId): bool
+    {
+        $version = $this->docRepo->obtenerVersionPorId($versionId);
+        if (!$version || $version->obtenerPlantillaId() !== $plantillaId) {
+            throw new PlantillaNoEncontradaExcepcion("Versión ID [{$versionId}] no pertenece a la plantilla [{$plantillaId}].");
+        }
+
+        try {
+            return $this->docRepo->activarVersion($plantillaId, $versionId);
+        } catch (\PDOException $e) {
+            // Capturar violación de uq_dpv_plantilla_activa ante carrera en motor MySQL
+            if (str_contains($e->getMessage(), 'uq_dpv_plantilla_activa') || $e->getCode() === '23000') {
+                throw new ConflictoDocumentalExcepcion('Conflicto concurrente: ya se encuentra una versión en proceso de activación.');
+            }
+            throw $e;
+        }
+    }
+
+    // =========================================================================
+    // 2. EMISIÓN DE CONTRATOS DE ARRENDAMIENTO (VERTICAL DOCUMENTOS-1)
+    // =========================================================================
+
+    /**
+     * Emite el contrato de arrendamiento formal (o previsualización en borrador).
+     *
+     * @param int $arrendamientoId
+     * @param int $actorId
+     * @param int|null $versionId Si es null, se utiliza la versión activa de CONTRATO_ARRENDAMIENTO
+     * @param bool $esBorrador Si es true, renderiza con marca de agua y no almacena registro definitivo
+     * @return array{documento: ?DocumentoEmitido, binario_pdf: string, nombre_archivo: string}
+     */
+    public function emitirContratoArrendamiento(
+        int $arrendamientoId,
+        int $actorId,
+        ?int $versionId = null,
+        bool $esBorrador = false
+    ): array {
+        // 1. Obtener contrato de arrendamiento
+        $arrendamiento = $this->obtenerArrendamientoValido($arrendamientoId);
+
+        // 2. Obtener plantilla y versión
+        $plantilla = $this->docRepo->obtenerPlantillaPorCodigo('CONTRATO_ARRENDAMIENTO');
+        if (!$plantilla || !$plantilla->estaActivo()) {
+            throw new PlantillaNoEncontradaExcepcion('Plantilla activa [CONTRATO_ARRENDAMIENTO]');
+        }
+
+        if ($versionId !== null) {
+            $version = $this->docRepo->obtenerVersionPorId($versionId);
+        } else {
+            $version = $this->docRepo->obtenerVersionActivaPorPlantillaId((int) $plantilla->obtenerId());
+        }
+
+        if (!$version) {
+            throw new PlantillaNoEncontradaExcepcion("No existe versión activa para la plantilla [{$plantilla->obtenerCodigo()}].");
+        }
+
+        // 3. Preparar folio
+        $fechaActual = new DateTimeImmutable();
+        if ($esBorrador) {
+            $codigoFolio = 'BORRADOR-' . $arrendamiento->obtenerCodigo();
+        } else {
+            $codigoFolio = $this->docRepo->obtenerSiguienteFolio('CONTRATO_ARRENDAMIENTO', 'ARR', $fechaActual);
+        }
+
+        // 4. Extraer datos tipados del contrato y sus partes
+        $datosContrato = $this->extraerDatosContratoArrendamiento($arrendamiento, $codigoFolio, $fechaActual);
+
+        // 5. Resolver ruta absoluta del membrete
+        $rutaMembrete = null;
+        if ($plantilla->requiereMembrete() && $plantilla->obtenerArchivoMembreteFondo()) {
+            $rutaMembrete = $this->storagePath . DIRECTORY_SEPARATOR . 'membretes' . DIRECTORY_SEPARATOR . $plantilla->obtenerArchivoMembreteFondo();
+        }
+
+        // 6. Compilar HTML y generar snapshot inmutable
+        $marcaAgua = $esBorrador ? 'BORRADOR - SIN VALIDEZ LEGAL' : null;
+        $compilacion = $this->compilador->compilar(
+            $plantilla,
+            $version,
+            $datosContrato,
+            $marcaAgua,
+            $rutaMembrete
+        );
+
+        // 7. Renderizar PDF con Dompdf
+        $renderPdf = $this->generadorPdf->renderizar($compilacion['snapshot_html'], true);
+
+        $nombreArchivo = "{$codigoFolio}.pdf";
+
+        // Si es borrador, devolvemos el PDF en memoria sin persistir emisión definitiva
+        if ($esBorrador) {
+            return [
+                'documento' => null,
+                'binario_pdf' => $renderPdf['binario_pdf'],
+                'nombre_archivo' => $nombreArchivo,
+            ];
+        }
+
+        // 8. Persistencia física del archivo PDF emitido
+        $subcarpetaYm = $fechaActual->format('Y') . DIRECTORY_SEPARATOR . $fechaActual->format('m');
+        $directorioDestino = $this->storagePath . DIRECTORY_SEPARATOR . 'documentos' . DIRECTORY_SEPARATOR . $subcarpetaYm;
+
+        if (!is_dir($directorioDestino)) {
+            mkdir($directorioDestino, 0775, true);
+        }
+
+        $rutaFisicaAbsoluta = $directorioDestino . DIRECTORY_SEPARATOR . $nombreArchivo;
+        file_put_contents($rutaFisicaAbsoluta, $renderPdf['binario_pdf']);
+
+        $rutaRelativaStorage = 'documentos/' . $fechaActual->format('Y') . '/' . $fechaActual->format('m') . '/' . $nombreArchivo;
+
+        // 9. Persistir documento emitido con snapshots inmutables y hash SHA-256
+        $docEmitido = new DocumentoEmitido(
+            null,
+            $codigoFolio,
+            (int) $plantilla->obtenerId(),
+            (int) $version->obtenerId(),
+            'ARRENDAMIENTO',
+            $arrendamientoId,
+            $compilacion['snapshot_datos_json'],
+            $compilacion['snapshot_html'],
+            $rutaRelativaStorage,
+            $renderPdf['tamano_bytes'],
+            $renderPdf['hash_pdf_sha256'],
+            $compilacion['hash_snapshot_sha256'],
+            $renderPdf['numero_paginas'],
+            $actorId,
+            $fechaActual->format('Y-m-d H:i:s')
+        );
+
+        $docId = $this->docRepo->crearDocumentoEmitido($docEmitido);
+        $documentoPersistido = $this->docRepo->obtenerDocumentoEmitidoPorId($docId);
+
+        return [
+            'documento' => $documentoPersistido,
+            'binario_pdf' => $renderPdf['binario_pdf'],
+            'nombre_archivo' => $nombreArchivo,
+        ];
+    }
+
+    // =========================================================================
+    // 3. DESCARGA Y VERIFICACIÓN DE INTEGRIDAD CRIPTOGRÁFICA (D-079 #7, #8, #9)
+    // =========================================================================
+
+    /**
+     * Descarga y valida la integridad de un documento emitido sin regeneración silenciosa.
+     *
+     * @param int $documentoId
+     * @param int $actorId
+     * @return array{binario_pdf: string, nombre_archivo: string, documento: DocumentoEmitido}
+     * @throws DocumentoCorruptoExcepcion si el archivo está ausente o su hash no coincide.
+     */
+    public function descargarDocumento(int $documentoId, int $actorId): array
+    {
+        $doc = $this->docRepo->obtenerDocumentoEmitidoPorId($documentoId);
+        if (!$doc) {
+            throw new PlantillaNoEncontradaExcepcion("Documento emitido ID [{$documentoId}]");
+        }
+
+        $rutaAbsoluta = $this->storagePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $doc->obtenerRutaArchivoPdf());
+
+        // 1. Comprobar existencia física
+        if (!file_exists($rutaAbsoluta)) {
+            $this->docRepo->registrarIncidencia(new DocumentoIncidencia(
+                null,
+                $documentoId,
+                DocumentoIncidencia::TIPO_ARCHIVO_FALTANTE,
+                "El archivo físico no fue encontrado en la ruta [{$doc->obtenerRutaArchivoPdf()}].",
+                $actorId
+            ));
+            throw new DocumentoCorruptoExcepcion($doc->obtenerCodigoFolio(), 'ARCHIVO_FALTANTE');
+        }
+
+        // 2. Comprobar integridad por hash SHA-256
+        $hashReal = hash_file('sha256', $rutaAbsoluta);
+        if ($hashReal !== $doc->obtenerHashPdfSha256()) {
+            $this->docRepo->registrarIncidencia(new DocumentoIncidencia(
+                null,
+                $documentoId,
+                DocumentoIncidencia::TIPO_HASH_NO_COINCIDE,
+                "Discrepancia de integridad: hash esperado [{$doc->obtenerHashPdfSha256()}], hash real [{$hashReal}].",
+                $actorId
+            ));
+            throw new DocumentoCorruptoExcepcion($doc->obtenerCodigoFolio(), 'HASH_NO_COINCIDE');
+        }
+
+        $contenido = file_get_contents($rutaAbsoluta);
+        if ($contenido === false) {
+            $this->docRepo->registrarIncidencia(new DocumentoIncidencia(
+                null,
+                $documentoId,
+                DocumentoIncidencia::TIPO_ERROR_LECTURA,
+                "Error al leer los bytes del archivo físico [{$rutaAbsoluta}].",
+                $actorId
+            ));
+            throw new DocumentoCorruptoExcepcion($doc->obtenerCodigoFolio(), 'ERROR_LECTURA');
+        }
+
+        return [
+            'binario_pdf' => $contenido,
+            'nombre_archivo' => "{$doc->obtenerCodigoFolio()}.pdf",
+            'documento' => $doc,
+        ];
+    }
+
+    /**
+     * Regeneración controlada de un documento corrupto o extraviado desde su snapshot congelado (D-079 #8, #9).
+     */
+    public function regenerarPdfDesdeSnapshot(int $documentoId, int $actorId, string $motivo): DocumentoEmitido
+    {
+        $doc = $this->docRepo->obtenerDocumentoEmitidoPorId($documentoId);
+        if (!$doc) {
+            throw new PlantillaNoEncontradaExcepcion("Documento emitido ID [{$documentoId}]");
+        }
+
+        // Renderizar ÚNICAMENTE a partir del snapshot_html congelado
+        $renderPdf = $this->generadorPdf->renderizar($doc->obtenerSnapshotHtml(), true);
+
+        // Guardar archivo físico en la ruta original
+        $rutaAbsoluta = $this->storagePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $doc->obtenerRutaArchivoPdf());
+        $dir = dirname($rutaAbsoluta);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        file_put_contents($rutaAbsoluta, $renderPdf['binario_pdf']);
+
+        // Actualizar metadatos y nuevo hash del PDF regenerado
+        $this->docRepo->actualizarRutaYHashPdf(
+            $documentoId,
+            $doc->obtenerRutaArchivoPdf(),
+            $renderPdf['tamano_bytes'],
+            $renderPdf['hash_pdf_sha256']
+        );
+
+        // Marcar incidencias previas como resueltas
+        $stmt = $this->docRepo->obtenerPdo()->prepare(
+            'UPDATE documento_incidencias 
+             SET resuelto = 1, resuelto_en = NOW(), resolucion_notas = :notas 
+             WHERE documento_emitido_id = :docId AND resuelto = 0'
+        );
+        $stmt->execute([
+            'docId' => $documentoId,
+            'notas' => "Regenerado exitosamente por actor [{$actorId}]: {$motivo}",
+        ]);
+
+        return $this->docRepo->obtenerDocumentoEmitidoPorId($documentoId);
+    }
+
+    public function anularDocumento(int $documentoId, int $actorId, string $motivo): bool
+    {
+        if (trim($motivo) === '') {
+            throw new ValidacionExcepcion(['motivo' => 'El motivo de anulación es obligatorio.']);
+        }
+        return $this->docRepo->anularDocumento($documentoId, $actorId, $motivo);
+    }
+
+    // =========================================================================
+    // EXTRACCIÓN Y FORMATEO DE DATOS DE ARRENDAMIENTO
+    // =========================================================================
+
+    private function obtenerArrendamientoValido(int $arrendamientoId): Arrendamiento
+    {
+        if ($this->arrendamientoRepo !== null) {
+            $arr = $this->arrendamientoRepo->obtenerPorId($arrendamientoId);
+            if ($arr !== null) {
+                return $arr;
+            }
+        }
+
+        $repo = new ArrendamientoRepositorio($this->docRepo->obtenerPdo());
+        $arr = $repo->obtenerPorId($arrendamientoId);
+        if (!$arr) {
+            throw new PlantillaNoEncontradaExcepcion("Contrato de arrendamiento ID [{$arrendamientoId}] no existe.");
+        }
+
+        return $arr;
+    }
+
+    private function extraerDatosContratoArrendamiento(
+        Arrendamiento $a,
+        string $codigoFolio,
+        DateTimeImmutable $fechaActual
+    ): array {
+        $pdo = $this->docRepo->obtenerPdo();
+
+        // 1. Consultar datos de contacto del arrendatario
+        $personaId = $a->obtenerTitularPersonaId();
+        $email = '';
+        $telefono = '';
+        $tipoDoc = 'DNI';
+
+        if ($personaId !== null) {
+            $stmtC = $pdo->prepare('SELECT tipo_contacto, valor FROM personas_contactos WHERE persona_id = :pId AND estado = \'ACTIVO\' ORDER BY es_principal DESC');
+            $stmtC->execute(['pId' => $personaId]);
+            while ($c = $stmtC->fetch(PDO::FETCH_ASSOC)) {
+                if ($c['tipo_contacto'] === 'EMAIL' && $email === '') {
+                    $email = $c['valor'];
+                } elseif ($c['tipo_contacto'] === 'TELEFONO' && $telefono === '') {
+                    $telefono = $c['valor'];
+                }
+            }
+
+            $stmtD = $pdo->prepare(
+                'SELECT td.codigo 
+                 FROM personas_documentos pd 
+                 JOIN tipos_documento td ON td.id = pd.tipo_documento_id 
+                 WHERE pd.persona_id = :pId LIMIT 1'
+            );
+            $stmtD->execute(['pId' => $personaId]);
+            $tipoDoc = $stmtD->fetchColumn() ?: 'DNI';
+        }
+
+        // 2. Consultar tipología y dirección de la unidad e inmueble
+        $stmtU = $pdo->prepare(
+            'SELECT u.nombre AS unidad_nombre, tu.nombre AS tipologia_nombre, p.nombre AS propiedad_nombre, p.direccion AS propiedad_direccion
+             FROM unidades u
+             JOIN tipos_unidad tu ON tu.id = u.tipo_unidad_id
+             JOIN propiedades p ON p.id = u.propiedad_id
+             WHERE u.id = :uId LIMIT 1'
+        );
+        $stmtU->execute(['uId' => $a->obtenerUnidadId()]);
+        $uInfo = $stmtU->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        // 3. Duración en meses
+        $inicio = new DateTimeImmutable($a->obtenerFechaInicio());
+        $fin = new DateTimeImmutable($a->obtenerFechaFin());
+        $diff = $inicio->diff($fin);
+        $meses = ($diff->y * 12) + $diff->m;
+        if ($meses === 0 && $diff->days > 0) {
+            $meses = 1;
+        }
+
+        // 4. Bloque de inventario y dotación de la unidad
+        $bloqueDotacion = $this->construirBloqueInventarioDotacion((int) $a->obtenerUnidadId());
+
+        return [
+            // Contrato
+            'contrato.numero' => $a->obtenerCodigo(),
+            'contrato.fecha_inicio' => $inicio->format('d/m/Y'),
+            'contrato.fecha_fin' => $fin->format('d/m/Y'),
+            'contrato.duracion_meses' => (string) max(1, $meses),
+            'contrato.dia_corte_pago' => (string) $a->obtenerDiaVencimiento(),
+            'contrato.canon_monto' => number_format((float) $a->obtenerRentaMensual(), 2, '.', ','),
+            'contrato.canon_moneda' => $a->obtenerMonedaCodigo(),
+            'contrato.canon_texto' => $this->convertirMontoATexto((string) $a->obtenerRentaMensual(), $a->obtenerMonedaCodigo()),
+            'garantia.monto' => number_format((float) $a->obtenerDepositoGarantia(), 2, '.', ','),
+            'garantia.texto' => $this->convertirMontoATexto((string) $a->obtenerDepositoGarantia(), $a->obtenerMonedaCodigo()),
+
+            // Arrendador
+            'arrendador.razon_social' => 'Camargo Hostelería S.A.C.',
+            'arrendador.ruc' => '20601234567',
+            'arrendador.representante_legal' => 'Orlando Gonzales Camargo',
+            'arrendador.representante_dni' => '45879632',
+            'arrendador.domicilio_legal' => 'Av. Principal 123, Miraflores, Lima - Perú',
+
+            // Arrendatario
+            'arrendatario.nombre_completo' => $a->obtenerTitularNombreCompleto() ?: 'Cliente Sin Nombre',
+            'arrendatario.tipo_documento' => $tipoDoc,
+            'arrendatario.numero_documento' => $a->obtenerTitularNumeroDocumento() ?: 'S/D',
+            'arrendatario.email' => $email ?: 'sin_correo@camargohosteleria.pe',
+            'arrendatario.telefono' => $telefono ?: 'sin_telefono',
+
+            // Unidad
+            'propiedad.nombre' => $uInfo['propiedad_nombre'] ?? $a->obtenerPropiedadNombre(),
+            'propiedad.direccion' => $uInfo['propiedad_direccion'] ?? 'Dirección no especificada',
+            'unidad.nombre' => $uInfo['unidad_nombre'] ?? $a->obtenerUnidadNombre(),
+            'unidad.tipologia' => $uInfo['tipologia_nombre'] ?? 'Departamento',
+
+            // Sistema
+            'emision.fecha' => $fechaActual->format('d/m/Y'),
+            'documento.folio' => $codigoFolio,
+
+            // Bloques
+            'bloque.inventario_dotacion' => $bloqueDotacion,
+            'bloque.firmas_partes' => '',
+        ];
+    }
+
+    private function construirBloqueInventarioDotacion(int $unidadId): string
+    {
+        $pdo = $this->docRepo->obtenerPdo();
+
+        // Buscar ubicación física asociada a esta unidad
+        $stmtUbi = $pdo->prepare('SELECT id FROM inventario_ubicaciones WHERE unidad_id = :uId LIMIT 1');
+        $stmtUbi->execute(['uId' => $unidadId]);
+        $ubiId = $stmtUbi->fetchColumn();
+
+        if (!$ubiId) {
+            return '<p><em>(Sin inventario o dotación registrada para esta unidad).</em></p>';
+        }
+
+        // Consultar existencias de lencería y consumibles en la habitación
+        $stmtEx = $pdo->prepare(
+            'SELECT a.nombre AS art_nombre, a.categoria AS art_cat, e.cantidad_actual, um.simbolo AS um_simbolo
+             FROM inventario_existencias e
+             JOIN inventario_articulos a ON a.id = e.articulo_id
+             JOIN inventario_unidades_medida um ON um.id = a.unidad_medida_id
+             WHERE e.ubicacion_id = :ubiId AND e.cantidad_actual > 0
+             ORDER BY a.categoria ASC, a.nombre ASC'
+        );
+        $stmtEx->execute(['ubiId' => $ubiId]);
+        $existencias = $stmtEx->fetchAll(PDO::FETCH_ASSOC);
+
+        // Consultar activos asignados a la habitación
+        $stmtAct = $pdo->prepare(
+            'SELECT a.nombre AS art_nombre, act.codigo_placa, act.marca, act.modelo, act.estado
+             FROM inventario_activos act
+             JOIN inventario_articulos a ON a.id = act.articulo_id
+             WHERE act.ubicacion_id = :ubiId AND act.estado = \'ASIGNADO\'
+             ORDER BY a.nombre ASC'
+        );
+        $stmtAct->execute(['ubiId' => $ubiId]);
+        $activos = $stmtAct->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($existencias) && empty($activos)) {
+            return '<p><em>(La unidad se entrega con dotación estándar según acta física de entrega).</em></p>';
+        }
+
+        $html = '<table class="tabla-dotacion">';
+        $html .= '<thead><tr><th>Elemento / Bien</th><th>Categoría / Detalle</th><th>Identificador / Serie</th><th>Cantidad / Estado</th></tr></thead>';
+        $html .= '<tbody>';
+
+        foreach ($existencias as $ex) {
+            $nombre = htmlspecialchars($ex['art_nombre'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $cat = htmlspecialchars($ex['art_cat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $cant = number_format((float) $ex['cantidad_actual'], 2, '.', '') . ' ' . htmlspecialchars($ex['um_simbolo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $html .= "<tr><td>{$nombre}</td><td>{$cat}</td><td>Stock físico</td><td>{$cant}</td></tr>";
+        }
+
+        foreach ($activos as $act) {
+            $nombre = htmlspecialchars($act['art_nombre'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $detalle = htmlspecialchars(($act['marca'] ? $act['marca'] . ' ' : '') . ($act['modelo'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $placa = htmlspecialchars($act['codigo_placa'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $estado = htmlspecialchars($act['estado'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $html .= "<tr><td>{$nombre}</td><td>{$detalle}</td><td>Placa: {$placa}</td><td>{$estado}</td></tr>";
+        }
+
+        $html .= '</tbody></table>';
+        return $html;
+    }
+
+    private function convertirMontoATexto(string $monto, string $moneda): string
+    {
+        $partes = explode('.', number_format((float) $monto, 2, '.', ''));
+        $enteros = (int) ($partes[0] ?? 0);
+        $decimales = $partes[1] ?? '00';
+
+        $textoEntero = $this->numeroEnLetras($enteros);
+        $nombreMoneda = $moneda === 'USD' ? 'Dólares Americanos' : 'Soles';
+
+        return "{$textoEntero} con {$decimales}/100 {$nombreMoneda}";
+    }
+
+    private function numeroEnLetras(int $numero): string
+    {
+        if ($numero === 0) {
+            return 'Cero';
+        }
+
+        $unidades = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez',
+            'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+        $decenas = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+        $centenas = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+
+        if ($numero < 20) {
+            return ucfirst($unidades[$numero]);
+        }
+        if ($numero < 30) {
+            return $numero === 20 ? 'Veinte' : 'Veinti' . $unidades[$numero - 20];
+        }
+        if ($numero < 100) {
+            $u = $numero % 10;
+            return ucfirst($decenas[(int) ($numero / 10)] . ($u > 0 ? ' y ' . $unidades[$u] : ''));
+        }
+        if ($numero === 100) {
+            return 'Cien';
+        }
+        if ($numero < 1000) {
+            $resto = $numero % 100;
+            return ucfirst($centenas[(int) ($numero / 100)] . ($resto > 0 ? ' ' . strtolower($this->numeroEnLetras($resto)) : ''));
+        }
+        if ($numero < 2000) {
+            $resto = $numero % 1000;
+            return 'Mil' . ($resto > 0 ? ' ' . strtolower($this->numeroEnLetras($resto)) : '');
+        }
+        if ($numero < 1000000) {
+            $miles = (int) ($numero / 1000);
+            $resto = $numero % 1000;
+            return ucfirst($this->numeroEnLetras($miles)) . ' mil' . ($resto > 0 ? ' ' . strtolower($this->numeroEnLetras($resto)) : '');
+        }
+
+        return (string) $numero;
+    }
+}

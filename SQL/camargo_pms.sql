@@ -2082,4 +2082,182 @@ CREATE TABLE IF NOT EXISTS `inventario_dotaciones_estandar` (
     UNIQUE KEY `uq_ide_unidad_articulo` (`unidad_id`, `articulo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dotación esperada o reglamentaria por tipo de unidad o por unidad específica';
 
+-- ----------------------------------------------------------------------------
+-- 56. Secuencias Concurrency-Safe para Folios (DOCUMENTOS-1 / D-079)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `documento_secuencias` (
+    `tipo_documento` VARCHAR(40) NOT NULL COMMENT 'CONTRATO_ARRENDAMIENTO, RECIBO_PAGO, etc.',
+    `periodo_ym` CHAR(6) NOT NULL COMMENT 'YYYYMM para reinicio mensual ordenado',
+    `ultimo_correlativo` INT UNSIGNED NOT NULL DEFAULT 0,
+    `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`tipo_documento`, `periodo_ym`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Secuencias concurrency-safe para folios documentales (DOC-ARR-YYYYMM-XXXX)';
+
+-- ----------------------------------------------------------------------------
+-- 57. Catálogo Maestro de Plantillas Documentales (DOCUMENTOS-1 / D-079)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `documento_plantillas` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `codigo` VARCHAR(40) NOT NULL COMMENT 'Identificador único canónico (CONTRATO_ARRENDAMIENTO)',
+    `nombre` VARCHAR(150) NOT NULL,
+    `descripcion` VARCHAR(500) NULL,
+    `origen_tipo_permitido` ENUM('ARRENDAMIENTO', 'RESERVA', 'ESTADIA', 'PAGO', 'RECIBO') NOT NULL,
+    `orientacion` ENUM('PORTRAIT', 'LANDSCAPE') NOT NULL DEFAULT 'PORTRAIT',
+    `tamano_papel` ENUM('A4', 'LETTER', 'TICKET_80MM') NOT NULL DEFAULT 'A4',
+    `requiere_membrete` TINYINT(1) NOT NULL DEFAULT 1,
+    `archivo_membrete_fondo` VARCHAR(255) NULL COMMENT 'Ruta inmutable en storage/membretes/',
+    `margen_superior_mm` INT NOT NULL DEFAULT 35,
+    `margen_inferior_mm` INT NOT NULL DEFAULT 28,
+    `margen_izquierdo_mm` INT NOT NULL DEFAULT 20,
+    `margen_derecho_mm` INT NOT NULL DEFAULT 20,
+    `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `chk_docp_codigo_no_vacio` CHECK (`codigo` <> ''),
+    CONSTRAINT `chk_docp_nombre_no_vacio` CHECK (`nombre` <> ''),
+    CONSTRAINT `chk_docp_m_sup_no_negativo` CHECK (`margen_superior_mm` >= 0),
+    CONSTRAINT `chk_docp_m_inf_no_negativo` CHECK (`margen_inferior_mm` >= 0),
+    CONSTRAINT `chk_docp_m_izq_no_negativo` CHECK (`margen_izquierdo_mm` >= 0),
+    CONSTRAINT `chk_docp_m_der_no_negativo` CHECK (`margen_derecho_mm` >= 0),
+    UNIQUE KEY `uq_docp_codigo` (`codigo`),
+    INDEX `idx_docp_origen_tipo` (`origen_tipo_permitido`),
+    INDEX `idx_docp_estado` (`estado`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Catálogo maestro de plantillas documentales';
+
+-- ----------------------------------------------------------------------------
+-- 58. Versiones Inmutables de Contenido de Plantillas (DOCUMENTOS-1 / D-079)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `documento_plantilla_versiones` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `plantilla_id` BIGINT UNSIGNED NOT NULL,
+    `numero_version` INT NOT NULL,
+    `titulo_documento` VARCHAR(200) NOT NULL,
+    `cuerpo_html` MEDIUMTEXT NOT NULL COMMENT 'Plantilla HTML con shortcodes {{entidad.propiedad}}',
+    `estilos_css` TEXT NULL COMMENT 'CSS documental específico para print/Dompdf',
+    `notas_version` VARCHAR(500) NULL,
+    `es_activa` TINYINT(1) NOT NULL DEFAULT 0,
+    `version_activa_idx` BIGINT UNSIGNED GENERATED ALWAYS AS (
+        CASE WHEN `es_activa` = 1 THEN `plantilla_id` ELSE NULL END
+    ) VIRTUAL COMMENT 'Garantiza a nivel InnoDB que solo exista una versión activa por plantilla',
+    `creado_por_actor_id` BIGINT UNSIGNED NOT NULL,
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `chk_dpv_version_positiva` CHECK (`numero_version` > 0),
+    CONSTRAINT `chk_dpv_titulo_no_vacio` CHECK (`titulo_documento` <> ''),
+    CONSTRAINT `fk_dpv_plantilla` FOREIGN KEY (`plantilla_id`) REFERENCES `documento_plantillas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_dpv_actor` FOREIGN KEY (`creado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE KEY `uq_dpv_plantilla_version` (`plantilla_id`, `numero_version`),
+    UNIQUE KEY `uq_dpv_plantilla_activa` (`version_activa_idx`),
+    INDEX `idx_dpv_plantilla` (`plantilla_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Versiones inmutables de contenido de plantillas documentales';
+
+-- ----------------------------------------------------------------------------
+-- 59. Documentos Emitidos con Snapshots e Integridad Criptográfica (DOCUMENTOS-1 / D-079)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `documentos_emitidos` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `codigo_folio` VARCHAR(50) NOT NULL COMMENT 'DOC-ARR-YYYYMM-XXXX',
+    `plantilla_id` BIGINT UNSIGNED NOT NULL,
+    `plantilla_version_id` BIGINT UNSIGNED NOT NULL,
+    `origen_tipo` ENUM('ARRENDAMIENTO', 'RESERVA', 'ESTADIA', 'PAGO', 'RECIBO') NOT NULL,
+    `origen_id` BIGINT UNSIGNED NOT NULL,
+    `snapshot_datos_json` JSON NOT NULL COMMENT 'Valores crudos de los shortcodes en orden determinista',
+    `snapshot_html` MEDIUMTEXT NOT NULL COMMENT 'HTML resuelto exactamente como fue renderizado',
+    `ruta_archivo_pdf` VARCHAR(255) NOT NULL COMMENT 'Ruta física relativa a storage/documentos/',
+    `tamano_bytes` INT UNSIGNED NOT NULL,
+    `hash_pdf_sha256` CHAR(64) NOT NULL COMMENT 'Hash criptográfico del binario PDF almacenado',
+    `hash_snapshot_sha256` CHAR(64) NOT NULL COMMENT 'Hash del HTML compilado congelado',
+    `numero_paginas` INT UNSIGNED NOT NULL DEFAULT 1,
+    `emitido_por_actor_id` BIGINT UNSIGNED NOT NULL,
+    `emitido_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `estado` ENUM('VALIDO', 'ANULADO') NOT NULL DEFAULT 'VALIDO',
+    `motivo_anulacion` VARCHAR(500) NULL,
+    `anulado_en` DATETIME NULL,
+    `anulado_por_actor_id` BIGINT UNSIGNED NULL,
+    CONSTRAINT `chk_demit_folio_no_vacio` CHECK (`codigo_folio` <> ''),
+    CONSTRAINT `chk_demit_tamano_positivo` CHECK (`tamano_bytes` > 0),
+    CONSTRAINT `fk_demit_plantilla` FOREIGN KEY (`plantilla_id`) REFERENCES `documento_plantillas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_demit_version` FOREIGN KEY (`plantilla_version_id`) REFERENCES `documento_plantilla_versiones` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_demit_emisor` FOREIGN KEY (`emitido_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_demit_anulador` FOREIGN KEY (`anulado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE KEY `uq_demit_codigo_folio` (`codigo_folio`),
+    INDEX `idx_demit_origen` (`origen_tipo`, `origen_id`),
+    INDEX `idx_demit_hash` (`hash_pdf_sha256`),
+    INDEX `idx_demit_estado` (`estado`),
+    INDEX `idx_demit_plantilla` (`plantilla_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Documentos emitidos con snapshot inmutable y hash SHA-256';
+
+-- ----------------------------------------------------------------------------
+-- 60. Incidencias Documentales (Auditoría de Archivos Ausentes o Corruptos)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `documento_incidencias` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `documento_emitido_id` BIGINT UNSIGNED NOT NULL,
+    `tipo_incidencia` ENUM('ARCHIVO_FALTANTE', 'HASH_NO_COINCIDE', 'ERROR_LECTURA') NOT NULL,
+    `descripcion` VARCHAR(500) NOT NULL,
+    `detectado_por_actor_id` BIGINT UNSIGNED NOT NULL,
+    `detectado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `resuelto` TINYINT(1) NOT NULL DEFAULT 0,
+    `resuelto_en` DATETIME NULL,
+    `resolucion_notas` VARCHAR(500) NULL,
+    CONSTRAINT `fk_dinc_documento` FOREIGN KEY (`documento_emitido_id`) REFERENCES `documentos_emitidos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_dinc_actor` FOREIGN KEY (`detectado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    INDEX `idx_dinc_documento` (`documento_emitido_id`),
+    INDEX `idx_dinc_resuelto` (`resuelto`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Registro de auditoría de inconsistencias físicas documentales';
+
+-- ----------------------------------------------------------------------------
+-- SEMILLAS DOCUMENTOS-1 (D-079): Permisos, Plantilla Canónica V1 y Menú
+-- ----------------------------------------------------------------------------
+INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `es_sistema`) VALUES
+('documentos.ver', 'Ver módulo de documentos y descargas', 'Consultar plantillas, versiones y documentos emitidos', 'documentos', 'ACTIVO', 1),
+('documentos.emitir', 'Emitir contratos y documentos oficiales', 'Generar versiones oficiales de contratos y actas con folio legal', 'documentos', 'ACTIVO', 1),
+('documentos.descargar', 'Descargar archivos PDF emitidos', 'Descargar PDFs binarios con verificación criptográfica de hash', 'documentos', 'ACTIVO', 1),
+('documentos.regenerar', 'Regenerar archivos PDF desde snapshot', 'Reconstruir binarios ante discrepancias de hash o faltantes físicos', 'documentos', 'ACTIVO', 1),
+('documentos.anular', 'Anular formalmente documentos emitidos', 'Revocar la validez legal de folios emitidos preservando el histórico', 'documentos', 'ACTIVO', 1),
+('documentos.plantillas.gestionar', 'Gestionar plantillas y versiones', 'Crear plantillas y publicar nuevas versiones inmutables', 'documentos', 'ACTIVO', 1)
+ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `descripcion` = VALUES(`descripcion`);
+
+INSERT INTO `roles_permisos` (`rol_id`, `permiso_id`)
+SELECT r.id, p.id
+FROM `roles` r
+CROSS JOIN `permisos` p
+WHERE r.codigo = 'SUPERADMINISTRADOR'
+  AND p.codigo LIKE 'documentos.%'
+ON DUPLICATE KEY UPDATE `rol_id` = VALUES(`rol_id`);
+
+INSERT INTO `documento_plantillas` (
+    `id`, `codigo`, `nombre`, `descripcion`, `origen_tipo_permitido`,
+    `orientacion`, `tamano_papel`, `requiere_membrete`, `archivo_membrete_fondo`,
+    `margen_superior_mm`, `margen_inferior_mm`, `margen_izquierdo_mm`, `margen_derecho_mm`,
+    `estado`
+) VALUES (
+    1,
+    'CONTRATO_ARRENDAMIENTO',
+    'Contrato de Arrendamiento Inmobiliario',
+    'Plantilla oficial canónica A4 para formalización de contratos de arrendamiento',
+    'ARRENDAMIENTO',
+    'portrait',
+    'A4',
+    1,
+    'membrete_a4_canonica_v1.png',
+    35,
+    28,
+    20,
+    20,
+    'ACTIVO'
+) ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
+
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'documentos_motor', 'Documentos', 'fa-solid fa-file-shield', '/documentos', 8, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'documentos.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
 SET FOREIGN_KEY_CHECKS = 1;

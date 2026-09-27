@@ -4,6 +4,45 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase DOCUMENTOS-1 — Motor documental, plantillas versionadas y generación PDF (D-079)
+
+- **Motor Documental y Dompdf Confinado:**
+  - Integración de Dompdf 3.1.6 como motor oficial de generación PDF (`dompdf/dompdf ~3.1.0`), sin dependencias de motores externos o procesos Node/headless.
+  - Confinamiento de seguridad estricto: `isRemoteEnabled = false`, `isPhpEnabled = false`, `isJavascriptEnabled = false`, y `chroot` acotado exclusivamente a `storage/membretes` y rutas autorizadas.
+  - Numeración nativa de páginas mediante canvas de Dompdf ("Página X de Y").
+- **Seguridad y Validación Estricta de HTML/CSS:**
+  - `ValidadorHtmlDocumental`: análisis con `DOMDocument` para rechazo categórico de `<script>`, `<iframe>`, `<object>`, `<embed>`, eventos JS (`onclick`, `onload`, etc.), esquemas de URL `javascript:`, `data:`, y URLs remotas `http://`, `https://`.
+  - Confinamiento estricto de hojas de estilo CSS: soporte para `@page` (tamaño A4, márgenes milimétricos estándar: sup 35mm, inf 28mm, izq 20mm, der 20mm), rechazo de `@import`, selectores maliciosos o scripts embebidos.
+- **Interpolación Tipada y Determinismo Documental:**
+  - `RegistroVariablesDocumentales`: catálogo canónico de shortcodes para origen `ARRENDAMIENTO` (`contrato.*`, `arrendador.*`, `arrendatario.*`, `inmueble.*`, `garantia.*`, `sistema.*`, etc.) con tipos y obligatoriedad.
+  - Sanitización obligatoria `htmlspecialchars()` en valores dinámicos interpolados.
+  - `CompiladorDocumental`: ordenamiento lexicográfico de variables con `ksort()` en `snapshot_datos_json`, cálculo de `hash_snapshot_sha256 = hash('sha256', snapshot_html)`. Garantía de idempotencia matemática y determinismo.
+- **Persistencia, Restricciones InnoDB e Inmutabilidad:**
+  - Migración `021_documentos.sql` (tablas 56 a 60 en esquema consolidado):
+    - `documento_secuencias`: generador atómico de folios `DOC-ARR-YYYYMM-XXXX` con reinicio mensual y bloqueo pesimista `SELECT ... FOR UPDATE`.
+    - `documento_plantillas`: catálogo de plantillas con soporte A4, márgenes milimétricos y membrete de fondo.
+    - `documento_plantilla_versiones`: versiones inmutables con activación atómica y restricción relacional física `uq_dpv_plantilla_activa` sobre columna virtual InnoDB (`version_activa_idx = IF(es_activa = 1, 1, NULL)`), bloqueando físicamente en BD dos versiones activas simultáneas (Error 1062).
+    - `documentos_emitidos`: almacenamiento inmutable de contratos emitidos con folios oficiales, `snapshot_html`, `snapshot_datos_json`, `hash_snapshot_sha256` y `hash_pdf_sha256`.
+    - `documento_incidencias`: bitácora de auditoría ante discrepancias físicas o archivos faltantes.
+  - Preservación histórica garantizada: cambios posteriores en la base de datos (renta, titulares, etc.) o en la plantilla no mutan el snapshot congelado ni el binario PDF.
+- **Emisión Oficial, Borradores y Verificación en Vivo:**
+  - Modo borrador: renderiza PDF al vuelo con marca de agua "BORRADOR NO VÁLIDO" sin consumir folio ni persistir en base de datos.
+  - Emisión oficial: genera folio consecutivo, persiste snapshot inmutable, almacena PDF físico en `storage/documentos/YYYY/MM/folio.pdf`, y calcula hash SHA-256 de los bytes exactos almacenados.
+  - Descarga segura con verificación en vivo del 100% de los bytes contra `hash_pdf_sha256`. Detección inmediata de manipulación (1 byte alterado) con `DocumentoCorruptoExcepcion` (HTTP 500) y registro formal en `documento_incidencias`.
+  - Cero regeneración silenciosa: la descarga ordinaria jamás sobrescribe o repara archivos corruptos en secreto.
+  - Regeneración asistida controlada: endpoint administrativo explícito que reconstruye el binario exclusivamente a partir del `snapshot_html` congelado, resolviendo las incidencias previas.
+  - Anulación formal: revoca la validez legal del documento registrando actor, motivo y marca de agua sin destruir el archivo físico ni el folio histórico.
+- **Interfaz Alina Conforme a D-075 y D-076:**
+  - Módulo `/documentos` con 4 KPIs (Emitidos, Activos, Plantillas, Incidencias), navegación por 3 pestañas operativas (Emitidos, Plantillas Versionadas, Auditoría de Incidencias), visualizador de PDF con iframe, y modales nativos Alina (`app-form app-icon-form`, Select2 42px).
+  - Controlador JS modular `public/assets/js/gestion-documentos.js` (Vanilla Fetch, SweetAlert2, 0 jQuery en lógica).
+  - Integración en menú lateral bajo Operaciones y permisos RBAC granulares (`documentos.ver`, `documentos.emitir`, `documentos.plantillas.gestionar`, `documentos.anular`, `documentos.regenerar`).
+- **Verificación Automatizada Exhaustiva (60/60 PASS):**
+  - Matriz de dominio y seguridad: `tests/test_documentos_matriz_40.php` (40/40 PASS).
+  - Concurrencia, atomicidad e inmutabilidad: `tests/test_documentos_concurrencia.php` (6/6 PASS).
+  - Flujo HTTP E2E real contra Apache: `tests/test_e2e_documentos.php` (14/14 PASS).
+
+## [f8f1fcb] - 2026-09-27
+
 ### Microfase INVENTARIO-1 — Catálogo de artículos, almacenes/ubicaciones, existencias, movimientos, activos y dotaciones (D-078)
 
 - **Ontología y Modelo de Dominio de Inventario:**

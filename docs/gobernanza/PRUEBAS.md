@@ -196,6 +196,34 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `RES-D061-02`: Confirmación registra `confirmado_por_actor_id` resuelto como actor humano.
   - `RES-D061-03`: Cancelación registra `cancelado_por_actor_id` resuelto como actor humano.
   - `RES-D061-04`: Expiración automática del sistema registra actor estructural `CAMARGO_PMS` (actor de sistema D-061).
+- **Matriz Formal de Motor Documental, Plantillas y PDF (MAT-01 a MAT-40 — DOCUMENTOS-1 / D-079):** 40 verificaciones automáticas de dominio, compilación y seguridad:
+  - *Bloque 1: Seguridad, Dompdf y Validador HTML (MAT-01 a MAT-09):* Configuración ultra-defensiva de Dompdf (`isRemoteEnabled=false`, `isPhpEnabled=false`, `isJavascriptEnabled=false`), confinamiento `chroot` estricto en almacenamiento local, rechazo categórico de `<script>`, `<iframe>`, `<object>`, `<embed>`, eventos JS (`onclick`, `onload`), esquemas `javascript:`/`data:`, URLs remotas `http://`/`https://`, y admisión de etiquetas estructurales y membretes institucionales locales seguros.
+  - *Bloque 2: Shortcodes, Compilador y Determinismo (MAT-10 a MAT-18):* Catálogo tipado para origen `ARRENDAMIENTO`, validación de shortcodes autorizados, rechazo con `VariableDocumentalDesconocidaExcepcion` (422) ante variables inventadas, rechazo con `VariableDocumentalFaltanteExcepcion` (422) ante datos requeridos vacíos, sanitización `htmlspecialchars()` de datos interpolados, ordenamiento determinista con `ksort()` en `snapshot_datos_json`, cálculo criptográfico de `hash_snapshot_sha256 = hash('sha256', snapshot_html)`, e invariante de determinismo reproducible.
+  - *Bloque 3: Generación PDF, Canonicalidad y Folios (MAT-19 a MAT-27):* Generación de binario PDF válido (`%PDF-1.`), cálculo de `hash_pdf_sha256` sobre bytes físicos almacenables, numeración nativa de páginas mediante canvas ("Página X de Y"), marca de agua diagonal con clase CSS `@page` en modo borrador, folio correlativo atómico `DOC-ARR-YYYYMM-XXXX` bajo `SELECT ... FOR UPDATE`, incremento consecutivo sin colisiones, persistencia fidedigna en `documentos_emitidos`, protección relacional InnoDB mediante clave única `uq_dpv_plantilla_activa` sobre columna virtual (Error 1062 ante dos versiones activas simultáneas), y conmutación atómica de versiones.
+  - *Bloque 4: Emisión, Borradores, Descarga y Verificación (MAT-28 a MAT-33):* Emisión oficial con generación simultánea de fila en BD y archivo físico, modo borrador sin consumo de folios ni persistencia en BD, descarga segura con verificación al 100% del hash SHA-256 de los bytes físicos en disco, detección de archivos faltantes (`ARCHIVO_FALTANTE`) o alterados (`HASH_NO_COINCIDE`) con `DocumentoCorruptoExcepcion` (HTTP 500), y garantía estricta de cero regeneración silenciosa en descargas ordinarias.
+  - *Bloque 5: Incidencias, Regeneración Asistida y Anulación (MAT-34 a MAT-40):* Registro formal de anomalías físicas en tabla `documento_incidencias` con trazabilidad de actor ejecutor, regeneración asistida exclusiva desde `snapshot_html` inmutable congelado con resolución automática de incidencias previas, anulación documental sin borrado físico registrando motivo, actor y fecha, preservación histórica garantizada ante mutaciones vivas de la base de datos, maquetación HTML de tablas de dotación física, y serialización de excepciones de dominio con códigos HTTP canónicos (404, 422, 500).
+- **Suite de Concurrencia e Integridad Documental (DOC-C01 a DOC-C06 — DOCUMENTOS-1):** 6 verificaciones de resistencia concurrente y defensiva:
+  - `DOC-C01`: Generación atómica concurrente de folios consecutivos bajo `SELECT ... FOR UPDATE` sin saltos ni duplicados.
+  - `DOC-C02`: Restricción física relacional InnoDB `uq_dpv_plantilla_activa` sobre columna virtual bloquea versiones activas simultáneas (Error 1062).
+  - `DOC-C03`: Detección transaccional de discrepancia de hash SHA-256 detiene la entrega del documento corrupto.
+  - `DOC-C04`: Confinamiento `chroot` estricto en Dompdf sin URLs remotas ni acceso al sistema de archivos del SO.
+  - `DOC-C05`: Rechazo estricto de 5 vectores de ataque XSS y HTML malicioso antes de compilar o persistir versiones de plantillas.
+  - `DOC-C06`: Inmutabilidad histórica comprobada: PDF reconstruido utiliza exclusivamente el snapshot HTML congelado y no se contamina por modificaciones en vivo de la BD.
+- **Suite E2E HTTP Real contra Apache (E2E-DOC-01 a E2E-DOC-14 — DOCUMENTOS-1):** 14 pruebas end-to-end con cURL contra el servidor web real Apache en HTTPS (`https://app.camargo-pms.test/`):
+  - `E2E-DOC-01`: Redirección anónima de `/documentos` hacia `/login` (HTTP 302).
+  - `E2E-DOC-02`: Autenticación real de usuario administrador con sesión y cookie HTTP.
+  - `E2E-DOC-03`: Bloqueo RBAC a usuario autenticado sin permiso `documentos.ver` (HTTP 403 Forbidden).
+  - `E2E-DOC-04`: Carga autorizada de `/documentos` con vista Alina, KPIs y pestañas operativas (HTTP 200).
+  - `E2E-DOC-05`: Catálogo JSON de plantillas con plantilla canónica activa (HTTP 200).
+  - `E2E-DOC-06`: Generación de borrador de contrato con cabecera `application/pdf` y marca de agua sin consumir folio (HTTP 200).
+  - `E2E-DOC-07`: Emisión oficial de contrato con asignación atómica de folio correlativo y hash SHA-256 (HTTP 201).
+  - `E2E-DOC-08`: Listado JSON de documentos emitidos reflejando el contrato emitido (HTTP 200).
+  - `E2E-DOC-09`: Descarga segura del binario PDF con hash SHA-256 verificado en vivo (HTTP 200).
+  - `E2E-DOC-10`: Verificación física del binario contra registro criptográfico en base de datos (HTTP 200).
+  - `E2E-DOC-11`: Rechazo con HTTP 422 ante intento de guardar versión de plantilla con inyecciones `<script>` o eventos JS.
+  - `E2E-DOC-12`: Publicación de versión inmutable V2 (HTTP 201) y conmutación atómica en InnoDB (HTTP 200).
+  - `E2E-DOC-13`: Anulación formal del contrato revocando validez legal y preservando histórico (HTTP 200).
+  - `E2E-DOC-14`: Detección en vivo de corrupción física de archivo (HTTP 500) y regeneración asistida controlada desde snapshot (HTTP 200).
 - **Reconciliación Canónica y Matemática Suite por Suite:**
 
 | Módulo / Fase | Suite de Prueba | Casos Dominio / Integración | Casos HTTP E2E (Apache) | Estado |
@@ -242,7 +270,10 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **INVENTARIO-1**    | `test_inventario_matriz_40.php` (INV-01..40) | 40 | — | 40/40 PASS |
 | **INVENTARIO-1**    | `test_inventario_concurrencia.php` (INV-C01..C06) | 6 | — | 6/6 PASS |
 | **INVENTARIO-1**    | `test_e2e_inventario.php` (E2E-INV-01..14) | — | 14 (`E2E-INV`) | 14/14 PASS |
-| **TOTALES CANÓNICOS**| **41 suites ejecutadas** | **1044** | **196** | **1240 casos PASS (100%)** |
+| **DOCUMENTOS-1**    | `test_documentos_matriz_40.php` (MAT-01..40) | 40 | — | 40/40 PASS |
+| **DOCUMENTOS-1**    | `test_documentos_concurrencia.php` (DOC-C01..C06) | 6 | — | 6/6 PASS |
+| **DOCUMENTOS-1**    | `test_e2e_documentos.php` (E2E-DOC-01..14) | — | 14 (`E2E-DOC`) | 14/14 PASS |
+| **TOTALES CANÓNICOS**| **44 suites ejecutadas** | **1090** | **210** | **1300 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
     - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
@@ -254,5 +285,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Arrendamientos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Mantenimiento-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Inventario-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - **Total Consolidado de Regresión Activa: 638/638 PASS (100%)**.
+    - Documentos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
+    - **Total Consolidado de Regresión Activa: 698/698 PASS (100%)**.
 

@@ -703,6 +703,59 @@ $enrutador->get('/api/inventario/dotaciones/auditoria/{unidadId}', [\CamargoPMS\
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('inventario.ver'),
 ]);
 
+// =========================================================================
+// Rutas de Motor Documental, Plantillas y Generación PDF (DOCUMENTOS-1 / D-079)
+// =========================================================================
+
+// Vista principal Alina D-075
+$enrutador->get('/documentos', [\CamargoPMS\Controladores\DocumentoControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
+]);
+
+// API: Documentos emitidos
+$enrutador->get('/api/documentos', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiListarDocumentos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
+]);
+$enrutador->get('/api/documentos/incidencias', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiListarIncidencias'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
+]);
+
+// API: Plantillas y Versiones
+$enrutador->get('/api/documentos/plantillas', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiListarPlantillas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
+]);
+$enrutador->post('/api/documentos/plantillas', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiCrearPlantilla'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.plantillas.gestionar'),
+]);
+$enrutador->get('/api/documentos/plantillas/{id}/versiones', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiListarVersiones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
+]);
+$enrutador->post('/api/documentos/plantillas/{id}/versiones', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiCrearVersion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.plantillas.gestionar'),
+]);
+$enrutador->post('/api/documentos/plantillas/{id}/versiones/{versionId}/activar', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiActivarVersion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.plantillas.gestionar'),
+]);
+
+// API: Emisión de Contratos
+$enrutador->post('/api/arrendamientos/{id}/emitir-contrato', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiEmitirContratoArrendamiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.emitir'),
+]);
+
+// API: Operaciones sobre Documentos Emitidos
+$enrutador->get('/api/documentos/{id}/descargar', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiDescargarDocumento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.descargar'),
+]);
+$enrutador->get('/api/documentos/{id}/verificar', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiVerificarDocumento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
+]);
+$enrutador->post('/api/documentos/{id}/regenerar', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiRegenerarDocumento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.regenerar'),
+]);
+$enrutador->post('/api/documentos/{id}/anular', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiAnularDocumento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.anular'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

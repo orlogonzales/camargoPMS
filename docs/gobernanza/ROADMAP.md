@@ -400,6 +400,23 @@ Implementación del dominio de inventario físico, existencias por ubicación, K
 - **Persistencia Relacional (Migración 020):** Tablas `inventario_unidades_medida`, `inventario_ubicaciones`, `inventario_articulos`, `inventario_existencias`, `inventario_movimientos`, `inventario_activos`, `inventario_dotaciones_estandar`, permisos RBAC (`inventario.*`) y menú bajo Operaciones.
 - **Interfaz Alina Conforme a D-075:** Módulo en `/inventario` con formulario píldora 20px, Select2 42px, Flatpickr, badges y PristineJS.
 
+Estado: homologada (micro-baseline oficial f8f1fcb).
+
+## DOCUMENTOS-1 — Motor Documental, Plantillas Versionadas y Generación PDF
+
+Implementación del motor central de generación documental, plantillas versionadas y contratos de arrendamiento bajo D-079:
+- **Homologación de Dompdf 3.x:** Motor PDF oficial en PHP 8.3 puro (congelado por `composer.lock`), cero binarios externos.
+- **Configuración de Seguridad Estricta:** `isRemoteEnabled = false`, `chroot` confinado estrictamente a rutas locales autorizadas, PHP y JavaScript deshabilitados.
+- **Sanitización de HTML Documental:** Rechazo absoluto de `<script>`, `<iframe>`, `<object>`, `<embed>`, URLs externas o esquemas arbitrarios y event handlers.
+- **Ontología Documental Vinculante:** $\text{PLANTILLA} \neq \text{VERSIÓN} \neq \text{SNAPSHOT} \neq \text{DOCUMENTO EMITIDO} \neq \text{PDF BINARIO}$. Modificaciones futuras no alteran documentos históricos.
+- **Snapshots Inmutables:** `snapshot_datos_json` (datos deterministas) y `snapshot_html` (HTML resuelto congelado).
+- **Integridad Criptográfica:** `hash_pdf_sha256` calculado sobre los bytes exactos del PDF físico almacenado.
+- **Regeneración Auditada:** Cero regeneración silenciosa ante pérdida o corrupción de archivos; detección y registro en `documento_incidencias`.
+- **Shortcodes Tipados:** Registro central tipado (`RegistroVariablesDocumentales`) con resolución y escape HTML. Shortcodes desconocidos o faltantes lanzan HTTP 422.
+- **Activación Única y Folios Seguros:** Activación protegida a nivel InnoDB mediante columna virtual generada con índice único. Folios `DOC-ARR-YYYYMM-XXXX` generados con secuencias transaccionales atómicas.
+- **Vertical Inicial de Contrato de Arrendamiento:** Generación completa del contrato legal formal A4 a partir de `arrendamiento_contratos`, sus partes, cánones, garantías y anexo de dotación física.
+- **Persistencia Relacional (Migración 021):** Tablas `documento_secuencias`, `documento_plantillas`, `documento_plantilla_versiones`, `documentos_emitidos`, `documento_incidencias` y permisos RBAC (`documentos.*`).
+
 Estado: en progreso.
 
 ## Dominio operativo

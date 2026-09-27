@@ -1026,6 +1026,30 @@ $$\mathbf{ARTÍCULO} \quad \neq \quad \mathbf{EXISTENCIA\ (STOCK)} \quad \neq \q
     - Validación en servicio que genera `StockInsuficienteExcepcion` (HTTP 422).
     - Conflictos de bloqueo o deadlocks (1205, 1213) traducidos a `ConflictoInventarioExcepcion` (HTTP 409).
 
+### D-079 — Motor Documental, Plantillas Versionadas, Generación PDF y Homologación de Dompdf (GATE P-007 / DOCUMENTOS-1)
+
+Se formaliza el diseño arquitectónico del motor documental y se cierra definitivamente la decisión pendiente `P-007`:
+
+1. **Homologación de Dompdf:** Se adopta oficialmente `dompdf/dompdf`, versión homologada exacta `3.1.6` congelada en `composer.lock`, ejecutada en PHP 8.3 puro sin binarios nativos externos (cero Node.js, cero Chromium headless, cero wkhtmltopdf).
+2. **Configuración de Seguridad Estricta:** `isRemoteEnabled = false`, `chroot` restringido únicamente a `storage/documentos/`, `storage/membretes/` y `public/assets/fuentes/`. PHP y JavaScript embebidos desactivados.
+3. **Sanitización de HTML Documental:** Validador/sanitizador documental rechaza estrictamente `<script>`, `<iframe>`, `<object>`, `<embed>`, URLs remotas o `file://` arbitrarios, y event handlers (`onclick=`, etc.). Imágenes solo vía recursos controlados del sistema.
+4. **Ontología Inmutable Vinculante:** $\text{PLANTILLA} \neq \text{VERSIÓN} \neq \text{SNAPSHOT} \neq \text{DOCUMENTO EMITIDO} \neq \text{PDF BINARIO}$. Cambios futuros en catálogo o entidades jamás alteran documentos históricos emitidos.
+5. **Referencia de Versión:** `documentos_emitidos` almacena obligatoriamente `plantilla_id` y `plantilla_version_id` para trazabilidad exacta.
+6. **Snapshots Deterministas:** `snapshot_datos_json` (evidencia estructurada determinista) y `snapshot_html` (representación resuelta compilada).
+7. **Hash Criptográfico del Binario:** `hash_pdf_sha256 = SHA-256(bytes exactos del PDF almacenado)`.
+8. **Regeneración vs. Histórico:** El PDF original es el artefacto soberano. Regeneración $\neq$ garantía automática de identidad binaria; reconstruye fielmente el documento visual desde el snapshot, pero un hash distinto no sustituye silenciosamente el histórico.
+9. **No Regeneración Silenciosa al Descargar:** Archivos ausentes o con hash discrepante levantan incidencia documental auditada y requieren regeneración controlada.
+10. **Shortcodes con Registro Central:** Catálogo tipado `RegistroVariablesDocumentales` con resolución y escape HTML obligatorio. Cero reflexión arbitraria.
+11. **Bloqueo por Shortcode Inválido:** Placeholders desconocidos lanzan `VariableDocumentalDesconocidaExcepcion` (422) y variables requeridas faltantes lanzan `VariableDocumentalFaltanteExcepcion` (422).
+12. **Inmutabilidad de Versiones Publicadas:** Las versiones activas o históricas no se editan; cualquier cambio genera una nueva versión secuencial.
+13. **Activación Única en InnoDB:** Columna virtual generada `version_activa_idx` con `UNIQUE KEY uq_dpv_plantilla_activa` para impedir carreras en activación.
+14. **Folios Concurrency-Safe:** Secuencias atómicas transaccionales (`documento_secuencias` con `FOR UPDATE`). Formato `DOC-ARR-YYYYMM-XXXX`.
+15. **Catálogo Controlado de Orígenes:** `origen_tipo` ENUM ('ARRENDAMIENTO', 'RESERVA', 'ESTADIA', 'PAGO', 'RECIBO'). `origen_tipo ≠ tipo_documento`.
+16. **Membretes Versionados:** Archivos de membrete identificados de forma inmutable; nunca se sobrescribe físicamente un membrete histórico.
+17. **Márgenes Configurables por Plantilla:** Valores milimétricos configurables por plantilla (defaults: 35 mm sup, 28 mm inf, 20 mm laterales).
+18. **CSS Documental Print-Oriented:** Estilos específicos para Dompdf (`@page`, bloques, tablas). Cero dependencias de Flexbox, CSS Grid o clases Alina/Bootstrap.
+19. **Alcance Inicial:** Primera vertical completa: Motor documental + plantillas versionadas + contrato de arrendamiento (`DOCUMENTOS-1`).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
@@ -1034,7 +1058,7 @@ $$\mathbf{ARTÍCULO} \quad \neq \quad \mathbf{EXISTENCIA\ (STOCK)} \quad \neq \q
 | P-004 | Estrategia de zona horaria y fecha hotelera | Antes de disponibilidad | **Cerrada en D-066** |
 | P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja | **Cerrada en D-069** |
 | P-006 | Estrategia de concurrencia para disponibilidad | Antes de reservas | **Cerrada en D-067** |
-| P-007 | Librería PDF | Antes de contratos/recibos | Pendiente |
+| P-007 | Librería PDF | Antes de contratos/recibos | **Cerrada en D-079** |
 | P-008 | Proveedor inicial de pagos | Antes de integración de pagos | Pendiente |
 | P-009 | Retención de datos y auditoría | Antes de producción | Pendiente |
 
