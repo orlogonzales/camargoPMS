@@ -45,7 +45,7 @@ declare(strict_types=1);
         <div class="row main-content-box">
             <div class="col-lg-5 form-content-box p-0">
                 <div class="form-container">
-                    <form class="app-form" action="<?= url_ruta('/login') ?>" method="POST">
+                    <form class="app-form app-icon-form" action="<?= url_ruta('/login') ?>" method="POST">
                         <?= csrf_campo() ?>
 
                         <?php if (!empty($return)): ?>

@@ -63,7 +63,7 @@ declare(strict_types=1);
                 </ul>
 
                 <!-- Contenido de las Pestañas y Formulario Central -->
-                <form id="form-configuracion-sistema" class="p-4" novalidate autocomplete="off">
+                <form id="form-configuracion-sistema" class="app-form p-4" novalidate autocomplete="off">
                     <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
 
                     <div class="tab-content" id="contenido-tabs-configuracion">
@@ -189,7 +189,7 @@ declare(strict_types=1);
                                                                <?= !$esEditable || empty($capacidades['puede_editar']) ? 'readonly disabled' : '' ?>>
                                                     </div>
                                                 <?php elseif ($clave === 'sistema.idioma'): ?>
-                                                    <select class="form-select form-select-sm campo-configuracion basic-select2"
+                                                    <select class="form-select campo-configuracion basic-select2"
                                                             id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
                                                             name="configuraciones[<?= e($clave) ?>]"
                                                             <?= !$esEditable || empty($capacidades['puede_editar']) ? 'disabled' : '' ?>>

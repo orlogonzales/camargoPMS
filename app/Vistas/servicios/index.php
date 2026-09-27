@@ -390,7 +390,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-contratar-servicio" novalidate>
+            <form id="form-contratar-servicio" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <!-- Reserva Comercial Titular (Obligatoria) -->
@@ -614,7 +614,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-crear-servicio" novalidate>
+            <form id="form-crear-servicio" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="servicio-id" name="id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
@@ -723,7 +723,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-crear-proveedor" novalidate>
+            <form id="form-crear-proveedor" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="proveedor-id" name="id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
@@ -815,7 +815,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-homologar-proveedor" novalidate>
+            <form id="form-homologar-proveedor" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="homologar-servicio-id" name="servicio_id">
                 <div class="modal-body p-4">
                     <div class="mb-3">
@@ -876,7 +876,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-cancelar-servicio" novalidate>
+            <form id="form-cancelar-servicio" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="cancelar-contratado-id" name="id">
                 <div class="modal-body p-4">
                     <p class="text-secondary f-s-13 mb-3">

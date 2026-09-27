@@ -232,14 +232,15 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **FINANCIERO-2** | `test_financiero_concurrencia.php` (FIN2-C01..C06) | 6 | — | 6/6 PASS |
 | **FINANCIERO-2** | `test_e2e_financiero.php` (E2E-FIN2-01..15) | — | 15 (`E2E-FIN2`) | 15/15 PASS |
 | **UI-3** | `test_ui3_matriz_25.php` (UI3-01..25) | 25 | — | 25/25 PASS |
-| **TOTALES CANÓNICOS**| **31 suites ejecutadas** | **836** | **154** | **990 casos PASS (100%)** |
+| **UI-3A** | `test_ui3a_fidelidad_alina.php` (Fidelidad Alina D-075) | 70 | — | 70/70 PASS |
+| **TOTALES CANÓNICOS**| **32 suites ejecutadas** | **906** | **154** | **1060 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
-    - UI-2 (25) + UI-2A (20) + UI-3 (25) = 70 casos
+    - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
     - Disponibilidad Matriz (40) + E2E Disponibilidad (12) = 52 casos
     - Reservas Matriz (50) + Concurrencia Reservas (6) + E2E Reservas (15) + RES-1A (12) = 83 casos
     - Estadías Matriz (40) + Concurrencia Estadías (6) + E2E Estadías (15) = 61 casos
     - Servicios Matriz (40) + Concurrencia Servicios (6) + E2E Servicios (15) = 61 casos
     - Financiero-2 Matriz (40) + Concurrencia Financiero-2 (6) + E2E Financiero-2 (15) = 61 casos
-    - **Total Consolidado de Regresión Activa: 388/388 PASS (100%)**.
+    - **Total Consolidado de Regresión Activa: 458/458 PASS (100%)**.
 

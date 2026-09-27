@@ -57,7 +57,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
-                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-propiedad-unidad" data-placeholder="Todas las propiedades">
+                        <select class="form-select basic-select2 select-clear" id="filtro-propiedad-unidad" data-placeholder="Todas las propiedades">
                             <option value="">Todas las propiedades</option>
                             <?php foreach ($propiedades as $pr): ?>
                                 <option value="<?= (int)$pr['id'] ?>" <?= $propiedadIdFiltro === (int)$pr['id'] ? 'selected' : '' ?>>
@@ -67,7 +67,7 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-tipo-unidad" data-placeholder="Todos los tipos">
+                        <select class="form-select basic-select2 select-clear" id="filtro-tipo-unidad" data-placeholder="Todos los tipos">
                             <option value="">Todos los tipos</option>
                             <?php foreach ($tiposUnidad as $tu): ?>
                                 <option value="<?= (int)$tu['id'] ?>"><?= e($tu['nombre']) ?></option>
@@ -75,7 +75,7 @@ declare(strict_types=1);
                         </select>
                     </div>
                     <div class="col-md-2 col-6">
-                        <select class="form-select form-select-sm basic-select2 select-clear" id="filtro-estado-unidad" data-placeholder="Todos los estados">
+                        <select class="form-select basic-select2 select-clear" id="filtro-estado-unidad" data-placeholder="Todos los estados">
                             <option value="">Todos los estados</option>
                             <option value="ACTIVO">ACTIVO</option>
                             <option value="INACTIVO">INACTIVO</option>
@@ -155,7 +155,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-unidad" novalidate>
+            <form id="form-unidad" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="unidad-id" name="id" value="">
                 <div class="modal-body p-4">
                     <div class="row g-3">
@@ -164,7 +164,7 @@ declare(strict_types=1);
                             <label for="unidad-propiedad-id" class="form-label f-s-13 f-w-600">
                                 Propiedad Física <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm basic-select2" id="unidad-propiedad-id" name="propiedad_id" required
+                            <select class="form-select basic-select2" id="unidad-propiedad-id" name="propiedad_id" required
                                     data-placeholder="Seleccione una propiedad..."
                                     data-pristine-required-message="Debe seleccionar una propiedad física.">
                                 <option value="">Seleccione una propiedad...</option>
@@ -179,7 +179,7 @@ declare(strict_types=1);
                             <label for="unidad-tipo-id" class="form-label f-s-13 f-w-600">
                                 Tipo de Unidad <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm basic-select2" id="unidad-tipo-id" name="tipo_unidad_id" required
+                            <select class="form-select basic-select2" id="unidad-tipo-id" name="tipo_unidad_id" required
                                     data-placeholder="Seleccione un tipo..."
                                     data-pristine-required-message="Debe seleccionar el tipo de unidad.">
                                 <option value="">Seleccione un tipo...</option>
@@ -196,7 +196,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-barcode position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5 text-uppercase" id="unidad-codigo" name="codigo"
+                                <input type="text" class="form-control ps-5 text-uppercase" id="unidad-codigo" name="codigo"
                                        placeholder="Ej: DPTO-101, HAB-01" maxlength="50" required
                                        data-pristine-required-message="El código es obligatorio."
                                        data-pristine-pattern="/^[A-Za-z0-9\-_.\/ ]+$/"
@@ -212,7 +212,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-door-open position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5" id="unidad-nombre" name="nombre"
+                                <input type="text" class="form-control ps-5" id="unidad-nombre" name="nombre"
                                        placeholder="Ej: Departamento 101 Vista Mar" maxlength="150" required minlength="2"
                                        data-pristine-required-message="El nombre es obligatorio."
                                        data-pristine-minlength-message="Mínimo 2 caracteres.">
@@ -226,7 +226,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-layer-group position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5" id="unidad-piso-nivel" name="piso_nivel"
+                                <input type="text" class="form-control ps-5" id="unidad-piso-nivel" name="piso_nivel"
                                        placeholder="Ej: 1, 2, PB, Azotea" maxlength="30">
                             </div>
                         </div>
@@ -245,7 +245,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-user-group position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="number" class="form-control form-control-sm ps-5" id="unidad-capacidad" name="capacidad_personas"
+                                <input type="number" class="form-control ps-5" id="unidad-capacidad" name="capacidad_personas"
                                        value="1" min="1" max="100" required
                                        data-pristine-required-message="Capacidad requerida."
                                        data-pristine-min-message="Mínimo 1 persona.">
@@ -259,7 +259,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-bed position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="number" class="form-control form-control-sm ps-5" id="unidad-dormitorios" name="dormitorios"
+                                <input type="number" class="form-control ps-5" id="unidad-dormitorios" name="dormitorios"
                                        value="1" min="0" max="50" required
                                        data-pristine-required-message="Dormitorios requeridos."
                                        data-pristine-min-message="No puede ser negativo.">
@@ -274,7 +274,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-bath position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="number" step="0.5" class="form-control form-control-sm ps-5" id="unidad-banos" name="banos"
+                                <input type="number" step="0.5" class="form-control ps-5" id="unidad-banos" name="banos"
                                        value="1.0" min="0" max="50" required
                                        data-pristine-required-message="Baños requeridos."
                                        data-pristine-min-message="No puede ser negativo.">
@@ -288,7 +288,7 @@ declare(strict_types=1);
                             </label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-ruler-combined position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="number" step="0.01" class="form-control form-control-sm ps-5" id="unidad-area-m2" name="area_m2"
+                                <input type="number" step="0.01" class="form-control ps-5" id="unidad-area-m2" name="area_m2"
                                        placeholder="Ej: 65.50" min="0.01" max="99999.99"
                                        data-pristine-min-message="Debe ser mayor a 0 m².">
                             </div>
@@ -299,7 +299,7 @@ declare(strict_types=1);
                             <label for="unidad-descripcion" class="form-label f-s-13 f-w-600">Descripción / Detalles</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-align-left position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
-                                <textarea class="form-control form-control-sm ps-5" id="unidad-descripcion" name="descripcion" rows="2"
+                                <textarea class="form-control ps-5" id="unidad-descripcion" name="descripcion" rows="2"
                                           placeholder="Descripción de la distribución, vista o características físicas de la unidad..."></textarea>
                             </div>
                         </div>
@@ -309,7 +309,7 @@ declare(strict_types=1);
                             <label for="unidad-observaciones" class="form-label f-s-13 f-w-600">Observaciones Internas</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
-                                <textarea class="form-control form-control-sm ps-5" id="unidad-observaciones" name="observaciones" rows="1"
+                                <textarea class="form-control ps-5" id="unidad-observaciones" name="observaciones" rows="1"
                                           placeholder="Notas administrativas o de mantenimiento interno..."></textarea>
                             </div>
                         </div>
@@ -335,7 +335,7 @@ declare(strict_types=1);
                 <h6 class="modal-title f-s-14 f-w-700" id="modal-estado-unidad-titulo">Cambiar Estado</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-estado-unidad">
+            <form id="form-estado-unidad" class="app-form app-icon-form">
                 <input type="hidden" id="estado-unidad-id" value="">
                 <input type="hidden" id="estado-unidad-nuevo" value="">
                 <div class="modal-body p-3">
@@ -346,7 +346,7 @@ declare(strict_types=1);
                         <label for="motivo-cambio-estado-unidad" class="form-label f-s-12 f-w-600">Motivo (opcional)</label>
                         <div class="icon-control position-relative">
                             <i class="fa-solid fa-pen-to-square position-absolute top-0 start-0 mt-2 ms-3 text-secondary"></i>
-                            <textarea class="form-control form-control-sm ps-5" id="motivo-cambio-estado-unidad" rows="2"
+                            <textarea class="form-control ps-5" id="motivo-cambio-estado-unidad" rows="2"
                                       placeholder="Justificación del cambio de estado para trazabilidad..."></textarea>
                         </div>
                     </div>

@@ -195,7 +195,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-checkin" novalidate>
+            <form id="form-checkin" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-3">
                     <div class="row g-3">
                         <!-- Selección de Reserva Confirmada -->
@@ -332,7 +332,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-checkout" novalidate>
+            <form id="form-checkout" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="checkout-estadia-id">
                 <div class="modal-body p-3">
                     <div class="p-3 bg-light b-r-8 mb-3 border">
@@ -392,7 +392,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-anular-estadia" novalidate>
+            <form id="form-anular-estadia" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="anular-estadia-id">
                 <div class="modal-body p-3">
                     <p class="f-s-13 mb-2">

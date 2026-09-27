@@ -287,7 +287,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-propiedad" novalidate>
+            <form id="form-propiedad" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="propiedad-id" name="id" value="<?= (int) $propiedad->obtenerId() ?>">
                 <div class="modal-body p-4">
                     <div class="row g-3">
@@ -295,21 +295,21 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                             <label for="propiedad-codigo" class="form-label f-s-13 f-w-600">
                                 Código Inmueble <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm text-uppercase" id="propiedad-codigo" name="codigo"
+                            <input type="text" class="form-control text-uppercase" id="propiedad-codigo" name="codigo"
                                    required minlength="2" maxlength="30" value="<?= e($propiedad->obtenerCodigo()) ?>">
                         </div>
                         <div class="col-md-8">
                             <label for="propiedad-nombre" class="form-label f-s-13 f-w-600">
                                 Nombre del Inmueble / Edificio <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-nombre" name="nombre"
+                            <input type="text" class="form-control" id="propiedad-nombre" name="nombre"
                                    required minlength="3" maxlength="150" value="<?= e($propiedad->obtenerNombre()) ?>">
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-pais-id" class="form-label f-s-13 f-w-600">
                                 País <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm" id="propiedad-pais-id" name="pais_id" required>
+                            <select class="form-select" id="propiedad-pais-id" name="pais_id" required>
                                 <option value="">-- Seleccionar --</option>
                                 <?php foreach ($paises as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" <?= $p['id'] === $propiedad->obtenerPaisId() ? 'selected' : '' ?>>
@@ -320,47 +320,47 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-departamento" class="form-label f-s-13 f-w-600">Departamento / Región</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-departamento" name="departamento"
+                            <input type="text" class="form-control" id="propiedad-departamento" name="departamento"
                                    maxlength="100" value="<?= e($propiedad->obtenerDepartamento() ?? '') ?>">
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-provincia" class="form-label f-s-13 f-w-600">Provincia</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-provincia" name="provincia"
+                            <input type="text" class="form-control" id="propiedad-provincia" name="provincia"
                                    maxlength="100" value="<?= e($propiedad->obtenerProvincia() ?? '') ?>">
                         </div>
                         <div class="col-md-3">
                             <label for="propiedad-distrito" class="form-label f-s-13 f-w-600">Distrito</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-distrito" name="distrito"
+                            <input type="text" class="form-control" id="propiedad-distrito" name="distrito"
                                    maxlength="100" value="<?= e($propiedad->obtenerDistrito() ?? '') ?>">
                         </div>
                         <div class="col-md-7">
                             <label for="propiedad-direccion" class="form-label f-s-13 f-w-600">Dirección Física</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-direccion" name="direccion"
+                            <input type="text" class="form-control" id="propiedad-direccion" name="direccion"
                                    maxlength="255" value="<?= e($propiedad->obtenerDireccion() ?? '') ?>">
                         </div>
                         <div class="col-md-5">
                             <label for="propiedad-referencia" class="form-label f-s-13 f-w-600">Referencia de Acceso</label>
-                            <input type="text" class="form-control form-control-sm" id="propiedad-referencia" name="referencia"
+                            <input type="text" class="form-control" id="propiedad-referencia" name="referencia"
                                    maxlength="255" value="<?= e($propiedad->obtenerReferencia() ?? '') ?>">
                         </div>
                         <div class="col-md-6">
                             <label for="propiedad-latitud" class="form-label f-s-13 f-w-600">Latitud GPS</label>
-                            <input type="number" step="0.0000001" min="-90" max="90" class="form-control form-control-sm"
+                            <input type="number" step="0.0000001" min="-90" max="90" class="form-control"
                                    id="propiedad-latitud" name="latitud" value="<?= $lat !== null ? (float) $lat : '' ?>">
                         </div>
                         <div class="col-md-6">
                             <label for="propiedad-longitud" class="form-label f-s-13 f-w-600">Longitud GPS</label>
-                            <input type="number" step="0.0000001" min="-180" max="180" class="form-control form-control-sm"
+                            <input type="number" step="0.0000001" min="-180" max="180" class="form-control"
                                    id="propiedad-longitud" name="longitud" value="<?= $lng !== null ? (float) $lng : '' ?>">
                         </div>
                         <div class="col-12">
                             <label for="propiedad-descripcion" class="form-label f-s-13 f-w-600">Descripción General</label>
-                            <textarea class="form-control form-control-sm" id="propiedad-descripcion" name="descripcion"
+                            <textarea class="form-control" id="propiedad-descripcion" name="descripcion"
                                       rows="2"><?= e($propiedad->obtenerDescripcion() ?? '') ?></textarea>
                         </div>
                         <div class="col-12">
                             <label for="propiedad-observaciones" class="form-label f-s-13 f-w-600">Observaciones Internas</label>
-                            <textarea class="form-control form-control-sm" id="propiedad-observaciones" name="observaciones"
+                            <textarea class="form-control" id="propiedad-observaciones" name="observaciones"
                                       rows="2"><?= e($propiedad->obtenerObservaciones() ?? '') ?></textarea>
                         </div>
                     </div>

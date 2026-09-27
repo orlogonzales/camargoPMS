@@ -228,7 +228,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-apertura-caja" novalidate>
+            <form id="form-apertura-caja" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="apertura-caja-id" class="form-label f-s-12 f-w-600">Caja Física <span class="text-danger">*</span></label>
@@ -275,7 +275,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-cierre-caja" novalidate>
+            <form id="form-cierre-caja" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="cierre-sesion-id" name="sesion_id" value="">
                 <div class="modal-body p-4">
                     <div class="alert alert-warning border-0 p-3 mb-3 b-r-8 f-s-12">
@@ -352,7 +352,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-movimiento-caja" novalidate>
+            <form id="form-movimiento-caja" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="mov-tipo" class="form-label f-s-12 f-w-600">Tipo de Movimiento <span class="text-danger">*</span></label>
@@ -545,7 +545,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-registrar-cobro" novalidate>
+            <form id="form-registrar-cobro" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="cobro-folio-id" name="cuenta_folio_id" value="">
                 <div class="modal-body p-4">
                     <div class="mb-3">
@@ -626,7 +626,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-aplicar-pago" novalidate>
+            <form id="form-aplicar-pago" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="aplicar-cargo-id" name="cargo_id" value="">
                 <div class="modal-body p-4">
                     <div class="mb-3">
@@ -671,7 +671,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-registrar-devolucion" novalidate>
+            <form id="form-registrar-devolucion" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="dev-folio-id" name="cuenta_folio_id" value="">
                 <input type="hidden" id="dev-pago-id" name="pago_id" value="">
                 <div class="modal-body p-4">

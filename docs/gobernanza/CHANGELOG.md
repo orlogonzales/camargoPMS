@@ -4,6 +4,25 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-3A — Fidelidad Visual Exacta de Formularios Nativos Alina (D-075)
+
+- **Corrección Geométrica y Fidelidad Visual Exacta de Formularios Alina:**
+  - Diagnóstico empírico mediante Headless Edge CDP de los componentes originales de Alina (`admin-dashboard/alina/template/default_forms.html` y `select.html`).
+  - Eliminación absoluta de overrides artificiales destructivos en `camargo.css` que forzaban `border-radius: 0.375rem !important` y alturas achatadas.
+- **Vertical Form With Icon de Alina:**
+  - Adopción transversal de la clase canónica `<form class="app-form app-icon-form">` en todas las vistas y modales del PMS.
+  - Implementación nativa del separador vertical `|` de 1px entre el icono y el texto mediante el pseudo-elemento `.icon-control::after` (`left: 40px`, `height: 20px`, `background: rgba(var(--dark), 0.6)`).
+  - Geometría tipo píldora nativa con `border-radius: var(--app-border-radius)` (20px), padding de `0.8rem 0.75rem 0.8rem 3rem` (48px) e icono centrado con `pointer-events: none`.
+- **Select 2 de Alina:**
+  - Estandarización de la caja de selección a píldora redondeada `border-radius: var(--app-border-radius)` (20px), borde `1px solid rgba(var(--secondary), 0.4)` y altura nativa de 42px (`calc(2.5rem + var(--bs-border-width) * 2)`).
+  - Flecha chevron de Font Awesome 6 `\f078` y botón de limpieza redondeado a 14px (`.select2-selection__clear`) con fondo tenue rojo `rgba(var(--danger), 0.2)`.
+  - Erradicación de clases `form-control-sm` y `form-select-sm` en campos dentro de `.icon-control` o con `.basic-select2`.
+- **Verificación Automatizada e Inmutabilidad:**
+  - Suite automatizada `tests/test_ui3a_fidelidad_alina.php` con 70/70 aserciones PASS.
+  - Regresión consolidada completa de fases anteriores: 363/363 PASS.
+  - Gran total verificado: 433/433 PASS (100%).
+  - Cero dependencias externas / CDN, cero alteraciones funcionales de backend y cero migraciones SQL.
+
 ### Microfase UI-3 — Estandarización de Formularios mediante Componentes Nativos Alina
 
 - **Vertical Form With Icon de Alina (D-075):**

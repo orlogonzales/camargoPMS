@@ -212,7 +212,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                 <h5 class="modal-title f-w-700" id="modal-opcion-titulo">Opción de Menú</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-opcion-menu" autocomplete="off" novalidate>
+            <form id="form-opcion-menu" class="app-form app-icon-form" autocomplete="off" novalidate>
                 <input type="hidden" id="opcion-id" name="id" value="">
                 <?= csrf_campo() ?>
 
@@ -220,7 +220,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                     <!-- Nivel / Categoría Padre -->
                     <div class="mb-3">
                         <label for="opcion-padre-id" class="form-label f-s-13 f-w-600">Nivel de Menú</label>
-                        <select class="form-select form-select-sm basic-select2" id="opcion-padre-id" name="padre_id"
+                        <select class="form-select basic-select2" id="opcion-padre-id" name="padre_id"
                                 data-placeholder="Categoría Principal (Nivel 1 — Icono Superior)">
                             <option value="">Categoría Principal (Nivel 1 — Icono Superior)</option>
                             <optgroup label="Asignar como Opción Secundaria (Nivel 2) bajo:">
@@ -242,7 +242,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                             <label for="opcion-clave" class="form-label f-s-13 f-w-600">Clave Técnica <span class="text-danger">*</span></label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-key position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5" id="opcion-clave" name="clave"
+                                <input type="text" class="form-control ps-5" id="opcion-clave" name="clave"
                                        placeholder="ej. config_menu" required pattern="/^[a-z0-9_\-]+$/" maxlength="50"
                                        data-pristine-required-message="La clave técnica es obligatoria."
                                        data-pristine-pattern-message="Solo se admiten letras minúsculas, números, guiones y barras bajas."
@@ -256,7 +256,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                             <label for="opcion-nombre" class="form-label f-s-13 f-w-600">Nombre Visible <span class="text-danger">*</span></label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5" id="opcion-nombre" name="nombre"
+                                <input type="text" class="form-control ps-5" id="opcion-nombre" name="nombre"
                                        placeholder="ej. Gestión de menú" required maxlength="100"
                                        data-pristine-required-message="El nombre visible es obligatorio."
                                        data-pristine-maxlength-message="El nombre visible no puede superar los 100 caracteres.">
@@ -270,7 +270,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                             <label for="opcion-icono" class="form-label f-s-13 f-w-600">Icono (Font Awesome)</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-icons position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5" id="opcion-icono" name="icono"
+                                <input type="text" class="form-control ps-5" id="opcion-icono" name="icono"
                                        placeholder="fa-solid fa-bars" maxlength="100">
                             </div>
                         </div>
@@ -280,7 +280,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                             <label for="opcion-orden" class="form-label f-s-13 f-w-600">Posición de Orden</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-arrow-down-1-9 position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="number" class="form-control form-control-sm ps-5" id="opcion-orden" name="orden"
+                                <input type="number" class="form-control ps-5" id="opcion-orden" name="orden"
                                        value="1" min="1" max="999"
                                        data-pristine-min-message="La posición de orden mínima es 1."
                                        data-pristine-max-message="La posición de orden máxima es 999.">
@@ -293,7 +293,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                         <label for="opcion-ruta" class="form-label f-s-13 f-w-600">Ruta Local Interna</label>
                         <div class="icon-control position-relative">
                             <i class="fa-solid fa-link position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                            <input type="text" class="form-control form-control-sm ps-5" id="opcion-ruta" name="ruta"
+                            <input type="text" class="form-control ps-5" id="opcion-ruta" name="ruta"
                                    placeholder="/configuracion/menu" maxlength="255">
                         </div>
                         <div class="form-text f-s-11">Debe ser una ruta local (ej. <code>/usuarios</code>). No se aceptan URLs externas ni esquemas script.</div>
@@ -303,7 +303,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                         <!-- Permiso RBAC -->
                         <div class="col-md-8 mb-3">
                             <label for="opcion-permiso-id" class="form-label f-s-13 f-w-600">Permiso RBAC de Visibilidad</label>
-                            <select class="form-select form-select-sm basic-select2" id="opcion-permiso-id" name="permiso_id"
+                            <select class="form-select basic-select2" id="opcion-permiso-id" name="permiso_id"
                                     data-placeholder="Sin restricción específica (Visible a autenticados)">
                                 <option value="">Sin restricción específica (Visible a autenticados)</option>
                                 <?php foreach ($permisos as $perm): ?>
@@ -318,7 +318,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                         <!-- Estado -->
                         <div class="col-md-4 mb-3">
                             <label for="opcion-estado" class="form-label f-s-13 f-w-600">Estado</label>
-                            <select class="form-select form-select-sm basic-select2" id="opcion-estado" name="estado">
+                            <select class="form-select basic-select2" id="opcion-estado" name="estado">
                                 <option value="ACTIVO" selected>ACTIVO</option>
                                 <option value="INACTIVO">INACTIVO</option>
                             </select>

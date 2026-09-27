@@ -275,21 +275,21 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-unidad" novalidate>
+            <form id="form-unidad" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="unidad-id" name="id" value="<?= (int)$unidad->obtenerId() ?>">
                 <input type="hidden" id="unidad-propiedad-id" name="propiedad_id" value="<?= (int)$unidad->obtenerPropiedadId() ?>">
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6 col-12">
                             <label class="form-label f-s-13 f-w-600">Propiedad Física</label>
-                            <input type="text" class="form-control form-control-sm bg-light" 
+                            <input type="text" class="form-control bg-light"
                                    value="<?= $propiedad ? e($propiedad->obtenerNombre()) : 'ID ' . $unidad->obtenerPropiedadId() ?>" readonly>
                         </div>
                         <div class="col-md-6 col-12">
                             <label for="unidad-tipo-id" class="form-label f-s-13 f-w-600">
                                 Tipo de Unidad <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-select-sm" id="unidad-tipo-id" name="tipo_unidad_id" required>
+                            <select class="form-select" id="unidad-tipo-id" name="tipo_unidad_id" required>
                                 <?php foreach ($tiposUnidad as $tu): ?>
                                     <option value="<?= (int)$tu['id'] ?>" <?= $unidad->obtenerTipoUnidadId() === (int)$tu['id'] ? 'selected' : '' ?>>
                                         <?= e($tu['nombre']) ?>
@@ -301,48 +301,48 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                             <label for="unidad-codigo" class="form-label f-s-13 f-w-600">
                                 Código / Identificador <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm text-uppercase" id="unidad-codigo" name="codigo"
+                            <input type="text" class="form-control text-uppercase" id="unidad-codigo" name="codigo"
                                    value="<?= e($unidad->obtenerCodigo()) ?>" required maxlength="50">
                         </div>
                         <div class="col-md-5 col-12">
                             <label for="unidad-nombre" class="form-label f-s-13 f-w-600">
                                 Nombre Descriptivo <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="unidad-nombre" name="nombre"
+                            <input type="text" class="form-control" id="unidad-nombre" name="nombre"
                                    value="<?= e($unidad->obtenerNombre()) ?>" required maxlength="150" minlength="2">
                         </div>
                         <div class="col-md-3 col-12">
                             <label for="unidad-piso-nivel" class="form-label f-s-13 f-w-600">Piso / Nivel</label>
-                            <input type="text" class="form-control form-control-sm" id="unidad-piso-nivel" name="piso_nivel"
+                            <input type="text" class="form-control" id="unidad-piso-nivel" name="piso_nivel"
                                    value="<?= e((string)$unidad->obtenerPisoNivel()) ?>" maxlength="30">
                         </div>
                         <div class="col-md-3 col-6">
                             <label for="unidad-capacidad" class="form-label f-s-13 f-w-600">Capacidad <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control form-control-sm" id="unidad-capacidad" name="capacidad_personas"
+                            <input type="number" class="form-control" id="unidad-capacidad" name="capacidad_personas"
                                    value="<?= $unidad->obtenerCapacidadPersonas() ?>" min="1" max="100" required>
                         </div>
                         <div class="col-md-3 col-6">
                             <label for="unidad-dormitorios" class="form-label f-s-13 f-w-600">Dormitorios <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control form-control-sm" id="unidad-dormitorios" name="dormitorios"
+                            <input type="number" class="form-control" id="unidad-dormitorios" name="dormitorios"
                                    value="<?= $unidad->obtenerDormitorios() ?>" min="0" max="50" required>
                         </div>
                         <div class="col-md-3 col-6">
                             <label for="unidad-banos" class="form-label f-s-13 f-w-600">Baños <span class="text-danger">*</span></label>
-                            <input type="number" step="0.5" class="form-control form-control-sm" id="unidad-banos" name="banos"
+                            <input type="number" step="0.5" class="form-control" id="unidad-banos" name="banos"
                                    value="<?= $unidad->obtenerBanos() ?>" min="0" max="50" required>
                         </div>
                         <div class="col-md-3 col-6">
                             <label for="unidad-area-m2" class="form-label f-s-13 f-w-600">Área (m²)</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm" id="unidad-area-m2" name="area_m2"
+                            <input type="number" step="0.01" class="form-control" id="unidad-area-m2" name="area_m2"
                                    value="<?= $unidad->obtenerAreaM2() !== null ? e((string)$unidad->obtenerAreaM2()) : '' ?>" min="0.01" max="99999.99">
                         </div>
                         <div class="col-12">
                             <label for="unidad-descripcion" class="form-label f-s-13 f-w-600">Descripción</label>
-                            <textarea class="form-control form-control-sm" id="unidad-descripcion" name="descripcion" rows="2"><?= e((string)$unidad->obtenerDescripcion()) ?></textarea>
+                            <textarea class="form-control" id="unidad-descripcion" name="descripcion" rows="2"><?= e((string)$unidad->obtenerDescripcion()) ?></textarea>
                         </div>
                         <div class="col-12">
                             <label for="unidad-observaciones" class="form-label f-s-13 f-w-600">Observaciones</label>
-                            <textarea class="form-control form-control-sm" id="unidad-observaciones" name="observaciones" rows="1"><?= e((string)$unidad->obtenerObservaciones()) ?></textarea>
+                            <textarea class="form-control" id="unidad-observaciones" name="observaciones" rows="1"><?= e((string)$unidad->obtenerObservaciones()) ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                 <h6 class="modal-title f-s-14 f-w-700" id="modal-estado-unidad-titulo">Cambiar Estado</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-estado-unidad">
+            <form id="form-estado-unidad" class="app-form app-icon-form">
                 <input type="hidden" id="estado-unidad-id" value="<?= (int)$unidad->obtenerId() ?>">
                 <input type="hidden" id="estado-unidad-nuevo" value="<?= $esActiva ? 'INACTIVO' : 'ACTIVO' ?>">
                 <div class="modal-body p-3">
@@ -374,7 +374,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                     </p>
                     <div class="mb-2">
                         <label for="motivo-cambio-estado-unidad" class="form-label f-s-12 f-w-600">Motivo (opcional)</label>
-                        <textarea class="form-control form-control-sm" id="motivo-cambio-estado-unidad" rows="2"
+                        <textarea class="form-control" id="motivo-cambio-estado-unidad" rows="2"
                                   placeholder="Justificación del cambio de estado..."></textarea>
                     </div>
                 </div>

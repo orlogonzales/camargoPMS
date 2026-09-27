@@ -340,6 +340,17 @@ Estandarización transversal de todos los formularios, modales y filtros de Cama
 
 Estado: completada (candidata a micro-baseline).
 
+## UI-3A — Fidelidad Visual Exacta de Formularios Nativos Alina
+
+Microfase correctiva de fidelidad estética y geométrica absoluta basada en la inspección empírica de los componentes originales de Alina (`default_forms.html` y `select.html`):
+- **Diagnóstico y Eliminación de Reglas Destructivas:** Detección y erradicación de overrides artificiales en `camargo.css` que forzaban `border-radius: 0.375rem !important` y alturas rectangulares en Select2 e inputs.
+- **Vertical Form With Icon de Alina:** Adopción transversal de `<form class="app-form app-icon-form">`, inputs píldora (`border-radius: var(--app-border-radius)` = 20px), padding izquierdo de 48px (`3rem`) e incorporación del separador vertical `|` de 1px a 40px con altura de 20px mediante el pseudo-elemento `.icon-control::after`.
+- **Select 2 de Alina:** Caja de selección redondeada tipo píldora de 20px (`var(--app-border-radius)`), borde de 1px, altura nativa de 42px (`calc(2.5rem + var(--bs-border-width) * 2)`), flecha chevron Font Awesome 6 `\f078` y botón de limpieza redondeado a 14px con fondo tenue rojo (`rgba(var(--danger), 0.2)`).
+- **Limpieza Transversal de Clases:** Erradicación de `form-control-sm` y `form-select-sm` en campos que emplean `.icon-control` o `.basic-select2`.
+- **Verificación Automatizada e Inmutabilidad:** Suite automatizada `test_ui3a_fidelidad_alina.php` (70/70 PASS) y regresión consolidada completa (363/363 PASS), alcanzando un total consolidado de 458/458 PASS (100%). Cero dependencias externas / CDN, cero alteraciones de backend y cero migraciones SQL.
+
+Estado: completada (candidata a micro-baseline).
+
 ## Dominio operativo
 
 1. propiedades, niveles y unidades;

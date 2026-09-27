@@ -128,7 +128,7 @@ declare(strict_types=1);
                         <!-- Barra de Consulta Hotelera -->
                         <div class="card border mb-3">
                             <div class="card-body p-3 bg-light-subtle">
-                                <form id="form-consulta-disponibilidad" class="row g-2 align-items-end">
+                                <form id="form-consulta-disponibilidad" class="app-form app-icon-form row g-2 align-items-end">
                                     <div class="col-md-4 col-12">
                                         <label for="consulta-rango-fechas" class="form-label f-s-12 f-w-600 mb-1">
                                             <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo de Estadía (Check-in → Check-out)
@@ -343,7 +343,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-crear-bloqueo" novalidate>
+            <form id="form-crear-bloqueo" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-3">
                     <div class="alert alert-warning py-2 px-3 f-s-12 mb-3">
                         <i class="fa-solid fa-triangle-exclamation me-1"></i>
@@ -431,7 +431,7 @@ declare(strict_types=1);
                 </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-liberar-bloqueo">
+            <form id="form-liberar-bloqueo" class="app-form app-icon-form">
                 <input type="hidden" id="liberar-bloqueo-id" value="">
                 <div class="modal-body p-3">
                     <p class="f-s-13 text-secondary mb-2" id="mensaje-confirmacion-liberar">

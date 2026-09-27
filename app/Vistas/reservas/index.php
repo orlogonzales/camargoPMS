@@ -148,7 +148,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-crear-reserva" novalidate>
+            <form id="form-crear-reserva" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-3">
                     <div class="row g-3">
                         <!-- Titular de la Reserva -->
@@ -399,7 +399,7 @@ declare(strict_types=1);
                 </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-cancelar-reserva">
+            <form id="form-cancelar-reserva" class="app-form app-icon-form">
                 <input type="hidden" id="cancelar-reserva-id" value="">
                 <div class="modal-body p-3">
                     <p class="f-s-13 text-secondary mb-2">
