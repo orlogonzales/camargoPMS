@@ -867,8 +867,49 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Prohibición formal y eliminación total de clases `btn-gradient-*` y `bg-gradient-*` en todo el directorio `app/Vistas/`.
    - Sustitución por botones sólidos o con contorno canónicos de Bootstrap 5 / Alina (`btn-primary`, `btn-outline-secondary`, etc.) e insignias suaves de Alina (`bg-light-primary`, `bg-light-success`, `bg-light-warning`, `bg-light-danger`) con texto de alto contraste semántico (`f-w-500` / `f-w-600`).
 
-7. **Preservación de Lógica y Datos:**
-   - Cero alteraciones en esquemas SQL, cero migraciones añadidas, cero cambios en contratos de modelos, servicios o repositorios backend (mantener suite consolidada al 100% PASS).
+### D-076 — Dominio, Disponibilidad Sparse y Arquitectura Financiera de Arrendamientos de Mediana y Larga Estancia (ARRENDAMIENTOS-1)
+
+1. **Principio Ontológico Rector:**
+   $$\mathbf{RESERVA} \neq \mathbf{ESTADÍA} \neq \mathbf{ARRENDAMIENTO}$$
+   La reserva formaliza acuerdos comerciales hoteleros de corta estancia por noche; la estadía formaliza la ocupación física real derivada de una reserva; el arrendamiento es una relación contractual patrimonial de mediana/larga estancia (mensual o multimes) con reglas económicas, documentales, temporales y operativas independientes.
+
+2. **Titularidad Unificada sin Duplicidad:**
+   - Todos los sujetos vinculados al contrato residen exclusivamente en la tabla `arrendamiento_personas`: `arrendamiento_id`, `persona_id`, `tipo_relacion ENUM('TITULAR', 'COTITULAR', 'OCUPANTE')`.
+   - Unicidad de titular principal blindada en base de datos: columna virtual `es_titular_unico AS (CASE WHEN tipo_relacion = 'TITULAR' THEN arrendamiento_id ELSE NULL END) VIRTUAL` con `UNIQUE KEY uq_arrp_titular_unico (es_titular_unico)`. Garantiza a lo sumo un titular principal por contrato en MySQL/InnoDB.
+   - Capacidad física: ocupantes totales $\le \text{unidades.capacidad\_personas}$.
+
+3. **Temporalidad Contractual y Semántica Hotelera Semiabierta:**
+   - Todo contrato en V1 se pacta a plazo determinado cerrado (`fecha_inicio NOT NULL`, `fecha_fin NOT NULL`, $\text{fecha\_fin} > \text{fecha\_inicio}$).
+   - **Semántica semiabierta $[\text{fecha\_inicio}, \text{fecha\_fin})$:** Las noches bloqueadas abarcan desde `fecha_inicio` hasta `fecha_fin - 1 día`. La `fecha_fin` queda libre y disponible para nuevas operaciones.
+   - Continuidad formal:
+     - **Prórroga:** Prolonga el arrendamiento existente ampliando `fecha_fin`. Transaccionalidad atómica: lock de unidad $\rightarrow$ validar ausencia de conflicto en tramo adicional $\rightarrow$ materializar noches $\rightarrow$ actualizar `fecha_fin` $\rightarrow$ auditar.
+     - **Renovación:** Nueva relación contractual sucesora enlazada vía `arrendamiento_anterior_id`.
+   - Invariante: $\mathbf{VENCIMIENTO\ CONTRACTUAL} \neq \mathbf{FINALIZACIÓN\ REAL}$. Alcanzar `fecha_fin` no culmina el contrato hasta la recepción formal del inmueble (`FINALIZADO`).
+
+4. **Disponibilidad Sparse y Convivencia con DISPONIBILIDAD-1 (D-067):**
+   - Materialización total de noches en `inventario_diario_unidades` bajo `tipo_bloqueo = 'ARRENDAMIENTO'`. La restricción de integridad InnoDB `UNIQUE KEY (unidad_id, fecha)` impide en el motor cualquier colisión con reservas hoteleras.
+   - Rescisión anticipada con fecha efectiva $F$: noches pasadas ($\text{fecha} < F$) se conservan intactas en inventario como historia consumida; noches futuras ($\text{fecha} \ge F$) se liberan mediante `DELETE FROM inventario_diario_unidades WHERE origen_tipo = 'ARRENDAMIENTO' AND origen_id = :id AND fecha >= :F`.
+
+5. **Devengo Mensual Idempotente y Día de Vencimiento:**
+   - Nomenclatura explícita de dominio: `dia_vencimiento` (1..31). Si el día no existe en un mes dado (29, 30, 31), vence el último día calendario del mes.
+   - Distinción canónica: `PERÍODO DE RENTA` (cobertura mensual), `FECHA DE DEVENGO` (inicio del ciclo/emisión), `FECHA DE VENCIMIENTO` (límite de pago).
+   - Entidad `arrendamiento_cuotas` con `UNIQUE KEY (arrendamiento_id, periodo_anio, periodo_mes, tipo_cuota)` garantizando:
+     $$\mathbf{ARRENDAMIENTO} + \mathbf{PERÍODO} + \mathbf{TIPO\ CUOTA} = \text{máximo 1 devengo}$$
+   - El servicio verifica la existencia previa; la BD actúa como blindaje contra carreras concurrentes.
+
+6. **Fondos en Garantía / Custodia (Segregación de Ingresos Ordinarios):**
+   - Principio: $\mathbf{RENTA} \neq \mathbf{GARANTÍA}$ y $\mathbf{GARANTÍA\ RECIBIDA} \neq \mathbf{INGRESO\ ORDINARIO}$.
+   - Entidad `arrendamiento_garantias` con saldo reconstructible (`monto_pactado`, `monto_recibido`, `monto_retenido_actual`, `monto_compensado_danos`, `monto_compensado_renta`, `monto_devuelto`).
+   - Trazabilidad de compensaciones: la aplicación de garantía a daños o rentas no altera silenciosamente el saldo; se liquida contra un cargo formal en el folio mediante aplicación explícita.
+
+7. **Extensión No Destructiva de Folios (Compatibilidad FINANCIERO-2):**
+   - `cuentas_folios` evoluciona con `reserva_id NULL`, `arrendamiento_id NULL UNIQUE` y constraint XOR `chk_ctaf_sujeto_exclusivo`.
+   - Consulta `CuentaFolioRepositorio::listar()` adaptada con `LEFT JOIN reservas r ... LEFT JOIN arrendamientos arr ...` para no omitir folios de arrendamiento.
+   - Compatibilidad demostrada mediante regresión completa (363 pruebas de ciclo activo).
+
+8. **Auditoría Transversal (D-061) e Interfaz Alina (D-075):**
+   - Registro de transiciones en `arrendamiento_historial_estados` con actor (`ACTOR ≠ USUARIO`; procesos batch imputados a `CAMARGO_PMS`).
+   - Módulo `/arrendamientos` conforme a D-075 (Vertical Form With Icon 20px píldora, Select2 42px con 20px de radio, Flatpickr, 0 degradados).
 
 ## Pendientes de decisión
 

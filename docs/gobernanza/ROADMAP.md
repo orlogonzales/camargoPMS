@@ -338,7 +338,7 @@ Estandarización transversal de todos los formularios, modales y filtros de Cama
 - **Erradicación Absoluta de Degradados:** Cero clases `btn-gradient-*` y `bg-gradient-*` en todo el árbol de vistas, sustituidas por estilos planos canónicos de Bootstrap 5 / Alina (`btn-primary`, `btn-outline-*`) e insignias suaves `bg-light-*` con texto semántico (`f-w-500` / `f-w-600`).
 - **Preservación Integral:** Cero cambios en la base de datos o lógica de negocio (388/388 PASS verificados: 363 consolidado + 25 UI-3).
 
-Estado: completada (candidata a micro-baseline).
+Estado: homologada (micro-baseline oficial 4e2afde).
 
 ## UI-3A — Fidelidad Visual Exacta de Formularios Nativos Alina
 
@@ -348,6 +348,21 @@ Microfase correctiva de fidelidad estética y geométrica absoluta basada en la 
 - **Select 2 de Alina:** Caja de selección redondeada tipo píldora de 20px (`var(--app-border-radius)`), borde de 1px, altura nativa de 42px (`calc(2.5rem + var(--bs-border-width) * 2)`), flecha chevron Font Awesome 6 `\f078` y botón de limpieza redondeado a 14px con fondo tenue rojo (`rgba(var(--danger), 0.2)`).
 - **Limpieza Transversal de Clases:** Erradicación de `form-control-sm` y `form-select-sm` en campos que emplean `.icon-control` o `.basic-select2`.
 - **Verificación Automatizada e Inmutabilidad:** Suite automatizada `test_ui3a_fidelidad_alina.php` (70/70 PASS) y regresión consolidada completa (363/363 PASS), alcanzando un total consolidado de 458/458 PASS (100%). Cero dependencias externas / CDN, cero alteraciones de backend y cero migraciones SQL.
+
+Estado: homologada (micro-baseline oficial 0514447).
+
+## ARRENDAMIENTOS-1 — Gestión de Arrendamientos de Mediana y Larga Estancia
+
+Implementación del dominio de contratos de arrendamiento prolongado, coexistencia con el motor sparse de disponibilidad, devengo mensual recurrente, fondos de garantía en custodia y extensión compatible de cuentas folios bajo D-076:
+- **Separación Ontológica Estricta:** $\text{RESERVA} \neq \text{ESTADÍA} \neq \text{ARRENDAMIENTO}$.
+- **Titularidad Unificada en BD:** Sujetos modelados en `arrendamiento_personas` con columna virtual `es_titular_unico` y `UNIQUE KEY` para garantizar exactamente un titular principal en BD sin duplicar relaciones.
+- **Vigencia Determinada y Semántica Hotelera:** Plazo determinado cerrado (`fecha_fin NOT NULL`, $\text{fecha\_fin} > \text{fecha\_inicio}$) con intervalo semiabierto $[\text{fecha\_inicio}, \text{fecha\_fin})$ donde `fecha_fin` queda libre/disponible. Prórrogas atómicas y renovaciones enlazadas.
+- **Disponibilidad Sparse:** Materialización de noches en `inventario_diario_unidades` bajo `tipo_bloqueo = 'ARRENDAMIENTO'`, blindado por `UNIQUE(unidad_id, fecha)` en InnoDB. Rescisión anticipada con preservación de noches pasadas y liberación atómica de noches futuras.
+- **Devengo Mensual Idempotente:** Entidad `arrendamiento_cuotas` con `UNIQUE(arrendamiento_id, periodo_anio, periodo_mes, tipo_cuota)`. Nomenclatura `dia_vencimiento` con regla para meses cortos (29/30/31).
+- **Fondos en Garantía / Custodia:** Entidad `arrendamiento_garantias` segregada de la renta ordinaria con saldo reconstructible y trazabilidad completa de compensaciones.
+- **Extensión Compatible de Folios:** Adaptación no destructiva de `cuentas_folios` mediante `reserva_id NULL`, `arrendamiento_id NULL UNIQUE` y `CHECK XOR`, con auditoría de consumidores y verificación por regresión completa de FINANCIERO-2.
+- **Persistencia Relacional (Migración 018):** Tablas `arrendamientos`, `arrendamiento_personas`, `arrendamiento_cuotas`, `arrendamiento_garantias`, `arrendamiento_historial_estados`, permisos RBAC (`arrendamientos.*`) y opción de menú dinámico bajo `operaciones`.
+- **Interfaz Alina Conforme a D-075:** Módulo en `/arrendamientos` con formulario nativo Alina, Select2 píldora 20px a 42px, Flatpickr, badges y PristineJS.
 
 Estado: completada (candidata a micro-baseline).
 

@@ -4,6 +4,44 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase ARRENDAMIENTOS-1 — Gestión de Arrendamientos de Mediana y Larga Estancia (D-076)
+
+- **Separación Ontológica y Modelo de Dominio:**
+  - Consagración del principio rector vinculante $\text{RESERVA} \neq \text{ESTADÍA} \neq \text{ARRENDAMIENTO}$.
+  - Entidades de dominio ricas `Arrendamiento`, `ArrendamientoPersona`, `ArrendamientoCuota`, `ArrendamientoGarantia` y `ArrendamientoHistorialEstado`.
+- **Titularidad Unificada en BD:**
+  - Modelado en `arrendamiento_personas` con columna virtual generada `es_titular_unico` y `UNIQUE KEY uq_arrp_titular_unico`. Blindaje estructural en motor InnoDB de a lo sumo un titular principal por contrato.
+  - Soporte de cotitulares (corresponsables) y ocupantes autorizados.
+- **Temporalidad Contractual y Semántica Semiabierta:**
+  - Plazo determinado en V1 (`fecha_fin NOT NULL`, $\text{fecha\_fin} > \text{fecha\_inicio}$).
+  - Semántica hotelera semiabierta $[\text{fecha\_inicio}, \text{fecha\_fin})$, donde `fecha_fin` queda libre para nuevas entradas.
+  - Prórrogas transaccionales con bloqueo pesimista y renovaciones trazables vía `arrendamiento_anterior_id`.
+- **Disponibilidad Sparse:**
+  - Materialización directa de noches en `inventario_diario_unidades` bajo `tipo_bloqueo = 'ARRENDAMIENTO'`.
+  - Rescisión anticipada con preservación intacta de noches pasadas y liberación atómica de noches futuras (`DELETE` selectivo).
+- **Devengo Mensual Idempotente y Día de Vencimiento:**
+  - Entidad `arrendamiento_cuotas` con `UNIQUE KEY (arrendamiento_id, periodo_anio, periodo_mes, tipo_cuota)`.
+  - Nomenclatura vinculante `dia_vencimiento` (1..31) con ajuste automático al último día para meses cortos (ej. día 31 vence el 30 en abril, 28/29 en febrero).
+- **Custodia Segregada de Fondos en Garantía:**
+  - Entidad `arrendamiento_garantias` segregada de rentas ordinarias con saldo reconstructible:
+    $$\text{monto\_recibido} = \text{monto\_retenido\_actual} + \text{monto\_compensado\_danos} + \text{monto\_compensado\_renta} + \text{monto\_devuelto}$$
+  - Compensación formal por daños y rentas insolutas con liquidación contra cargos devengados en el folio.
+- **Extensión Compatible de Cuentas Folios (FINANCIERO-2):**
+  - Modificación de `cuentas_folios` con `reserva_id NULL`, `arrendamiento_id NULL UNIQUE` y restricción XOR `chk_ctaf_sujeto_exclusivo`.
+  - Consulta `CuentaFolioRepositorio::listar()` adaptada con `LEFT JOIN` hacia reservas y arrendamientos.
+- **Persistencia Relacional y Migración 018:**
+  - Script `SQL/migraciones/018_arrendamientos.sql` y esquema canónico `SQL/camargo_pms.sql` sincronizados al 100%. Tablas 40 a 44, alter de inventario, permisos RBAC y opción de menú dinámico bajo `operaciones`.
+- **Interfaz Alina Conforme a D-075:**
+  - Vista `/arrendamientos` con diseño Alina (`app-form app-icon-form`, Select2 píldora 20px a 42px, Flatpickr, badges y PristineJS).
+  - Controlador JS Vanilla reactivo `public/assets/js/gestion-arrendamientos.js`.
+- **Verificación Automatizada Exhaustiva:**
+  - Matriz de dominio: `tests/test_arrendamientos_matriz_40.php` (40/40 PASS).
+  - Suite de concurrencia e integridad: `tests/test_arrendamientos_concurrencia.php` (6/6 PASS).
+  - Suite HTTP E2E real contra Apache: `tests/test_e2e_arrendamientos.php` (14/14 PASS).
+  - Regresión consolidada completa de fases anteriores al 100% PASS.
+
+## [0514447] - 2026-09-27
+
 ### Microfase UI-3A — Fidelidad Visual Exacta de Formularios Nativos Alina (D-075)
 
 - **Corrección Geométrica y Fidelidad Visual Exacta de Formularios Alina:**

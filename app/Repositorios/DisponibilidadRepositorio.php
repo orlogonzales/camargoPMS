@@ -161,6 +161,24 @@ class DisponibilidadRepositorio
     }
 
     /**
+     * Elimina noches del inventario diario a partir de una fecha específica (>= desdeFecha).
+     * Utilizado para rescisión anticipada de contratos de arrendamiento conservando el histórico.
+     */
+    public function eliminarInventarioPorOrigenDesdeFecha(string $origenTipo, int $origenId, string $desdeFecha): int
+    {
+        $sql = 'DELETE FROM inventario_diario_unidades
+                WHERE origen_tipo = :origen_tipo AND origen_id = :origen_id AND fecha >= :desde_fecha';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':origen_tipo', $origenTipo, PDO::PARAM_STR);
+        $stmt->bindValue(':origen_id', $origenId, PDO::PARAM_INT);
+        $stmt->bindValue(':desde_fecha', $desdeFecha, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
+
+    /**
      * Inserta un nuevo registro maestro de bloqueo de unidad.
      *
      * @param BloqueoUnidad $bloqueo

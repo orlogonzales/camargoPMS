@@ -20,14 +20,15 @@ class CuentaFolioRepositorio
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO cuentas_folios (
-                codigo, reserva_id, persona_titular_id, moneda_codigo, estado, creado_por_actor_id, creado_en
+                codigo, reserva_id, arrendamiento_id, persona_titular_id, moneda_codigo, estado, creado_por_actor_id, creado_en
             ) VALUES (
-                :codigo, :reserva_id, :persona_titular_id, :moneda_codigo, :estado, :creado_por_actor_id, NOW()
+                :codigo, :reserva_id, :arrendamiento_id, :persona_titular_id, :moneda_codigo, :estado, :creado_por_actor_id, NOW()
             )'
         );
         $stmt->execute([
             'codigo' => $folio->obtenerCodigo(),
             'reserva_id' => $folio->obtenerReservaId(),
+            'arrendamiento_id' => $folio->obtenerArrendamientoId(),
             'persona_titular_id' => $folio->obtenerPersonaTitularId(),
             'moneda_codigo' => $folio->obtenerMonedaCodigo(),
             'estado' => $folio->obtenerEstado(),
@@ -50,6 +51,15 @@ class CuentaFolioRepositorio
         $sql = 'SELECT * FROM cuentas_folios WHERE reserva_id = :reserva_id LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['reserva_id' => $reservaId]);
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila ? CuentaFolio::desdeArreglo($fila) : null;
+    }
+
+    public function obtenerPorArrendamientoId(int $arrendamientoId, bool $bloquear = false): ?CuentaFolio
+    {
+        $sql = 'SELECT * FROM cuentas_folios WHERE arrendamiento_id = :arrendamiento_id LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['arrendamiento_id' => $arrendamientoId]);
         $fila = $stmt->fetch(PDO::FETCH_ASSOC);
         return $fila ? CuentaFolio::desdeArreglo($fila) : null;
     }
@@ -77,10 +87,12 @@ class CuentaFolioRepositorio
     {
         $sql = 'SELECT 
                     cf.*,
-                    r.codigo AS reserva_codigo,
-                    r.estado AS reserva_estado,
-                    r.fecha_entrada,
-                    r.fecha_salida,
+                    COALESCE(r.codigo, arr.codigo) AS reserva_codigo,
+                    COALESCE(r.codigo, "") AS solo_reserva_codigo,
+                    COALESCE(arr.codigo, "") AS arrendamiento_codigo,
+                    COALESCE(r.estado, arr.estado) AS reserva_estado,
+                    COALESCE(r.fecha_entrada, arr.fecha_inicio) AS fecha_entrada,
+                    COALESCE(r.fecha_salida, arr.fecha_fin) AS fecha_salida,
                     TRIM(CONCAT(p.nombres, " ", p.apellido_paterno, " ", COALESCE(p.apellido_materno, ""))) AS titular_nombre_completo,
                     COALESCE((SELECT pd.numero_documento FROM personas_documentos pd WHERE pd.persona_id = p.id LIMIT 1), "") AS titular_documento,
                     COALESCE((SELECT SUM(c.total) FROM cargos_cuenta c WHERE c.cuenta_folio_id = cf.id AND c.estado = "DEVENGADO"), 0.00) AS total_cargos_devengados,
@@ -89,7 +101,8 @@ class CuentaFolioRepositorio
                     COALESCE((SELECT SUM(pg.monto_aplicado) FROM pagos_cuenta pg WHERE pg.cuenta_folio_id = cf.id AND pg.estado = "CONFIRMADO"), 0.00) AS total_pagos_aplicados,
                     COALESCE((SELECT SUM(d.monto) FROM devoluciones_cuenta d WHERE d.cuenta_folio_id = cf.id AND d.estado = "CONFIRMADA"), 0.00) AS total_devoluciones_confirmadas
                 FROM cuentas_folios cf
-                INNER JOIN reservas r ON r.id = cf.reserva_id
+                LEFT JOIN reservas r ON r.id = cf.reserva_id
+                LEFT JOIN arrendamientos arr ON arr.id = cf.arrendamiento_id
                 INNER JOIN personas p ON p.id = cf.persona_titular_id
                 WHERE 1=1';
 
@@ -105,8 +118,13 @@ class CuentaFolioRepositorio
             $params['reserva_id'] = (int) $filtros['reserva_id'];
         }
 
+        if (!empty($filtros['arrendamiento_id'])) {
+            $sql .= ' AND cf.arrendamiento_id = :arrendamiento_id';
+            $params['arrendamiento_id'] = (int) $filtros['arrendamiento_id'];
+        }
+
         if (!empty($filtros['q'])) {
-            $sql .= ' AND (cf.codigo LIKE :q OR r.codigo LIKE :q OR p.nombres LIKE :q OR p.apellido_paterno LIKE :q)';
+            $sql .= ' AND (cf.codigo LIKE :q OR r.codigo LIKE :q OR arr.codigo LIKE :q OR p.nombres LIKE :q OR p.apellido_paterno LIKE :q)';
             $params['q'] = '%' . $filtros['q'] . '%';
         }
 

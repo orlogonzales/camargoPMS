@@ -481,6 +481,58 @@ $enrutador->post('/caja/devoluciones', [\CamargoPMS\Controladores\CajaControlado
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.devolver'),
 ]);
 
+// ============================================================================
+// Rutas de Arrendamientos de Mediana y Larga Estancia (ARRENDAMIENTOS-1 / D-076)
+// ============================================================================
+$enrutador->get('/arrendamientos', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.ver'),
+]);
+$enrutador->get('/arrendamientos/listar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'listar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.ver'),
+]);
+$enrutador->get('/api/arrendamientos', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'listar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.ver'),
+]);
+$enrutador->post('/api/arrendamientos', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.crear'),
+]);
+$enrutador->get('/api/arrendamientos/{id}', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'obtenerDetalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.ver'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/activar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'activar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.activar'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/personas', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'agregarPersona'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.gestionar'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/personas/{personaId}/eliminar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'quitarPersona'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.gestionar'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/prorrogar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'prorrogar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.gestionar'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/rescindir', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'rescindir'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.rescindir'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/finalizar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'finalizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.rescindir'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/cancelar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'cancelarBorrador'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.crear'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/cuotas', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'generarCuota'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.generar_cargos'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/garantia/recibir', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'recibirGarantia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.generar_cargos'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/garantia/compensar', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'compensarGarantia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.generar_cargos'),
+]);
+$enrutador->post('/api/arrendamientos/{id}/garantia/devolver', [\CamargoPMS\Controladores\ArrendamientoControlador::class, 'devolverGarantia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.generar_cargos'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

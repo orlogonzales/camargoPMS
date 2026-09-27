@@ -433,7 +433,26 @@ INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `
 ('estadias.checkin', 'Realizar check-in de estadías', 'Permite efectuar el check-in físico de unidades reservadas', 'estadias', 'ACTIVO', 1),
 ('estadias.checkout', 'Realizar check-out de estadías', 'Permite registrar la salida física y devolución de llaves de unidades en curso', 'estadias', 'ACTIVO', 1),
 ('estadias.huespedes', 'Gestionar huéspedes de estadía', 'Permite actualizar acompañantes y responsable en estadías en curso', 'estadias', 'ACTIVO', 1),
-('estadias.anular', 'Anular check-in de estadía', 'Permite anular excepcionalmente una estadía en curso con justificación obligatoria', 'estadias', 'ACTIVO', 1)
+('estadias.anular', 'Anular check-in de estadía', 'Permite anular excepcionalmente una estadía en curso con justificación obligatoria', 'estadias', 'ACTIVO', 1),
+('servicios.ver', 'Ver catálogo y consumos de servicios', 'Consultar catálogo de servicios, proveedores y consumos contratados', 'servicios', 'ACTIVO', 1),
+('servicios.gestionar', 'Gestionar catálogo de servicios y proveedores', 'Crear y modificar servicios del catálogo y proveedores homologados', 'servicios', 'ACTIVO', 1),
+('servicios.contratar', 'Contratar servicios y consumos', 'Registrar contratación de servicios para reservas y estadías', 'servicios', 'ACTIVO', 1),
+('servicios.ejecutar', 'Ejecutar servicios contratados', 'Marcar servicios como ejecutados/entregados físicamente', 'servicios', 'ACTIVO', 1),
+('servicios.cancelar', 'Cancelar contratación de servicios', 'Anular contratación de servicios con registro de motivo', 'servicios', 'ACTIVO', 1),
+('caja.ver', 'Ver módulos de caja, folios y finanzas', 'Consultar folios, cargos, pagos y sesiones de caja', 'caja', 'ACTIVO', 1),
+('caja.aperturar', 'Aperturar sesiones de caja', 'Iniciar turnos de caja física con fondo inicial', 'caja', 'ACTIVO', 1),
+('caja.cerrar', 'Arqueo y cierre de sesiones de caja', 'Conteo de efectivo y cierre irreversible de turnos', 'caja', 'ACTIVO', 1),
+('caja.movimientos', 'Registrar movimientos de caja', 'Registrar ingresos y egresos de efectivo manuales', 'caja', 'ACTIVO', 1),
+('caja.cobrar', 'Registrar cobros y pagos a cuentas', 'Recibir fondos en efectivo, tarjeta o banco', 'caja', 'ACTIVO', 1),
+('caja.aplicar', 'Imputar pagos a cargos específicos', 'Vincular cobros a cargos de alojamiento o servicios', 'caja', 'ACTIVO', 1),
+('caja.devolver', 'Registrar devoluciones y reembolsos', 'Emitir devoluciones reales de fondos al cliente', 'caja', 'ACTIVO', 1),
+('caja.reversar', 'Reversar pagos y anular cargos', 'Operaciones compensatorias y correcciones de auditoría', 'caja', 'ACTIVO', 1),
+('arrendamientos.ver', 'Ver contratos de arrendamiento', 'Consultar listado, detalle y estados de arrendamientos', 'arrendamientos', 'ACTIVO', 1),
+('arrendamientos.crear', 'Crear borradores de arrendamiento', 'Formular nuevos contratos con unidad, fechas y sujetos', 'arrendamientos', 'ACTIVO', 1),
+('arrendamientos.activar', 'Activar contratos de arrendamiento', 'Poner en vigencia contratos y materializar bloqueos de inventario', 'arrendamientos', 'ACTIVO', 1),
+('arrendamientos.gestionar', 'Gestionar sujetos y prórrogas', 'Agregar cotitulares, ocupantes y extender plazos contractuales', 'arrendamientos', 'ACTIVO', 1),
+('arrendamientos.rescindir', 'Rescindir o finalizar contratos', 'Terminación anticipada con causa o cierre regular de contrato', 'arrendamientos', 'ACTIVO', 1),
+('arrendamientos.generar_cargos', 'Generar cuotas periódicas de renta', 'Emitir cargos mensuales y liquidar fondos de custodia', 'arrendamientos', 'ACTIVO', 1)
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `descripcion` = VALUES(`descripcion`);
 
 -- Asignar permisos al rol SUPERADMINISTRADOR
@@ -444,7 +463,10 @@ CROSS JOIN `permisos` p
 WHERE r.`codigo` = 'SUPERADMINISTRADOR'
   AND p.`codigo` IN (
       'reservas.ver', 'reservas.crear', 'reservas.confirmar', 'reservas.cancelar', 'reservas.expirar',
-      'estadias.ver', 'estadias.checkin', 'estadias.checkout', 'estadias.huespedes', 'estadias.anular'
+      'estadias.ver', 'estadias.checkin', 'estadias.checkout', 'estadias.huespedes', 'estadias.anular',
+      'servicios.ver', 'servicios.gestionar', 'servicios.contratar', 'servicios.ejecutar', 'servicios.cancelar',
+      'caja.ver', 'caja.aperturar', 'caja.cerrar', 'caja.movimientos', 'caja.cobrar', 'caja.aplicar', 'caja.devolver', 'caja.reversar',
+      'arrendamientos.ver', 'arrendamientos.crear', 'arrendamientos.activar', 'arrendamientos.gestionar', 'arrendamientos.rescindir', 'arrendamientos.generar_cargos'
   )
 ON DUPLICATE KEY UPDATE `permiso_id` = VALUES(`permiso_id`);
 
@@ -591,6 +613,48 @@ FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'estadias.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+-- Nivel 2: Opción Secundaria 'Servicios y Consumos'
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'servicios_catalogo', 'Servicios y Consumos', 'fa-solid fa-concierge-bell', '/servicios', 3, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'servicios.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+-- Nivel 2: Opción Secundaria 'Caja y Cuentas'
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'caja_cuentas', 'Caja y Cuentas', 'fa-solid fa-cash-register', '/caja', 4, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'caja.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+-- Nivel 2: Opción Secundaria 'Arrendamientos'
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'arrendamientos_catalogo', 'Arrendamientos', 'fa-solid fa-file-contract', '/arrendamientos', 5, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'arrendamientos.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),
@@ -839,7 +903,7 @@ CREATE TABLE IF NOT EXISTS `inventario_diario_unidades` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `unidad_id` BIGINT UNSIGNED NOT NULL,
     `fecha` DATE NOT NULL,
-    `tipo_bloqueo` ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO', 'RESERVA') NOT NULL DEFAULT 'BLOQUEO_MANUAL',
+    `tipo_bloqueo` ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO', 'RESERVA', 'ARRENDAMIENTO') NOT NULL DEFAULT 'BLOQUEO_MANUAL',
     `origen_tipo` VARCHAR(50) NOT NULL DEFAULT 'BLOQUEO_MANUAL',
     `origen_id` BIGINT UNSIGNED NOT NULL,
     `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1280,36 +1344,43 @@ CREATE TABLE IF NOT EXISTS `sesiones_caja` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Turnos de trabajo y arqueos de gaveta de efectivo';
 
 -- ----------------------------------------------------------------------------
--- 33. Folios Financieros / Cuentas de Reserva (FINANCIERO-2)
+-- 33. Folios Financieros / Cuentas de Reserva o Arrendamiento (FINANCIERO-2 / ARRENDAMIENTOS-1)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `cuentas_folios` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `codigo` VARCHAR(30) NOT NULL COMMENT 'Formato FOL-YYYYMMDD-XXXX',
-    `reserva_id` BIGINT UNSIGNED NOT NULL COMMENT '1:1 estricto con la reserva raíz comercial',
+    `reserva_id` BIGINT UNSIGNED NULL COMMENT '1:1 con la reserva raíz comercial (NULL si es arrendamiento)',
+    `arrendamiento_id` BIGINT UNSIGNED NULL COMMENT '1:1 con el arrendamiento patrimonial (NULL si es reserva)',
     `persona_titular_id` BIGINT UNSIGNED NOT NULL COMMENT 'Titular principal de la cuenta',
     `moneda_codigo` VARCHAR(3) NOT NULL DEFAULT 'PEN',
     `estado` ENUM('ABIERTA', 'CONGELADA', 'CERRADA', 'ANULADA') NOT NULL DEFAULT 'ABIERTA',
     `creado_por_actor_id` BIGINT UNSIGNED NOT NULL,
     `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_ctaf_reserva` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_ctaf_reserva` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_ctaf_arrendamiento` FOREIGN KEY (`arrendamiento_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `fk_ctaf_persona_titular` FOREIGN KEY (`persona_titular_id`) REFERENCES `personas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_ctaf_actor_creador` FOREIGN KEY (`creado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `chk_ctaf_codigo_no_vacio` CHECK (`codigo` <> ''),
+    CONSTRAINT `chk_ctaf_sujeto_exclusivo` CHECK (
+        (`reserva_id` IS NOT NULL AND `arrendamiento_id` IS NULL) OR
+        (`reserva_id` IS NULL AND `arrendamiento_id` IS NOT NULL)
+    ),
     UNIQUE KEY `uq_cuentas_folios_codigo` (`codigo`),
     UNIQUE KEY `uq_cuentas_folios_reserva` (`reserva_id`),
+    UNIQUE KEY `uq_cuentas_folios_arrendamiento` (`arrendamiento_id`),
     INDEX `idx_ctaf_estado` (`estado`),
     INDEX `idx_ctaf_titular` (`persona_titular_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Contenedor financiero consolidado de la reserva comercial';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Contenedor financiero consolidado de la reserva comercial o contrato de arrendamiento';
 
 -- ----------------------------------------------------------------------------
--- 34. Cargos a la Cuenta (FINANCIERO-2)
+-- 34. Cargos a la Cuenta (FINANCIERO-2 / ARRENDAMIENTOS-1)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `cargos_cuenta` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `codigo` VARCHAR(30) NOT NULL COMMENT 'Formato CRG-YYYYMMDD-XXXX',
     `cuenta_folio_id` BIGINT UNSIGNED NOT NULL,
-    `origen_tipo` ENUM('ALOJAMIENTO_NOCHES', 'SERVICIO_CONTRATADO', 'PENALIDAD', 'AJUSTE_MANUAL') NOT NULL,
+    `origen_tipo` ENUM('ALOJAMIENTO_NOCHES', 'SERVICIO_CONTRATADO', 'PENALIDAD', 'AJUSTE_MANUAL', 'RENTA_ARRENDAMIENTO', 'DEPOSITO_GARANTIA') NOT NULL,
     `origen_id` BIGINT UNSIGNED NULL COMMENT 'ID de reserva_unidades o servicios_contratados',
     `estadia_id` BIGINT UNSIGNED NULL COMMENT 'Habitación física que consumió (NULL si es preventa o general)',
     `concepto` VARCHAR(255) NOT NULL,
@@ -1483,6 +1554,126 @@ CREATE TABLE IF NOT EXISTS `movimientos_bancarios` (
     INDEX `idx_movb_operacion` (`numero_operacion`),
     INDEX `idx_movb_pago` (`pago_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Libro de movimientos en cuentas bancarias para posterior conciliación';
+
+-- ----------------------------------------------------------------------------
+-- 40. Arrendamientos de Mediana y Larga Estancia (ARRENDAMIENTOS-1 / D-076)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `arrendamientos` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `codigo` VARCHAR(30) NOT NULL COMMENT 'Formato ARR-YYYYMMDD-XXXX',
+    `unidad_id` BIGINT UNSIGNED NOT NULL,
+    `arrendamiento_anterior_id` BIGINT UNSIGNED NULL COMMENT 'Para contratos renovados',
+    `fecha_inicio` DATE NOT NULL,
+    `fecha_fin` DATE NOT NULL,
+    `dia_vencimiento` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Día contractual de vencimiento (1..31)',
+    `renta_mensual` DECIMAL(15,2) NOT NULL,
+    `deposito_garantia` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    `monto_primer_periodo` DECIMAL(15,2) NOT NULL COMMENT 'Monto congelado inicial (completo o prorrateado)',
+    `es_primer_mes_prorrateado` TINYINT(1) NOT NULL DEFAULT 0,
+    `moneda_codigo` VARCHAR(3) NOT NULL DEFAULT 'PEN',
+    `estado` ENUM('BORRADOR', 'VIGENTE', 'FINALIZADO', 'RESCINDIDO', 'CANCELADO') NOT NULL DEFAULT 'BORRADOR',
+    `motivo_rescision` VARCHAR(500) NULL,
+    `rescidido_en` DATETIME NULL,
+    `rescidido_por_actor_id` BIGINT UNSIGNED NULL,
+    `notas_adicionales` TEXT NULL,
+    `creado_por_actor_id` BIGINT UNSIGNED NOT NULL,
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_arr_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidades` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_arr_arrendamiento_anterior` FOREIGN KEY (`arrendamiento_anterior_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_arr_actor_creador` FOREIGN KEY (`creado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_arr_actor_rescisor` FOREIGN KEY (`rescidido_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT `chk_arr_codigo_no_vacio` CHECK (`codigo` <> ''),
+    CONSTRAINT `chk_arr_fechas_coherentes` CHECK (`fecha_fin` > `fecha_inicio`),
+    CONSTRAINT `chk_arr_dia_vencimiento_rango` CHECK (`dia_vencimiento` BETWEEN 1 AND 31),
+    CONSTRAINT `chk_arr_renta_positiva` CHECK (`renta_mensual` > 0),
+    CONSTRAINT `chk_arr_garantia_no_negativa` CHECK (`deposito_garantia` >= 0),
+    UNIQUE KEY `uq_arrendamientos_codigo` (`codigo`),
+    INDEX `idx_arr_unidad_fechas` (`unidad_id`, `fecha_inicio`, `fecha_fin`),
+    INDEX `idx_arr_estado` (`estado`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Contratos patrimoniales de arrendamiento de unidades';
+
+-- ----------------------------------------------------------------------------
+-- 41. Sujetos del Arrendamiento: Titular Único, Cotitulares y Ocupantes (ARRENDAMIENTOS-1 / D-076)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `arrendamiento_personas` (
+    `arrendamiento_id` BIGINT UNSIGNED NOT NULL,
+    `persona_id` BIGINT UNSIGNED NOT NULL,
+    `tipo_relacion` ENUM('TITULAR', 'COTITULAR', 'OCUPANTE') NOT NULL,
+    `es_titular_unico` BIGINT UNSIGNED GENERATED ALWAYS AS (
+        CASE WHEN `tipo_relacion` = 'TITULAR' THEN `arrendamiento_id` ELSE NULL END
+    ) VIRTUAL,
+    `observaciones` VARCHAR(255) NULL,
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`arrendamiento_id`, `persona_id`),
+    CONSTRAINT `fk_arrp_arrendamiento` FOREIGN KEY (`arrendamiento_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_arrp_persona` FOREIGN KEY (`persona_id`) REFERENCES `personas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE KEY `uq_arrp_titular_unico` (`es_titular_unico`),
+    INDEX `idx_arrp_persona` (`persona_id`),
+    INDEX `idx_arrp_tipo` (`arrendamiento_id`, `tipo_relacion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Partes contractuales y residentes de la unidad con unicidad de titular';
+
+-- ----------------------------------------------------------------------------
+-- 42. Cuotas Periódicas Idempotentes de Renta (ARRENDAMIENTOS-1 / D-076)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `arrendamiento_cuotas` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `arrendamiento_id` BIGINT UNSIGNED NOT NULL,
+    `periodo_anio` SMALLINT UNSIGNED NOT NULL,
+    `periodo_mes` TINYINT UNSIGNED NOT NULL,
+    `periodo_codigo` VARCHAR(7) NOT NULL COMMENT 'YYYY-MM',
+    `tipo_cuota` ENUM('RENTA_MENSUAL', 'CUOTA_PRORRATEADA', 'AJUSTE_PERIODICO') NOT NULL DEFAULT 'RENTA_MENSUAL',
+    `fecha_emision` DATE NOT NULL,
+    `fecha_vencimiento` DATE NOT NULL,
+    `monto_renta` DECIMAL(15,2) NOT NULL,
+    `cargo_cuenta_id` BIGINT UNSIGNED NOT NULL,
+    `estado` ENUM('PENDIENTE', 'PAGADA_PARCIAL', 'PAGADA_TOTAL', 'ANULADA') NOT NULL DEFAULT 'PENDIENTE',
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_arrc_arrendamiento` FOREIGN KEY (`arrendamiento_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_arrc_cargo_cuenta` FOREIGN KEY (`cargo_cuenta_id`) REFERENCES `cargos_cuenta` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `chk_arrc_periodo_mes` CHECK (`periodo_mes` BETWEEN 1 AND 12),
+    CONSTRAINT `chk_arrc_monto_positivo` CHECK (`monto_renta` > 0),
+    UNIQUE KEY `uq_arrc_arrendamiento_periodo_tipo` (`arrendamiento_id`, `periodo_anio`, `periodo_mes`, `tipo_cuota`),
+    INDEX `idx_arrc_arrendamiento_estado` (`arrendamiento_id`, `estado`),
+    INDEX `idx_arrc_vencimiento` (`fecha_vencimiento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Registro de obligaciones mensuales recurrentes por contrato';
+
+-- ----------------------------------------------------------------------------
+-- 43. Custodia Segregada de Garantía (ARRENDAMIENTOS-1 / D-076)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `arrendamiento_garantias` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `arrendamiento_id` BIGINT UNSIGNED NOT NULL UNIQUE,
+    `monto_pactado` DECIMAL(15,2) NOT NULL,
+    `monto_recibido` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    `monto_retenido_actual` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    `monto_compensado_danos` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    `monto_compensado_renta` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    `monto_devuelto` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    `estado` ENUM('PENDIENTE', 'CUSTODIADA', 'COMPENSADA_PARCIAL', 'LIQUIDADA') NOT NULL DEFAULT 'PENDIENTE',
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_arrg_arrendamiento` FOREIGN KEY (`arrendamiento_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `chk_arrg_montos_no_negativos` CHECK (
+        `monto_pactado` >= 0 AND `monto_recibido` >= 0 AND `monto_retenido_actual` >= 0
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Fondo de garantía en custodia con saldo reconstructible';
+
+-- ----------------------------------------------------------------------------
+-- 44. Historial Inmutable de Transiciones de Estado (ARRENDAMIENTOS-1 / D-076)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `arrendamiento_historial_estados` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `arrendamiento_id` BIGINT UNSIGNED NOT NULL,
+    `estado_anterior` ENUM('BORRADOR', 'VIGENTE', 'FINALIZADO', 'RESCINDIDO', 'CANCELADO') NOT NULL,
+    `estado_nuevo` ENUM('BORRADOR', 'VIGENTE', 'FINALIZADO', 'RESCINDIDO', 'CANCELADO') NOT NULL,
+    `motivo` VARCHAR(500) NULL,
+    `actor_id` BIGINT UNSIGNED NOT NULL,
+    `cambiado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_ahe_arrendamiento` FOREIGN KEY (`arrendamiento_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_ahe_actor` FOREIGN KEY (`actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    INDEX `idx_ahe_arrendamiento` (`arrendamiento_id`, `cambiado_en`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Trazabilidad histórica inmutable de cambios de estado';
 
 SET FOREIGN_KEY_CHECKS = 1;
 
