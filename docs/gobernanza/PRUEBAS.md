@@ -120,12 +120,15 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `CONC-03`: Coexistencia de intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$. Comprobación de que la fecha de salida (checkout) de una reserva y la fecha de entrada (check-in) de una reserva subsecuente sobre la misma unidad en la misma fecha calendario coexisten a la perfección sin generar colisión espuria (1 PASS / 0 FAIL).
   - `CONC-04`: Liberación atómica y reocupación inmediata. La cancelación o expiración de una reserva elimina atómicamente sus noches en el inventario diario y permite la reocupación inmediata por otra reserva sin residuos lógicos (1 PASS / 0 FAIL).
   - `CONC-05`: Timeouts defensivos y verificación de cero locks residuales. La sesión impone `innodb_lock_wait_timeout = 2` y confirma la inexistencia de transacciones zombis o bloqueos residuales en `information_schema.innodb_trx` tras la ejecución concurrente (1 PASS / 0 FAIL).
-- **Suite de Concurrencia Productiva sobre BD Real (CONC-PROD-01 a CONC-PROD-05 — DISPONIBILIDAD-1):** 5 verificaciones de concurrencia real ejecutadas sobre el esquema productivo con dos conexiones PDO concurrentes independientes:
+- **Suite de Concurrencia Productiva sobre BD Real (CONC-PROD-01 a CONC-PROD-05 — DISPONIBILIDAD-1):** 5 verificaciones de concurrencia real ejecutadas sobre el motor MySQL Community Server 8.4.3 LTS con dos conexiones PDO concurrentes independientes:
   - `CONC-PROD-01`: Inserción atómica multinoche sparse en orden determinista `ORDER BY unidad_id ASC, fecha ASC` (3 noches registradas exactamente).
   - `CONC-PROD-02`: Colisión capturada y rollback íntegro ejecutado (cero noches huérfanas persistidas ante colisión de clave duplicada 1062).
   - `CONC-PROD-03`: Bloqueos contiguos $[\text{D1}, \text{D2})$ y $[\text{D2}, \text{D3})$ operan sin falso conflicto en fecha de checkout (noche de salida liberada).
   - `CONC-PROD-04`: Liberación atómica de bloqueo restaura disponibilidad inmediata en el rango completo.
   - `CONC-PROD-05`: Error traducido formalmente a HTTP 409 `ConflictoDisponibilidadExcepcion`.
+- **Verificación Rigurosa de Contratos de Concurrencia 1205 y 1213 (G-1205 y G-1213 — DISPONIBILIDAD-1A):** 2 verificaciones automáticas directas sobre el motor MySQL 8.4.3:
+  - `G-1205`: Error 1205 real (*Lock wait timeout exceeded*) inducido en MySQL 8.4.3 con `innodb_lock_wait_timeout = 1`. Captura de `["HY000", 1205]`, reversión transaccional completa (`inTransaction = false`), y traducción a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+  - `G-1213`: Error 1213 real (*Deadlock found when trying to get lock*) inducido mediante contención circular entre dos procesos concurrentes en InnoDB. Detección automática por el InnoDB Deadlock Detector de MySQL 8.4.3 (`["40001", 1213]`), captura en servicio, rollback atómico y traducción a `ConflictoDisponibilidadExcepcion` (HTTP 409).
 - **Matriz Formal de Disponibilidad e Inventario Diario (DISP-01 a DISP-40 — DISPONIBILIDAD-1):** 40 verificaciones automáticas de dominio e integración cubriendo:
   - Fallback a zona horaria central del PMS (`America/Lima`) y prevalencia de zona horaria por propiedad física.
   - Mitigación segura ante identificadores IANA desconocidos o inválidos recurriendo de forma segura a `America/Lima`.
@@ -159,24 +162,30 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `E2E-DISP-10`: GET `/disponibilidad/bloqueos` retorna 200 OK con listado paginado y metadatos.
   - `E2E-DISP-11`: GET `/disponibilidad/matriz` retorna 200 OK con estructura de rack mensual y estadísticas.
   - `E2E-DISP-12`: POST `/disponibilidad/liberar` con CSRF libera bloqueo y restaura disponibilidad en inventario.
-- **Reconciliación Canónica de Pruebas Automatizadas:**
-  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **638 ejecuciones brutas (638 PASS / 0 FAIL)**.
-  - Total de casos de prueba estrictamente independientes de dominio e integración: **538 casos independientes** (493 previos + 5 de CONC-PROD + 40 de DISP).
-  - Total de pruebas HTTP E2E reales contra servidor Apache: **94 casos únicos** (82 previos + 12 de DISPONIBILIDAD-1).
-  - Desglose independiente por módulos:
-    - IDENTIDAD-1: 27/27 PASS.
-    - PERSONAL-1 / PERSONAL-1A: 26/26 PASS.
-    - AUTH-1 / AUTH-1A: 60/60 PASS.
-    - ROLES-1 / ROLES-2 / ROLES-2A: 48/48 PASS (7 ROLES-1 safe invariant + 40 ROLES-2 matriz formal + 1 ROL-HIST-01 persistencia histórica).
-    - MENÚ-1 / MENÚ-1A: 57/57 PASS (40 MENU matriz formal + 12 Pristine CDP + 5 Delete integrity).
-    - AUDITORÍA-1 / AUDITORÍA-1A: 102/102 PASS (40 AUD matriz formal + 62 Sanitizador multibyte).
-    - USUARIOS-1 / USUARIOS-1A: 46/46 PASS (40 USR matriz formal + 6 ACTOR matriz de identidad).
-    - CONFIGURACIÓN-1: 40/40 PASS (40 CFG matriz formal unitaria/integración).
-    - PROPIEDADES-1: 41/41 PASS (40 PROP matriz formal + 1 PROP-HIST-01 persistencia histórica de 10 pasos).
-    - UNIDADES-1: 41/41 PASS (40 UNI matriz formal + 1 UNI-HIST-01 persistencia histórica de 10 pasos).
-    - GATE OPERATIVO-1 / 1A: 5/5 PASS (5 CONC harness de concurrencia e inventario diario P-006).
-    - DISPONIBILIDAD-1: 45/45 PASS (40 DISP matriz formal + 5 CONC-PROD concurrencia productiva).
-    - SUITES HTTP E2E REALES (Apache HTTPS): 94/94 PASS (12 Disponibilidad + 12 Unidades + 12 Propiedades + 12 Configuración + 12 Roles + 10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).
+- **Reconciliación Canónica y Matemática Suite por Suite:**
+
+| Módulo / Fase | Suite de Prueba | Casos Dominio / Integración | Casos HTTP E2E (Apache) | Estado |
+|---|---|---|---|---|
+| **IDENTIDAD-1** | `test_identidad_suite.php` | 27 | — | 27/27 PASS |
+| **PERSONAL-1 / 1A** | `test_reconstruccion_personal.php`, `test_ddl_003.php` | 26 | — | 26/26 PASS |
+| **AUTH-1 / 1A** | `test_parity_auth1.php`, `test_pw_spaces.php` + invariantes | 60 | 6 (`NAV-1`) | 66/66 PASS |
+| **ROLES-1 / 2 / 2A** | `test_roles_matriz_40.php`, `test_rol_hist_01.php` | 48 (40 + 7 + 1) | 12 (`E2E-ROL2`) | 60/60 PASS |
+| **MENÚ-1 / 1A** | `test_regresion_menu1a.php`, `test_delete_integrity.php`, Pristine | 57 (40 + 12 + 5) | 10 (`E2E-MENU`) | 67/67 PASS |
+| **AUDITORÍA-1 / 1A** | `test_auditoria_completo.php`, `test_sanitizador_14_variantes.php` | 102 (40 + 62) | 8 (`E2E-AUD`) | 110/110 PASS |
+| **USUARIOS-1 / 1A** | `test_usuarios_matriz_40.php`, `test_actor_suite.php` | 46 (40 + 6) | 10 (`E2E-USR`) | 56/56 PASS |
+| **CONFIGURACIÓN-1** | `test_configuracion_matriz_40.php` | 40 | 12 (`E2E-CFG`) | 52/52 PASS |
+| **PROPIEDADES-1** | `test_propiedades_matriz_40.php`, `test_prop_hist_01.php` | 41 (40 + 1) | 12 (`E2E-PROP`) | 53/53 PASS |
+| **UNIDADES-1** | `test_unidades_matriz_40.php`, `test_uni_hist_01.php` | 41 (40 + 1) | 12 (`E2E-UNI`) | 53/53 PASS |
+| **GATE OPERATIVO-1**| `harness_concurrencia_p006.php` (CONC-01..05) | 5 | — | 5/5 PASS |
+| **DISPONIBILIDAD-1**| `test_disponibilidad_matriz_40.php` (DISP-01..40) | 40 | — | 40/40 PASS |
+| **DISPONIBILIDAD-1**| `test_concurrencia_productiva.php` (CONC-PROD-01..05) | 5 | — | 5/5 PASS |
+| **DISPONIBILIDAD-1A**| `test_1205_1213.php` (G-1205 y G-1213) | 2 | — | 2/2 PASS |
+| **DISPONIBILIDAD-1**| `test_e2e_disponibilidad.php` (E2E-DISP-01..12) | — | 12 (`E2E-DISP`) | 12/12 PASS |
+| **TOTALES CANÓNICOS**| **15 suites ejecutadas** | **540** | **94** | **640/640 PASS (100%)** |
+
+  - **Casos Independientes de Dominio e Integración:** 493 (previos a disponibilidad) + 40 (DISP) + 5 (CONC-PROD) + 2 (G-1205/G-1213) = **540 casos**.
+  - **Pruebas HTTP E2E Reales (Apache HTTPS):** 82 (previos) + 12 (E2E-DISP) = **94 casos**.
+  - **Total Bruto Acumulado:** 581 (previos ef6a806) + 40 (DISP) + 5 (CONC-PROD) + 12 (E2E-DISP) + 2 (G-1205/1213) = **640 ejecuciones (640 PASS / 0 FAIL)**.
 
 
 

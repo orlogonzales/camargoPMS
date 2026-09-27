@@ -562,7 +562,7 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 3. Concurrencia, orden determinista y manejo de excepciones:
    - Toda creación de bloqueo o reserva multinoche se procesa bajo una única transacción ACID de base de datos.
    - Inserción ordenada deterministamente: `ORDER BY unidad_id ASC, fecha ASC`, mitigando deadlocks y bloqueos cruzados.
-   - Captura estricta de errores de integridad y contención (códigos MySQL/MariaDB 1062 Clave Duplicada, 1205 Lock Wait Timeout y 1213 Deadlock), ejecutando `ROLLBACK` total inmediato y emitiendo `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), garantizando cero noches huérfanas o transacciones inconsistentes.
+   - Captura estricta de errores de integridad y contención (códigos MySQL 1062 Clave Duplicada, 1205 Lock Wait Timeout y 1213 Deadlock), ejecutando `ROLLBACK` total inmediato y emitiendo `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), verificados empíricamente en el motor MySQL Community Server 8.4.3 LTS (GPL), garantizando cero noches huérfanas o transacciones inconsistentes.
 
 4. Semántica temporal del intervalo semiabierto y husos horarios (D-066 implementada):
    - Intervalo hotelero: $[\text{fecha\_inicio}, \text{fecha\_fin})$ con $\text{fecha\_fin} > \text{fecha\_inicio}$ y $\text{noches} = \text{fecha\_fin} - \text{fecha\_inicio} \ge 1$.

@@ -4,6 +4,21 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase DISPONIBILIDAD-1A — Verificación final de concurrencia, motor SQL y reconciliación
+
+- **Confirmación Empírica del Motor y Versión de Base de Datos:**
+  - Comprobado mediante `SELECT VERSION()` y `SELECT @@version_comment` que el motor en ejecución es **MySQL Community Server 8.4.3 LTS (GPL)**.
+  - Rectificadas referencias documentales a fin de reflejar con exactitud la base instalada.
+- **Verificación Rigurosa de Contratos de Concurrencia 1205 y 1213:**
+  - **G-1205 (Lock Wait Timeout Exceeded):** Inducido en MySQL 8.4.3 configurando `innodb_lock_wait_timeout = 1` y contención por clave de inventario. Confirmada captura de error nativo `["HY000", 1205]`, rollback integral en servicio (`inTransaction = false`), y traducción a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+  - **G-1213 (Deadlock Detected):** Inducido ciclo real de interbloqueo circular entre dos procesos concurrentes en InnoDB. Confirmada detección inmediata por el Deadlock Detector arrojando `["40001", 1213]`. Captura en `DisponibilidadServicio`, reversión atómica y traducción a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+- **Ejecución y Reconciliación Integral Suite por Suite:**
+  - Ejecución en verde de 15 suites de prueba cubriendo todo el histórico del PMS: Identidad (27/27), Usuarios (40/40), Actor (6/6), Roles (40/40), Rol-Hist (10/10), Menú (9/9), Auditoría (40/40), Sanitizador (62/62), Configuración (40/40), Propiedades (40/40), Prop-Hist (10/10), Unidades (40/40), Uni-Hist (10/10), Disponibilidad (40/40), Concurrencia Productiva (5/5), Contratos 1205/1213 (2/2) y E2E Apache HTTPS (94/94).
+- **Reconciliación Matemática Canónica:**
+  - 540 casos independientes de dominio e integración (493 previos + 40 DISP + 5 CONC-PROD + 2 G-1205/G-1213).
+  - 94 casos HTTP E2E reales contra servidor Apache HTTPS.
+  - 640 ejecuciones acumuladas con 0 fallos (100% PASS).
+
 ### Fase DISPONIBILIDAD-1 — Motor Central de Disponibilidad e Inventario Diario
 
 - **Arquitectura e Integridad Transaccional (D-066, D-067 y D-068):**

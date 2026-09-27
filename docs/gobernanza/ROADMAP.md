@@ -168,7 +168,8 @@ Implementación completa del motor central de inventario diario y bloqueos opera
   - Módulo completo en `/disponibilidad` con KPIs, consulta por fechas/propiedad/tipo, matriz/rack mensual interactivo y modales de bloqueo y liberación.
   - JavaScript moderno nativo (Vanilla JS, 0 jQuery, CSRF token, SweetAlert2, PristineJS v1.1.0).
 - **Suites de Pruebas:**
-  - Concurrencia productiva en MariaDB: CONC-PROD-01..05 (5/5 PASS).
+  - Concurrencia productiva en MySQL 8.4.3: CONC-PROD-01..05 (5/5 PASS).
+  - Verificación rigurosa de contratos 1205 y 1213: G-1205 y G-1213 (2/2 PASS).
   - Matriz formal exhaustiva de dominio: DISP-01..40 (40/40 PASS).
   - Suite HTTP E2E Real contra servidor Apache HTTPS: E2E-DISP-01..12 (12/12 PASS).
 

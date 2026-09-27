@@ -193,6 +193,7 @@ Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica.
    - Ordenar inserciones deterministamente: `ORDER BY unidad_id ASC, fecha ASC` (reducción sustancial del riesgo de deadlocks y patrones de bloqueo cruzado).
    - Insertar cada noche del intervalo semiabierto en el inventario.
    - Si colisiona alguna fecha (error de clave duplicada 1062, lock wait timeout 1205 o deadlock 1213), capturar y ejecutar `rollBack()` total inmediato. Mapear a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+   - Verificación empírica en MySQL 8.4.3 LTS: comprobado que tanto el error 1205 (lock wait timeout) como el 1213 (deadlock detectado por InnoDB) ejecutan rollback completo e inmediato y emiten `ConflictoDisponibilidadExcepcion` (HTTP 409).
    - Si todas las noches se persisten exitosamente, ejecutar `commit()`.
 4. **Liberación atómica:**
    - La cancelación o liberación ejecuta `DELETE FROM inventario_diario_unidades WHERE origen_tipo = 'BLOQUEO_MANUAL' AND origen_id = ?`, liberando las noches de forma inmediata sin residuos.
