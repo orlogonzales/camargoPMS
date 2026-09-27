@@ -364,7 +364,24 @@ Implementación del dominio de contratos de arrendamiento prolongado, coexistenc
 - **Persistencia Relacional (Migración 018):** Tablas `arrendamientos`, `arrendamiento_personas`, `arrendamiento_cuotas`, `arrendamiento_garantias`, `arrendamiento_historial_estados`, permisos RBAC (`arrendamientos.*`) y opción de menú dinámico bajo `operaciones`.
 - **Interfaz Alina Conforme a D-075:** Módulo en `/arrendamientos` con formulario nativo Alina, Select2 píldora 20px a 42px, Flatpickr, badges y PristineJS.
 
-Estado: completada (candidata a micro-baseline).
+Estado: homologada (micro-baseline oficial c9eb823).
+
+## MANTENIMIENTO-1 — Incidencias, Órdenes de Trabajo y Bloqueo Operativo de Unidades
+
+Implementación del dominio integral de incidencias físicas, órdenes de trabajo preventivas y correctivas, tercer origen de indisponibilidad física en el inventario diario sparse y preservación histórica bajo D-077:
+- **Separación Ontológica Estricta:** $\text{INCIDENCIA} \neq \text{ORDEN DE TRABAJO} \neq \text{BLOQUEO OPERATIVO}$. Las incidencias son tickets de observación que por sí mismos jamás bloquean unidades.
+- **Coherencia de Bloqueo en BD:** Regla `CHECK` estricta garantizando que si `requiere_bloqueo = 1`, `unidad_id` y fechas de bloqueo sean obligatorias con $\text{fecha\_bloqueo\_fin} > \text{fecha\_bloqueo\_inicio}$; y si `requiere_bloqueo = 0`, ambas fechas sean estrictamente `NULL`.
+- **Protección Anticipada de Inventario:** Materialización transaccional inmediata en `inventario_diario_unidades` en estado `PROGRAMADA` para el intervalo semiabierto $[\text{fecha\_bloqueo\_inicio}, \text{fecha\_bloqueo\_fin})$.
+- **Mapeo de Origen en Disponibilidad:** `tipo_bloqueo = 'MANTENIMIENTO'`, `origen_tipo = 'MANTENIMIENTO_ORDEN'`, `origen_id = mantenimiento_ordenes.id`.
+- **Responsables Desacoplados:** Soporte para colaboradores internos (`colaborador_asignado_id`) y contratistas externos de `SERVICIOS-1` (`proveedor_id`), gobernado por reglas de negocio en `MantenimientoServicio`.
+- **Desacoplamiento Económico con Arrendamientos:** Cero columna `arrendamiento_id` en `mantenimiento_ordenes`; imputación financiera reservada a fases posteriores.
+- **Modelo de Costos:** Costo estimado, mano de obra, materiales y total gestionados en `DECIMAL(15,2)` mediante `BCMath` en backend.
+- **Relación N:M Incidencia <-> Orden:** Asociación de múltiples tickets en una orden correctiva mediante `mantenimiento_orden_incidencias`, admitiendo preventivos sin incidencias previas.
+- **Preservación Histórica:** Al cerrar o cancelar órdenes con bloqueo transcurrido, las noches pasadas consumidas se preservan y solo se liberan las noches futuras.
+- **Persistencia Relacional (Migración 019):** Tablas `mantenimiento_incidencias`, `mantenimiento_ordenes`, `mantenimiento_orden_incidencias`, `mantenimiento_historial_estados`, permisos RBAC (`mantenimiento.*`) y opción de menú dinámico bajo `reservas` (Operaciones).
+- **Interfaz Alina Conforme a D-075:** Módulo en `/mantenimiento` con formulario nativo Alina, Select2 píldora 20px a 42px, Flatpickr, badges suaves y PristineJS.
+
+Estado: completada (pendiente de homologación post-commit).
 
 ## Dominio operativo
 

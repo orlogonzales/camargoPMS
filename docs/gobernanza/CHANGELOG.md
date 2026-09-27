@@ -4,6 +4,38 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase MANTENIMIENTO-1 — Incidencias, Órdenes de Trabajo y Bloqueo Operativo de Unidades (D-077)
+
+- **Separación Ontológica y Modelo de Dominio:**
+  - Consagración del principio vinculante $\text{INCIDENCIA} \neq \text{ORDEN DE TRABAJO} \neq \text{BLOQUEO DE DISPONIBILIDAD}$.
+  - Entidades de dominio ricas `Incidencia`, `OrdenTrabajo`, `OrdenIncidencia` y `MantenimientoHistorialEstado`.
+- **Invariante Operacional de Inventario:**
+  - Una incidencia técnica por sí misma **jamás bloquea** disponibilidad ni retira unidades de la venta.
+  - La orden de trabajo en estado `BORRADOR` **no altera** inventario diario.
+  - El flag `requiere_bloqueo = 1` exige obligatoriamente `unidad_id` e intervalo válido $[\text{fecha\_bloqueo\_inicio}, \text{fecha\_bloqueo\_fin})$ con $\text{fecha\_fin} > \text{fecha\_inicio}$. Si `requiere_bloqueo = 0`, las columnas de fechas de bloqueo son estrictamente `NULL`.
+- **Protección Relacional DDL y Motor InnoDB:**
+  - Restricción `chk_mord_bloqueo_coherente` validada a nivel de tabla en MySQL/MariaDB.
+  - Bloqueo pesimista con `SELECT ... FOR UPDATE` al programar órdenes bloqueantes, garantizando serialización y exclusión mutua.
+  - Captura y traducción estricta de códigos MySQL 1062 (colisión de clave única), 1205 (lock wait timeout) y 1213 (deadlock) a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+- **Semántica Semiabierta Hotelera y Preservación Histórica:**
+  - Intervalos bloqueados en $[\text{inicio}, \text{fin})$, dejando `fecha_fin` libre para check-in inmediato de huéspedes o arrendatarios.
+  - Prórrogas transaccionales con verificación de noches futuras sin colisión.
+  - Culminación y cancelación de órdenes liberan selectivamente noches futuras, preservando intacto el histórico de noches pasadas efectivamente consumidas.
+- **Costeo Aritmético con BCMath:**
+  - Columnas `DECIMAL(15,2)` en BD sin columnas generadas rígidas, procesadas aritméticamente con `BCMath` (`costo_total = bcadd(mano_obra, materiales, 2)`).
+- **Persistencia Relacional y Migración 019:**
+  - Script `SQL/migraciones/019_mantenimiento.sql` y esquema canónico `SQL/camargo_pms.sql` sincronizados (tablas 45 a 48).
+  - 8 permisos RBAC (`mantenimiento.*`), menú dinámico `/mantenimiento` bajo categoría Operaciones.
+- **Interfaz Alina Conforme a D-075 y D-076:**
+  - Vista `/mantenimiento` con tarjetas KPI, tabla responsiva con badges Alina suaves (`bg-light-*`), modales nativos Alina (`app-form app-icon-form`, Select2 42px píldora 20px, Flatpickr y toggle switch).
+  - Controlador JS reactivo `public/assets/js/gestion-mantenimiento.js` (Vanilla JS, 0 jQuery en negocio, PristineJS y SweetAlert2).
+- **Verificación Automatizada Exhaustiva (60/60 PASS):**
+  - Matriz de dominio: `tests/test_mantenimiento_matriz_40.php` (40/40 PASS).
+  - Suite de concurrencia e integridad: `tests/test_mantenimiento_concurrencia.php` (6/6 PASS).
+  - Suite HTTP E2E real contra Apache: `tests/test_e2e_mantenimiento.php` (14/14 PASS).
+
+## [c9eb823] - 2026-09-27
+
 ### Microfase ARRENDAMIENTOS-1 — Gestión de Arrendamientos de Mediana y Larga Estancia (D-076)
 
 - **Separación Ontológica y Modelo de Dominio:**

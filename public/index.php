@@ -533,6 +533,76 @@ $enrutador->post('/api/arrendamientos/{id}/garantia/devolver', [\CamargoPMS\Cont
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('arrendamientos.generar_cargos'),
 ]);
 
+// ============================================================================
+// Rutas de Mantenimiento e Incidencias Técnicas (MANTENIMIENTO-1 / D-077)
+// ============================================================================
+$enrutador->get('/mantenimiento', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+
+// Incidencias
+$enrutador->get('/api/mantenimiento/incidencias', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'listarIncidencias'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+$enrutador->get('/api/mantenimiento/incidencias/{id}', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'obtenerIncidencia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+$enrutador->post('/api/mantenimiento/incidencias', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'reportarIncidencia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.incidencias.reportar'),
+]);
+$enrutador->post('/api/mantenimiento/incidencias/{id}/evaluar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'evaluarIncidencia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.incidencias.gestionar'),
+]);
+$enrutador->post('/api/mantenimiento/incidencias/{id}/resolver-directa', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'resolverIncidenciaDirecta'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.incidencias.gestionar'),
+]);
+$enrutador->post('/api/mantenimiento/incidencias/{id}/desestimar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'desestimarIncidencia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.incidencias.gestionar'),
+]);
+
+// Órdenes de Trabajo
+$enrutador->get('/api/mantenimiento/ordenes', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'listarOrdenes'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+$enrutador->get('/api/mantenimiento/ordenes/{id}', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'obtenerOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'crearOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.crear'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/programar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'programarOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.programar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/iniciar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'iniciarEjecucion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.ejecutar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/estado', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'iniciarEjecucion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.ejecutar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/costos', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'registrarCostos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.ejecutar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/completar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'completarOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.cerrar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/cancelar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'cancelarOrden'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.cancelar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/prorrogar', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'prorrogarBloqueo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.programar'),
+]);
+$enrutador->post('/api/mantenimiento/ordenes/{id}/prorrogar-bloqueo', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'prorrogarBloqueo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ordenes.programar'),
+]);
+
+// Estadísticas e Historial
+$enrutador->get('/api/mantenimiento/estadisticas', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'obtenerEstadisticas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+$enrutador->get('/api/mantenimiento/{tipo}/{id}/historial', [\CamargoPMS\Controladores\MantenimientoControlador::class, 'obtenerHistorial'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('mantenimiento.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

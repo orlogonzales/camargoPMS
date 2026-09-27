@@ -911,6 +911,55 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Registro de transiciones en `arrendamiento_historial_estados` con actor (`ACTOR ≠ USUARIO`; procesos batch imputados a `CAMARGO_PMS`).
    - Módulo `/arrendamientos` conforme a D-075 (Vertical Form With Icon 20px píldora, Select2 42px con 20px de radio, Flatpickr, 0 degradados).
 
+### D-077 — Dominio de Mantenimiento, Incidencias Técnicas, Órdenes de Trabajo y Bloqueo Operativo de Unidades (MANTENIMIENTO-1)
+
+1. **Principio Ontológico Rector:**
+   $$\mathbf{INCIDENCIA} \neq \mathbf{ORDEN\ DE\ TRABAJO} \neq \mathbf{BLOQUEO\ OPERATIVO}$$
+   - **Incidencia:** Síntoma o reporte de desperfecto físico. Severidad (`BAJA`, `MEDIA`, `ALTA`, `CRITICA`). Por sí misma **JAMÁS bloquea unidades** ni altera el inventario diario.
+   - **Orden de Trabajo:** Instrumento técnico-administrativo de gestión, asignación y costeo (`PREVENTIVO` o `CORRECTIVO`). Prioridad (`BAJA`, `MEDIA`, `ALTA`, `URGENTE`). Define si requiere inhabilitación física mediante `requiere_bloqueo`.
+   - **Bloqueo Operativo:** Tercer origen físico de indisponibilidad en `inventario_diario_unidades` (`tipo_bloqueo = 'MANTENIMIENTO'`, `origen_tipo = 'MANTENIMIENTO_ORDEN'`, `origen_id = mantenimiento_ordenes.id`).
+
+2. **Coherencia de Bloqueo Blindada en Base de Datos:**
+   - Si `requiere_bloqueo = 1`: `unidad_id NOT NULL`, `fecha_bloqueo_inicio NOT NULL`, `fecha_bloqueo_fin NOT NULL`, con $\text{fecha\_bloqueo\_fin} > \text{fecha\_bloqueo\_inicio}$.
+   - Si `requiere_bloqueo = 0`: `fecha_bloqueo_inicio IS NULL` y `fecha_bloqueo_fin IS NULL`.
+   - Blindado por `CONSTRAINT chk_mord_bloqueo_coherente CHECK (...)` en MySQL/InnoDB.
+
+3. **Protección Anticipada de Inventario al Programar:**
+   - La materialización física en `inventario_diario_unidades` ocurre atómicamente cuando la orden se establece en `PROGRAMADA` (no espera a `EN_PROCESO`).
+   - Bloqueo de todo el intervalo semiabierto $[\text{fecha\_bloqueo\_inicio}, \text{fecha\_bloqueo\_fin})$.
+   - Colisión con reserva, arrendamiento o bloqueo previo genera `ConflictoDisponibilidadExcepcion` (HTTP 409), reversión atómica total (`ROLLBACK`) e impide la programación.
+
+4. **Responsables Desacoplados de Restricciones DDL de Estado:**
+   - Columnas `colaborador_asignado_id NULL` y `proveedor_id NULL` (`tipo_asignacion ENUM('INTERNO', 'EXTERNO', 'MIXTO')`).
+   - Cero `CHECK` rígido en BD ligando estado con responsables; la validación de asignación para programar o iniciar se rige en `MantenimientoServicio`.
+
+5. **Máquinas de Estados y Culminación Técnica:**
+   - Incidencia: `REPORTADA` $\rightarrow$ `EN_EVALUACION` $\rightarrow$ `CONVERTIDA_A_ORDEN` / `RESUELTA_DIRECTA` / `DESESTIMADA`.
+   - Orden de Trabajo: `BORRADOR` $\rightarrow$ `PROGRAMADA` $\rightarrow$ `EN_PROCESO` $\rightarrow$ `COMPLETADA` / `CANCELADA`.
+   - `CANCELADA` exige `motivo_cancelacion` obligatorio.
+   - `COMPLETADA` representa fin de labores técnicas con `notas_cierre` obligatorias.
+
+6. **Preservación Histórica en Desbloqueo y Liberación:**
+   - Al completar o cancelar una orden con bloqueo transcurrido, las noches pasadas ($\text{fecha} < \text{hoy}$) se conservan en `inventario_diario_unidades` como trazabilidad de inhabilitación consumida.
+   - Solo se liberan las noches futuras ($\text{fecha} \ge \text{hoy}$).
+
+7. **Desacoplamiento Económico con Arrendamientos:**
+   - Cero columna `arrendamiento_id` en `mantenimiento_ordenes`. La imputación de costos a inquilinos o retención de garantías se gestionará en fases financieras posteriores.
+
+8. **Modelo de Costos con BCMath:**
+   - Columnas `costo_estimado`, `costo_mano_obra`, `costo_materiales`, `costo_total` en `DECIMAL(15,2)` no negativas.
+   - Cálculo aritmético exclusivo mediante `BCMath` en PHP, sin columnas generadas rígidas en BD.
+
+9. **Relación Incidencia N:M Orden:**
+   - Tabla asociativa `mantenimiento_orden_incidencias` (`orden_id`, `incidencia_id`).
+   - Preventivo sin incidencias (`tipo = 'PREVENTIVO'`).
+   - Correctivo puede vincular 1 o múltiples incidencias reportadas.
+
+10. **Trazabilidad y Manejo Canónico de Excepciones:**
+    - Registro inmutable en `mantenimiento_historial_estados` conforme a D-061 (`ACTOR ≠ USUARIO`).
+    - Bloqueo pesimista `FOR UPDATE` ordenado por fecha y traducción de errores 1062, 1205 y 1213 a `ConflictoDisponibilidadExcepcion` (HTTP 409).
+    - Interfaz Alina bajo D-075 en `/mantenimiento` con formulario píldora 20px, Select2 42px, badges suaves y validación con PristineJS.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

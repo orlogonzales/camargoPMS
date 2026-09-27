@@ -170,6 +170,14 @@ final class Colaborador
         return $cargoVigente ? $cargoVigente->obtenerCargo() : null;
     }
 
+    /**
+     * Devuelve el nombre completo de la persona vinculada o el código si no está hidratada.
+     */
+    public function obtenerNombreCompleto(): string
+    {
+        return $this->persona !== null ? $this->persona->obtenerNombreCompleto() : $this->codigo;
+    }
+
     public function aArreglo(): array
     {
         return [
