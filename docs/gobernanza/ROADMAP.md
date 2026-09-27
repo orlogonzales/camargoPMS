@@ -266,6 +266,37 @@ Implementación del dominio de ocupación física real, check-in, llaves, lista 
 - **Persistencia Relacional (Migración 015):**
   - Tablas `estadias` y `estadia_huespedes`, 5 permisos RBAC (`estadias.*`) asignados a `SUPERADMINISTRADOR` y opción de menú dinámico bajo 'reservas'.
 
+Estado: homologada (micro-baseline oficial 7911ae1).
+
+## SERVICIOS-1 — Catálogo de Servicios, Proveedores, Consumos y Traslados
+
+Implementación del dominio de catálogo maestro de servicios, directorio de proveedores externos homologados, imputación de consumos a reservas/estadías y extensión logística 1:1 de traslados bajo D-073:
+- **Separación Ontológica Estricta:** `PROVEEDOR ≠ SERVICIO ≠ SERVICIO CONTRATADO ≠ RESERVA ≠ ESTADÍA`. Cero pagos, caja o facturación electrónica en esta fase.
+- **Directorio Maestro de Proveedores Externos:**
+  - Prestadores `EMPRESA` y `PERSONA_NATURAL` vinculados al maestro central de personas sin duplicar identidad.
+  - Cero proveedor "Interno" ficticio: servicios de Camargo Hostelería se marcan con `es_operacion_interna = 1` y `proveedor_id = NULL`.
+- **Integridad Estructural en Base de Datos (CHECK Constraint):**
+  - Motor InnoDB MySQL 8.4 valida formalmente `chk_sc_coherencia_operacion_interna` garantizando coherencia matemática absoluta entre origen interno y proveedor externo.
+- **Matriz de Homologación de Proveedores y Unicidad de Preferente:**
+  - Costo pactado, plazos de pago y referencia.
+  - Columna virtual generada e índice UNIQUE `uq_sp_servicio_preferente` para garantizar exactamente un proveedor preferente activo por servicio.
+- **Catálogo Maestro de Servicios:**
+  - Clasificación en 8 categorías y 6 modalidades de cobro (incluyendo `POR_UNIDAD`). Códigos canónicos `SERV-CAT-XXX`.
+- **Contratación e Imputación de Consumos:**
+  - Reserva comercial obligatoria (`reserva_id NOT NULL`).
+  - Imputación coherente a estadía física validando transaccionalmente con bloqueo `FOR UPDATE` que pertenezca a la misma reserva y no esté `ANULADA`.
+  - Snapshot económico y descriptivo inmutable (D-010 / D-069): congelamiento de importes en `DECIMAL(15,2)` con `moneda_codigo = 'PEN'`, `impuesto_total = 0.00` y `total = subtotal`.
+- **Ciclo Operativo y Prohibición Estricta en Servicios Ejecutados:**
+  - Estados: `SOLICITADO`, `CONFIRMADO`, `EJECUTADO`, `CANCELADO`.
+  - Bloqueo vinculante: Prohibido cancelar un servicio `EJECUTADO` (HTTP 422).
+  - Trazabilidad UTC y autoría D-061 en ejecución y cancelación.
+- **Extensión Especializada 1:1 de Traslados (Transfers):**
+  - Tabla `servicio_traslados` con origen/destino generalizado, número de vuelo, pasajeros, equipaje, vehículo y chofer asignado, con rollback transaccional atómico ante fallas logísticas.
+- **Interfaz Alina Conforme a D-071:**
+  - Módulo completo en `/servicios` con 4 pestañas interactivas, Flatpickr, Font Awesome 6.3.0 exclusivo, Variants of badge de Alina (`bg-light-*`), 0 dotted, 0 dashed, Vanilla JS nativo, PristineJS y SweetAlert2.
+- **Persistencia Relacional (Migración 016):**
+  - 7 tablas nuevas, 5 permisos RBAC (`servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`) y opción de menú dinámico bajo `reservas`.
+
 Estado: completada (candidata a micro-baseline).
 
 ## Dominio operativo

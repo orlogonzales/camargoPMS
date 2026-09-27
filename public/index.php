@@ -341,6 +341,85 @@ $enrutador->post('/estadias/{id}/huespedes', [\CamargoPMS\Controladores\EstadiaC
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('estadias.huespedes'),
 ]);
 
+// ----------------------------------------------------------------------------
+// Rutas de Catálogo de Servicios, Proveedores, Consumos y Traslados (SERVICIOS-1)
+// ----------------------------------------------------------------------------
+$enrutador->get('/servicios', [\CamargoPMS\Controladores\ServicioControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->get('/servicios/auxiliares', [\CamargoPMS\Controladores\ServicioControlador::class, 'auxiliares'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->get('/servicios/categorias', [\CamargoPMS\Controladores\ServicioControlador::class, 'listarCategorias'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->get('/servicios/modalidades', [\CamargoPMS\Controladores\ServicioControlador::class, 'listarModalidades'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+
+// Consumos y Contrataciones
+$enrutador->get('/servicios/contratados', [\CamargoPMS\Controladores\ServicioControlador::class, 'listarContratados'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->get('/servicios/contratados/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'obtenerContratado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->post('/servicios/contratados', [\CamargoPMS\Controladores\ServicioControlador::class, 'contratar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.contratar'),
+]);
+$enrutador->post('/servicios/contratados/{id}/confirmar', [\CamargoPMS\Controladores\ServicioControlador::class, 'confirmar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.contratar'),
+]);
+$enrutador->post('/servicios/contratados/{id}/ejecutar', [\CamargoPMS\Controladores\ServicioControlador::class, 'ejecutar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ejecutar'),
+]);
+$enrutador->post('/servicios/contratados/{id}/cancelar', [\CamargoPMS\Controladores\ServicioControlador::class, 'cancelar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.cancelar'),
+]);
+
+// Catálogo Maestro
+$enrutador->get('/servicios/catalogo', [\CamargoPMS\Controladores\ServicioControlador::class, 'listarCatalogo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->get('/servicios/catalogo/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'obtenerServicio'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->post('/servicios/catalogo', [\CamargoPMS\Controladores\ServicioControlador::class, 'crearServicio'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->post('/servicios/catalogo/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'actualizarServicio'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->put('/servicios/catalogo/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'actualizarServicio'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->post('/servicios/catalogo/{id}/estado', [\CamargoPMS\Controladores\ServicioControlador::class, 'cambiarEstadoServicio'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->post('/servicios/catalogo/{id}/proveedores', [\CamargoPMS\Controladores\ServicioControlador::class, 'homologarProveedor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+
+// Proveedores
+$enrutador->get('/servicios/proveedores', [\CamargoPMS\Controladores\ServicioControlador::class, 'listarProveedores'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->get('/servicios/proveedores/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'obtenerProveedor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.ver'),
+]);
+$enrutador->post('/servicios/proveedores', [\CamargoPMS\Controladores\ServicioControlador::class, 'crearProveedor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->post('/servicios/proveedores/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'actualizarProveedor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->put('/servicios/proveedores/{id}', [\CamargoPMS\Controladores\ServicioControlador::class, 'actualizarProveedor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+$enrutador->post('/servicios/proveedores/{id}/estado', [\CamargoPMS\Controladores\ServicioControlador::class, 'cambiarEstadoProveedor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

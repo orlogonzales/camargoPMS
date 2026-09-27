@@ -742,6 +742,55 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Todas las mutaciones de check-in, check-out, anulación y modificación de huéspedes registran eventos de auditoría (`ESTADIA_CHECKIN`, `ESTADIA_CHECKOUT`, `ESTADIA_ANULADA`, `ESTADIA_HUESPEDES_ACTUALIZADOS`) vinculando al actor ejecutor humano correspondiente (`checkin_por_actor_id`, etc.).
    - Permisos RBAC granulares: `estadias.ver`, `estadias.checkin`, `estadias.checkout`, `estadias.huespedes`, `estadias.anular`.
 
+### D-073 — Catálogo Maestro de Servicios, Matriz de Proveedores Homologados, Consumos Imputados y Traslados (SERVICIOS-1)
+
+1. **Separación Ontológica y Delimitación de Dominio:**
+   - Principio rector: `PROVEEDOR ≠ SERVICIO ≠ SERVICIO CONTRATADO ≠ RESERVA ≠ ESTADÍA`.
+   - El proveedor es una entidad externa que presta un servicio o suministro; el servicio es el concepto o plantilla comercializable; el servicio contratado es la instancia ejecutada o comprometida para una reserva; la reserva es el contrato comercial de hospedaje; la estadía es la ocupación física real.
+   - Exclusiones estrictas: pagos, caja, transacciones financieras de cobro, facturación SUNAT y arrendamientos quedan fuera de esta fase.
+
+2. **Maestro Independiente de Proveedores y Cero Proveedor "Interno":**
+   - La tabla `proveedores` es un catálogo autónomo para prestadores externos de tipo `EMPRESA` (RUC / razón social) o `PERSONA_NATURAL` (vinculada opcionalmente al registro central de `personas` para no duplicar identidad).
+   - Principio `PROVEEDOR ≠ OPERACIÓN INTERNA`: no se crea un proveedor ficticio llamado "Interno" ni se inventa una empresa Camargo en la tabla de proveedores. Cuando el servicio es realizado directamente por Camargo Hostelería, `es_operacion_interna = 1` y `proveedor_id` permanece en `NULL`.
+
+3. **Integridad Estructural en Base de Datos (CHECK Constraint):**
+   - El motor de base de datos MySQL 8.4 InnoDB impone estructuralmente la coherencia de procedencia mediante:
+     ```sql
+     CONSTRAINT chk_sc_coherencia_operacion_interna CHECK (
+       (es_operacion_interna = 1 AND proveedor_id IS NULL)
+       OR (es_operacion_interna = 0 AND proveedor_id IS NOT NULL)
+     )
+     ```
+   - No se permite depender exclusivamente de validaciones PHP: cualquier estado contradictorio es rechazado a nivel de motor.
+
+4. **Matriz de Homologación de Proveedores y Unicidad de Preferente:**
+   - La relación entre servicios y proveedores se modela en `servicio_proveedores`, registrando costos pactados (`costo_pactado DECIMAL(15,2)`), plazos de pago en días y referencias comerciales.
+   - Cada servicio puede homologar múltiples proveedores, pero solo uno puede ser `preferente` activo a la vez. Esta regla se garantiza en base de datos mediante una columna virtual generada:
+     ```sql
+     es_preferente_virt TINYINT GENERATED ALWAYS AS (CASE WHEN es_preferente = 1 THEN 1 ELSE NULL END) STORED,
+     UNIQUE KEY uq_sp_servicio_preferente (servicio_id, es_preferente_virt)
+     ```
+
+5. **Contratación e Imputación de Consumos:**
+   - Toda contratación exige anclarse a una reserva comercial (`reserva_id NOT NULL`), garantizando que no existan consumos huérfanos.
+   - La imputación a una estadía física es opcional (`estadia_id NULL`), pero si se especifica, debe pertenecer obligatoriamente a la misma reserva y encontrarse en estado válido (no anulada), verificado bajo transacción con bloqueo pesimista `FOR UPDATE`.
+   - Snapshots inmutables (D-010 / D-069): se congelan inmutablemente en el registro contratado: `concepto_servicio`, `cantidad`, `precio_unitario`, `costo_unitario`, `subtotal`, `tasa_impuesto = 0.0000`, `impuesto_total = 0.00` y `total = subtotal` (`moneda_codigo = 'PEN'`). Modificaciones posteriores del catálogo o tarifas de proveedores no alteran consumos emitidos.
+
+6. **Ciclo Operativo y Prohibición Estricta en Servicios Ejecutados:**
+   - Estados: `SOLICITADO` → `CONFIRMADO` → `EJECUTADO`, y `CANCELADO`.
+   - **Regla Vinculante:** PROHIBIDO cancelar un servicio que ya ha sido `EJECUTADO` físicamente. Toda solicitud de cancelación sobre un servicio en estado `EJECUTADO` es rechazada con `EstadoServicioInvalidoExcepcion` (HTTP 422).
+   - Cancelación justificada sobre servicios no ejecutados requiere motivo obligatorio (1-255 caracteres), registrando marca técnica UTC y actor cancelador.
+   - Cero borrado físico: `DELETE = 0` en tablas transaccionales; claves foráneas con `ON DELETE RESTRICT`.
+
+7. **Extensión Especializada 1:1 de Traslados (Transfers):**
+   - Los traslados se modelan en tabla dedicada `servicio_traslados` con relación 1:1 estricta (`UNIQUE(servicio_contratado_id)`).
+   - Soporta operaciones de `LLEGADA` y `SALIDA`, con origen y destino generalizados (aeropuerto, terminal, estación, propiedad, centro o dirección libre), número de vuelo/transporte, pasajeros, equipaje, vehículo y chofer asignado.
+   - La persistencia es atómica: cualquier error de validación logística revierte completamente la transacción.
+
+8. **Trazabilidad de Autoría (D-061) y Seguridad RBAC:**
+   - Todas las mutaciones operativas registran auditoría transversal resolviendo canónicamente el `actor_id` humano (`ACTOR ≠ USUARIO`).
+   - Permisos RBAC granulares: `servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

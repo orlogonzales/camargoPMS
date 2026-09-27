@@ -4,6 +4,44 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase SERVICIOS-1 — Catálogo de Servicios, Proveedores, Consumos y Traslados
+
+- **Separación Ontológica Estricta (D-073):**
+  - Principio rector inviolable: `PROVEEDOR ≠ SERVICIO ≠ SERVICIO CONTRATADO ≠ RESERVA ≠ ESTADÍA`.
+  - Exclusión taxativa: cero pagos, cero caja, cero facturación electrónica SUNAT, cero cálculo financiero prematuro y cero eliminación física (`DELETE = 0`).
+- **Maestro Independiente de Proveedores:**
+  - Tabla `proveedores` administrable para prestadores externos, clasificados en `EMPRESA` (RUC / razón social) y `PERSONA_NATURAL` (vinculación opcional al maestro central de `personas` para no duplicar identidad).
+  - Principio `PROVEEDOR ≠ OPERACIÓN INTERNA`: no se crea proveedor ficticio "Interno". Cuando un servicio es ejecutado con personal o recursos propios de Camargo Hostelería, `es_operacion_interna = 1` y `proveedor_id` permanece obligatoriamente en `NULL`.
+- **Integridad Estructural en Base de Datos (CHECK Constraint):**
+  - Regla formal implementada a nivel de motor MySQL 8.4 InnoDB (`chk_sc_coherencia_operacion_interna`):
+    `((es_operacion_interna = 1 AND proveedor_id IS NULL) OR (es_operacion_interna = 0 AND proveedor_id IS NOT NULL))`.
+- **Matriz de Homologación de Proveedores y Unicidad de Preferente:**
+  - Tabla asociativa `servicio_proveedores` con costo pactado (`costo_pactado DECIMAL(15,2)`), plazo de pago en días, código de referencia del proveedor y condición de preferente (`es_preferente`).
+  - Restricción de unicidad estricta en base de datos para proveedor preferente: columna virtual generada `uq_preferente` indexada por `uq_sp_servicio_preferente`, impidiendo más de un preferente activo por servicio tanto en concurrencia como transaccionalmente.
+- **Catálogo Maestro de Servicios:**
+  - Catálogo normalizado con `categorias_servicio` (8 categorías seeded) y `modalidades_cobro_servicio` (6 modalidades seeded, incluyendo explícitamente `POR_UNIDAD`).
+  - Configuración con código canónico autogenerado (`SERV-CAT-XXX`), precio de venta referencial y flags operativas (`requiere_proveedor_externo`, `es_traslado`).
+- **Contratación e Imputación de Consumos:**
+  - Reserva comercial obligatoria (`reserva_id NOT NULL`): no se admiten consumos desanclados.
+  - Imputación a estadía opcional pero coherente: si se proporciona `estadia_id`, el sistema verifica bajo transacciones con bloqueo pesimista (`FOR UPDATE`) que la estadía pertenezca a la misma reserva y no se encuentre `ANULADA` (emitiendo HTTP 422 si no coincide).
+  - Snapshot económico y descriptivo inmutable (D-010 / D-069): se congelan `concepto_servicio`, `cantidad`, `precio_unitario`, `costo_unitario`, `subtotal`, `impuesto_total = 0.00` y `total = subtotal` (`moneda_codigo = 'PEN'`). Modificaciones posteriores del catálogo o costos de proveedor no alteran operaciones emitidas.
+- **Ciclo Operativo y Prohibición Estricta en Servicios Ejecutados:**
+  - Estados: `SOLICITADO`, `CONFIRMADO`, `EJECUTADO`, `CANCELADO`.
+  - **Bloqueo Vinculante:** PROHIBIDO cancelar un servicio que ya ha sido `EJECUTADO` físicamente (rechazo riguroso con `EstadoServicioInvalidoExcepcion` / HTTP 422).
+  - Transición a `EJECUTADO` registra instante UTC técnico (`ejecutado_en`) y actor ejecutor (`ejecutado_por_actor_id`).
+  - Cancelación justificada requiere motivo explícito, registrando instante UTC técnico y actor cancelador.
+- **Extensión Especializada 1:1 de Traslados (Transfers):**
+  - Tabla `servicio_traslados` vinculada 1:1 a `servicios_contratados` con `UNIQUE(servicio_contratado_id)`.
+  - Soporta traslados de `LLEGADA` y `SALIDA`, capturando origen y destino generalizados (aeropuerto, terminal, estación, propiedad, centro u otra dirección libre), número de vuelo/transporte, cantidad de pasajeros y equipaje, conductor asignado y vehículo.
+  - Rollback transaccional atómico: cualquier fallo en los datos logísticos revierte integralmente la cabecera del servicio contratado.
+- **Interfaz Alina y Experiencia de Usuario (D-071):**
+  - Módulo completo bajo `/servicios` con 4 pestañas operativas (Consumos Imputados, Catálogo de Conceptos, Directorio de Proveedores, Logística de Traslados).
+  - Conformidad estricta con D-071: Font Awesome 6.3.0 exclusivo, Flatpickr con formato visual d/m/Y y envío canónico Y-m-d, Badges oficiales de Alina (`bg-light-success`, `bg-light-info`, `bg-light-primary`, `bg-light-warning`, `bg-light-danger`, `bg-light-secondary`), 0 dotted, 0 dashed, Vanilla JS nativo modular, PristineJS y SweetAlert2.
+- **Persistencia Relacional (Migración 016):**
+  - 7 nuevas tablas: `categorias_servicio`, `modalidades_cobro_servicio`, `proveedores`, `servicios`, `servicio_proveedores`, `servicios_contratados`, `servicio_traslados`.
+  - 5 nuevos permisos RBAC: `servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`.
+  - Opción de menú dinámica de nivel 2: `servicios_catalogo` bajo `reservas`.
+
 ### Microfase ESTADÍAS-1 — Check-in, Registro de Huéspedes y Ciclo Operativo de Estancias
 
 - **Separación Ontológica Estricta (D-072):**

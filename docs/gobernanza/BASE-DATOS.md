@@ -285,6 +285,61 @@ En ESTADÍAS-1 se introduce la gestión operativa de ocupación física real, ch
    - **35 permisos** RBAC en catálogo (`estadias.ver`, `estadias.checkin`, `estadias.checkout`, `estadias.huespedes`, `estadias.anular`).
    - **15 migraciones** aplicadas (`001` a `015`), cero pendientes.
 
+## Catálogo de Servicios, Proveedores, Consumos y Traslados (Implementado — SERVICIOS-1 / D-073)
+
+En SERVICIOS-1 se implementa el catálogo de servicios complementarios, proveedores homologados, consumos imputados y traslados (Migración `016_servicios.sql`):
+
+1. **Tabla de categorías de servicio (`categorias_servicio`):**
+   - Columnas: `id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(50) NOT NULL UNIQUE`, `nombre VARCHAR(100) NOT NULL`, `descripcion VARCHAR(255) NULL`, `orden INT UNSIGNED NOT NULL DEFAULT 0`, `activo TINYINT(1) NOT NULL DEFAULT 1`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - Semillas (8): `TRASLADOS`, `ALIMENTACION`, `LIMPIEZA_EXTRA`, `TOURS`, `LAVANDERIA`, `BIENESTAR`, `EQUIPAMIENTO`, `OTROS`.
+
+2. **Tabla de modalidades de cobro (`modalidades_cobro_servicio`):**
+   - Columnas: `id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(50) NOT NULL UNIQUE`, `nombre VARCHAR(100) NOT NULL`, `descripcion VARCHAR(255) NULL`, `activo TINYINT(1) NOT NULL DEFAULT 1`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`.
+   - Semillas (6): `POR_EVENTO`, `POR_PERSONA`, `POR_NOCHE`, `POR_PERSONA_NOCHE`, `POR_HORA`, `POR_UNIDAD`.
+
+3. **Tabla de proveedores externos (`proveedores`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(30) NOT NULL UNIQUE`, `tipo_proveedor ENUM('EMPRESA', 'PERSONA_NATURAL') NOT NULL DEFAULT 'EMPRESA'`, `persona_id BIGINT UNSIGNED NULL`, `razon_social VARCHAR(255) NOT NULL`, `nombre_comercial VARCHAR(255) NULL`, `tipo_documento ENUM('RUC', 'DNI', 'CE', 'PASAPORTE', 'OTRO') NOT NULL DEFAULT 'RUC'`, `numero_documento VARCHAR(30) NOT NULL UNIQUE`, `telefono VARCHAR(50) NULL`, `email VARCHAR(255) NULL`, `direccion VARCHAR(255) NULL`, `contacto_nombre VARCHAR(150) NULL`, `contacto_telefono VARCHAR(50) NULL`, `estado ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO'`, `observaciones TEXT NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - FK: `fk_proveedores_persona`: `FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+   - Cero tipo "INTERNO" ficticio: prestadores propios se marcan en `servicios_contratados` con `es_operacion_interna = 1` y `proveedor_id = NULL`.
+
+4. **Tabla de catálogo de servicios (`servicios`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(30) NOT NULL UNIQUE`, `categoria_id INT UNSIGNED NOT NULL`, `modalidad_cobro_id INT UNSIGNED NOT NULL`, `nombre VARCHAR(150) NOT NULL`, `descripcion TEXT NULL`, `moneda_codigo VARCHAR(3) NOT NULL DEFAULT 'PEN'`, `precio_venta_referencial DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `requiere_proveedor_externo TINYINT(1) NOT NULL DEFAULT 0`, `es_traslado TINYINT(1) NOT NULL DEFAULT 0`, `activo TINYINT(1) NOT NULL DEFAULT 1`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - FKs:
+     - `fk_servicios_categoria`: `FOREIGN KEY (categoria_id) REFERENCES categorias_servicio(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_servicios_modalidad`: `FOREIGN KEY (modalidad_cobro_id) REFERENCES modalidades_cobro_servicio(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+
+5. **Tabla de homologación servicio-proveedor (`servicio_proveedores`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `servicio_id BIGINT UNSIGNED NOT NULL`, `proveedor_id BIGINT UNSIGNED NOT NULL`, `costo_pactado DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `moneda_codigo VARCHAR(3) NOT NULL DEFAULT 'PEN'`, `plazo_pago_dias INT UNSIGNED NOT NULL DEFAULT 0`, `codigo_referencia_proveedor VARCHAR(50) NULL`, `es_preferente TINYINT(1) NOT NULL DEFAULT 0`, `es_preferente_virt TINYINT GENERATED ALWAYS AS (CASE WHEN es_preferente = 1 THEN 1 ELSE NULL END) STORED`, `activo TINYINT(1) NOT NULL DEFAULT 1`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - FKs:
+     - `fk_sp_servicio`: `FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_sp_proveedor`: `FOREIGN KEY (proveedor_id) REFERENCES proveedores(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+   - Restricciones UNIQUE:
+     - `uq_sp_servicio_proveedor`: `UNIQUE KEY (servicio_id, proveedor_id)`.
+     - `uq_sp_servicio_preferente`: `UNIQUE KEY (servicio_id, es_preferente_virt)` (garantía en BD de máximo un preferente).
+
+6. **Tabla de servicios contratados y consumos (`servicios_contratados`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(30) NOT NULL UNIQUE`, `reserva_id BIGINT UNSIGNED NOT NULL`, `estadia_id BIGINT UNSIGNED NULL`, `servicio_id BIGINT UNSIGNED NOT NULL`, `proveedor_id BIGINT UNSIGNED NULL`, `es_operacion_interna TINYINT(1) NOT NULL DEFAULT 1`, `concepto_servicio VARCHAR(200) NOT NULL`, `cantidad DECIMAL(10,2) NOT NULL DEFAULT 1.00`, `moneda_codigo VARCHAR(3) NOT NULL DEFAULT 'PEN'`, `precio_unitario DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `costo_unitario DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `subtotal DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `tasa_impuesto DECIMAL(5,4) NOT NULL DEFAULT 0.0000`, `impuesto_total DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `total DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `fecha_servicio DATE NOT NULL`, `hora_servicio TIME NULL`, `estado ENUM('SOLICITADO', 'CONFIRMADO', 'EJECUTADO', 'CANCELADO') NOT NULL DEFAULT 'SOLICITADO'`, `observaciones TEXT NULL`, `motivo_cancelacion VARCHAR(255) NULL`, `cancelado_en DATETIME NULL`, `cancelado_por_actor_id BIGINT UNSIGNED NULL`, `ejecutado_en DATETIME NULL`, `ejecutado_por_actor_id BIGINT UNSIGNED NULL`, `creado_por_actor_id BIGINT UNSIGNED NOT NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - FKs:
+     - `fk_sc_reserva`: `FOREIGN KEY (reserva_id) REFERENCES reservas(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_sc_estadia`: `FOREIGN KEY (estadia_id) REFERENCES estadias(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_sc_servicio`: `FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_sc_proveedor`: `FOREIGN KEY (proveedor_id) REFERENCES proveedores(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_sc_actor_creador`: `FOREIGN KEY (creado_por_actor_id) REFERENCES actores(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+     - `fk_sc_actor_cancelador`: `FOREIGN KEY (cancelado_por_actor_id) REFERENCES actores(id) ON DELETE SET NULL ON UPDATE CASCADE`.
+     - `fk_sc_actor_ejecutor`: `FOREIGN KEY (ejecutado_por_actor_id) REFERENCES actores(id) ON DELETE SET NULL ON UPDATE CASCADE`.
+   - CHECK Constraint:
+     - `chk_sc_coherencia_operacion_interna`: `CHECK (((es_operacion_interna = 1 AND proveedor_id IS NULL) OR (es_operacion_interna = 0 AND proveedor_id IS NOT NULL)))`.
+
+7. **Tabla de extensión 1:1 de traslados (`servicio_traslados`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `servicio_contratado_id BIGINT UNSIGNED NOT NULL UNIQUE`, `tipo_traslado ENUM('LLEGADA', 'SALIDA') NOT NULL`, `origen VARCHAR(255) NOT NULL`, `destino VARCHAR(255) NOT NULL`, `numero_vuelo_transporte VARCHAR(50) NULL`, `pasajeros INT UNSIGNED NOT NULL DEFAULT 1`, `equipaje_piezas INT UNSIGNED NOT NULL DEFAULT 0`, `conductor_nombre VARCHAR(150) NULL`, `vehiculo_placa VARCHAR(20) NULL`, `vehiculo_modelo VARCHAR(100) NULL`, `observaciones_logistica TEXT NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - FK: `fk_st_servicio_contratado`: `FOREIGN KEY (servicio_contratado_id) REFERENCES servicios_contratados(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
+
+8. **Estado general de la base de datos tras SERVICIOS-1:**
+   - **37 tablas** físicas consolidadas.
+   - **54 Foreign Keys** referenciales inviolables.
+   - **40 permisos** RBAC en catálogo (`servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`).
+   - **16 migraciones** aplicadas (`001` a `016`), cero pendientes.
+
 
 
 ## Migraciones

@@ -220,9 +220,21 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **RESERVAS-1** | `test_reservas_concurrencia.php` (RES-CONC-01..05, EXP-01) | 6 | — | 6/6 PASS |
 | **RESERVAS-1** | `test_e2e_reservas.php` (E2E-RES-01..15) | — | 15 (`E2E-RES`) | 15/15 PASS |
 | **RESERVAS-1A** | `test_reservas_1a_fisc_hold_d061.php` (FISC, HOLD, D061) | 12 | — | 12/12 PASS |
-| **TOTALES CANÓNICOS**| **20 suites ejecutadas** | **628** | **109** | **737 casos (743 ejecuciones) PASS (100%)** |
+| **UI-2** | `test_ui2_matriz_25.php` (UI2-01..25) | 25 | — | 25/25 PASS |
+| **UI-2A** | `test_ui2a_matriz_20.php` (UI2A-01..20) | 20 | — | 20/20 PASS |
+| **ESTADÍAS-1** | `test_estadias_matriz_40.php` (EST-01..40) | 40 | — | 40/40 PASS |
+| **ESTADÍAS-1** | `test_estadias_concurrencia.php` (EST-CONC-01..06) | 6 | — | 6/6 PASS |
+| **ESTADÍAS-1** | `test_e2e_estadias.php` (E2E-EST-01..15) | — | 15 (`E2E-EST`) | 15/15 PASS |
+| **SERVICIOS-1** | `test_servicios_matriz_40.php` (SERV-01..40) | 40 | — | 40/40 PASS |
+| **SERVICIOS-1** | `test_servicios_concurrencia.php` (SERV-C01..C06) | 6 | — | 6/6 PASS |
+| **SERVICIOS-1** | `test_e2e_servicios.php` (E2E-SERV-01..15) | — | 15 (`E2E-SERV`) | 15/15 PASS |
+| **TOTALES CANÓNICOS**| **27 suites ejecutadas** | **765** | **139** | **904 casos PASS (100%)** |
 
-  - **Casos Independientes de Dominio e Integración:** 560 (previos c2d41cc) + 50 (RES-01..50) + 6 (RES-CONC-01..05, EXP-01) + 12 (RESERVAS-1A) = **628 casos**.
-  - **Pruebas HTTP E2E Reales (Apache HTTPS):** 94 (previos c2d41cc) + 15 (E2E-RES-01..15) = **109 casos**.
-  - **Total Bruto Acumulado:** 660 (previos c2d41cc) + 71 (RESERVAS-1) + 12 (RESERVAS-1A) = **743 ejecuciones (743 PASS / 0 FAIL)**.
+  - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
+    - UI-2 (25) + UI-2A (20) = 45 casos
+    - Disponibilidad Matriz (40) + E2E Disponibilidad (12) = 52 casos
+    - Reservas Matriz (50) + Concurrencia Reservas (6) + E2E Reservas (15) + RES-1A (12) = 83 casos
+    - Estadías Matriz (40) + Concurrencia Estadías (6) + E2E Estadías (15) = 61 casos
+    - Servicios Matriz (40) + Concurrencia Servicios (6) + E2E Servicios (15) = 61 casos
+    - **Total Consolidado de Regresión Activa: 302/302 PASS (100%)**.
 
