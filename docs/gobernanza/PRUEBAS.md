@@ -228,7 +228,10 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **SERVICIOS-1** | `test_servicios_matriz_40.php` (SERV-01..40) | 40 | — | 40/40 PASS |
 | **SERVICIOS-1** | `test_servicios_concurrencia.php` (SERV-C01..C06) | 6 | — | 6/6 PASS |
 | **SERVICIOS-1** | `test_e2e_servicios.php` (E2E-SERV-01..15) | — | 15 (`E2E-SERV`) | 15/15 PASS |
-| **TOTALES CANÓNICOS**| **27 suites ejecutadas** | **765** | **139** | **904 casos PASS (100%)** |
+| **FINANCIERO-2** | `test_financiero_matriz_40.php` (FIN2-01..40) | 40 | — | 40/40 PASS |
+| **FINANCIERO-2** | `test_financiero_concurrencia.php` (FIN2-C01..C06) | 6 | — | 6/6 PASS |
+| **FINANCIERO-2** | `test_e2e_financiero.php` (E2E-FIN2-01..15) | — | 15 (`E2E-FIN2`) | 15/15 PASS |
+| **TOTALES CANÓNICOS**| **30 suites ejecutadas** | **811** | **154** | **965 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
     - UI-2 (25) + UI-2A (20) = 45 casos
@@ -236,5 +239,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Reservas Matriz (50) + Concurrencia Reservas (6) + E2E Reservas (15) + RES-1A (12) = 83 casos
     - Estadías Matriz (40) + Concurrencia Estadías (6) + E2E Estadías (15) = 61 casos
     - Servicios Matriz (40) + Concurrencia Servicios (6) + E2E Servicios (15) = 61 casos
-    - **Total Consolidado de Regresión Activa: 302/302 PASS (100%)**.
+    - Financiero-2 Matriz (40) + Concurrencia Financiero-2 (6) + E2E Financiero-2 (15) = 61 casos
+    - **Total Consolidado de Regresión Activa: 363/363 PASS (100%)**.
 

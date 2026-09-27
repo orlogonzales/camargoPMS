@@ -334,11 +334,24 @@ En SERVICIOS-1 se implementa el catálogo de servicios complementarios, proveedo
    - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `servicio_contratado_id BIGINT UNSIGNED NOT NULL UNIQUE`, `tipo_traslado ENUM('LLEGADA', 'SALIDA') NOT NULL`, `origen VARCHAR(255) NOT NULL`, `destino VARCHAR(255) NOT NULL`, `numero_vuelo_transporte VARCHAR(50) NULL`, `pasajeros INT UNSIGNED NOT NULL DEFAULT 1`, `equipaje_piezas INT UNSIGNED NOT NULL DEFAULT 0`, `conductor_nombre VARCHAR(150) NULL`, `vehiculo_placa VARCHAR(20) NULL`, `vehiculo_modelo VARCHAR(100) NULL`, `observaciones_logistica TEXT NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
    - FK: `fk_st_servicio_contratado`: `FOREIGN KEY (servicio_contratado_id) REFERENCES servicios_contratados(id) ON DELETE RESTRICT ON UPDATE CASCADE`.
 
-8. **Estado general de la base de datos tras SERVICIOS-1:**
-   - **37 tablas** físicas consolidadas.
-   - **54 Foreign Keys** referenciales inviolables.
-   - **40 permisos** RBAC en catálogo (`servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`).
-   - **16 migraciones** aplicadas (`001` a `016`), cero pendientes.
+8. **Esquema de Cuentas, Cargos, Pagos y Caja Física (FINANCIERO-2 y Migración 017):**
+   - **`cajas_fisicas`:** Catálogo de puntos físicos de custodia de efectivo por propiedad (`id`, `propiedad_id`, `codigo`, `nombre`, `estado`, `creado_en`, `actualizado_en`). FK: `fk_cajas_propiedad`.
+   - **`cuentas_bancarias`:** Cuentas corrientes y recaudadoras de la empresa (`id`, `banco_nombre`, `tipo_cuenta`, `moneda_codigo`, `numero_cuenta`, `cci`, `alias`, `estado`, `creado_en`, `actualizado_en`). Semilla: BCP Corriente Soles.
+   - **`metodos_pago`:** Catálogo administrable de modalidades de cobro (`id`, `codigo`, `nombre`, `tipo`, `requiere_caja_fisica`, `requiere_cuenta_bancaria`, `requiere_referencia`, `activo`). Semillas: `EFECTIVO`, `TARJETA`, `TRANSFERENCIA`, `DEPOSITO`, `BILLETERA`.
+   - **`sesiones_caja`:** Turnos de caja de recepción con control de apertura y cierre (`id`, `caja_fisica_id`, `aperturada_por_actor_id`, `cerrada_por_actor_id`, `aperturada_en`, `cerrada_en`, `monto_apertura`, `monto_ventas_efectivo`, `monto_ingresos_manuales`, `monto_egresos_manuales`, `monto_devoluciones_efectivo`, `monto_cierre_esperado`, `monto_cierre_real`, `diferencia_arqueo`, `resultado_arqueo`, `motivo_diferencia`, `estado`).
+   - **`movimientos_caja`:** Libro diario de caja física (`id`, `sesion_caja_id`, `tipo_movimiento`, `origen`, `origen_id`, `monto`, `concepto`, `creado_por_actor_id`, `anulado`, `anulado_por_actor_id`).
+   - **`movimientos_bancarios`:** Libro auxiliar bancario (`id`, `cuenta_bancaria_id`, `tipo_movimiento`, `origen`, `origen_id`, `monto`, `numero_operacion`, `concepto`, `fecha_operacion`, `creado_por_actor_id`, `anulado`, `anulado_por_actor_id`).
+   - **`cuentas_folios`:** Cuentas maestras de huéspedes vinculadas 1:1 a la reserva (`id`, `reserva_id UNIQUE`, `codigo`, `estado`, `total_cargos`, `total_pagos`, `total_devoluciones`, `saldo_pendiente`, `creado_por_actor_id`, `creado_en`).
+   - **`cargos_cuenta`:** Deudas y consumos devengados o provisionales (`id`, `cuenta_folio_id`, `estadia_id NULL`, `servicio_contratado_id NULL`, `tipo_cargo`, `concepto`, `cantidad`, `precio_unitario`, `subtotal`, `tasa_impuesto`, `impuesto_total`, `total`, `monto_aplicado`, `saldo_pendiente`, `estado`, `creado_por_actor_id`).
+   - **`pagos_cuenta`:** Ingresos formalizados de dinero (`id`, `cuenta_folio_id`, `metodo_pago_id`, `cuenta_bancaria_id NULL`, `sesion_caja_id NULL`, `movimiento_caja_id NULL`, `movimiento_bancario_id NULL`, `monto_total`, `monto_aplicado`, `monto_devuelto`, `saldo_no_aplicado`, `codigo_transaccion_externa`, `estado`, `creado_por_actor_id`).
+   - **`aplicaciones_pago`:** Entidad desacoplada de amortización (`id`, `pago_id`, `cargo_id`, `monto_aplicado`, `reversada`, `reversada_en`, `reversado_por_actor_id`, `motivo_reversion`, `creado_por_actor_id`).
+   - **`devoluciones_cuenta`:** Salidas de fondos registradas contra un pago (`id`, `pago_id`, `cuenta_folio_id`, `metodo_pago_id`, `cuenta_bancaria_id NULL`, `sesion_caja_id NULL`, `movimiento_caja_id NULL`, `movimiento_bancario_id NULL`, `monto`, `motivo`, `creado_por_actor_id`).
+
+9. **Estado general de la base de datos tras FINANCIERO-2:**
+   - **48 tablas** físicas consolidadas.
+   - **92 Foreign Keys** referenciales inviolables.
+   - **48 permisos** RBAC en catálogo (`caja.ver`, `caja.aperturar`, `caja.cerrar`, `caja.movimientos`, `caja.cobrar`, `caja.aplicar`, `caja.devolver`, `caja.reversar`).
+   - **17 migraciones** aplicadas (`001` a `017`), cero pendientes.
 
 
 

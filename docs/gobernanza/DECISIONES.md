@@ -787,9 +787,51 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Soporta operaciones de `LLEGADA` y `SALIDA`, con origen y destino generalizados (aeropuerto, terminal, estación, propiedad, centro o dirección libre), número de vuelo/transporte, pasajeros, equipaje, vehículo y chofer asignado.
    - La persistencia es atómica: cualquier error de validación logística revierte completamente la transacción.
 
-8. **Trazabilidad de Autoría (D-061) y Seguridad RBAC:**
-   - Todas las mutaciones operativas registran auditoría transversal resolviendo canónicamente el `actor_id` humano (`ACTOR ≠ USUARIO`).
-   - Permisos RBAC granulares: `servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`.
+### D-074 — Tríada Financiera, Modelo de Cuentas/Folios, Aplicaciones de Pago, Arqueos Deterministas y Tesorería (FINANCIERO-2)
+
+1. **La Tríada Financiera y Desacoplamiento de Cobros:**
+   - Principios ontológicos inviolables: `CARGO ≠ PAGO ≠ MOVIMIENTO DE CAJA` y `PAGO ≠ APLICACIÓN DE PAGO`.
+   - **Cargo:** Representa una deuda u obligación contractual devengada contra la cuenta/folio (por alojamiento o consumo de servicios).
+   - **Pago:** Representa un ingreso formal de fondos a favor del establecimiento, capturado a través de un método de pago. El pago puede ingresar sin estar aplicado inmediatamente a un cargo específico (anticipo o saldo no aplicado).
+   - **Movimiento de Caja:** Representa una afectación física del dinero en efectivo bajo custodia de un cajero en un turno de recepción.
+   - **Aplicación de Pago:** Entidad relacional desacoplada que formaliza la amortización total o parcial de un cargo con un pago específico.
+   - **Cero banderas booleanas (`pagado = 1`):** El balance de la cuenta, el saldo pendiente de cada cargo y el saldo no aplicado de cada pago son derivados matemáticos estrictos calculados en tiempo real mediante `BCMath` con dos decimales (`DECIMAL(15,2)`).
+
+2. **Folios Comerciales 1:1 por Reserva:**
+   - Cada reserva comercial dispone de exactamente una cuenta/folio financiero principal (`cuentas_folios.reserva_id UNIQUE`).
+   - Los cargos se imputan obligatoriamente a la cuenta de la reserva, pero conservan un puntero opcional `estadia_id NULL` para responder con exactitud:
+     - "¿Cuánto debe esta reserva en total?" (Balance global de la cuenta).
+     - "¿Qué consumió específicamente la habitación/estadía X?" (Filtro por `estadia_id`).
+
+3. **Ciclo de Vida de Cargos y Sincronización Automática:**
+   - **Cargos de Alojamiento:** Nacerán en estado `DEVENGADO` de forma transaccional automática cuando la reserva comercial pasa al estado `CONFIRMADA`.
+   - **Cargos de Servicios:**
+     - Al contratarse el servicio (`SOLICITADO` / `CONFIRMADO`): se genera automáticamente un cargo en estado `PROVISIONAL`.
+     - Al ejecutarse físicamente el servicio (`EJECUTADO`): el cargo transiciona de inmediato a `DEVENGADO`.
+     - Si el servicio es cancelado antes de su ejecución: el cargo transiciona a `ANULADO`, liberando la deuda asociada.
+
+4. **Caja Física, Turnos y Arqueo Determinista:**
+   - Todo cobro o devolución liquidado con método `EFECTIVO` exige indispensablemente una sesión de caja física abierta (`sesiones_caja.estado = 'ABIERTO'`).
+   - El arqueo de cierre de turno es estrictamente determinista:
+     $$\Delta = \text{Monto Contado Declarado} - \text{Monto Esperado del Sistema}$$
+     - Si $\Delta = 0.00$ $\rightarrow$ `resultado_arqueo = 'CUADRADA'`.
+     - Si $\Delta > 0.00$ $\rightarrow$ `resultado_arqueo = 'SOBRANTE'`. Justificación obligatoria de 10 a 500 caracteres (`motivo_diferencia`).
+     - Si $\Delta < 0.00$ $\rightarrow$ `resultado_arqueo = 'FALTANTE'`. Justificación obligatoria de 10 a 500 caracteres (`motivo_diferencia`).
+   - Movimientos manuales de caja: Estrictamente tipados (`INGRESO_AJUSTE`, `EGRESO_GASTO_MENOR`) con motivo obligatorio y registro del actor responsable.
+
+5. **Cuentas Bancarias vs Medios de Pago Electrónicos:**
+   - Pagos de tipo `TRANSFERENCIA` y `DEPOSITO` exigen obligatoriamente vincular una `cuenta_bancaria_id` activa, generando un movimiento bancario de entrada.
+   - Pagos electrónicos de tipo `TARJETA` y `BILLETERA` registran código de referencia externa; la cuenta bancaria de destino permanece como `NULL` opcional para permitir la liquidación posterior a través de pasarelas adquirentes y conciliación diferida.
+
+6. **Reversiones y Devoluciones Formalizadas:**
+   - Las aplicaciones de pago son reversibles de forma compensatoria (`reversada = 1`, `reversada_en`, `reversado_por_actor_id`), restaurando inmediatamente el saldo pendiente del cargo y el saldo no aplicado del pago sin alterar los registros históricos.
+   - Las devoluciones formalizadas (`devoluciones_cuenta`) reducen el saldo del pago original, exigen motivo de 10 a 500 caracteres y, en caso de ejecutarse en efectivo, registran un egreso automático en la caja física activa.
+
+7. **Integridad Relacional y Seguridad:**
+   - Cero borrado físico: `DELETE = 0` en todas las tablas financieras transaccionales; claves foráneas protegidas con `ON DELETE RESTRICT`.
+   - Permisos RBAC granulares: `caja.ver`, `caja.aperturar`, `caja.cerrar`, `caja.movimientos`, `caja.cobrar`, `caja.aplicar`, `caja.devolver`, `caja.reversar`.
+   - Trazabilidad y autoría D-061 (`ACTOR ≠ USUARIO`) registrada en todas las aperturas, cierres, cobros, aplicaciones y devoluciones.
+   - Interfaz Alina D-071: Font Awesome 6.3.0 exclusivo, Flatpickr, Variants of badge de Alina (`bg-light-*`), 0 dotted, 0 dashed, Vanilla JS nativo, PristineJS y SweetAlert2.
 
 ## Pendientes de decisión
 

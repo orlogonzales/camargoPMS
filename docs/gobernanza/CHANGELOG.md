@@ -4,6 +4,38 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase FINANCIERO-2 — Cuentas de Folios, Cargos, Pagos, Aplicaciones, Devoluciones y Caja Física
+
+- **Tríada Financiera y Desacoplamiento de Cobros (D-074):**
+  - Consagración del principio rector inviolable: `CARGO ≠ PAGO ≠ MOVIMIENTO DE CAJA` y `PAGO ≠ APLICACIÓN DE PAGO`.
+  - Cero banderas booleanas (`pagado = 1`): el balance del folio, saldo pendiente del cargo y saldo no aplicado del pago se derivan mediante cálculo aritmético exacto con `BCMath` en `DECIMAL(15,2)`.
+  - Exclusiones estrictas respetadas: CERO facturación electrónica / SUNAT, CERO IGV inventado (0.00 por defecto salvo alícuota explícita), CERO cuentas por pagar a proveedores externos, CERO eliminación física (`DELETE = 0`).
+- **Folios Comerciales 1:1 por Reserva:**
+  - Cada reserva comercial dispone de exactamente una cuenta/folio financiero principal (`cuentas_folios.reserva_id UNIQUE`).
+  - Cargos imputados a la cuenta con puntero opcional `estadia_id NULL`, permitiendo estados de cuenta consolidados por reserva y desglosados por habitación.
+- **Sincronización Transaccional Automática:**
+  - Cargos de alojamiento devengados automáticamente al confirmar reservas comerciales.
+  - Cargos de servicios sincronizados atómicamente con el ciclo operativo: `SOLICITADO`/`CONFIRMADO` $\rightarrow$ `PROVISIONAL`, `EJECUTADO` $\rightarrow$ `DEVENGADO`, y `CANCELADO` $\rightarrow$ `ANULADO`.
+- **Caja Física, Turnos y Arqueo Determinista:**
+  - Exigencia estricta de sesión de caja física abierta para cobros o devoluciones en efectivo (`EFECTIVO`).
+  - Arqueo determinista de cierre computando la diferencia entre el dinero contado declarado y el esperado por el sistema:
+    - $\Delta = 0.00$ $\rightarrow$ `CUADRADA`.
+    - $\Delta > 0.00$ $\rightarrow$ `SOBRANTE` (justificación obligatoria de 10 a 500 caracteres).
+    - $\Delta < 0.00$ $\rightarrow$ `FALTANTE` (justificación obligatoria de 10 a 500 caracteres).
+  - Movimientos manuales de caja tipados: `INGRESO_AJUSTE` y `EGRESO_GASTO_MENOR` con motivo obligatorio y actor responsable.
+- **Cuentas Bancarias vs Medios Electrónicos:**
+  - Depósitos y transferencias exigen cuenta bancaria activa. Tarjetas y billeteras digitales operan con referencia externa y cuenta opcional nullable.
+- **Reversiones y Devoluciones Formalizadas:**
+  - Reversión compensatoria de aplicaciones de pago (`reversada = 1`) restaurando saldos pendientes sin alterar los registros originales.
+  - Devoluciones formalizadas (`devoluciones_cuenta`) reduciendo saldo del pago con motivo justificado y egreso de caja física si es en efectivo.
+- **Interfaz Alina y Experiencia de Usuario (D-071):**
+  - Módulo completo de Tesorería en `/caja` con KPIs en tiempo real, pestañas de Cuentas/Folios y Turno de Recepción, y 7 modales operativos.
+  - Font Awesome 6.3.0 exclusivo, Flatpickr, Variants of badge de Alina (`bg-light-*`), 0 dotted, 0 dashed, Vanilla JS modular (`gestion-caja.js`), PristineJS y SweetAlert2.
+- **Persistencia Relacional (Migración 017):**
+  - 11 nuevas tablas: `cajas_fisicas`, `cuentas_bancarias`, `metodos_pago`, `sesiones_caja`, `movimientos_caja`, `movimientos_bancarios`, `cuentas_folios`, `cargos_cuenta`, `pagos_cuenta`, `aplicaciones_pago`, `devoluciones_cuenta`.
+  - 8 nuevos permisos RBAC: `caja.ver`, `caja.aperturar`, `caja.cerrar`, `caja.movimientos`, `caja.cobrar`, `caja.aplicar`, `caja.devolver`, `caja.reversar`.
+  - Opción de menú de nivel 2: `caja` con ruta `/caja` bajo categoría principal `finanzas`.
+
 ### Microfase SERVICIOS-1 — Catálogo de Servicios, Proveedores, Consumos y Traslados
 
 - **Separación Ontológica Estricta (D-073):**

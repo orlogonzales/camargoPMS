@@ -420,6 +420,67 @@ $enrutador->post('/servicios/proveedores/{id}/estado', [\CamargoPMS\Controladore
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('servicios.gestionar'),
 ]);
 
+// =========================================================================
+// Rutas de Caja, Cuentas y Cobros (FINANCIERO-2)
+// =========================================================================
+$enrutador->get('/caja', [\CamargoPMS\Controladores\CajaControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/caja/auxiliares', [\CamargoPMS\Controladores\CajaControlador::class, 'auxiliares'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+
+// Cuentas y Folios
+$enrutador->get('/caja/folios', [\CamargoPMS\Controladores\CajaControlador::class, 'listarFolios'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/caja/folios/{id}', [\CamargoPMS\Controladores\CajaControlador::class, 'obtenerEstadoCuenta'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/caja/folios/por-reserva/{id}', [\CamargoPMS\Controladores\CajaControlador::class, 'obtenerFolioPorReserva'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+
+// Sesión de Caja y Arqueo
+$enrutador->get('/caja/sesion-activa', [\CamargoPMS\Controladores\CajaControlador::class, 'obtenerSesionActiva'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/caja/sesion/{id}', [\CamargoPMS\Controladores\CajaControlador::class, 'obtenerSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->post('/caja/sesion/abrir', [\CamargoPMS\Controladores\CajaControlador::class, 'aperturarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.aperturar'),
+]);
+$enrutador->post('/caja/aperturar', [\CamargoPMS\Controladores\CajaControlador::class, 'aperturarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.aperturar'),
+]);
+$enrutador->post('/caja/sesion/cerrar', [\CamargoPMS\Controladores\CajaControlador::class, 'cerrarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.cerrar'),
+]);
+$enrutador->post('/caja/cerrar', [\CamargoPMS\Controladores\CajaControlador::class, 'cerrarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.cerrar'),
+]);
+$enrutador->post('/caja/movimientos', [\CamargoPMS\Controladores\CajaControlador::class, 'registrarMovimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.movimientos'),
+]);
+
+// Cobros / Pagos y Aplicaciones
+$enrutador->post('/caja/cobros', [\CamargoPMS\Controladores\CajaControlador::class, 'registrarPago'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.cobrar'),
+]);
+$enrutador->post('/caja/pagos', [\CamargoPMS\Controladores\CajaControlador::class, 'registrarPago'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.cobrar'),
+]);
+$enrutador->post('/caja/aplicaciones', [\CamargoPMS\Controladores\CajaControlador::class, 'aplicarPago'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.aplicar'),
+]);
+$enrutador->post('/caja/pagos/{id}/reversar', [\CamargoPMS\Controladores\CajaControlador::class, 'reversarPago'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.reversar'),
+]);
+$enrutador->post('/caja/devoluciones', [\CamargoPMS\Controladores\CajaControlador::class, 'registrarDevolucion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.devolver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

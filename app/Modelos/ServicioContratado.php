@@ -164,6 +164,11 @@ class ServicioContratado
         return $this->descripcionServicioSnapshot;
     }
 
+    public function obtenerConceptoServicio(): string
+    {
+        return $this->descripcionServicioSnapshot;
+    }
+
     public function obtenerCategoriaCodigoSnapshot(): string
     {
         return $this->categoriaCodigoSnapshot;

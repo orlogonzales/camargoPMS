@@ -335,6 +335,11 @@ class ReservaServicio
                 pdoTransaccional: $this->pdo
             );
 
+            if ($estado === Reserva::ESTADO_CONFIRMADA) {
+                $cuentaFolioServicio = new CuentaFolioServicio($this->pdo);
+                $cuentaFolioServicio->generarCargosAlojamiento($reservaId, $actorId);
+            }
+
             $this->pdo->commit();
 
             return $this->reservaRepo->buscarPorId($reservaId, true);
@@ -482,6 +487,9 @@ class ReservaServicio
                 correlacionId: null,
                 pdoTransaccional: $this->pdo
             );
+
+            $cuentaFolioServicio = new CuentaFolioServicio($this->pdo);
+            $cuentaFolioServicio->generarCargosAlojamiento($id, $actorId);
 
             $this->pdo->commit();
 

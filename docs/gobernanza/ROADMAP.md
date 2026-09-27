@@ -297,6 +297,34 @@ Implementación del dominio de catálogo maestro de servicios, directorio de pro
 - **Persistencia Relacional (Migración 016):**
   - 7 tablas nuevas, 5 permisos RBAC (`servicios.ver`, `servicios.gestionar`, `servicios.contratar`, `servicios.ejecutar`, `servicios.cancelar`) y opción de menú dinámico bajo `reservas`.
 
+Estado: homologada (micro-baseline oficial 39ad372).
+
+## FINANCIERO-2 — Cuentas de Folios, Cargos, Pagos, Aplicaciones, Devoluciones y Caja Física
+
+Implementación de la Tríada Financiera, tesorería operativa, folios comerciales 1:1 por reserva, arqueo determinista y ciclo de vida de cargos bajo D-074:
+- **Tríada Financiera y Desacoplamiento de Cobros:**
+  - Consagración formal de `CARGO ≠ PAGO ≠ MOVIMIENTO DE CAJA` y `PAGO ≠ APLICACIÓN DE PAGO`.
+  - Cero banderas booleanas (`pagado = 1`); saldo de cargos y pagos derivado con `BCMath` en `DECIMAL(15,2)`.
+  - Cero facturación electrónica SUNAT, cero IGV inventado, cero cuentas por pagar y cero eliminación física (`DELETE = 0`).
+- **Folios Comerciales 1:1 por Reserva:**
+  - Un folio financiero principal por reserva comercial (`cuentas_folios.reserva_id UNIQUE`).
+  - Imputación a estadía opcional (`estadia_id NULL`) para desgloses por habitación.
+- **Sincronización Automática de Cargos:**
+  - Devengado automático de alojamiento al confirmar reservas.
+  - Sincronización atómica de servicios contratados (`PROVISIONAL` $\rightarrow$ `DEVENGADO` $\rightarrow$ `ANULADO`).
+- **Caja Física, Turnos y Arqueo Determinista:**
+  - Obligatoriedad de caja abierta para cobros o devoluciones en efectivo (`EFECTIVO`).
+  - Arqueo determinista de cierre: `CUADRADA` ($\Delta = 0.00$), `SOBRANTE` ($\Delta > 0.00$) o `FALTANTE` ($\Delta < 0.00$), con justificación obligatoria (10-500 caracteres).
+  - Movimientos manuales de caja tipados: `INGRESO_AJUSTE` y `EGRESO_GASTO_MENOR`.
+- **Cuentas Bancarias vs Medios Electrónicos:**
+  - Depósito/transferencia exige cuenta bancaria. Tarjetas/billeteras operan con referencia externa y cuenta de destino opcional hasta conciliación.
+- **Reversiones y Devoluciones:**
+  - Reversión compensatoria de aplicaciones (`reversada = 1`) y devoluciones formales (`devoluciones_cuenta`) reduciendo saldo y afectando caja si es en efectivo.
+- **Interfaz Alina Conforme a D-071:**
+  - Módulo en `/caja` con KPIs, 2 pestañas (Folios y Turno de Recepción), 7 modales operativos, Vanilla JS (`gestion-caja.js`), PristineJS y SweetAlert2.
+- **Persistencia Relacional (Migración 017):**
+  - 11 nuevas tablas, 8 permisos RBAC (`caja.*`) y opción de menú dinámico `/caja` bajo `finanzas`.
+
 Estado: completada (candidata a micro-baseline).
 
 ## Dominio operativo

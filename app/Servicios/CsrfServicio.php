@@ -35,6 +35,14 @@ class CsrfServicio
     }
 
     /**
+     * Alias de compatibilidad para obtenerToken().
+     */
+    public function generarToken(): string
+    {
+        return $this->obtenerToken();
+    }
+
+    /**
      * Regenera forzosamente un nuevo token CSRF en la sesión.
      *
      * @return string

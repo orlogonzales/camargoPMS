@@ -416,6 +416,9 @@ class ServicioContratadoServicio
                 pdoTransaccional: $this->pdo
             );
 
+            $cuentaFolioServicio = new CuentaFolioServicio($this->pdo);
+            $cuentaFolioServicio->sincronizarCargoServicioContratado($id, 'CONFIRMADO', $actorIdFinal);
+
             $this->pdo->commit();
             return $this->obtenerPorId($id);
         } catch (Throwable $e) {
@@ -468,6 +471,9 @@ class ServicioContratadoServicio
                 correlacionId: null,
                 pdoTransaccional: $this->pdo
             );
+
+            $cuentaFolioServicio = new CuentaFolioServicio($this->pdo);
+            $cuentaFolioServicio->sincronizarCargoServicioContratado($id, 'EJECUTADO', $actorIdFinal);
 
             $this->pdo->commit();
             return $this->obtenerPorId($id);
@@ -535,6 +541,9 @@ class ServicioContratadoServicio
                 correlacionId: null,
                 pdoTransaccional: $this->pdo
             );
+
+            $cuentaFolioServicio = new CuentaFolioServicio($this->pdo);
+            $cuentaFolioServicio->sincronizarCargoServicioContratado($id, 'CANCELADO', $actorIdFinal);
 
             $this->pdo->commit();
             return $this->obtenerPorId($id);
