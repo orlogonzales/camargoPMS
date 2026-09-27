@@ -302,9 +302,51 @@ Los servicios adicionales tienen catálogo y relación muchos-a-muchos con prove
 
 ## Finanzas
 
-Cobros, ingresos, egresos, gastos, retiros, pagos, impuestos y conciliaciones deben mantener origen y actor. Un pago confirmado puede originar transacción, movimiento de caja y cambio de reserva; el caso de uso debe ser atómico o explícitamente recuperable.
+El subsistema financiero de Camargo PMS se rige por el **Principio de Separación Financiera y Exactitud Decimal (D-069 / P-005)**:
 
-No existen movimientos financieros huérfanos. Los importes históricos no cambian por modificaciones posteriores de precios o catálogos.
+```text
+MONEDA ≠ IMPORTE ≠ TARIFA ≠ TOTAL ≠ PAGO ≠ MOVIMIENTO DE CAJA ≠ IMPUESTO ≠ PRECIO BASE ≠ VALOR HISTÓRICO CONGELADO
+```
+
+Esta separación es vinculante y rige la arquitectura de dominio en tarifas, reservas, facturación y caja:
+
+1. **Moneda Canónica y Presentación:**
+   - La moneda operativa del PMS es el Sol peruano (`PEN`), conforme al estándar ISO 4217.
+   - El símbolo comercial `S/` es un recurso exclusivo de presentación visual en la capa de interfaz (`Vistas/`); jamás se almacena en base de datos ni interviene en cálculos de dominio.
+   - Toda cifra monetaria se acompaña de su código de divisa (`moneda_codigo VARCHAR(3)`), garantizando preparación para escenarios multimoneda (PEN, USD, EUR) sin números anónimos.
+
+2. **Exactitud Numérica y Prohibición de Coma Flotante:**
+   - Queda estrictamente prohibido el uso de tipos de coma flotante (`FLOAT`, `DOUBLE`, `REAL`) en base de datos y memoria.
+   - En MySQL 8.4 se utiliza `DECIMAL` exacto; en PHP 8.3 se utiliza la extensión `BCMath` con cadenas de texto (`string`) o enteros en céntimos, garantizando exactitud absoluta y cero errores por redondeo binario IEEE 754.
+
+3. **Escala y Precisión Diferenciada:**
+   - **Importes Comerciales y Saldos:** `DECIMAL(15,2)` (escala de 2 decimales para céntimos comerciales).
+   - **Tarifas Unitarias Base, Tasas Tributarias y Consumos:** `DECIMAL(15,4)` (escala mínima de 4 decimales para tarifas base, suministros y alícuotas impositivas, ej. `0.1800` para 18% IGV).
+
+4. **Regla de Redondeo y Precisión Intermedia:**
+   - Se adopta la norma estándar de redondeo mercantil `ROUND_HALF_UP` (hacia arriba en el límite exacto `.005` para importes positivos).
+   - **Cómputo sin redondeo prematuro acumulativo:** En operaciones con múltiples noches, ítems o servicios, los cálculos intermedios preservan precisión extendida (al menos 4 decimales). El redondeo comercial a 2 decimales se aplica sobre el total de la línea contractual o sobre el total consolidado de la operación según la legislación tributaria aplicable, evitando desviaciones acumuladas de céntimos.
+
+5. **Autoridad Absoluta de Cálculo en Backend:**
+   - El backend del PMS (`Servicio`) es la única autoridad que calcula tarifas, recargos, impuestos, deducciones y totales.
+   - Los datos enviados desde el frontend (JavaScript, formularios, aplicaciones clientes, OTAs) son meros parámetros de solicitud (unidad, fechas, extras seleccionados). El backend nunca confía ni acepta montos totales declarados por el cliente, recalculando siempre contra las tarifas oficiales vigentes.
+
+6. **Inmutabilidad Histórica y Snapshots:**
+   - Principio: `VALOR ACTUAL ≠ VALOR HISTÓRICO CONGELADO`.
+   - Toda operación emitida (reserva, contrato, cargo, cobro) congela un snapshot de los valores pactados: tarifa unitaria, base imponible, tasas tributarias aplicables, montos de impuestos y total.
+   - Cambios posteriores en el catálogo maestro de tarifas o reformas en la ley tributaria aplican únicamente a operaciones futuras; jamás recalculan transacciones ya emitidas.
+
+7. **Determinismo del Saldo y Pagos Parciales:**
+   - Soporte nativo de pagos parciales y escalonados.
+   - El saldo pendiente es determinista y computable en todo momento a partir de la relación:
+     $$\text{Saldo Pendiente} = \text{Total Contratado} - \sum(\text{Pagos Válidos Confirmados})$$
+   - El saldo pendiente no se almacena como una columna editable de mutación libre sin respaldo de transacciones.
+
+8. **Preservación Contable y Cero Eliminación Física:**
+   - Principio: `ANULACIÓN / REVERSO ≠ DELETE`.
+   - Cero borrado físico (`DELETE FROM`) para pagos, cobros, cargos o asientos de caja.
+   - Las correcciones o cancelaciones se registran mediante transiciones a estado `ANULADO` con motivo justificado o mediante contra-asientos compensatorios con trazabilidad transversal de actor (D-061).
+   - No existen movimientos financieros huérfanos.
 
 ## Inventario y mantenimiento
 
@@ -323,5 +365,5 @@ Camargo PMS es la fuente central. WordPress y futuras aplicaciones consultan y o
 - Jerarquía física avanzada de niveles/alas independientes (la relación base 1:N Propiedad -> Unidad física alojable quedó establecida en UNIDADES-1).
 - Identificadores fiscales y reglas específicas por país.
 - Catálogos definitivos de estados y transiciones.
-- Contabilidad, impuestos y conciliación requeridos legalmente (P-005, PENDIENTE antes de tarifas/caja).
+- Modelos específicos de tarifas, planes tarifarios y caja chica (Contrato monetario base de P-005 cerrado en D-069; modelos específicos se implementarán en sus fases autorizadas).
 - Retención y anonimización de datos personales (P-009).

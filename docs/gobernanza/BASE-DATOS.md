@@ -166,10 +166,32 @@ La gestión estructural del esquema sigue el principio de doble representación 
 - Claves primarias estables y claves foráneas explícitas.
 - Restricciones `NOT NULL`, `UNIQUE`, `CHECK` y FK cuando expresen una invariante real y sean compatibles con la versión seleccionada.
 - Índices derivados de consultas justificadas; evitar índices especulativos.
-- Importes en `DECIMAL`, nunca `FLOAT`.
+- Importes obligatoriamente en `DECIMAL`, prohibición terminante de `FLOAT` y `DOUBLE`.
 - Fechas y horas almacenadas con una política única; intercambio ISO 8601 con zona explícita.
 - Estados mediante catálogos o códigos estables con transiciones controladas; no texto libre.
 - No usar campos JSON para evitar relaciones que deben ser consultables o validadas.
+
+## Contrato de Tipos Monetarios y Financieros (GATE FINANCIERO-1 / D-069 — cierra P-005)
+
+En preparación para los módulos transaccionales (`RESERVAS-1`, `TARIFAS`, `CAJA`, `COBROS`), el esquema relacional de Camargo PMS formaliza las siguientes reglas vinculantes de persistencia financiera:
+
+1. **Tipos de Columna y Escala:**
+   - **Importes Comerciales y Saldos:** `DECIMAL(15,2)` obligatorio (representando céntimos con rango hasta $999,999,999,999.99$).
+   - **Tarifas Unitarias Base, Tasas Tributarias y Consumos:** `DECIMAL(15,4)` obligatorio para evitar pérdidas de precisión por truncamiento en cálculos intermedios (ej. lecturas de medidor kWh, m³, coeficientes de descuento y tasas impositivas como `0.1800` para 18% IGV).
+   - **Código de Moneda Explícito:** Toda tabla que contenga columnas de importe o tarifa debe incluir la columna `moneda_codigo VARCHAR(3) NOT NULL` (o `CHAR(3)`) con código alfabético canónico según la norma ISO 4217 (semilla base: `'PEN'`). Se prohíben importes sin divisa explícita.
+   - **Desacoplamiento de Símbolo:** El símbolo `'S/'` no se almacena en base de datos; pertenece exclusivamente a la capa de formateo y presentación visual.
+
+2. **Prohibición de Coma Flotante:**
+   - Queda prohibido el uso de `FLOAT`, `DOUBLE` o `REAL` para valores monetarios tanto en DDL como en expresiones SQL.
+
+3. **Aritmética y Redondeo en Base de Datos:**
+   - En MySQL 8.4, operaciones con literales y columnas `DECIMAL` conservan precisión exacta. La multiplicación `DECIMAL(M1,D1) * DECIMAL(M2,D2)` expande automáticamente la escala a $D1+D2$ decimales preservando precisión intermedia.
+   - Redondeo comercial estándar: función `ROUND(expr, 2)` implementa `ROUND_HALF_UP` en aritmética exacta sobre números positivos.
+
+4. **Inmutabilidad y Preservación Histórica:**
+   - Las operaciones emitidas (reservas, contratos, consumos, recibos) persisten snapshots congelados de: tarifa unitaria aplicada, base imponible, tasa impositiva, monto de impuesto y total.
+   - Los cambios futuros en catálogos de tarifas o reformas en tasas fiscales no alteran ni recalculan operaciones históricas emitidas.
+   - **Preservación Contable:** Cero eliminación física (`DELETE FROM`) en cobros, pagos, asientos o movimientos de caja; las anulaciones operativas se registran mediante transiciones a estado `ANULADO` con motivo justificado o mediante contra-asientos compensatorios (D-061).
 
 ## Históricos
 

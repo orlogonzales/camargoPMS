@@ -162,6 +162,27 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `E2E-DISP-10`: GET `/disponibilidad/bloqueos` retorna 200 OK con listado paginado y metadatos.
   - `E2E-DISP-11`: GET `/disponibilidad/matriz` retorna 200 OK con estructura de rack mensual y estadísticas.
   - `E2E-DISP-12`: POST `/disponibilidad/liberar` con CSRF libera bloqueo y restaura disponibilidad en inventario.
+- **Matriz Formal de Contrato Monetario y Financiero (FIN-01 a FIN-20 — GATE FINANCIERO-1 / P-005):** 20 verificaciones automáticas de dominio, aritmética exacta y motor SQL:
+  - `FIN-01`: PEN canónico según ISO 4217 (código oficial de 3 letras alfabéticas en mayúsculas).
+  - `FIN-02`: Símbolo 'S/' desacoplado de la moneda (exclusivo para presentación visual en capa de vistas).
+  - `FIN-03`: Prohibición estricta de `FLOAT`/`DOUBLE` y comprobación empírica de fallas de precisión binaria IEEE 754 (`0.1 + 0.2 != 0.3`).
+  - `FIN-04`: Importe comercial estándar a 2 decimales (`DECIMAL(15,2)` verificado en MySQL 8.4).
+  - `FIN-05`: Valor unitario / tasa con alta precisión decimal (`DECIMAL(15,4)` para tarifas base, alícuotas y consumos).
+  - `FIN-06`: Redondeo `ROUND_HALF_UP` verificado en MySQL 8.4 sobre valores positivos.
+  - `FIN-07`: Redondeo `ROUND_HALF_UP` en límites exactos `.005` con BCMath en PHP (`1.005->1.01`, `10.005->10.01`, `2.675->2.68`).
+  - `FIN-08`: Demostración de precisión intermedia requerida sin redondeo prematuro acumulativo (evita descuadres de céntimos).
+  - `FIN-09`: Backend como única autoridad centralizada de cálculo financiero.
+  - `FIN-10`: Frontend estimativo y rechazo categórico de importes o totales ciegos enviados por el cliente.
+  - `FIN-11`: Almacenamiento explícito de código de moneda ISO 4217 (`moneda_codigo`) por cada importe persistido.
+  - `FIN-12`: Tarifa histórica inmutable almacenada en snapshot de la operación emitida.
+  - `FIN-13`: Tasa de impuesto histórica inmutable congelada en snapshot de la operación emitida.
+  - `FIN-14`: Modificación de tarifa maestra de catálogo no altera transacciones u operaciones pasadas.
+  - `FIN-15`: Modificación de tasa impositiva legal (ej. variaciones de IGV) no altera facturación o reservas pasadas.
+  - `FIN-16`: Compatibilidad con pagos parciales y saldo pendiente determinista calculable ($\text{Saldo} = \text{Total} - \sum \text{Pagos Válidos}$).
+  - `FIN-17`: Principio de anulación/reverso contable sin `DELETE` físico (`ANULACIÓN ≠ DELETE`).
+  - `FIN-18`: Aritmética exacta verificada en MySQL 8.4 con tipos `DECIMAL(15,2)` y escala de multiplicación $D1+D2$.
+  - `FIN-19`: Aritmética exacta verificada en PHP 8.3 mediante la extensión `BCMath` y cadenas numéricas.
+  - `FIN-20`: Cierre formal e inequívoco de la decisión P-005 antes de abordar la fase `RESERVAS-1` (20/20 PASS).
 - **Reconciliación Canónica y Matemática Suite por Suite:**
 
 | Módulo / Fase | Suite de Prueba | Casos Dominio / Integración | Casos HTTP E2E (Apache) | Estado |
@@ -181,11 +202,9 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **DISPONIBILIDAD-1**| `test_concurrencia_productiva.php` (CONC-PROD-01..05) | 5 | — | 5/5 PASS |
 | **DISPONIBILIDAD-1A**| `test_1205_1213.php` (G-1205 y G-1213) | 2 | — | 2/2 PASS |
 | **DISPONIBILIDAD-1**| `test_e2e_disponibilidad.php` (E2E-DISP-01..12) | — | 12 (`E2E-DISP`) | 12/12 PASS |
-| **TOTALES CANÓNICOS**| **15 suites ejecutadas** | **540** | **94** | **640/640 PASS (100%)** |
+| **GATE FINANCIERO-1**| `test_finanzas_p005.php` (FIN-01..20) | 20 | — | 20/20 PASS |
+| **TOTALES CANÓNICOS**| **16 suites ejecutadas** | **560** | **94** | **654 casos (660 ejecuciones) PASS (100%)** |
 
-  - **Casos Independientes de Dominio e Integración:** 493 (previos a disponibilidad) + 40 (DISP) + 5 (CONC-PROD) + 2 (G-1205/G-1213) = **540 casos**.
-  - **Pruebas HTTP E2E Reales (Apache HTTPS):** 82 (previos) + 12 (E2E-DISP) = **94 casos**.
-  - **Total Bruto Acumulado:** 581 (previos ef6a806) + 40 (DISP) + 5 (CONC-PROD) + 12 (E2E-DISP) + 2 (G-1205/1213) = **640 ejecuciones (640 PASS / 0 FAIL)**.
-
-
-
+  - **Casos Independientes de Dominio e Integración:** 540 (previos) + 20 (FIN-01..20) = **560 casos**.
+  - **Pruebas HTTP E2E Reales (Apache HTTPS):** **94 casos**.
+  - **Total Bruto Acumulado:** 640 (previos a7ad7b2) + 20 (FIN-01..20) = **660 ejecuciones (660 PASS / 0 FAIL)**.

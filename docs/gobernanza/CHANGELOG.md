@@ -4,6 +4,35 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase GATE FINANCIERO-1 — Definición del Contrato Monetario y Cierre de P-005
+
+- **Formalización de la Decisión D-069 (Cierre Definitivo de P-005):**
+  - **Moneda Canónica ISO 4217:** Adopción oficial del Sol peruano (`PEN`) como moneda canónica operativa de Camargo PMS.
+  - **Desacoplamiento de Símbolo:** Principio `MONEDA ≠ SÍMBOLO`. El símbolo comercial `'S/'` queda desacoplado del dominio y reservado exclusivamente a la capa visual de interfaz (`Vistas/`), impidiendo su almacenamiento o concatenación en base de datos.
+  - **Prohibición Terminante de Coma Flotante:** Demostradas empíricamente las fallas de precisión binaria IEEE 754 de `FLOAT`/`DOUBLE` (`0.1 + 0.2 = 0.30000000000000004`, pérdida de redondeo en `1.005`). Se prohíben en DDL, consultas SQL y modelos PHP.
+  - **Escala y Precisión Numérica Diferenciada:**
+    - `DECIMAL(15,2)` en MySQL para importes comerciales y saldos finales (céntimos).
+    - `DECIMAL(15,4)` en MySQL para tarifas unitarias base, consumos de suministros y tasas de impuestos (ej. `0.1800` para 18% IGV).
+  - **Aritmética Exacta en PHP:** Implementación mediante la extensión nativa `BCMath` y cadenas numéricas (`bcadd`, `bcsub`, `bcmul`, `bcdiv`, `bccomp`) sobre PHP 8.3.30.
+  - **Estándar de Redondeo ROUND_HALF_UP:** Adopción del redondeo mercantil estándar hacia arriba en el límite exacto `.005` para importes positivos.
+  - **Precisión Intermedia sin Redondeo Prematuro:** Demostrado que redondear cada ítem individualmente a 2 decimales versus redondear sobre la suma agregada genera descuadres de céntimos. Se establece como regla preservar precisión ($\ge 4$ decimales) en cálculos intermedios y aplicar `ROUND_HALF_UP` en el límite contractual final.
+  - **Autoridad Financiera Centralizada en Backend:** La capa de `Servicios` es la única autoridad de cálculo. El frontend es puramente estimativo y se rechazan categóricamente totales o precios enviados a ciegas por el cliente.
+  - **Preparación Multimoneda:** Exigencia obligatoria de la columna `moneda_codigo VARCHAR(3)` en toda tabla o entidad con importes financieros.
+  - **Inmutabilidad Histórica y Snapshots:** Las transacciones emitidas congelan snapshots de tarifas pactadas e impuestos vigentes. Cero recálculo ante variaciones posteriores de catálogo o de alícuotas fiscales.
+  - **Determinismo del Saldo:** Soporte de pagos parciales donde $\text{Saldo Pendiente} = \text{Total Contratado} - \sum(\text{Pagos Válidos})$.
+  - **Preservación Contable:** Principio `ANULACIÓN / REVERSO ≠ DELETE`. Cero borrado físico de pagos o movimientos financieros; reversos mediante estados de anulación o contra-asientos con trazabilidad transversal bajo D-061.
+- **Verificación Técnica Automatizada (FIN-01 a FIN-20):**
+  - Implementación y ejecución de la suite técnica `test_finanzas_p005.php` verificando los 20 requisitos monetarios y fiscales sobre MySQL 8.4.3 LTS y PHP 8.3.30 (20/20 PASS).
+- **Reconciliación Matemática Canónica:**
+  - 16 suites ejecutadas en verde (0 fallos).
+  - 560 casos independientes de dominio e integración (540 previos + 20 FIN-01..20).
+  - 94 casos HTTP E2E reales contra servidor Apache HTTPS.
+  - 654 casos tabulados / 660 ejecuciones brutas acumuladas (100% PASS).
+- **Invariantes del Incremento:**
+  - Cero código de producción prematuro (no se implementaron servicios de reservas ni caja).
+  - Cero migración 014 (migraciones permanecen en 001–013).
+  - `admin-dashboard/` y `.env` intactos.
+
 ### Microfase DISPONIBILIDAD-1A — Verificación final de concurrencia, motor SQL y reconciliación
 
 - **Confirmación Empírica del Motor y Versión de Base de Datos:**

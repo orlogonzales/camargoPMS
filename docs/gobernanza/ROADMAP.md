@@ -173,6 +173,29 @@ Implementación completa del motor central de inventario diario y bloqueos opera
   - Matriz formal exhaustiva de dominio: DISP-01..40 (40/40 PASS).
   - Suite HTTP E2E Real contra servidor Apache HTTPS: E2E-DISP-01..12 (12/12 PASS).
 
+Estado: homologada (micro-baseline oficial a7ad7b2).
+
+## GATE FINANCIERO-1 — Definición del Contrato Monetario, Precisión Decimal e Impuestos (P-005)
+
+Formalización vinculante del contrato monetario, financiero y fiscal del PMS, cerrando de forma definitiva la decisión pendiente P-005 mediante la decisión D-069 antes de abordar la fase transaccional RESERVAS-1:
+- **P-005 Resuelta (D-069 — Contrato Monetario y Financiero Base):**
+  - Moneda canónica operativa: Sol peruano (`PEN`), código alfabético ISO 4217 de 3 caracteres en mayúsculas.
+  - Desacoplamiento de presentación: símbolo comercial `'S/'` restringido exclusivamente a la capa visual (`Vistas/`); prohibición de persistencia o concatenación en lógica de dominio.
+  - Prohibición estricta de coma flotante (`FLOAT`, `DOUBLE`, `REAL`); adopción de `DECIMAL` en base de datos y `BCMath` / strings en PHP 8.3.
+  - Escala diferenciada: `DECIMAL(15,2)` para importes comerciales finales y saldos; `DECIMAL(15,4)` para tarifas base unitarias, prorrateos, consumos y tasas de impuestos (ej. `0.1800` para 18% IGV).
+  - Regla de redondeo comercial: `ROUND_HALF_UP` a 2 decimales en el límite transaccional final, preservando precisión intermedia ($\ge 4$ decimales) sin redondeo prematuro acumulativo.
+  - Autoridad de cálculo financiera centralizada en los servicios de backend; frontend puramente estimativo y rechazo categórico de totales ciegos enviados por clientes o APIs externas.
+  - Preparación multimoneda: columna obligatoria `moneda_codigo VARCHAR(3)` en cada importe financiero persistido.
+  - Inmutabilidad histórica: transacciones emitidas congelan snapshots de tarifas pactadas e impuestos vigentes; cero recálculo ante mutaciones posteriores de catálogos maestros o leyes fiscales.
+  - Determinismo de saldos: compatibilidad con pagos parciales donde $\text{Saldo} = \text{Total} - \sum \text{Pagos Válidos}$.
+  - Preservación contable: principio `ANULACIÓN / REVERSO ≠ DELETE`; cero eliminación física de pagos o asientos contables.
+- **Verificación Técnica Automatizada (FIN-01 a FIN-20):**
+  - Matriz técnica de 20 casos (`test_finanzas_p005.php`) ejecutada con 100% de éxito (20/20 PASS) sobre MySQL 8.4.3 LTS y PHP 8.3.30.
+- **Invariantes de Repositorio:**
+  - Cero código de producción prematuro (no se implementaron servicios de reservas ni caja en esta fase de gate).
+  - Cero migración 014 (migraciones permanecen estrictamente en 001–013).
+  - `admin-dashboard/` y `.env` intactos.
+
 Estado: completada (candidata a micro-baseline).
 
 ## Dominio operativo

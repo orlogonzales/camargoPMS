@@ -574,15 +574,53 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Una vez liberado, la disponibilidad del rango queda restaurada de forma inmediata para nuevas operaciones.
    - Intentos de re-liberar un bloqueo ya inactivo son rechazados con `ValidacionExcepcion` (HTTP 422).
 
+### D-069 — Contrato Monetario y Financiero Base (cierra P-005)
+
+1. Moneda Canónica y Desacoplamiento de Presentación:
+   - La moneda operativa y canónica de Camargo PMS es el Sol peruano, representado bajo el código oficial ISO 4217: `PEN` (tres letras alfabéticas en mayúsculas).
+   - Separación conceptual: `MONEDA ≠ SÍMBOLO`. El símbolo comercial `S/` es estrictamente un recurso de formato visual en la capa de interfaz y presentación (`Vistas/`). Se prohíbe terminantemente almacenar el símbolo `S/` en columnas de base de datos o concatenarlo en variables de dominio o lógica de negocio.
+   - Preparación multimoneda: Toda entidad o tabla que almacene importes monetarios debe persistir explícitamente la columna `moneda_codigo VARCHAR(3) NOT NULL` (o `CHAR(3)`) según la norma ISO 4217, garantizando que el sistema esté preparado para operar con múltiples divisas (PEN, USD, EUR) sin cifras anónimas.
+
+2. Prohibición Absoluta de Coma Flotante (Float / Double):
+   - Se prohíbe terminantemente el uso de tipos de coma flotante binaria (`FLOAT`, `DOUBLE`, `REAL`) para almacenar o calcular importes, tarifas, precios, saldos o impuestos.
+   - En MySQL 8.4: Todo valor monetario debe almacenarse obligatoriamente bajo el tipo exacto `DECIMAL` (representación empaquetada de base 10 fija).
+   - En PHP 8.3: Todo cálculo financiero en capa de dominio y servicios debe ejecutarse utilizando aritmética de precisión arbitraria mediante la extensión `BCMath` (`bcadd`, `bcsub`, `bcmul`, `bcdiv`, `bccomp`) sobre valores tipados como cadenas de texto (`string`), o mediante enteros que representen centésimas (céntimos).
+
+3. Escala y Precisión Numérica Diferenciada:
+   - **Importes Comerciales y Saldos Finales:** Se modelan como `DECIMAL(15,2)`, soportando importes de hasta 999,999,999,999.99 con 2 decimales para céntimos.
+   - **Tarifas Unitarias Base, Tasas de Impuestos y Consumos:** Se modelan con una precisión mínima de 4 decimales: `DECIMAL(15,4)` (ej. tasa impositiva `0.1800` para 18% IGV, lecturas de suministros kWh o m³), garantizando granularidad en prorrateos y previniendo pérdidas por truncamiento.
+
+4. Estándar de Redondeo y Precisión Intermedia:
+   - Se adopta como regla obligatoria de redondeo comercial el método aritmético `ROUND_HALF_UP` (redondeo a la centésima más cercana, resolviendo el empate en exactamente `.005` hacia arriba para importes positivos, conforme a los usos mercantiles y de la autoridad tributaria SUNAT).
+   - **Prohibición de Redondeo Prematuro Acumulativo:** En transacciones con múltiples conceptos, noches o ítems de consumo, los cómputos intermedios deben mantener su precisión (al menos 4 decimales). El redondeo comercial a 2 decimales se aplica sobre el total de la línea contractual o sobre el total consolidado de la operación según la reglamentación fiscal aplicable, impidiendo descuadres sistemáticos de céntimos.
+
+5. Autoridad Centralizada del Cálculo Financiero:
+   - El backend de Camargo PMS (`Servicios` de dominio) es la única entidad autoritativa con capacidad para calcular tarifas, descuentos, recargos, impuestos y montos totales.
+   - El frontend (JavaScript, formularios web, WordPress, aplicaciones cliente, OTAs) es puramente estimativo y de visualización. Queda terminantemente prohibido confiar o aceptar montos totales o precios finales enviados directamente por el cliente; el backend siempre recalcula y valida los importes contra las tarifas maestras vigentes o cotizaciones formales.
+
+6. Inmutabilidad Histórica y Congelamiento de Snapshots:
+   - Principio vinculante: `VALOR ACTUAL ≠ VALOR HISTÓRICO CONGELADO`.
+   - Al confirmarse o emitirse una reserva, contrato, consumo o cobro, el sistema debe registrar un snapshot inmutable de los valores pactados: tarifa unitaria aplicada, desglose de base imponible, tasas tributarias vigentes y total exigible.
+   - Modificaciones futuras en el catálogo maestro de tarifas o en la normativa fiscal (ej. ajustes temporales de tasas de IGV) aplican exclusivamente a operaciones futuras; jamás recalculan ni alteran registros históricos pasados.
+
+7. Determinismo de Saldos y Pagos Parciales:
+   - El sistema soporta estructuralmente pagos parciales. El saldo pendiente de una operación es determinista y computable en todo momento mediante la relación:
+     $$\text{Saldo Pendiente} = \text{Total Contratado} - \sum(\text{Pagos Válidos Confirmados})$$
+   - El saldo pendiente no se almacena como una columna editable de mutación libre, sino como un valor sincronizado o calculado a partir del histórico de transacciones válidas.
+
+8. Preservación Contable y Cero Eliminación Física:
+   - Principio: `ANULACIÓN / REVERSO ≠ DELETE`.
+   - Se prohíbe la eliminación física (`DELETE FROM`) de cobros, pagos, asientos o movimientos de caja.
+   - Cualquier corrección, devolución o cancelación operativa se implementa mediante transacciones de reverso (contra-asientos) o transiciones explícitas a estados `ANULADO` con registro de motivo, actor ejecutor humano y fecha (bajo D-061), preservando la trazabilidad contable y tributaria.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
 |---|---|---|---|
 | P-003 | Framework de pruebas PHP/JS | Antes de pruebas automatizadas de dominio | Pendiente |
 | P-004 | Estrategia de zona horaria y fecha hotelera | Antes de disponibilidad | **Cerrada en D-066** |
-| P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja | **PENDIENTE (ABIERTA)** |
+| P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja | **Cerrada en D-069** |
 | P-006 | Estrategia de concurrencia para disponibilidad | Antes de reservas | **Cerrada en D-067** |
 | P-007 | Librería PDF | Antes de contratos/recibos | Pendiente |
 | P-008 | Proveedor inicial de pagos | Antes de integración de pagos | Pendiente |
 | P-009 | Retención de datos y auditoría | Antes de producción | Pendiente |
-

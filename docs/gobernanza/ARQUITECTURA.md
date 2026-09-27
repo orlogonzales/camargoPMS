@@ -95,6 +95,14 @@ El servicio define el límite transaccional de casos críticos: reservar disponi
 - **Intervalo Hotelero Semiabierto:** La estancia se rige por $[\text{fecha\_entrada}, \text{fecha\_salida})$, liberando la fecha de checkout para check-in simultáneo sin conflicto.
 - **Canalización Unificada:** Todo canal externo (WordPress, App móvil, OTAs, APIs) debe invocar forzosamente el mismo servicio de disponibilidad del PMS; no existen motores paralelos.
 
+### Contrato Financiero y Autoridad de Cálculo (D-069 / P-005)
+
+- **Autoridad Absoluta en Backend:** La capa de `Servicios` de dominio es la única responsable de computar tarifas, descuentos, recargos, impuestos y montos totales. Los controladores descartan totales declarados por el cliente; el frontend (JavaScript, APIs externas, formularios) es exclusivamente estimativo y de presentación.
+- **Aritmética Exacta en Memoria:** Todo cálculo financiero se realiza en PHP 8.3 mediante la extensión `BCMath` sobre cadenas de texto (`string`) o enteros en céntimos. Prohibición estricta de aritmética de coma flotante (`float`/`double`).
+- **Precisión Intermedia y Redondeo Comercial:** Cálculos de subtotales, prorrateos y tasas mantienen precisión extendida ($\ge 4$ decimales). El redondeo `ROUND_HALF_UP` a 2 decimales se aplica en el límite contractual final o consolidado de la transacción, evitando descuadres de céntimos acumulados.
+- **Persistencia en Snapshot Inmutable:** Al emitir reservas o cobros, se persisten snapshots congelados de tarifas e impuestos vigentes. Modificaciones posteriores de catálogo o de leyes tributarias no recalculan operaciones pasadas.
+- **Preservación Contable:** Cero eliminación física (`DELETE FROM`) en cobros o pagos; las anulaciones se gestionan mediante estados o contra-asientos compensatorios con trazabilidad transversal (D-061).
+
 ## Errores
 
 - Excepciones de dominio: violación esperada de una regla, traducible a respuesta controlada.
