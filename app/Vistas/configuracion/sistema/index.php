@@ -86,12 +86,12 @@ declare(strict_types=1);
                                                     <label for="cfg_<?= e(str_replace('.', '_', $clave)) ?>" class="form-label fw-bold mb-0">
                                                         <?= e($param['nombre']) ?>
                                                     </label>
-                                                    <span class="badge bg-secondary-subtle text-secondary f-s-11 font-monospace ms-1">
+                                                    <span class="badge bg-light-secondary font-monospace f-s-11 ms-1">
                                                         <?= e($clave) ?>
                                                     </span>
                                                 </div>
                                                 <?php if (!$esEditable): ?>
-                                                    <span class="badge bg-danger-subtle text-danger f-s-11">
+                                                    <span class="badge bg-light-danger f-s-11">
                                                         <i class="fa-solid fa-lock me-1"></i> Protegido
                                                     </span>
                                                 <?php endif; ?>
@@ -165,7 +165,7 @@ declare(strict_types=1);
                                                     <label for="cfg_<?= e(str_replace('.', '_', $clave)) ?>" class="form-label fw-bold mb-0">
                                                         <?= e($param['nombre']) ?>
                                                     </label>
-                                                    <span class="badge bg-secondary-subtle text-secondary f-s-11 font-monospace ms-1">
+                                                    <span class="badge bg-light-secondary font-monospace f-s-11 ms-1">
                                                         <?= e($clave) ?>
                                                     </span>
                                                 </div>
@@ -241,7 +241,7 @@ declare(strict_types=1);
                                                     <label for="cfg_<?= e(str_replace('.', '_', $clave)) ?>" class="form-label fw-bold mb-0">
                                                         <?= e($param['nombre']) ?>
                                                     </label>
-                                                    <span class="badge bg-secondary-subtle text-secondary f-s-11 font-monospace ms-1">
+                                                    <span class="badge bg-light-secondary font-monospace f-s-11 ms-1">
                                                         <?= e($clave) ?>
                                                     </span>
                                                 </div>

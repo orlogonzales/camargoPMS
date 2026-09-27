@@ -302,20 +302,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const esSistema = Boolean(r.es_sistema);
             const estaActivo = r.estado === 'ACTIVO';
 
-            // Badge de Tipo
+            // Chip de Tipo (Alina Variants of chip)
             let badgeTipo = '';
             if (esSuper) {
-                badgeTipo = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle f-s-11"><i class="fa-solid fa-crown me-1"></i>Superadmin</span>';
+                badgeTipo = '<span class="chip bg-light-warning f-s-11"><i class="fa-solid fa-crown me-1"></i>Superadmin</span>';
             } else if (esSistema) {
-                badgeTipo = '<span class="badge bg-info-subtle text-info border border-info-subtle f-s-11"><i class="fa-solid fa-microchip me-1"></i>Sistema</span>';
+                badgeTipo = '<span class="chip bg-light-info f-s-11"><i class="fa-solid fa-microchip me-1"></i>Sistema</span>';
             } else {
-                badgeTipo = '<span class="badge bg-secondary-subtle text-secondary f-s-11"><i class="fa-solid fa-user me-1"></i>Personalizado</span>';
+                badgeTipo = '<span class="chip bg-light-secondary f-s-11"><i class="fa-solid fa-user me-1"></i>Personalizado</span>';
             }
 
-            // Badge de Estado
-            const badgeEstado = estaActivo
-                ? '<span class="badge bg-success-subtle text-success border border-success-subtle f-s-11"><i class="fa-solid fa-check me-1"></i>ACTIVO</span>'
-                : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11"><i class="fa-solid fa-ban me-1"></i>INACTIVO</span>';
+            // Badge de Estado (Alina Variants of badge)
+            const badgeEstado = (window.CamargoInsignia && window.CamargoInsignia.estado)
+                ? window.CamargoInsignia.estado(r.estado, false, 'f-s-11')
+                : (estaActivo
+                    ? '<span class="badge bg-light-success f-s-11"><i class="fa-solid fa-check me-1"></i>ACTIVO</span>'
+                    : '<span class="badge bg-light-secondary f-s-11"><i class="fa-solid fa-ban me-1"></i>INACTIVO</span>');
 
             // Botones de acción
             let botonesAccion = `
@@ -355,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>
                         <div class="f-w-600 text-dark f-s-14">${escapeHtml(r.nombre)}</div>
                         <div class="d-flex align-items-center gap-1 mt-1">
-                            <span class="badge bg-light text-primary font-monospace f-s-11 border">${escapeHtml(r.codigo)}</span>
+                            <span class="badge bg-light-primary font-monospace f-s-11">${escapeHtml(r.codigo)}</span>
                             ${r.descripcion ? `<span class="text-muted f-s-12 text-truncate d-inline-block" style="max-width: 250px;" title="${escapeHtml(r.descripcion)}">${escapeHtml(r.descripcion)}</span>` : ''}
                         </div>
                     </td>
@@ -704,7 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Actualizar encabezado del modal
             if (txtSubtituloPermisos) {
-                txtSubtituloPermisos.innerHTML = `Rol: <strong>${escapeHtml(rolActualEnPermisos.nombre)}</strong> <span class="badge bg-light text-primary border font-monospace ms-1">${escapeHtml(rolActualEnPermisos.codigo)}</span>`;
+                txtSubtituloPermisos.innerHTML = `Rol: <strong>${escapeHtml(rolActualEnPermisos.nombre)}</strong> <span class="badge bg-light-primary font-monospace ms-1">${escapeHtml(rolActualEnPermisos.codigo)}</span>`;
             }
 
             // Banner Superadministrador
@@ -755,7 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 Módulo: ${escapeHtml(moduloNombre)}
                             </label>
                         </div>
-                        <span class="badge bg-secondary-subtle text-secondary f-s-11 conteo-modulo-badge" id="badge-${moduloIdSeguro}">
+                        <span class="badge bg-light-secondary f-s-11 conteo-modulo-badge" id="badge-${moduloIdSeguro}">
                             0 / ${permisosModulo.length}
                         </span>
                     </div>
@@ -780,8 +782,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                        ${disabledAttr}>
                                 <label class="form-check-label f-s-13 d-block" for="permiso-${p.id}">
                                     <span class="f-w-600 text-dark">${escapeHtml(p.nombre)}</span>
-                                    <span class="badge bg-light text-primary font-monospace f-s-10 ms-1 border">${escapeHtml(p.codigo)}</span>
-                                    ${esCritico ? '<span class="badge bg-warning text-dark f-s-10 ms-1">Crítico Superadmin</span>' : ''}
+                                    <span class="badge bg-light-primary font-monospace f-s-10 ms-1">${escapeHtml(p.codigo)}</span>
+                                    ${esCritico ? '<span class="chip bg-light-warning f-s-10 ms-1"><i class="fa-solid fa-crown me-1"></i>Crítico Superadmin</span>' : ''}
                                     ${p.descripcion ? `<small class="text-secondary d-block mt-1 f-s-11">${escapeHtml(p.descripcion)}</small>` : ''}
                                 </label>
                             </div>
@@ -973,15 +975,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 let html = '';
                 usuarios.forEach((u) => {
-                    const badgeEstadoUsuario = u.estado_usuario === 'ACTIVO'
-                        ? '<span class="badge bg-success-subtle text-success">ACTIVO</span>'
-                        : '<span class="badge bg-danger-subtle text-danger">INACTIVO/BLOQUEADO</span>';
+                    const badgeEstadoUsuario = (window.CamargoInsignia && window.CamargoInsignia.estado)
+                        ? window.CamargoInsignia.estado(u.estado_usuario, false, 'f-s-11')
+                        : (u.estado_usuario === 'ACTIVO'
+                            ? '<span class="badge bg-light-success f-s-11"><i class="fa-solid fa-circle-check me-1"></i>Activo</span>'
+                            : '<span class="badge bg-light-secondary f-s-11"><i class="fa-solid fa-circle-xmark me-1"></i>Inactivo</span>');
 
                     html += `
                         <tr>
                             <td>
                                 <strong class="text-dark">${escapeHtml(u.nombre_usuario)}</strong>
-                                <span class="badge bg-light text-secondary font-monospace ms-1 border">ID: ${u.usuario_id}</span>
+                                <span class="badge bg-light-secondary font-monospace ms-1">ID: ${u.usuario_id}</span>
                             </td>
                             <td>
                                 <div>${escapeHtml(u.nombre_completo_persona)}</div>

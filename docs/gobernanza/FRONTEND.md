@@ -85,6 +85,31 @@ Regla vinculante: **0 jQuery en código propio**. Todo desarrollo de frontend pr
 - Confirmaciones destructivas explican el objeto y consecuencia.
 - Mantener semántica, ARIA y contraste al adaptar componentes Alina.
 
+## Badges y Chips (UI-2A / D-071)
+
+La representación visual de estados, categorías, atributos, contadores y tags en Camargo PMS se rige estrictamente por los componentes oficiales de Alina (`admin-dashboard/alina/template/badges.html`):
+
+1. **Variants of badge de Alina (`badge bg-light-*`, `badge text-bg-*`):**
+   - Destinados a estados compactos en tablas, listados, modales y contadores numéricos breves.
+   - Aplica estilos nativos de Alina con transparencia y borde tonal suave (`rgba(var(--color), 0.1)`).
+2. **Variants of chip de Alina (`chip bg-light-*`, `chip text-bg-*`):**
+   - Destinados a categorías, clasificaciones, tipos de unidad física, roles de usuario, principios arquitectónicos y tags removibles o interactivos.
+   - Aplica estilos nativos de Alina con padding específico y esquinas redondeadas controladas.
+3. **Prohibiciones estrictas:**
+   - Badges y Chips con bordes punteados o discontinuos estrictamente prohibidos (conteo de `dotted` = 0 y `dashed` = 0).
+   - Erradicación de clases Bootstrap crudas (`bg-*-subtle`) en favor de las clases oficiales de Alina (`bg-light-*`).
+   - Iconografía interna exclusivamente mediante Font Awesome 6 Free (v6.3.0).
+4. **Mapa Semántico Oficial:**
+   - `SUCCESS` (`bg-light-success`): `ACTIVO`, `CONFIRMADA`, `DISPONIBLE`.
+   - `WARNING` (`bg-light-warning`): `PENDIENTE`, `MANTENIMIENTO`, `SUPERADMIN`.
+   - `DANGER` (`bg-light-danger`): `CANCELADA`, `BLOQUEADO`, `OCUPADO`, `SUSPENDIDO`.
+   - `INFO` (`bg-light-info`): informativo / sistema / manual / tipo de unidad.
+   - `SECONDARY` (`bg-light-secondary`): `INACTIVO`, `EXPIRADA`, `LIBERADO`, contadores y códigos auxiliares.
+   - `LIGHT` / `DARK`: contraste puntual o códigos de unidad/propiedad destacados.
+5. **Resolución técnica centralizada:**
+   - Backend (PHP): Clase `\CamargoPMS\Nucleo\Insignia` y funciones globales `insignia_badge()`, `insignia_chip()`, `insignia_estado()`.
+   - Frontend (JS): Namespace global Vanilla JS `window.CamargoInsignia` en `camargo-layout.js` (`badge()`, `chip()`, `estado()`, `resolverClase()`).
+
 ## Seguridad de salida
 
 Escapar en servidor según contexto. En cliente usar `textContent` para datos no confiables y evitar `innerHTML`. URLs, iconos y clases dinámicas se eligen de listas permitidas.

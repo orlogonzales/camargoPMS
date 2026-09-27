@@ -82,3 +82,34 @@ if (!function_exists('usuario_autenticado')) {
         return (new \CamargoPMS\Servicios\AutenticacionServicio())->obtenerUsuarioAutenticado();
     }
 }
+
+if (!function_exists('insignia_badge')) {
+    /**
+     * Genera un Badge estándar de Alina (Variants of badge).
+     */
+    function insignia_badge(string $texto, string $variante = 'secondary', ?string $icono = null, string $clasesExtra = ''): string
+    {
+        return \CamargoPMS\Nucleo\Insignia::badge($texto, $variante, $icono, $clasesExtra);
+    }
+}
+
+if (!function_exists('insignia_chip')) {
+    /**
+     * Genera un Chip estándar de Alina (Variants of chip).
+     */
+    function insignia_chip(string $texto, string $variante = 'primary', ?string $icono = null, string $clasesExtra = ''): string
+    {
+        return \CamargoPMS\Nucleo\Insignia::chip($texto, $variante, $icono, $clasesExtra);
+    }
+}
+
+if (!function_exists('insignia_estado')) {
+    /**
+     * Resuelve y renderiza automáticamente la insignia estándar para un estado.
+     */
+    function insignia_estado(string $estado, bool $comoChip = false, string $clasesExtra = ''): string
+    {
+        return \CamargoPMS\Nucleo\Insignia::estado($estado, $comoChip, $clasesExtra);
+    }
+}
+

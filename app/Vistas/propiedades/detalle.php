@@ -36,14 +36,8 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <h3 class="mb-0 f-s-22 f-w-700"><?= e($propiedad->obtenerNombre()) ?></h3>
-                                <span class="badge bg-secondary-subtle text-secondary f-s-12">
-                                    <?= e($propiedad->obtenerCodigo()) ?>
-                                </span>
-                                <?php if ($propiedad->estaActiva()): ?>
-                                    <span class="badge bg-success-subtle text-success f-s-12">ACTIVO</span>
-                                <?php else: ?>
-                                    <span class="badge bg-danger-subtle text-danger f-s-12">INACTIVO</span>
-                                <?php endif; ?>
+                                <?= insignia_chip($propiedad->obtenerCodigo(), 'secondary', null, 'f-s-12') ?>
+                                <?= insignia_estado($propiedad->obtenerEstado(), false, 'f-s-12') ?>
                             </div>
                             <p class="text-secondary f-s-13 mb-0">
                                 <i class="fa-solid fa-location-dot me-1"></i> <?= e($propiedad->obtenerUbicacionCompleta()) ?>
@@ -146,7 +140,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                     <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark me-2">
                         Unidades Físicas (<?= count($unidades ?? []) ?>)
                     </h5>
-                    <span class="badge bg-primary-subtle text-primary f-s-11">Principio PROPIEDAD ≠ UNIDAD</span>
+                    <?= insignia_chip('Principio PROPIEDAD ≠ UNIDAD', 'primary', 'fa-solid fa-layer-group', 'f-s-11') ?>
                 </div>
                 <div class="d-flex gap-2">
                     <?php if (!empty($puedeCrearUnidad) && $propiedad->estaActiva()): ?>
@@ -182,17 +176,13 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                                             </a>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info-subtle text-info border border-info-subtle f-s-11">
-                                                <?= e($u->obtenerTipoUnidadNombre() ?? 'Unidad') ?>
-                                            </span>
+                                            <?= insignia_chip($u->obtenerTipoUnidadNombre() ?? 'Unidad', 'info', null, 'f-s-11') ?>
                                         </td>
                                         <td class="f-s-12 text-secondary">
                                             <?= e($u->obtenerResumenFisico()) ?>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge <?= $u->estaActiva() ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> f-s-10">
-                                                <?= $u->obtenerEstado() ?>
-                                            </span>
+                                            <?= insignia_estado($u->obtenerEstado(), false, 'f-s-10') ?>
                                         </td>
                                         <td class="text-end">
                                             <a href="<?= url_ruta("/unidades/{$u->obtenerId()}/perfil") ?>" class="btn btn-outline-secondary btn-sm" title="Ver ficha técnica de la unidad">
@@ -269,9 +259,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                 <ul class="list-unstyled mb-0 f-s-13">
                     <li class="mb-3">
                         <span class="text-muted d-block f-s-12">Estado Operativo</span>
-                        <span class="badge bg-<?= $propiedad->estaActiva() ? 'success' : 'danger' ?>-subtle text-<?= $propiedad->estaActiva() ? 'success' : 'danger' ?> f-s-12">
-                            <?= e($propiedad->obtenerEstado()) ?>
-                        </span>
+                        <?= insignia_estado($propiedad->obtenerEstado(), false, 'f-s-12') ?>
                     </li>
                     <li class="mb-3">
                         <span class="text-muted d-block f-s-12">Fecha de Registro</span>

@@ -681,6 +681,26 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 5. **Cero Dependencia de jQuery:**
    - Toda la inicialización, sincronización de eventos y manipulación de selectores se realiza exclusivamente mediante JavaScript moderno nativo (Vanilla JS ES6+).
 
+6. **Estandarización de Badges y Chips de Alina (UI-2A):**
+   - **Componentes Permitidos y Obligatorios:**
+     - *Variants of badge* de Alina (`badge bg-light-*`, `badge text-bg-*`, etc.) para estados compactos en tablas, listados, modales y contadores numéricos.
+     - *Variants of chip* de Alina (`chip bg-light-*`, etc.) para categorías, atributos de entidad, clasificaciones de rol, principios arquitectónicos y tags interactivos/removibles.
+   - **Prohibiciones Estrictas:**
+     - Prohibido el uso de badges o chips con bordes punteados o discontinuos (`dotted`, `dashed`, `border-dotted`, `border-dashed`).
+     - Prohibido el uso de badges o chips personalizados fuera del estándar Alina o clases Bootstrap crudas (`bg-*-subtle`).
+   - **Iconografía Interna:**
+     - Los iconos insertados dentro de badges y chips provienen exclusivamente de Font Awesome 6 Free (v6.3.0). Queda prohibido Tabler Icons u otras librerías.
+   - **Mapa Semántico Vinculante:**
+     - `SUCCESS` (`bg-light-success`): positivo / disponible / activo / confirmado (`ACTIVO`, `CONFIRMADA`, `DISPONIBLE`).
+     - `WARNING` (`bg-light-warning`): pendiente / atención / mantenimiento / superadministrador (`PENDIENTE`, `MANTENIMIENTO`, `SUPERADMIN`).
+     - `DANGER` (`bg-light-danger`): cancelado / error / bloqueo / suspendido (`CANCELADA`, `BLOQUEADO`, `OCUPADO`, `SUSPENDIDO`).
+     - `INFO` (`bg-light-info`): informativo neutral / sistema / manual (`MANUAL`, `SISTEMA`, tipo de unidad).
+     - `SECONDARY` (`bg-light-secondary`): neutral / inactivo / expirado / liberado / contadores y códigos auxiliares (`INACTIVO`, `EXPIRADA`, `LIBERADO`).
+     - `LIGHT` / `DARK` (`bg-light text-dark`, `bg-dark text-white`): contraste puntual o códigos de unidad/propiedad destacados.
+   - **Infraestructura Centralizada:**
+     - Backend: Clase `\CamargoPMS\Nucleo\Insignia` y funciones globales `insignia_badge()`, `insignia_chip()` e `insignia_estado()`.
+     - Frontend: Objeto global Vanilla JS `window.CamargoInsignia` (`badge()`, `chip()`, `estado()`, `resolverClase()`) en `camargo-layout.js`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

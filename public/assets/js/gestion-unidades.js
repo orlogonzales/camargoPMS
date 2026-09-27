@@ -148,12 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
         estadoVacio?.classList.add('d-none');
 
         tbodyUnidades.innerHTML = unidades.map(u => {
-            const esActiva = u.estado === 'ACTIVO';
-            const estadoBadge = esActiva
-                ? '<span class="badge bg-success-subtle text-success border border-success-subtle f-s-11">ACTIVO</span>'
-                : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11">INACTIVO</span>';
+            const estadoBadge = (window.CamargoInsignia && window.CamargoInsignia.estado)
+                ? window.CamargoInsignia.estado(u.estado, false, 'f-s-11')
+                : (u.estado === 'ACTIVO'
+                    ? '<span class="badge bg-light-success f-s-11"><i class="fa-solid fa-circle-check me-1"></i>Activo</span>'
+                    : '<span class="badge bg-light-secondary f-s-11"><i class="fa-solid fa-circle-xmark me-1"></i>Inactivo</span>');
 
-            const pisoTxt = u.piso_nivel ? `<span class="badge bg-light text-secondary border me-1">${escapeHtml(u.piso_nivel)}</span>` : '';
+            const pisoTxt = u.piso_nivel ? `<span class="chip bg-light-secondary me-1 f-s-11">${escapeHtml(u.piso_nivel)}</span>` : '';
             const areaTxt = u.area_m2 ? `${u.area_m2} m²` : '';
 
             return `
@@ -173,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </a>
                     </td>
                     <td>
-                        <span class="badge bg-info-subtle text-info border border-info-subtle f-s-11">
+                        <span class="chip bg-light-info f-s-11">
                             ${escapeHtml(u.tipo_unidad_nombre || 'Unidad')}
                         </span>
                     </td>

@@ -17,7 +17,7 @@ declare(strict_types=1);
  */
 
 $esActiva = $unidad->estaActiva();
-$estadoClase = $esActiva ? 'bg-success' : 'bg-danger';
+$estadoClase = $esActiva ? 'bg-light-success' : 'bg-light-danger';
 $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
 ?>
 <input type="hidden" id="csrf-token-global" value="<?= e($csrf_token) ?>">
@@ -34,16 +34,14 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         </span>
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-dark-subtle text-dark border f-s-12 f-w-700">
+                                <span class="chip bg-dark text-white f-s-12 f-w-700">
                                     <?= e($unidad->obtenerCodigo()) ?>
                                 </span>
                                 <span class="badge <?= $estadoClase ?> f-s-11" id="badge-estado-perfil">
-                                    <?= $estadoTexto ?>
+                                    <i class="<?= $esActiva ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark' ?> me-1"></i><?= $estadoTexto ?>
                                 </span>
                                 <?php if ($unidad->obtenerTipoUnidadNombre()): ?>
-                                    <span class="badge bg-info-subtle text-info border f-s-11">
-                                        <?= e($unidad->obtenerTipoUnidadNombre()) ?>
-                                    </span>
+                                    <?= insignia_chip($unidad->obtenerTipoUnidadNombre(), 'info', null, 'f-s-11') ?>
                                 <?php endif; ?>
                             </div>
                             <h3 class="f-s-22 f-w-700 mb-0 text-dark"><?= e($unidad->obtenerNombre()) ?></h3>
@@ -214,13 +212,13 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         </div>
                         <div>
                             <h6 class="f-s-14 f-w-700 mb-0"><?= e($propiedad->obtenerNombre()) ?></h6>
-                            <span class="badge bg-secondary-subtle text-secondary f-s-11"><?= e($propiedad->obtenerCodigo()) ?></span>
+                            <?= insignia_chip($propiedad->obtenerCodigo(), 'secondary', null, 'f-s-11') ?>
                         </div>
                     </div>
                     <ul class="list-unstyled f-s-12 text-secondary mb-3">
                         <li class="mb-1"><i class="fa-solid fa-location-dot me-1 text-muted"></i><?= e($propiedad->obtenerDireccion()) ?></li>
                         <li class="mb-1"><i class="fa-solid fa-globe me-1 text-muted"></i><?= e($propiedad->obtenerUbicacionCompleta()) ?></li>
-                        <li><i class="fa-solid fa-wave-square me-1 text-muted"></i>Estado: <span class="badge <?= $propiedad->estaActiva() ? 'bg-success' : 'bg-danger' ?> f-s-10"><?= $propiedad->obtenerEstado() ?></span></li>
+                        <li><i class="fa-solid fa-wave-square me-1 text-muted"></i>Estado: <?= insignia_estado($propiedad->obtenerEstado(), false, 'f-s-10') ?></li>
                     </ul>
                     <a href="<?= url_ruta("/propiedades/{$propiedad->obtenerId()}/perfil") ?>" class="btn btn-outline-primary btn-sm w-100">
                         <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Abrir Ficha de Propiedad
@@ -249,9 +247,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         <?php foreach ($historialAuditoria as $ev): ?>
                             <div class="border-bottom py-2">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-secondary-subtle text-secondary f-s-10 f-w-700">
-                                        <?= e((string)$ev['accion']) ?>
-                                    </span>
+                                    <?= insignia_badge((string)$ev['accion'], 'secondary', null, 'f-s-10 f-w-700 font-monospace') ?>
                                     <span class="text-muted f-s-11"><?= e((string)$ev['creado_en']) ?></span>
                                 </div>
                                 <div class="text-dark mt-1"><?= e((string)($ev['descripcion'] ?? 'Evento registrado')) ?></div>

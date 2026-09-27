@@ -16,7 +16,7 @@ declare(strict_types=1);
                 </p>
             </div>
             <div class="col-md-4 col-12 text-md-end mt-2 mt-md-0">
-                <span class="badge bg-light text-secondary border f-s-12">Fase UI-0 &bull; Alina Core</span>
+                <span class="badge bg-light-secondary f-s-12">Alina Core &bull; Camargo PMS</span>
             </div>
         </div>
     </div>

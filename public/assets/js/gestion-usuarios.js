@@ -280,25 +280,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const htmlFilas = usuarios.map(u => {
             const persona = u.persona || {};
-            const doc = persona.documento ? `<span class="badge bg-light text-secondary border f-s-11 ms-1">${escapeHtml(persona.documento)}</span>` : '';
+            const doc = persona.documento ? `<span class="badge bg-light-secondary font-monospace f-s-11 ms-1">${escapeHtml(persona.documento)}</span>` : '';
 
-            // Badges de roles
+            // Chips de roles (Variants of chip)
             const rolesHtml = (u.roles && u.roles.length > 0)
                 ? u.roles.map(r => {
-                    const badgeClass = r.es_superadministrador ? 'bg-danger-subtle text-danger border-danger-subtle' : 'bg-primary-subtle text-primary border-primary-subtle';
-                    return `<span class="badge ${badgeClass} border f-s-11 me-1 mb-1">${escapeHtml(r.nombre)}</span>`;
+                    const chipClass = r.es_superadministrador ? 'bg-light-danger' : 'bg-light-primary';
+                    const iconHtml = r.es_superadministrador ? '<i class="fa-solid fa-crown me-1"></i>' : '';
+                    return `<span class="chip ${chipClass} f-s-11 me-1 mb-1">${iconHtml}${escapeHtml(r.nombre)}</span>`;
                 }).join('')
                 : '<span class="text-muted f-s-12">Sin roles</span>';
 
-            // Badge de estado
-            let badgeEstadoClass = 'bg-success-subtle text-success';
-            if (u.estado === 'BLOQUEADO') badgeEstadoClass = 'bg-danger-subtle text-danger';
-            if (u.estado === 'INACTIVO') badgeEstadoClass = 'bg-secondary-subtle text-secondary';
-            const estadoHtml = `<span class="badge ${badgeEstadoClass} f-s-11 px-2 py-1">${escapeHtml(u.estado)}</span>`;
+            // Badge de estado (Variants of badge)
+            const estadoHtml = (window.CamargoInsignia && window.CamargoInsignia.estado)
+                ? window.CamargoInsignia.estado(u.estado, false, 'f-s-11')
+                : `<span class="badge bg-light-${u.estado === 'ACTIVO' ? 'success' : (u.estado === 'BLOQUEADO' ? 'danger' : 'secondary')} f-s-11 px-2 py-1">${escapeHtml(u.estado)}</span>`;
 
             // Sesiones activas
             const sesionesHtml = u.sesiones_activas > 0
-                ? `<span class="badge bg-info-subtle text-info border border-info-subtle cursor-pointer btn-ver-sesiones" data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" title="Ver sesiones activas">
+                ? `<span class="badge bg-light-info cursor-pointer btn-ver-sesiones" data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" title="Ver sesiones activas">
                        <i class="fa-solid fa-laptop me-1"></i>${u.sesiones_activas} activa${u.sesiones_activas > 1 ? 's' : ''}
                    </span>`
                 : `<span class="text-muted f-s-12">Sin sesión</span>`;
@@ -616,11 +616,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 let html = '<div class="d-flex flex-wrap gap-2">';
                 rolesAsignados.forEach(r => {
-                    const badgeClass = r.es_superadministrador ? 'bg-danger text-white' : 'bg-primary text-white';
+                    const chipClass = r.es_superadministrador ? 'bg-light-danger' : 'bg-light-primary';
+                    const iconHtml = r.es_superadministrador ? '<i class="fa-solid fa-crown me-1"></i>' : '';
                     html += `
-                        <div class="badge ${badgeClass} p-2 d-flex align-items-center gap-2 f-s-12">
-                            <span>${escapeHtml(r.nombre)}</span>
-                            <button type="button" class="btn btn-sm btn-link text-white p-0 btn-revocar-rol"
+                        <div class="chip ${chipClass} p-2 d-flex align-items-center gap-2 f-s-12">
+                            <span>${iconHtml}${escapeHtml(r.nombre)}</span>
+                            <button type="button" class="btn btn-sm btn-link text-dark p-0 btn-revocar-rol"
                                     data-rol-id="${r.id}" data-rol-nombre="${escapeHtml(r.nombre)}" title="Revocar rol">
                                 <i class="fa-solid fa-xmark f-s-14"></i>
                             </button>

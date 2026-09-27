@@ -209,10 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let html = '';
             for (const u of resultado.unidades) {
                 const disponibleBadge = u.disponible
-                    ? `<span class="badge bg-success-subtle text-success border border-success-subtle f-s-12">
+                    ? `<span class="badge bg-light-success f-s-12">
                            <i class="fa-solid fa-check me-1"></i> Disponible
                        </span>`
-                    : `<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-12" title="${u.motivo_no_disponible || 'Ocupada'}">
+                    : `<span class="badge bg-light-danger f-s-12" title="${u.motivo_no_disponible || 'Ocupada'}">
                            <i class="fa-solid fa-lock me-1"></i> ${u.motivo_no_disponible || 'Bloqueada'}
                        </span>`;
 
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fa-solid fa-building me-1"></i> ${u.propiedad_nombre}
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark border">${u.tipo_unidad_nombre || '-'}</span>
+                            <span class="chip bg-light-primary">${u.tipo_unidad_nombre || '-'}</span>
                         </td>
                         <td class="text-secondary f-s-13">
                             <i class="fa-solid fa-users me-1"></i> ${u.capacidad_personas} pers.
@@ -458,12 +458,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let html = '';
             for (const b of bloqueos) {
                 const estadoBadge = b.activo
-                    ? `<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11">ACTIVO</span>`
-                    : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle f-s-11">LIBERADO</span>`;
+                    ? `<span class="badge bg-light-danger f-s-11">ACTIVO</span>`
+                    : `<span class="badge bg-light-secondary f-s-11">LIBERADO</span>`;
 
                 const tipoBadge = b.tipo === 'MANTENIMIENTO'
-                    ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle f-s-11">Mantenimiento</span>`
-                    : `<span class="badge bg-info-subtle text-info border border-info-subtle f-s-11">Manual</span>`;
+                    ? `<span class="chip bg-light-warning f-s-11"><i class="fa-solid fa-wrench me-1"></i>Mantenimiento</span>`
+                    : `<span class="chip bg-light-info f-s-11"><i class="fa-solid fa-lock me-1"></i>Manual</span>`;
 
                 const btnLiberar = b.activo
                     ? `<button type="button" class="btn btn-outline-danger btn-sm btn-abrir-liberar"

@@ -334,6 +334,62 @@
         inicializarPantallaCompleta();
     }
 
+    // Exponer utilidad global CamargoInsignia para Badges y Chips Alina (UI-2A / D-071)
+    window.CamargoInsignia = {
+        MAPA_ESTADOS: {
+            'DISPONIBLE': { variante: 'success', icono: 'fa-solid fa-check', texto: 'Disponible' },
+            'BLOQUEADO': { variante: 'danger', icono: 'fa-solid fa-lock', texto: 'Bloqueado' },
+            'OCUPADO': { variante: 'danger', icono: 'fa-solid fa-lock', texto: 'Ocupado' },
+            'MANTENIMIENTO': { variante: 'warning', icono: 'fa-solid fa-wrench', texto: 'Mantenimiento' },
+            'LIBERADO': { variante: 'secondary', icono: 'fa-solid fa-check', texto: 'Liberado' },
+            'PENDIENTE': { variante: 'warning', icono: 'fa-solid fa-clock', texto: 'PENDIENTE' },
+            'CONFIRMADA': { variante: 'success', icono: 'fa-solid fa-check', texto: 'CONFIRMADA' },
+            'CANCELADA': { variante: 'danger', icono: 'fa-solid fa-xmark', texto: 'CANCELADA' },
+            'EXPIRADA': { variante: 'secondary', icono: 'fa-solid fa-hourglass-half', texto: 'EXPIRADA' },
+            'ACTIVO': { variante: 'success', icono: 'fa-solid fa-circle-check', texto: 'Activo' },
+            'INACTIVO': { variante: 'secondary', icono: 'fa-solid fa-circle-xmark', texto: 'Inactivo' },
+            'SUSPENDIDO': { variante: 'danger', icono: 'fa-solid fa-ban', texto: 'Suspendido' }
+        },
+
+        resolverClase(variante) {
+            const map = {
+                'primary': 'bg-light-primary',
+                'secondary': 'bg-light-secondary',
+                'success': 'bg-light-success',
+                'danger': 'bg-light-danger',
+                'warning': 'bg-light-warning',
+                'info': 'bg-light-info',
+                'light': 'bg-light text-dark',
+                'dark': 'bg-dark text-white'
+            };
+            return map[variante] || 'bg-light-secondary';
+        },
+
+        badge(texto, variante = 'secondary', icono = null, extraClases = '') {
+            const cls = `badge ${this.resolverClase(variante)} ${extraClases}`.trim();
+            const iconHtml = icono ? `<i class="${icono} me-1"></i>` : '';
+            return `<span class="${cls}">${iconHtml}${texto}</span>`;
+        },
+
+        chip(texto, variante = 'primary', icono = null, extraClases = '') {
+            const cls = `chip ${this.resolverClase(variante)} ${extraClases}`.trim();
+            const iconHtml = icono ? `<i class="${icono} me-1"></i>` : '';
+            return `<span class="${cls}">${iconHtml}${texto}</span>`;
+        },
+
+        estado(codEstado, comoChip = false, extraClases = '') {
+            const norm = (codEstado || '').toString().toUpperCase().trim();
+            const cfg = this.MAPA_ESTADOS[norm] || {
+                variante: 'secondary',
+                icono: null,
+                texto: codEstado || '-'
+            };
+            return comoChip
+                ? this.chip(cfg.texto, cfg.variante, cfg.icono, extraClases)
+                : this.badge(cfg.texto, cfg.variante, cfg.icono, extraClases);
+        }
+    };
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', iniciar);
     } else {

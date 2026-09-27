@@ -184,7 +184,7 @@ declare(strict_types=1);
                                 (<span id="info-noches-texto">1 noche</span>).
                                 Modelo: <strong>[entrada, salida)</strong>. La noche de salida queda liberada para check-in.
                             </div>
-                            <span class="badge bg-primary text-white" id="badge-total-consultadas">0 unidades</span>
+                            <span class="badge bg-light-primary" id="badge-total-consultadas">0 unidades</span>
                         </div>
 
                         <!-- Tabla de Resultados de Disponibilidad -->
@@ -235,13 +235,13 @@ declare(strict_types=1);
                                 </button>
                             </div>
                             <div class="col-md-3 col-12 d-flex justify-content-md-end align-items-center gap-2 pt-2 pt-md-0">
-                                <span class="badge bg-success-subtle text-success border border-success-subtle f-s-11">
+                                <span class="badge bg-light-success f-s-11">
                                     <i class="fa-solid fa-circle me-1"></i> Libre
                                 </span>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11">
+                                <span class="badge bg-light-danger f-s-11">
                                     <i class="fa-solid fa-circle me-1"></i> Bloqueado
                                 </span>
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle f-s-11">
+                                <span class="badge bg-light-warning f-s-11">
                                     <i class="fa-solid fa-circle me-1"></i> Mantenimiento
                                 </span>
                             </div>

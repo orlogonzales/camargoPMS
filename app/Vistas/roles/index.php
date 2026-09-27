@@ -256,7 +256,7 @@ declare(strict_types=1);
                         </button>
                     </div>
                     <div class="text-secondary f-s-12">
-                        <span id="contador-permisos-seleccionados" class="badge bg-primary">0</span> permisos seleccionados
+                        <span id="contador-permisos-seleccionados" class="badge bg-light-primary">0</span> permisos seleccionados
                     </div>
                 </div>
 

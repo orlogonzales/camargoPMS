@@ -201,10 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let filasHtml = '';
         propiedades.forEach((p) => {
-            const esActivo = p.estado === 'ACTIVO';
-            const badgeEstado = esActivo
-                ? '<span class="badge bg-success-subtle text-success">ACTIVO</span>'
-                : '<span class="badge bg-danger-subtle text-danger">INACTIVO</span>';
+            const badgeEstado = (window.CamargoInsignia && window.CamargoInsignia.estado)
+                ? window.CamargoInsignia.estado(p.estado, false, 'f-s-11')
+                : (p.estado === 'ACTIVO'
+                    ? '<span class="badge bg-light-success f-s-11"><i class="fa-solid fa-circle-check me-1"></i>Activo</span>'
+                    : '<span class="badge bg-light-secondary f-s-11"><i class="fa-solid fa-circle-xmark me-1"></i>Inactivo</span>');
 
             // Ubicación concatenada
             const partesUbicacion = [];
@@ -222,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lngFormatted = parseFloat(p.longitud).toFixed(5);
                 coordsHtml = `
                     <a href="https://www.google.com/maps?q=${p.latitud},${p.longitud}" target="_blank" rel="noopener noreferrer"
-                       class="badge bg-primary-subtle text-primary text-decoration-none" title="Ver en Google Maps">
+                       class="chip bg-light-primary text-decoration-none" title="Ver en Google Maps">
                         <i class="fa-solid fa-location-dot me-1"></i>${latFormatted}, ${lngFormatted}
                     </a>
                 `;

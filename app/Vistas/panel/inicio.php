@@ -19,7 +19,7 @@ declare(strict_types=1);
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">Arquitectura MVC</h5>
-                        <span class="badge bg-success-subtle text-success badge-estado-pms">Verificado</span>
+                        <?= insignia_badge('Verificado', 'success', 'fa-solid fa-check', 'badge-estado-pms') ?>
                     </div>
                 </div>
                 <p class="card-text text-secondary f-s-14">
@@ -39,7 +39,7 @@ declare(strict_types=1);
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">Plantilla Alina</h5>
-                        <span class="badge bg-success-subtle text-success badge-estado-pms">Verificado</span>
+                        <?= insignia_badge('Verificado', 'success', 'fa-solid fa-check', 'badge-estado-pms') ?>
                     </div>
                 </div>
                 <p class="card-text text-secondary f-s-14">
@@ -59,7 +59,7 @@ declare(strict_types=1);
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">JavaScript Propio</h5>
-                        <span class="badge bg-success-subtle text-success badge-estado-pms">Verificado</span>
+                        <?= insignia_badge('Verificado', 'success', 'fa-solid fa-check', 'badge-estado-pms') ?>
                     </div>
                 </div>
                 <p class="card-text text-secondary f-s-14">
@@ -79,7 +79,7 @@ declare(strict_types=1);
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">Gobernanza Activa</h5>
-                        <span class="badge bg-success-subtle text-success badge-estado-pms">Verificado</span>
+                        <?= insignia_badge('Verificado', 'success', 'fa-solid fa-check', 'badge-estado-pms') ?>
                     </div>
                 </div>
                 <p class="card-text text-secondary f-s-14">
@@ -98,7 +98,7 @@ declare(strict_types=1);
                 <h6 class="mb-0 text-dark f-w-600">
                     <i class="fa-solid fa-server text-primary me-2 f-s-18"></i> Estado de la Infraestructura de UI-0
                 </h6>
-                <span class="badge bg-primary text-white">Camargo PMS &bull; Fase UI-0</span>
+                <?= insignia_badge('Camargo PMS • Fase UI-0', 'primary') ?>
             </div>
             <div class="card-body">
                 <div class="row g-3">

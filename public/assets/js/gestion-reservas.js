@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let unidadesHtml = '';
             if (r.unidades && r.unidades.length > 0) {
                 unidadesHtml = r.unidades.map(u => `
-                    <span class="badge bg-light text-dark border me-1 mb-1" title="${u.propiedad_nombre || ''}">
+                    <span class="chip bg-light-primary me-1 mb-1" title="${u.propiedad_nombre || ''}">
                         <i class="fa-solid fa-door-open f-s-11 me-1"></i>${u.unidad_codigo}
                     </span>
                 `).join('');
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-solid fa-calendar-days me-1 text-secondary"></i>${r.fecha_entrada} &rarr; ${r.fecha_salida}
                     </td>
                     <td class="f-s-13 text-center">
-                        <span class="badge bg-secondary-subtle text-secondary">${r.noches} n</span>
+                        <span class="badge bg-light-secondary">${r.noches} n</span>
                     </td>
                     <td>${unidadesHtml}</td>
                     <td class="text-end f-w-700 f-s-13 text-dark">
@@ -274,15 +274,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function obtenerBadgeEstado(estado) {
+        if (window.CamargoInsignia && typeof window.CamargoInsignia.estado === 'function') {
+            return window.CamargoInsignia.estado(estado, false, 'f-s-11');
+        }
         switch (estado) {
             case 'PENDIENTE':
-                return '<span class="badge bg-warning-subtle text-warning f-s-11"><i class="fa-solid fa-clock me-1"></i>PENDIENTE</span>';
+                return '<span class="badge bg-light-warning f-s-11"><i class="fa-solid fa-clock me-1"></i>PENDIENTE</span>';
             case 'CONFIRMADA':
-                return '<span class="badge bg-success-subtle text-success f-s-11"><i class="fa-solid fa-check me-1"></i>CONFIRMADA</span>';
+                return '<span class="badge bg-light-success f-s-11"><i class="fa-solid fa-check me-1"></i>CONFIRMADA</span>';
             case 'CANCELADA':
-                return '<span class="badge bg-danger-subtle text-danger f-s-11"><i class="fa-solid fa-xmark me-1"></i>CANCELADA</span>';
+                return '<span class="badge bg-light-danger f-s-11"><i class="fa-solid fa-xmark me-1"></i>CANCELADA</span>';
             case 'EXPIRADA':
-                return '<span class="badge bg-secondary-subtle text-secondary f-s-11"><i class="fa-solid fa-hourglass-half me-1"></i>EXPIRADA</span>';
+                return '<span class="badge bg-light-secondary f-s-11"><i class="fa-solid fa-hourglass-half me-1"></i>EXPIRADA</span>';
             default:
                 return `<span class="badge bg-light text-dark f-s-11">${estado}</span>`;
         }
@@ -427,11 +430,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (diffDays > 0) {
             badgeNochesCalculadas.textContent = String(diffDays);
-            badgeNochesCalculadas.className = 'badge bg-primary text-white f-s-14';
+            badgeNochesCalculadas.className = 'badge bg-light-primary f-s-14';
             return diffDays;
         } else {
             badgeNochesCalculadas.textContent = 'Inválido';
-            badgeNochesCalculadas.className = 'badge bg-danger text-white f-s-12';
+            badgeNochesCalculadas.className = 'badge bg-light-danger f-s-12';
             return 0;
         }
     }

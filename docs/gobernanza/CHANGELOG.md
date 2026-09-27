@@ -4,6 +4,27 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-2A — Estandarización obligatoria de Badges y Chips de Alina
+
+- **Estandarización de Badges y Chips Oficiales de Alina (D-071):**
+  - **Componentes Permitidos:** Adopción obligatoria de *Variants of badge* de Alina (`badge bg-light-*`, `badge text-bg-*`) para estados compactos y contadores, y *Variants of chip* de Alina (`chip bg-light-*`, `chip text-bg-*`) para categorías, clasificaciones, tipos de unidad física, atributos y tags.
+  - **Prohibición Estricta de Dotted y Dashed:** Conteo absoluto de badges punteados o discontinuos = 0 (`dotted` = 0, `dashed` = 0) en toda la aplicación.
+  - **Erradicación de Clases Bootstrap Crudas:** Eliminadas todas las ocurrencias directas de `bg-*-subtle` en vistas y módulos JavaScript propios, reemplazándolas por las variantes oficiales de Alina (`bg-light-*`).
+  - **Iconografía Unificada Font Awesome 6:** Todos los iconos embebidos dentro de badges y chips provienen exclusivamente de Font Awesome 6 Free (`fa-solid fa-*`), con 0 Tabler Icons.
+  - **Mapa Semántico Vinculante:**
+    - `SUCCESS` (`bg-light-success`): `ACTIVO`, `CONFIRMADA`, `DISPONIBLE`.
+    - `WARNING` (`bg-light-warning`): `PENDIENTE`, `MANTENIMIENTO`, `SUPERADMIN`.
+    - `DANGER` (`bg-light-danger`): `CANCELADA`, `BLOQUEADO`, `OCUPADO`, `SUSPENDIDO`.
+    - `INFO` (`bg-light-info`): informativo neutral, sistema, manual, tipo de unidad.
+    - `SECONDARY` (`bg-light-secondary`): `INACTIVO`, `EXPIRADA`, `LIBERADO`, contadores y códigos auxiliares.
+    - `LIGHT` / `DARK`: contraste o códigos destacados de propiedad/unidad.
+  - **Infraestructura Centralizada:**
+    - Backend: Clase `\CamargoPMS\Nucleo\Insignia` y funciones globales `insignia_badge()`, `insignia_chip()` e `insignia_estado()`.
+    - Frontend: Módulo `window.CamargoInsignia` en `camargo-layout.js` con métodos `badge()`, `chip()`, `estado()` y `resolverClase()` en Vanilla JS puro (0 jQuery).
+  - **Gobernanza e Invariantes:**
+    - Registro de decisión D-071 sección 6 en `DECISIONES.md`, `FRONTEND.md`, `PLANTILLA-ALINA.md`, `CONVENCIONES.md` y `.skills/camargo-ui-alina/SKILL.md`.
+    - Invariables intactos: `admin-dashboard/` intacto (100% inmutable), `.env` intacto, 14 migraciones de BD (0 añadidas).
+
 ### Microfase UI-2 — Estandarización transversal obligatoria de recursos de interfaz
 
 - **Estandarización de Iconografía Oficial Font Awesome 6 (D-071):**

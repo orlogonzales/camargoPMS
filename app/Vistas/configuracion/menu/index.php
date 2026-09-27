@@ -73,7 +73,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                 </span>
                                                 <strong class="f-s-14 text-dark"><?= e($principal['nombre']) ?></strong>
                                                 <?php if (!empty($principal['es_sistema'])): ?>
-                                                    <span class="badge bg-info-subtle text-info ms-2 f-s-10">Sistema</span>
+                                                    <?= insignia_chip('Sistema', 'info', null, 'ms-2 f-s-10') ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -81,7 +81,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                         <td><span class="text-muted f-s-12">—</span></td>
                                         <td>
                                             <?php if (!empty($principal['permiso_codigo'])): ?>
-                                                <span class="badge bg-light text-dark border f-s-11">
+                                                <span class="badge bg-light-secondary font-monospace f-s-11">
                                                     <i class="fa-solid fa-key f-s-10 me-1"></i><?= e($principal['permiso_codigo']) ?>
                                                 </span>
                                             <?php else: ?>
@@ -89,12 +89,10 @@ $permisos = $datosGestion['permisos'] ?? [];
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-secondary-subtle text-dark"><?= (int) $principal['orden'] ?></span>
+                                            <?= insignia_badge((string) (int) $principal['orden'], 'secondary') ?>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-<?= $principal['estado'] === 'ACTIVO' ? 'success' : 'danger' ?>-subtle text-<?= $principal['estado'] === 'ACTIVO' ? 'success' : 'danger' ?>">
-                                                <?= e($principal['estado']) ?>
-                                            </span>
+                                            <?= insignia_estado($principal['estado'], false, 'f-s-11') ?>
                                         </td>
                                         <td class="text-end text-nowrap">
                                             <div class="btn-group btn-group-sm">
@@ -139,7 +137,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                         <span class="text-muted me-2"><i class="<?= e($hijo['icono'] ?? 'fa-solid fa-circle-dot') ?> f-s-14"></i></span>
                                                         <span class="f-s-13"><?= e($hijo['nombre']) ?></span>
                                                         <?php if (!empty($hijo['es_sistema'])): ?>
-                                                            <span class="badge bg-info-subtle text-info ms-2 f-s-10">Sistema</span>
+                                                            <?= insignia_chip('Sistema', 'info', null, 'ms-2 f-s-10') ?>
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
@@ -147,7 +145,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                 <td><code class="text-dark f-s-12"><?= e($hijo['ruta'] ?? '#') ?></code></td>
                                                 <td>
                                                     <?php if (!empty($hijo['permiso_codigo'])): ?>
-                                                        <span class="badge bg-light text-dark border f-s-11" title="<?= e($hijo['permiso_nombre'] ?? '') ?>">
+                                                        <span class="badge bg-light-secondary font-monospace f-s-11" title="<?= e($hijo['permiso_nombre'] ?? '') ?>">
                                                             <i class="fa-solid fa-key f-s-10 me-1"></i><?= e($hijo['permiso_codigo']) ?>
                                                         </span>
                                                     <?php else: ?>
@@ -155,12 +153,10 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge bg-light text-secondary border"><?= (int) $hijo['orden'] ?></span>
+                                                    <?= insignia_badge((string) (int) $hijo['orden'], 'secondary') ?>
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge bg-<?= $hijo['estado'] === 'ACTIVO' ? 'success' : 'danger' ?>-subtle text-<?= $hijo['estado'] === 'ACTIVO' ? 'success' : 'danger' ?>">
-                                                        <?= e($hijo['estado']) ?>
-                                                    </span>
+                                                    <?= insignia_estado($hijo['estado'], false, 'f-s-11') ?>
                                                 </td>
                                                 <td class="text-end text-nowrap">
                                                     <div class="btn-group btn-group-sm">

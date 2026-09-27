@@ -11,6 +11,7 @@ Los archivos bajo `admin-dashboard/` son referencias originales e inmutables: no
 | Dashboard / Home | `admin-dashboard/alina/template/index.html` | Referencia visual de dashboard |
 | Font Awesome | `admin-dashboard/alina/template/fontawesome.html` | Catálogo de referencia de iconos Font Awesome 6 |
 | Date Picker | `admin-dashboard/alina/template/date_picker.html` | Referencia de Date Picker y Range Picker Flatpickr |
+| Badges y Chips | `admin-dashboard/alina/template/badges.html` | Referencia oficial de Variants of badge y Variants of chip (D-071) |
 | Error HTTP 400 | `admin-dashboard/alina/template/error_400.html` | Bad Request |
 | Error HTTP 403 | `admin-dashboard/alina/template/error_403.html` | Forbidden / Acceso denegado |
 | Error HTTP 404 | `admin-dashboard/alina/template/error_404.html` | Not Found / Recurso no encontrado |

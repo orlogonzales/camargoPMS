@@ -193,7 +193,7 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-2 text-center d-flex flex-column justify-content-center">
                             <span class="f-s-11 text-secondary">Noches:</span>
-                            <span class="badge bg-secondary-subtle text-secondary f-s-14" id="crear-noches-calculadas">0</span>
+                            <span class="badge bg-light-primary f-s-14" id="crear-noches-calculadas">0</span>
                         </div>
 
                         <!-- Asignación Multiunidad y Snapshot Económico -->

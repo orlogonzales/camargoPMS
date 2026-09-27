@@ -32,6 +32,13 @@ Todo identificador propio se escribe en español. Se conservan keywords de PHP/J
 - **Iconografía:** Font Awesome 6 Free (v6.3.0) es la única librería autorizada para código propio (`fa-solid fa-*`, `fa-regular fa-*`). Prohibido el uso de Tabler Icons (`ti ti-*`) u otras librerías externas.
 - **Selectores de fecha:** Flatpickr Alina local es obligatorio para inputs de fecha (`.camargo-datepicker`) y rangos (`.camargo-rangepicker`).
 - **Contrato D-066 en formularios:** Los Range Pickers actúan exclusivamente como capa de experiencia de usuario, sincronizando automáticamente campos canónicos `fecha_entrada` y `fecha_salida` como cadenas ISO `YYYY-MM-DD` con semántica de intervalo semiabierto $[ \text{entrada}, \text{salida} )$.
+- **Badges y Chips Alina (UI-2A):**
+  - Estados compactos en tablas, modales y contadores: Variants of badge de Alina (`badge bg-light-*`, `badge text-bg-*`).
+  - Categorías, atributos, tipos y tags interactivos: Variants of chip de Alina (`chip bg-light-*`, `chip text-bg-*`).
+  - Prohibición estricta de bordes punteados o discontinuos (`dotted`, `dashed`, `border-dotted`, `border-dashed` = 0).
+  - Prohibido el uso de clases Bootstrap sutiles (`bg-*-subtle`) en favor de los estilos nativos de Alina (`bg-light-*`).
+  - Iconografía dentro de badges/chips exclusivamente Font Awesome 6.
+  - Generación y resolución centralizada mediante `Insignia` en PHP y `CamargoInsignia` en JavaScript.
 
 ## Vistas y rutas
 

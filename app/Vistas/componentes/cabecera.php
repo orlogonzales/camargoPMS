@@ -18,7 +18,7 @@ declare(strict_types=1);
                         <i class="fa-solid fa-align-justify f-s-22 text-secondary"></i>
                     </span>
                     <h4 class="txt-ellipsis-2 mb-0 f-s-18">
-                        Camargo PMS <span class="badge bg-light text-primary border ms-2">UI-0</span>
+                        Camargo PMS <span class="badge bg-light-primary ms-2">PMS</span>
                     </h4>
                 </div>
             </div>

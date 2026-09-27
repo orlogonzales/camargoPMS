@@ -16,13 +16,16 @@ Leer `../../AGENTS.md`, `../../docs/gobernanza/PLANTILLA-ALINA.md`, `FRONTEND.md
 - Proteger rutas en backend además de filtrar menús.
 - No adoptar `script.js` o `theme_customizer.js` original como núcleo.
 - No copiar ni cargar plugins no usados.
-- **D-071 (Iconos y Fechas):** Usar exclusivamente Font Awesome 6 Free (`fa-solid fa-*`) para iconografía en código propio (0 Tabler Icons). Usar Flatpickr Date Picker para fechas simples y Range Picker para rangos de fechas (`[fecha_entrada, fecha_salida]`), preservando D-066.
+- **D-071 (Iconos, Fechas, Badges y Chips):**
+  - Iconografía: Usar exclusivamente Font Awesome 6 Free (`fa-solid fa-*`) para iconografía en código propio (0 Tabler Icons).
+  - Selectores de fecha: Usar Flatpickr Date Picker para fechas simples y Range Picker para rangos de fechas (`[fecha_entrada, fecha_salida]`), preservando D-066.
+  - Badges y Chips: Variants of badge de Alina para estados compactos; Variants of chip de Alina para categorías, atributos y tags. Prohibición estricta de `dotted` y `dashed` (conteo = 0). Erradicación de clases Bootstrap sutiles (`bg-*-subtle`). Iconos internos exclusivamente Font Awesome 6.
 - **Cero jQuery:** Código propio en Vanilla JS (ES6+) moderno.
 - **Local Assets First:** Todos los recursos CSS, fuentes y scripts se cargan desde rutas locales de `public/assets/`. 0 CDNs externas.
 
 ## Adaptación
 
-1. Comparar el componente requerido con `blank.html`, `fontawesome.html` y `date_picker.html`.
+1. Comparar el componente requerido con `blank.html`, `fontawesome.html`, `date_picker.html` y `badges.html`.
 2. Clasificar markup, CSS, JS, imágenes y dependencias en globales o del módulo.
 3. Encapsular estructura repetida en plantilla/componentes; la vista aporta solo contenido.
 4. Implementar conducta propia tolerante a componentes opcionales.
