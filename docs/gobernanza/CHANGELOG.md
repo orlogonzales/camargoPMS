@@ -4,7 +4,37 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
-### Gate Operativo-1 / Gate Operativo-1A — Definición del Tiempo Hotelero y Concurrencia de Disponibilidad (P-004 + P-006)
+### Fase DISPONIBILIDAD-1 — Motor Central de Disponibilidad e Inventario Diario
+
+- **Arquitectura e Integridad Transaccional (D-066, D-067 y D-068):**
+  - **Inventario Diario Sparse:** Implementada la tabla `inventario_diario_unidades` en motor InnoDB con restricción inviolable `UNIQUE KEY uq_inventario_unidad_fecha (unidad_id, fecha)` como última línea de defensa ante sobreventas y carreras concurrentes.
+  - **Inserción Determinista y Rollback Íntegro:** Operaciones de ocupación multinoche procesadas en orden `ORDER BY unidad_id ASC, fecha ASC`, con captura de errores de clave duplicada (1062), lock wait timeout (1205) y deadlock (1213), rollback completo y traducción a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict).
+  - **Registro Maestro de Bloqueos:** Tabla `bloqueos_unidad` para la gestión de indisponibilidades técnicas (`MANTENIMIENTO`) y administrativas (`BLOQUEO_MANUAL`), con trazabilidad de actores (`creado_por_actor_id`, `liberado_por_actor_id`), marcas temporales y ciclo de vida histórico (`ACTIVO` ↔ `LIBERADO`) sin eliminación física (`DELETE` = 0 en registro maestro).
+  - **Liberación Atómica de Inventario:** El método `liberar()` actualiza el estado del bloqueo y elimina atómicamente todas sus filas asociadas en `inventario_diario_unidades` (`DELETE ... WHERE origen_tipo = 'BLOQUEO_MANUAL' AND origen_id = ?`), restableciendo la disponibilidad de forma inmediata.
+  - **Semántica Temporal Hotelero:** Intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$ donde la noche de salida queda liberada para check-in simultáneo sin falso conflicto. Noches: $\text{salida} - \text{entrada} \ge 1$.
+  - **Resolución de Zona Horaria IANA:** Campo `propiedades.zona_horaria` evaluado prioritariamente, con fallback al parámetro central `operacion.zona_horaria_predeterminada` (`America/Lima`) y validación segura contra identificadores no canónicos.
+  - **Preservación Estricta de Gobernanza P-005:** Cero columnas o nociones de tarifas, precios, costos, monedas, redondeos o impuestos en las tablas o entidades de disponibilidad.
+- **Base de Datos y Migración 013:**
+  - Migración `SQL/migraciones/013_disponibilidad.sql` ejecutada con paridad exacta al 100% en `SQL/camargo_pms.sql` (26 tablas, 29 Foreign Keys).
+  - Permisos RBAC sembrados y asignados a `SUPERADMINISTRADOR`: `disponibilidad.ver`, `disponibilidad.bloquear`, `disponibilidad.liberar`.
+  - Opción de menú sembrada: `disponibilidad_calendario` ('Disponibilidad', ruta `/disponibilidad`, icono `ti ti-calendar-event`, orden 3) bajo la categoría `propiedades`.
+  - Parámetro de sistema sembrado: `'operacion.zona_horaria_predeterminada'` = `'America/Lima'`.
+- **Capa de Backend (MVC):**
+  - Modelos de dominio: `BloqueoUnidad` e `InventarioDiario` con tipado estricto y métodos de serialización.
+  - Modelo `Propiedad`: soporte de `zonaHoraria` preservando compatibilidad posicional del constructor.
+  - Excepciones de dominio: `ConflictoDisponibilidadExcepcion` (409), `IntervaloInvalidoExcepcion` (422), `BloqueoNoEncontradoExcepcion` (404).
+  - Repositorio `DisponibilidadRepositorio`: consultas de disponibilidad sparse, inserción determinista atómica, eliminación atómica por origen, CRUD de bloqueos y matriz de inventario.
+  - Servicio `DisponibilidadServicio`: orquestador de lógica de negocio, resolución de huso horario, validación de intervalos, cálculo de noches, transacciones ACID con captura de 1062/1205/1213, auditoría transversal D-061 y matriz mensual.
+  - Controlador `DisponibilidadControlador`: 7 endpoints HTTP asegurados con `AutorizacionIntermediario` (`index`, `consultar`, `bloquear`, `liberar`, `bloqueosJson`, `matrizJson`).
+- **Interfaz Alina y Experiencia de Usuario:**
+  - Vista Alina responsiva en `app/Vistas/disponibilidad/index.php` con navegación por pestañas (Consulta, Matriz/Rack mensual, Bloqueos activos), KPIs en tiempo real (Totales, Disponibles, Bloqueadas, Tasa) y modales operativos de bloqueo y liberación.
+  - Módulo JavaScript Vanilla moderno en `public/assets/js/gestion-disponibilidad.js` (0 dependencias jQuery), consumo asíncrono con Fetch API, protección CSRF, PristineJS v1.1.0 para validación cliente y diálogos interactivos con SweetAlert2.
+- **Batería de Pruebas Automatizadas:**
+  - Suite de Concurrencia Productiva sobre BD Real: CONC-PROD-01..05 (5/5 PASS).
+  - Matriz Formal de Disponibilidad e Inventario: DISP-01..40 (40/40 PASS).
+  - Suite HTTP E2E Real contra servidor Apache HTTPS: E2E-DISP-01..12 (12/12 PASS).
+
+### Gate Operativo-1 / Gate Operativo-1A — Definición del Tiempo Hotelero y Concurrencia de Disponibilidad (P-004 + P-006) [HOMOLOGADO — ef6a806]
 
 - **Cierre Formal de Decisión P-004 (D-066 — Modelo Temporal Hotelero y Zonas Horarias IANA):**
   - Formalizada la separación ontológica tripartita: `INSTANTE ≠ FECHA HOTELERA ≠ HORARIO OPERACIONAL`.

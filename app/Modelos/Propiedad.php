@@ -25,6 +25,7 @@ class Propiedad
     private ?string $provincia;
     private ?string $distrito;
     private ?string $direccion;
+    private ?string $zonaHoraria;
     private ?string $referencia;
     private ?float $latitud;
     private ?float $longitud;
@@ -46,6 +47,7 @@ class Propiedad
      * @param string|null $provincia
      * @param string|null $distrito
      * @param string|null $direccion Dirección física precisa
+     * @param string|null $zonaHoraria Identificador IANA de huso horario (ej. 'America/Lima') o null para usar default del PMS
      * @param string|null $referencia
      * @param float|null $latitud Coordenada GPS [-90, 90]
      * @param float|null $longitud Coordenada GPS [-180, 180]
@@ -70,7 +72,8 @@ class Propiedad
         string $estado = 'ACTIVO',
         ?string $observaciones = null,
         ?string $creadoEn = null,
-        ?string $actualizadoEn = null
+        ?string $actualizadoEn = null,
+        ?string $zonaHoraria = null
     ) {
         $this->id = $id;
         $this->codigo = trim(strtoupper($codigo));
@@ -88,6 +91,7 @@ class Propiedad
         $this->observaciones = $observaciones !== null ? trim($observaciones) : null;
         $this->creadoEn = $creadoEn;
         $this->actualizadoEn = $actualizadoEn;
+        $this->zonaHoraria = $zonaHoraria !== null && trim($zonaHoraria) !== '' ? trim($zonaHoraria) : null;
     }
 
     public function obtenerId(): ?int
@@ -133,6 +137,16 @@ class Propiedad
     public function obtenerDireccion(): ?string
     {
         return $this->direccion;
+    }
+
+    public function obtenerZonaHoraria(): ?string
+    {
+        return $this->zonaHoraria;
+    }
+
+    public function asignarZonaHoraria(?string $zonaHoraria): void
+    {
+        $this->zonaHoraria = $zonaHoraria !== null && trim($zonaHoraria) !== '' ? trim($zonaHoraria) : null;
     }
 
     public function obtenerReferencia(): ?string
@@ -241,7 +255,8 @@ class Propiedad
             (string) ($datos['estado'] ?? 'ACTIVO'),
             isset($datos['observaciones']) && $datos['observaciones'] !== null ? (string) $datos['observaciones'] : null,
             isset($datos['creado_en']) ? (string) $datos['creado_en'] : null,
-            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null
+            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null,
+            isset($datos['zona_horaria']) && $datos['zona_horaria'] !== null && trim((string) $datos['zona_horaria']) !== '' ? (string) $datos['zona_horaria'] : null
         );
 
         if (isset($datos['pais_nombre'])) {
@@ -280,6 +295,7 @@ class Propiedad
             'provincia' => $this->provincia,
             'distrito' => $this->distrito,
             'direccion' => $this->direccion,
+            'zona_horaria' => $this->zonaHoraria,
             'referencia' => $this->referencia,
             'latitud' => $this->latitud,
             'longitud' => $this->longitud,

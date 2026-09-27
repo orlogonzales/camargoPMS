@@ -21,6 +21,8 @@
 
 - **PROPIEDADES:**
   - Catálogo de Inmuebles (`/propiedades`)
+  - Catálogo de Unidades (`/unidades`)
+  - Disponibilidad e Inventario (`/disponibilidad`)
 - **PERSONAS:**
   - Directorio de Personas
   - Gestión de Personal (Colaboradores, Cargos, Historial)
@@ -51,7 +53,12 @@
 
 ## Operaciones
 
-- Disponibilidad: consolida reservas, estadías, arrendamientos, bloqueos y mantenimiento.
+- **Disponibilidad e Inventario Diario (DISPONIBILIDAD-1 — Completada):**
+  - Motor central de inventario diario *sparse* con restricción inviolable `UNIQUE(unidad_id, fecha)` en motor InnoDB (D-067).
+  - Registro maestro de bloqueos operativos (`bloqueos_unidad`) y persistencia atómica por noche (`inventario_diario_unidades`).
+  - Modelo temporal hotelero con intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$, cálculo de noches ($\text{salida} - \text{entrada} \ge 1$) y resolución de huso horario IANA por propiedad con fallback al PMS (`operacion.zona_horaria_predeterminada`).
+  - Interfaz Alina operativa en `/disponibilidad` con KPIs en tiempo real, consulta por rango de fechas, matriz/rack mensual interactivo y gestión de bloqueos con validación en servidor, CSRF y SweetAlert2.
+  - Cero tarifas, precios o conceptos monetarios (P-005 estrictamente preservada).
 - Reservas: origen, fechas, unidad, persona, conceptos, total y estados.
 - Estadías: ocupación corta efectiva.
 - Arrendamientos: relación prolongada y calendario contractual.

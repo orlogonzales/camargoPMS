@@ -546,6 +546,34 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Todos los canales de venta (PMS administrativo, WordPress, App móvil, canales OTA / Airbnb, APIs externas y Webhooks) deben consumir forzosamente el **mismo servicio de disponibilidad**, la **misma transacción** y las **mismas restricciones de concurrencia**.
    - Ningún canal externo mantiene inventario autoritativo paralelo.
 
+### D-068 — Implementación del Motor Central de Disponibilidad, Bloqueos Operativos e Inventario Diario Sparse (DISPONIBILIDAD-1)
+
+1. Principio ontológico de disponibilidad y delimitación de dominio:
+   - `UNIDAD ≠ DISPONIBILIDAD ≠ RESERVA ≠ TARIFA`.
+   - `ACTIVO ≠ DISPONIBLE`: Una unidad activa dentro de una propiedad activa es potencialmente comercializable, pero su disponibilidad física real depende estrictamente de la ausencia de bloqueos o reservas para la tupla `(unidad_id, fecha)` en el rango de noches solicitado.
+   - Unidades en estado `INACTIVO` o pertenecientes a propiedades en estado `INACTIVO` son automáticamente excluidas de la disponibilidad comercial y rechazan cualquier intento de bloqueo operativo con `ValidacionExcepcion` (HTTP 422).
+   - Preservación estricta de P-005: Se prohíbe categóricamente incorporar tarifas, precios, costos, monedas, redondeos o impuestos en esta fase; las entidades `bloqueos_unidad` e `inventario_diario_unidades` carecen deliberadamente de columnas monetarias.
+
+2. Persistencia relacional en dos niveles (D-067 implementada):
+   - **Registro Maestro (`bloqueos_unidad`):** Almacena la entidad administrativa de indisponibilidad técnica/operativa (`id`, `unidad_id`, `fecha_inicio`, `fecha_fin`, `noches`, `motivo`, `tipo`, `estado`, `creado_por_actor_id`, `liberado_por_actor_id`, `creado_en`, `liberado_en`). No se destruye físicamente tras la liberación para salvaguardar el historial y auditoría bajo D-061.
+   - **Inventario Diario Físico Sparse (`inventario_diario_unidades`):** Persiste atómicamente cada noche individual con su clave única defensiva `UNIQUE KEY uq_inventario_unidad_fecha (unidad_id, fecha)` y origen polimórfico (`origen_tipo`, `origen_id`).
+   - Los tipos de bloqueo válidos son: `BLOQUEO_MANUAL` y `MANTENIMIENTO`.
+
+3. Concurrencia, orden determinista y manejo de excepciones:
+   - Toda creación de bloqueo o reserva multinoche se procesa bajo una única transacción ACID de base de datos.
+   - Inserción ordenada deterministamente: `ORDER BY unidad_id ASC, fecha ASC`, mitigando deadlocks y bloqueos cruzados.
+   - Captura estricta de errores de integridad y contención (códigos MySQL/MariaDB 1062 Clave Duplicada, 1205 Lock Wait Timeout y 1213 Deadlock), ejecutando `ROLLBACK` total inmediato y emitiendo `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict), garantizando cero noches huérfanas o transacciones inconsistentes.
+
+4. Semántica temporal del intervalo semiabierto y husos horarios (D-066 implementada):
+   - Intervalo hotelero: $[\text{fecha\_inicio}, \text{fecha\_fin})$ con $\text{fecha\_fin} > \text{fecha\_inicio}$ y $\text{noches} = \text{fecha\_fin} - \text{fecha\_inicio} \ge 1$.
+   - La noche de salida queda formalmente disponible para el check-in de una operación sucesiva ese mismo día, sin falso conflicto.
+   - Resolución de huso horario IANA: la propiedad física puede definir su huso en `propiedades.zona_horaria`; en caso de ser nulo, recurre de forma segura al parámetro central del PMS `operacion.zona_horaria_predeterminada` (`America/Lima`). Identificadores no reconocidos por PHP recurren de forma segura a `America/Lima`.
+
+5. Ciclo de vida y liberación atómica:
+   - La liberación de un bloqueo muta su estado administrativo de `ACTIVO` a `LIBERADO`, registra el actor ejecutor humano en `liberado_por_actor_id`, la marca temporal `liberado_en`, y elimina atómicamente todas sus filas en `inventario_diario_unidades` (`DELETE ... WHERE origen_tipo = 'BLOQUEO_MANUAL' AND origen_id = ?`).
+   - Una vez liberado, la disponibilidad del rango queda restaurada de forma inmediata para nuevas operaciones.
+   - Intentos de re-liberar un bloqueo ya inactivo son rechazados con `ValidacionExcepcion` (HTTP 422).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

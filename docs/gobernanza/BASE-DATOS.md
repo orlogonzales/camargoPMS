@@ -134,6 +134,33 @@ La gestión estructural del esquema sigue el principio de doble representación 
 - Opciones de menú introducidas:
   - Nivel 2 (Secundaria): `unidades_catalogo` ('Unidades Habitacionales', bajo `propiedades`, ruta `/unidades`, icono `ti ti-door`, permiso `unidades.ver`, orden 2).
 
+## Esquema del Motor de Disponibilidad e Inventario Diario (DISPONIBILIDAD-1 y Migración 013)
+
+- `propiedades.zona_horaria`: Columna agregada a la tabla `propiedades` (`VARCHAR(50) NULL DEFAULT NULL AFTER direccion`) para almacenar identificadores IANA de huso horario local (ej. `America/Lima`). Si es `NULL`, hereda la zona predeterminada del PMS (`operacion.zona_horaria_predeterminada`).
+- `configuraciones`: Parámetro añadido `'operacion.zona_horaria_predeterminada'` (Grupo `OPERACION`, Tipo `TEXTO`, Valor `'America/Lima'`).
+- `bloqueos_unidad`: Maestro de indisponibilidades técnicas y administrativas de unidades (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `unidad_id` BIGINT UNSIGNED NOT NULL, `fecha_inicio` DATE NOT NULL, `fecha_fin` DATE NOT NULL, `noches` INT UNSIGNED NOT NULL, `motivo` VARCHAR(255) NOT NULL, `tipo` ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO') NOT NULL DEFAULT 'BLOQUEO_MANUAL', `estado` ENUM('ACTIVO', 'LIBERADO') NOT NULL DEFAULT 'ACTIVO', `creado_por_actor_id` BIGINT UNSIGNED NULL, `liberado_por_actor_id` BIGINT UNSIGNED NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `liberado_en` DATETIME NULL).
+  - Claves foráneas:
+    - `fk_bloqueos_unidad`: Hacia `unidades(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE`. Impide eliminar unidades con bloqueos asociados.
+    - `fk_bloqueos_actor_creador`: Hacia `actores(id)` con `ON DELETE SET NULL ON UPDATE CASCADE`. Trazabilidad D-061 del actor creador.
+    - `fk_bloqueos_actor_liberador`: Hacia `actores(id)` con `ON DELETE SET NULL ON UPDATE CASCADE`. Trazabilidad D-061 del actor liberador.
+  - Restricciones CHECK:
+    - `chk_bloqueos_fechas`: `fecha_fin > fecha_inicio`.
+    - `chk_bloqueos_noches`: `noches >= 1`.
+    - `chk_bloqueos_motivo_no_vacio`: `motivo <> ''`.
+  - Índices: `idx_bloqueos_unidad_id`, `idx_bloqueos_estado`, `idx_bloqueos_rango (fecha_inicio, fecha_fin)`.
+  - Principio de preservación histórica: Cero eliminación física del registro maestro (`DELETE FROM bloqueos_unidad` inexistente); el ciclo de vida transita de `ACTIVO` a `LIBERADO` preservando auditoría y fechas.
+- `inventario_diario_unidades`: Inventario físico sparse noche por noche (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `unidad_id` BIGINT UNSIGNED NOT NULL, `fecha` DATE NOT NULL, `tipo_bloqueo` ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO') NOT NULL DEFAULT 'BLOQUEO_MANUAL', `origen_tipo` VARCHAR(50) NOT NULL DEFAULT 'BLOQUEO_MANUAL', `origen_id` BIGINT UNSIGNED NOT NULL, `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP).
+  - Claves foráneas:
+    - `fk_inventario_unidad`: Hacia `unidades(id)` con `ON DELETE RESTRICT ON UPDATE CASCADE`.
+  - Unicidad inviolable en base de datos (D-067):
+    - `uq_inventario_unidad_fecha`: `UNIQUE KEY (unidad_id, fecha)`. Garantía matemática absoluta contra colisiones de concurrencia y sobreventa a nivel de motor InnoDB.
+  - Índices: `idx_inventario_fecha`, `idx_inventario_origen (origen_tipo, origen_id)`, `idx_inventario_unidad_fecha (unidad_id, fecha)`.
+  - Principio sparse y liberación atómica: Solo contiene registros de noches bloqueadas. La liberación o cancelación ejecuta `DELETE ... WHERE origen_tipo = 'BLOQUEO_MANUAL' AND origen_id = ?`, restituyendo la disponibilidad de forma inmediata.
+  - Principio de preservación de P-005: Cero columnas de tarifa, precio, costo, moneda, impuesto o recargo.
+- Permisos RBAC introducidos: `disponibilidad.ver`, `disponibilidad.bloquear`, `disponibilidad.liberar`.
+- Opciones de menú introducidas:
+  - Nivel 2 (Secundaria): `disponibilidad_calendario` ('Disponibilidad', bajo `propiedades`, ruta `/disponibilidad`, icono `ti ti-calendar-event`, permiso `disponibilidad.ver`, orden 3).
+
 ## Reglas
 
 - Claves primarias estables y claves foráneas explícitas.
@@ -150,17 +177,17 @@ Las operaciones emitidas congelan los valores necesarios para reproducirlas: tar
 
 La configuración y tarifas sensibles a vigencia usan `vigente_desde`, `vigente_hasta` o versión equivalente. No sobrescribir una fila histórica si altera el significado de registros ya emitidos.
 
-## Disponibilidad y concurrencia (Diseño Técnico Aprobado — GATE OPERATIVO-1 / D-066 y D-067)
+## Disponibilidad y concurrencia (Implementado — DISPONIBILIDAD-1 / D-066, D-067 y D-068)
 
-Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica. A partir del Gate Operativo-1 queda formalmente aprobado el **Modelo Híbrido con Inventario Diario Sparse**:
+Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica. En DISPONIBILIDAD-1 opera el **Modelo Híbrido con Inventario Diario Sparse**:
 
-1. **Tabla de inventario diario (`inventario_diario_unidades`) para DISPONIBILIDAD-1:**
-   - Estructura: `id BIGINT AUTO_INCREMENT PRIMARY KEY`, `reserva_id INT NOT NULL`, `unidad_id INT NOT NULL`, `fecha DATE NOT NULL`, `tipo_bloqueo ENUM('RESERVA', 'BLOQUEO_MANUAL', 'MANTENIMIENTO', 'HOLD_TEMPORAL') NOT NULL`, `creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP`.
-   - Restricción defensiva inviolable: `UNIQUE KEY uq_unidad_fecha (unidad_id, fecha)`.
+1. **Tabla de inventario diario (`inventario_diario_unidades`):**
+   - Estructura: `id BIGINT AUTO_INCREMENT PRIMARY KEY`, `unidad_id BIGINT UNSIGNED NOT NULL`, `fecha DATE NOT NULL`, `tipo_bloqueo ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO') NOT NULL`, `origen_tipo VARCHAR(50) NOT NULL`, `origen_id BIGINT UNSIGNED NOT NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`.
+   - Restricción defensiva inviolable: `UNIQUE KEY uq_inventario_unidad_fecha (unidad_id, fecha)`.
    - Modelo *sparse*: solo contiene filas para noches ocupadas o bloqueadas (no pregenera millones de filas vacías).
    - Disponibilidad formal = ausencia de registro para `(unidad_id, fecha)` en el intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$.
-2. **Zona horaria por propiedad (en DISPONIBILIDAD-1):**
-   - Incorporación de columna nullable `zona_horaria VARCHAR(50) NULL DEFAULT NULL` en tabla `propiedades` para almacenar identificadores IANA (ej. `America/Lima`). Si es `NULL`, hereda el valor central del PMS (`operacion.zona_horaria_predeterminada`).
+2. **Zona horaria por propiedad:**
+   - Columna nullable `zona_horaria VARCHAR(50) NULL DEFAULT NULL` en tabla `propiedades` para almacenar identificadores IANA (ej. `America/Lima`). Si es `NULL`, hereda el valor central del PMS (`operacion.zona_horaria_predeterminada`).
 3. **Flujo transaccional obligatorio:**
    - Iniciar transacción PDO (`beginTransaction`).
    - Ordenar inserciones deterministamente: `ORDER BY unidad_id ASC, fecha ASC` (reducción sustancial del riesgo de deadlocks y patrones de bloqueo cruzado).
@@ -168,9 +195,9 @@ Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica.
    - Si colisiona alguna fecha (error de clave duplicada 1062, lock wait timeout 1205 o deadlock 1213), capturar y ejecutar `rollBack()` total inmediato. Mapear a `ConflictoDisponibilidadExcepcion` (HTTP 409).
    - Si todas las noches se persisten exitosamente, ejecutar `commit()`.
 4. **Liberación atómica:**
-   - La cancelación o expiración de un hold temporal ejecuta `DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`, liberando las noches de forma inmediata sin residuos.
+   - La cancelación o liberación ejecuta `DELETE FROM inventario_diario_unidades WHERE origen_tipo = 'BLOQUEO_MANUAL' AND origen_id = ?`, liberando las noches de forma inmediata sin residuos.
 5. **Estado de migraciones:**
-   - Las migraciones productivas activas son estrictamente `001` a `012` (24 tablas, 25 Foreign Keys). La migración `013` será creada en la fase `DISPONIBILIDAD-1`.
+   - Las migraciones productivas activas son estrictamente `001` a `013` (26 tablas, 29 Foreign Keys).
 
 ## Migraciones
 

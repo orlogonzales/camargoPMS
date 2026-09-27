@@ -120,10 +120,49 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `CONC-03`: Coexistencia de intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$. Comprobación de que la fecha de salida (checkout) de una reserva y la fecha de entrada (check-in) de una reserva subsecuente sobre la misma unidad en la misma fecha calendario coexisten a la perfección sin generar colisión espuria (1 PASS / 0 FAIL).
   - `CONC-04`: Liberación atómica y reocupación inmediata. La cancelación o expiración de una reserva elimina atómicamente sus noches en el inventario diario y permite la reocupación inmediata por otra reserva sin residuos lógicos (1 PASS / 0 FAIL).
   - `CONC-05`: Timeouts defensivos y verificación de cero locks residuales. La sesión impone `innodb_lock_wait_timeout = 2` y confirma la inexistencia de transacciones zombis o bloqueos residuales en `information_schema.innodb_trx` tras la ejecución concurrente (1 PASS / 0 FAIL).
+- **Suite de Concurrencia Productiva sobre BD Real (CONC-PROD-01 a CONC-PROD-05 — DISPONIBILIDAD-1):** 5 verificaciones de concurrencia real ejecutadas sobre el esquema productivo con dos conexiones PDO concurrentes independientes:
+  - `CONC-PROD-01`: Inserción atómica multinoche sparse en orden determinista `ORDER BY unidad_id ASC, fecha ASC` (3 noches registradas exactamente).
+  - `CONC-PROD-02`: Colisión capturada y rollback íntegro ejecutado (cero noches huérfanas persistidas ante colisión de clave duplicada 1062).
+  - `CONC-PROD-03`: Bloqueos contiguos $[\text{D1}, \text{D2})$ y $[\text{D2}, \text{D3})$ operan sin falso conflicto en fecha de checkout (noche de salida liberada).
+  - `CONC-PROD-04`: Liberación atómica de bloqueo restaura disponibilidad inmediata en el rango completo.
+  - `CONC-PROD-05`: Error traducido formalmente a HTTP 409 `ConflictoDisponibilidadExcepcion`.
+- **Matriz Formal de Disponibilidad e Inventario Diario (DISP-01 a DISP-40 — DISPONIBILIDAD-1):** 40 verificaciones automáticas de dominio e integración cubriendo:
+  - Fallback a zona horaria central del PMS (`America/Lima`) y prevalencia de zona horaria por propiedad física.
+  - Mitigación segura ante identificadores IANA desconocidos o inválidos recurriendo de forma segura a `America/Lima`.
+  - Validación de formato de fechas (`Y-m-d`), rechazo de fechas gregorianas irreales (ej. 31 de febrero).
+  - Rechazo de estancias de 0 noches y fechas invertidas ($\text{salida} < \text{entrada}$).
+  - Cálculo de noches en cruce de mes (30 ene al 02 feb = 3 noches).
+  - Ausencia de filas en inventario sparse indica disponibilidad completa.
+  - Bloqueo de 1 noche marca la unidad como no disponible; consultas fuera de fechas mantienen disponibilidad.
+  - Solapamientos parciales (inicio, fin, interno y exacto) detectan ocupación.
+  - Intervalo semiabierto $[\text{D1}, \text{D2})$ permite checkout y check-in contiguos sin colisión.
+  - Filtro por propiedad física restringe el catálogo; unidades inactivas o de propiedades inactivas excluidas comercialmente y rechazan bloqueos.
+  - Estados comerciales y motivos técnicos descriptivos (mantenimiento vs manual).
+  - Filtro `solo_disponibles` excluye unidades ocupadas; validaciones de motivo no vacío y longitudes.
+  - Persistencia de registro maestro `bloqueos_unidad` (estado `ACTIVO`, 4 noches) e inventario sparse (4 noches exactas).
+  - Liberación actualiza a `LIBERADO`, registra timestamps y actor liberador, y elimina atómicamente filas en inventario (0 filas restantes).
+  - Rechazo de re-liberación sobre bloqueos inactivos.
+  - Matriz mensual / rack de ocupación con cálculo dinámico de días del mes (bisiesto 29, ordinario 28).
+  - Trazabilidad transversal de auditoría D-061 (`CREAR` y `LIBERAR`) con resolución de actor humano (`USR_1`).
+  - Preservación estricta de P-005: cero columnas de precio, tarifa, moneda o impuestos en tablas.
+  - Opción de menú `disponibilidad_calendario` presente bajo `propiedades` con ruta `/disponibilidad` (40 PASS / 0 FAIL).
+- **Suite E2E HTTP Real contra Apache (E2E-DISP-01 a E2E-DISP-12 — DISPONIBILIDAD-1):** 12 validaciones end-to-end con cURL contra el servidor web real Apache en HTTPS (`https://app.camargo-pms.test/`) evaluando:
+  - `E2E-DISP-01`: Acceso anónimo a `/disponibilidad` redirige a `/login` (HTTP 302).
+  - `E2E-DISP-02`: Usuario ordinario sin permiso `disponibilidad.ver` recibe HTTP 403 Forbidden.
+  - `E2E-DISP-03`: Superadmin accede a `/disponibilidad` (HTTP 200) y la plantilla contiene pestañas operativas y KPIs.
+  - `E2E-DISP-04`: Endpoint `/disponibilidad/consultar` no autenticado redirige a `/login` (HTTP 302).
+  - `E2E-DISP-05`: Endpoint `/disponibilidad/consultar` retorna 200 OK con estructura completa de inventario.
+  - `E2E-DISP-06`: Consulta con fechas invertidas (salida < entrada) responde 422 Unprocessable Entity.
+  - `E2E-DISP-07`: POST `/disponibilidad/bloquear` sin token CSRF devuelve HTTP 403 Forbidden.
+  - `E2E-DISP-08`: POST `/disponibilidad/bloquear` con datos válidos crea bloqueo y responde 201 Created.
+  - `E2E-DISP-09`: POST `/disponibilidad/bloquear` sobre fechas ocupadas responde 409 Conflict (D-067).
+  - `E2E-DISP-10`: GET `/disponibilidad/bloqueos` retorna 200 OK con listado paginado y metadatos.
+  - `E2E-DISP-11`: GET `/disponibilidad/matriz` retorna 200 OK con estructura de rack mensual y estadísticas.
+  - `E2E-DISP-12`: POST `/disponibilidad/liberar` con CSRF libera bloqueo y restaura disponibilidad en inventario.
 - **Reconciliación Canónica de Pruebas Automatizadas:**
-  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **581 ejecuciones brutas (581 PASS / 0 FAIL)**.
-  - Total de casos de prueba estrictamente independientes de dominio e integración: **493 casos independientes** (488 previos + 5 de GATE OPERATIVO-1).
-  - Total de pruebas HTTP E2E reales contra servidor Apache: **82 casos únicos** (70 previos + 12 de UNIDADES-1).
+  - Total bruto de ejecuciones de prueba acumuladas en el árbol de suites: **638 ejecuciones brutas (638 PASS / 0 FAIL)**.
+  - Total de casos de prueba estrictamente independientes de dominio e integración: **538 casos independientes** (493 previos + 5 de CONC-PROD + 40 de DISP).
+  - Total de pruebas HTTP E2E reales contra servidor Apache: **94 casos únicos** (82 previos + 12 de DISPONIBILIDAD-1).
   - Desglose independiente por módulos:
     - IDENTIDAD-1: 27/27 PASS.
     - PERSONAL-1 / PERSONAL-1A: 26/26 PASS.
@@ -135,8 +174,9 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - CONFIGURACIÓN-1: 40/40 PASS (40 CFG matriz formal unitaria/integración).
     - PROPIEDADES-1: 41/41 PASS (40 PROP matriz formal + 1 PROP-HIST-01 persistencia histórica de 10 pasos).
     - UNIDADES-1: 41/41 PASS (40 UNI matriz formal + 1 UNI-HIST-01 persistencia histórica de 10 pasos).
-    - GATE OPERATIVO-1: 5/5 PASS (5 CONC harness de concurrencia e inventario diario P-006).
-    - SUITES HTTP E2E REALES (Apache HTTPS): 82/82 PASS (12 Unidades + 12 Propiedades + 12 Configuración + 12 Roles + 10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).
+    - GATE OPERATIVO-1 / 1A: 5/5 PASS (5 CONC harness de concurrencia e inventario diario P-006).
+    - DISPONIBILIDAD-1: 45/45 PASS (40 DISP matriz formal + 5 CONC-PROD concurrencia productiva).
+    - SUITES HTTP E2E REALES (Apache HTTPS): 94/94 PASS (12 Disponibilidad + 12 Unidades + 12 Propiedades + 12 Configuración + 12 Roles + 10 Menú + 8 Auditoría + 10 Usuarios + 6 Auth/Navegación).
 
 
 

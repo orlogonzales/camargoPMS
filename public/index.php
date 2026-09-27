@@ -260,6 +260,29 @@ $enrutador->post('/unidades/{id}/estado', [\CamargoPMS\Controladores\UnidadContr
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('unidades.cambiar_estado'),
 ]);
 
+// Rutas de Disponibilidad e Inventario Diario (DISPONIBILIDAD-1)
+$enrutador->get('/disponibilidad', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+$enrutador->get('/disponibilidad/consultar', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'consultar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+$enrutador->post('/disponibilidad/consultar', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'consultar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+$enrutador->post('/disponibilidad/bloquear', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'bloquear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.bloquear'),
+]);
+$enrutador->post('/disponibilidad/liberar', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'liberar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.liberar'),
+]);
+$enrutador->get('/disponibilidad/bloqueos', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'bloqueosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+$enrutador->get('/disponibilidad/matriz', [\CamargoPMS\Controladores\DisponibilidadControlador::class, 'matrizJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

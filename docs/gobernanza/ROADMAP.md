@@ -145,7 +145,34 @@ Microfase obligatoria de análisis, diseño técnico, prueba aislada y decisión
 - **P-005 Permanece Estrictamente Pendiente:** Moneda, redondeo e impuestos diferidos a la fase de tarifas y caja.
 - **Harness Técnico Aislado:** 5/5 verificaciones de concurrencia directa, multinoches, intervalo semiabierto, liberación y timeouts defensivos (CONC-01..05 PASS).
 
-Estado: completada (candidata a micro-baseline post GATE-OPERATIVO-1A).
+Estado: homologada (micro-baseline oficial ef6a806).
+
+## DISPONIBILIDAD-1 — Motor Central de Disponibilidad e Inventario Diario
+
+Implementación completa del motor central de inventario diario y bloqueos operativos sobre la base de las decisiones D-066, D-067 y D-068:
+- **Motor de Inventario Diario Sparse:**
+  - Tabla `inventario_diario_unidades` en motor InnoDB con restricción inviolable `UNIQUE KEY uq_inventario_unidad_fecha (unidad_id, fecha)`.
+  - Inserciones multinoche ordenadas deterministamente por `ORDER BY unidad_id ASC, fecha ASC`.
+  - Captura y traducción de errores de clave duplicada (1062), lock wait timeout (1205) y deadlocks (1213) con `ROLLBACK` total y emisión de `ConflictoDisponibilidadExcepcion` (HTTP 409).
+- **Gestión de Bloqueos Operativos:**
+  - Maestro `bloqueos_unidad` para indisponibilidades por mantenimiento o manuales.
+  - Ciclo de vida con preservación histórica (`ACTIVO` ↔ `LIBERADO`, cero `DELETE` en tabla maestra).
+  - Liberación atómica: elimina noches en `inventario_diario_unidades` y actualiza el estado y actor liberador en `bloqueos_unidad`.
+- **Modelo Temporal Hotelero Aplicado:**
+  - Intervalo semiabierto $[\text{fecha\_inicio}, \text{fecha\_fin})$ donde la noche de checkout queda libre para check-in simultáneo.
+  - Cálculo de noches $\ge 1$ con validación estricta de fechas gregorianas.
+  - Resolución de huso horario IANA de la propiedad (`propiedades.zona_horaria`) con fallback a `operacion.zona_horaria_predeterminada` (`America/Lima`).
+- **Preservación Estricta de Gobernanza:**
+  - P-005 (moneda, redondeo e impuestos) se mantiene formalmente **PENDIENTE**; cero columnas o conceptos tarifarios en las tablas.
+- **Interfaz Alina Operativa:**
+  - Módulo completo en `/disponibilidad` con KPIs, consulta por fechas/propiedad/tipo, matriz/rack mensual interactivo y modales de bloqueo y liberación.
+  - JavaScript moderno nativo (Vanilla JS, 0 jQuery, CSRF token, SweetAlert2, PristineJS v1.1.0).
+- **Suites de Pruebas:**
+  - Concurrencia productiva en MariaDB: CONC-PROD-01..05 (5/5 PASS).
+  - Matriz formal exhaustiva de dominio: DISP-01..40 (40/40 PASS).
+  - Suite HTTP E2E Real contra servidor Apache HTTPS: E2E-DISP-01..12 (12/12 PASS).
+
+Estado: completada (candidata a micro-baseline).
 
 ## Dominio operativo
 

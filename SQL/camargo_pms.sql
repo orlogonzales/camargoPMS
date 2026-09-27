@@ -420,7 +420,10 @@ INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `
 ('unidades.ver', 'Ver catálogo y detalle de unidades', 'Permite consultar el catálogo y los detalles de las unidades', 'unidades', 'ACTIVO', 1),
 ('unidades.crear', 'Crear nuevas unidades', 'Permite registrar nuevas unidades habitacionales en el sistema', 'unidades', 'ACTIVO', 1),
 ('unidades.editar', 'Modificar unidades existentes', 'Permite editar la información física y descriptiva de las unidades', 'unidades', 'ACTIVO', 1),
-('unidades.cambiar_estado', 'Activar o desactivar unidades', 'Permite alternar el estado operacional entre ACTIVO e INACTIVO de una unidad', 'unidades', 'ACTIVO', 1)
+('unidades.cambiar_estado', 'Activar o desactivar unidades', 'Permite alternar el estado operacional entre ACTIVO e INACTIVO de una unidad', 'unidades', 'ACTIVO', 1),
+('disponibilidad.ver', 'Ver disponibilidad e inventario', 'Permite consultar el calendario, estados de ocupación y unidades disponibles', 'disponibilidad', 'ACTIVO', 1),
+('disponibilidad.bloquear', 'Crear bloqueos de inventario', 'Permite aplicar bloqueos manuales y técnicos sobre unidades para fechas determinadas', 'disponibilidad', 'ACTIVO', 1),
+('disponibilidad.liberar', 'Liberar bloqueos de inventario', 'Permite levantar bloqueos previamente aplicados y restablecer la disponibilidad', 'disponibilidad', 'ACTIVO', 1)
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `descripcion` = VALUES(`descripcion`);
 
 -- ----------------------------------------------------------------------------
@@ -517,6 +520,19 @@ FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'propiedades' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'unidades.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'disponibilidad_calendario', 'Disponibilidad', 'ti ti-calendar-event', '/disponibilidad', 3, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'propiedades' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'disponibilidad.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),
@@ -627,7 +643,8 @@ INSERT INTO `configuraciones` (`clave`, `grupo`, `nombre`, `descripcion`, `tipo`
 ('sistema.formato_fecha', 'LOCALIZACION', 'Formato de Visualización de Fecha', 'Patrón visual estándar para representación de fechas', 'TEXTO', 'd/m/Y', 'd/m/Y', 1, 0, 2, 'ACTIVO'),
 ('sistema.formato_hora', 'LOCALIZACION', 'Formato de Visualización de Hora', 'Patrón visual estándar para representación horaria', 'TEXTO', 'H:i', 'H:i', 1, 0, 3, 'ACTIVO'),
 ('operacion.modo_mantenimiento', 'OPERACION', 'Modo Mantenimiento', 'Indica si el sistema se encuentra en ventana de mantenimiento operativo', 'BOOLEANO', '0', '0', 1, 0, 1, 'ACTIVO'),
-('operacion.paginacion_predeterminada', 'OPERACION', 'Paginación Predeterminada', 'Cantidad de registros predeterminada por página en listados administrativos', 'ENTERO', '15', '15', 1, 0, 2, 'ACTIVO')
+('operacion.paginacion_predeterminada', 'OPERACION', 'Paginación Predeterminada', 'Cantidad de registros predeterminada por página en listados administrativos', 'ENTERO', '15', '15', 1, 0, 2, 'ACTIVO'),
+('operacion.zona_horaria_predeterminada', 'OPERACION', 'Zona Horaria Predeterminada', 'Identificador IANA de la zona horaria central del sistema (ej. America/Lima)', 'TEXTO', 'America/Lima', 'America/Lima', 1, 0, 5, 'ACTIVO')
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `descripcion` = VALUES(`descripcion`),
@@ -649,6 +666,7 @@ CREATE TABLE IF NOT EXISTS `propiedades` (
     `provincia` VARCHAR(100) NULL,
     `distrito` VARCHAR(100) NULL,
     `direccion` VARCHAR(255) NOT NULL,
+    `zona_horaria` VARCHAR(50) NULL DEFAULT NULL,
     `referencia` VARCHAR(255) NULL,
     `latitud` DECIMAL(10, 7) NULL,
     `longitud` DECIMAL(10, 7) NULL,
@@ -727,5 +745,50 @@ CREATE TABLE IF NOT EXISTS `unidades` (
     INDEX `idx_unidades_codigo` (`codigo`),
     INDEX `idx_unidades_nombre` (`nombre`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Maestro de unidades físicas habitacionales y alojables';
+
+-- ----------------------------------------------------------------------------
+-- 16. Maestro de Bloqueos de Unidad (DISPONIBILIDAD-1)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `bloqueos_unidad` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `unidad_id` BIGINT UNSIGNED NOT NULL,
+    `fecha_inicio` DATE NOT NULL,
+    `fecha_fin` DATE NOT NULL,
+    `noches` INT UNSIGNED NOT NULL,
+    `motivo` VARCHAR(255) NOT NULL,
+    `tipo` ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO') NOT NULL DEFAULT 'BLOQUEO_MANUAL',
+    `estado` ENUM('ACTIVO', 'LIBERADO') NOT NULL DEFAULT 'ACTIVO',
+    `creado_por_actor_id` BIGINT UNSIGNED NULL,
+    `liberado_por_actor_id` BIGINT UNSIGNED NULL,
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `liberado_en` DATETIME NULL,
+    CONSTRAINT `chk_bloqueos_fechas` CHECK (`fecha_fin` > `fecha_inicio`),
+    CONSTRAINT `chk_bloqueos_noches` CHECK (`noches` >= 1),
+    CONSTRAINT `chk_bloqueos_motivo_no_vacio` CHECK (`motivo` <> ''),
+    CONSTRAINT `fk_bloqueos_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidades` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_bloqueos_actor_creador` FOREIGN KEY (`creado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT `fk_bloqueos_actor_liberador` FOREIGN KEY (`liberado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX `idx_bloqueos_unidad_id` (`unidad_id`),
+    INDEX `idx_bloqueos_estado` (`estado`),
+    INDEX `idx_bloqueos_rango` (`fecha_inicio`, `fecha_fin`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Registro maestro de bloqueos administrativos y técnicos de unidades';
+
+-- ----------------------------------------------------------------------------
+-- 17. Inventario Diario de Unidades - Modelo Sparse (DISPONIBILIDAD-1 / D-067)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `inventario_diario_unidades` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `unidad_id` BIGINT UNSIGNED NOT NULL,
+    `fecha` DATE NOT NULL,
+    `tipo_bloqueo` ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO') NOT NULL DEFAULT 'BLOQUEO_MANUAL',
+    `origen_tipo` VARCHAR(50) NOT NULL DEFAULT 'BLOQUEO_MANUAL',
+    `origen_id` BIGINT UNSIGNED NOT NULL,
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_inventario_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidades` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE KEY `uq_inventario_unidad_fecha` (`unidad_id`, `fecha`),
+    INDEX `idx_inventario_fecha` (`fecha`),
+    INDEX `idx_inventario_origen` (`origen_tipo`, `origen_id`),
+    INDEX `idx_inventario_unidad_fecha` (`unidad_id`, `fecha`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Inventario diario sparse de ocupación y bloqueos por noche y unidad';
 
 SET FOREIGN_KEY_CHECKS = 1;

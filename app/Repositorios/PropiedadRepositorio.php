@@ -119,11 +119,11 @@ class PropiedadRepositorio
     {
         $sql = 'INSERT INTO propiedades (
                     codigo, nombre, descripcion, pais_id,
-                    departamento, provincia, distrito, direccion, referencia,
+                    departamento, provincia, distrito, direccion, zona_horaria, referencia,
                     latitud, longitud, estado, observaciones, creado_en, actualizado_en
                 ) VALUES (
                     :codigo, :nombre, :descripcion, :pais_id,
-                    :departamento, :provincia, :distrito, :direccion, :referencia,
+                    :departamento, :provincia, :distrito, :direccion, :zona_horaria, :referencia,
                     :latitud, :longitud, :estado, :observaciones, NOW(), NOW()
                 )';
 
@@ -136,6 +136,7 @@ class PropiedadRepositorio
         $stmt->bindValue(':provincia', $propiedad->obtenerProvincia(), $propiedad->obtenerProvincia() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':distrito', $propiedad->obtenerDistrito(), $propiedad->obtenerDistrito() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':direccion', $propiedad->obtenerDireccion(), $propiedad->obtenerDireccion() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $stmt->bindValue(':zona_horaria', $propiedad->obtenerZonaHoraria(), $propiedad->obtenerZonaHoraria() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':referencia', $propiedad->obtenerReferencia(), $propiedad->obtenerReferencia() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':latitud', $propiedad->obtenerLatitud(), $propiedad->obtenerLatitud() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':longitud', $propiedad->obtenerLongitud(), $propiedad->obtenerLongitud() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
@@ -165,6 +166,7 @@ class PropiedadRepositorio
                     provincia = :provincia,
                     distrito = :distrito,
                     direccion = :direccion,
+                    zona_horaria = :zona_horaria,
                     referencia = :referencia,
                     latitud = :latitud,
                     longitud = :longitud,
@@ -183,6 +185,7 @@ class PropiedadRepositorio
         $stmt->bindValue(':provincia', $propiedad->obtenerProvincia(), $propiedad->obtenerProvincia() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':distrito', $propiedad->obtenerDistrito(), $propiedad->obtenerDistrito() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':direccion', $propiedad->obtenerDireccion(), $propiedad->obtenerDireccion() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $stmt->bindValue(':zona_horaria', $propiedad->obtenerZonaHoraria(), $propiedad->obtenerZonaHoraria() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':referencia', $propiedad->obtenerReferencia(), $propiedad->obtenerReferencia() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':latitud', $propiedad->obtenerLatitud(), $propiedad->obtenerLatitud() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $stmt->bindValue(':longitud', $propiedad->obtenerLongitud(), $propiedad->obtenerLongitud() === null ? PDO::PARAM_NULL : PDO::PARAM_STR);

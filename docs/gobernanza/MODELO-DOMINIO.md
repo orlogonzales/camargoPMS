@@ -278,6 +278,16 @@ ACTOR ≠ USUARIO
 7. **Liberación Atómica:** La cancelación o expiración de un hold temporal elimina de forma atómica sus noches (`DELETE FROM inventario_diario_unidades WHERE reserva_id = ?`), restableciendo la disponibilidad de inmediato.
 8. **Fuente Central de Verdad:** Camargo PMS es la única fuente autoritativa. Canales externos (WordPress, App móvil, OTA, API, Webhooks) consumen el mismo servicio de disponibilidad y transacción.
 
+### Motor de Disponibilidad y Bloqueos Operativos (DISPONIBILIDAD-1 / D-068)
+
+1. **Entidades de Dominio:**
+   - `BloqueoUnidad`: Modela el bloqueo administrativo o técnico de una unidad física alojable. Propiedades: `id`, `unidadId`, `fechaInicio`, `fechaFin`, `noches`, `motivo`, `tipo` (`BLOQUEO_MANUAL`, `MANTENIMIENTO`), `estado` (`ACTIVO`, `LIBERADO`), `creadoPorActorId`, `liberadoPorActorId`, `creadoEn`, `liberadoEn`. Métodos de conveniencia: `estaActivo()`, `estaLiberado()`, `esMantenimiento()`, `liberar(actorId)`.
+   - `InventarioDiario`: Modela la ocupación atómica de una noche física por unidad en el modelo sparse. Propiedades: `id`, `unidadId`, `fecha`, `tipoBloqueo`, `origenTipo`, `origenId`, `creadoEn`.
+2. **Fronteras y Delimitaciones del Dominio:**
+   - `UNIDAD ≠ DISPONIBILIDAD ≠ RESERVA ≠ TARIFA`: Las unidades físicas existen independientemente de si están ocupadas o libres. La disponibilidad se consulta proyectando el intervalo semiabierto sobre el inventario sparse.
+   - `ACTIVO ≠ DISPONIBLE`: Una unidad inactiva o con propiedad inactiva no es comercializable y rechaza bloqueos. Una unidad activa es comercializable siempre que no existan bloqueos para las noches solicitadas.
+   - Preservación de P-005: Las entidades de disponibilidad carecen estrictamente de cualquier noción de tarifas, precios, costos o monedas.
+
 ## Contratos y documentos
 
 Las plantillas contractuales son editables y versionadas. Un contrato emitido conserva la versión y los datos con que fue generado. El membrete PNG A4 y sus márgenes son configuración versionable cuando su cambio pueda afectar reproducción histórica.
