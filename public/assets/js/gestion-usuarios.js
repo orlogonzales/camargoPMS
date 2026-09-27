@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyUsuarios.innerHTML = `
                 <tr>
                     <td colspan="7" class="text-center py-4 text-danger">
-                        <i class="ti ti-alert-triangle me-1"></i> ${e.message}
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> ${e.message}
                     </td>
                 </tr>
             `;
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sesiones activas
             const sesionesHtml = u.sesiones_activas > 0
                 ? `<span class="badge bg-info-subtle text-info border border-info-subtle cursor-pointer btn-ver-sesiones" data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" title="Ver sesiones activas">
-                       <i class="ti ti-devices me-1"></i>${u.sesiones_activas} activa${u.sesiones_activas > 1 ? 's' : ''}
+                       <i class="fa-solid fa-laptop me-1"></i>${u.sesiones_activas} activa${u.sesiones_activas > 1 ? 's' : ''}
                    </span>`
                 : `<span class="text-muted f-s-12">Sin sesión</span>`;
 
@@ -333,19 +333,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="btn-group btn-group-sm" role="group">
                             <button type="button" class="btn btn-outline-secondary btn-roles-usuario"
                                     data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" title="Gestionar roles">
-                                <i class="ti ti-shield"></i>
+                                <i class="fa-solid fa-shield-halved"></i>
                             </button>
                             <button type="button" class="btn btn-outline-warning btn-reset-clave"
                                     data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" title="Restablecer contraseña">
-                                <i class="ti ti-key"></i>
+                                <i class="fa-solid fa-key"></i>
                             </button>
                             <button type="button" class="btn btn-outline-info btn-sesiones-usuario"
                                     data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" title="Ver/Cerrar sesiones">
-                                <i class="ti ti-devices"></i>
+                                <i class="fa-solid fa-laptop"></i>
                             </button>
                             <button type="button" class="btn btn-outline-dark btn-cambiar-estado"
                                     data-id="${u.id}" data-username="${escapeHtml(u.nombre_usuario)}" data-estado="${u.estado}" title="Cambiar estado">
-                                <i class="ti ti-toggle-left"></i>
+                                <i class="fa-solid fa-toggle-on"></i>
                             </button>
                         </div>
                     </td>
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 notificar('error', err.message);
             } finally {
                 btnGuardarCrear.disabled = false;
-                btnGuardarCrear.innerHTML = '<i class="ti ti-device-floppy me-1"></i> Crear Usuario';
+                btnGuardarCrear.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Crear Usuario';
             }
         });
     }
@@ -572,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 notificar('error', err.message);
             } finally {
                 btnGuardarReset.disabled = false;
-                btnGuardarReset.innerHTML = '<i class="ti ti-check me-1"></i> Restablecer Contraseña';
+                btnGuardarReset.innerHTML = '<i class="fa-solid fa-check me-1"></i> Restablecer Contraseña';
             }
         });
     }
@@ -622,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span>${escapeHtml(r.nombre)}</span>
                             <button type="button" class="btn btn-sm btn-link text-white p-0 btn-revocar-rol"
                                     data-rol-id="${r.id}" data-rol-nombre="${escapeHtml(r.nombre)}" title="Revocar rol">
-                                <i class="ti ti-x f-s-14"></i>
+                                <i class="fa-solid fa-xmark f-s-14"></i>
                             </button>
                         </div>
                     `;
@@ -789,7 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td class="text-end">
                             <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 btn-cerrar-sesion-indiv"
                                     data-sesion-id="${s.id}" title="Cerrar esta sesión">
-                                <i class="ti ti-x"></i> Cerrar
+                                <i class="fa-solid fa-xmark me-1"></i> Cerrar
                             </button>
                         </td>
                     </tr>

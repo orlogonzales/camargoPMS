@@ -24,7 +24,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-adjustments f-s-22"></i>
+                        <i class="fa-solid fa-sliders f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Configuración General del Sistema</h4>
@@ -36,7 +36,7 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_editar'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-configuracion">
-                            <i class="ti ti-device-floppy me-1"></i> Guardar Cambios
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios
                         </button>
                     <?php endif; ?>
                 </div>
@@ -47,17 +47,17 @@ declare(strict_types=1);
                 <ul class="nav nav-tabs nav-tabs-bottom px-4 pt-3 border-bottom" id="tabs-configuracion" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-medium" id="tab-general" data-bs-toggle="tab" data-bs-target="#panel-general" type="button" role="tab" aria-controls="panel-general" aria-selected="true">
-                            <i class="ti ti-building me-1"></i> General
+                            <i class="fa-solid fa-building me-1"></i> General
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link fw-medium" id="tab-localizacion" data-bs-toggle="tab" data-bs-target="#panel-localizacion" type="button" role="tab" aria-controls="panel-localizacion" aria-selected="false">
-                            <i class="ti ti-world me-1"></i> Localización
+                            <i class="fa-solid fa-globe me-1"></i> Localización
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link fw-medium" id="tab-operacion" data-bs-toggle="tab" data-bs-target="#panel-operacion" type="button" role="tab" aria-controls="panel-operacion" aria-selected="false">
-                            <i class="ti ti-tool me-1"></i> Operación
+                            <i class="fa-solid fa-wrench me-1"></i> Operación
                         </button>
                     </li>
                 </ul>
@@ -92,7 +92,7 @@ declare(strict_types=1);
                                                 </div>
                                                 <?php if (!$esEditable): ?>
                                                     <span class="badge bg-danger-subtle text-danger f-s-11">
-                                                        <i class="ti ti-lock me-1"></i> Protegido
+                                                        <i class="fa-solid fa-lock me-1"></i> Protegido
                                                     </span>
                                                 <?php endif; ?>
                                             </div>
@@ -102,7 +102,19 @@ declare(strict_types=1);
                                             <?php endif; ?>
 
                                             <div class="mb-2">
-                                                <?php if ($tipo === 'TEXTO' && str_contains($clave, 'descripcion')): ?>
+                                                <?php if ($tipo === 'FECHA'): ?>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text"><i class="fa-solid fa-calendar-days"></i></span>
+                                                        <input type="text"
+                                                               class="form-control form-control-sm campo-configuracion basic-date"
+                                                               data-provider="datepicker"
+                                                               id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
+                                                               name="configuraciones[<?= e($clave) ?>]"
+                                                               value="<?= e((string)$valor) ?>"
+                                                               placeholder="YYYY-MM-DD"
+                                                               <?= !$esEditable || empty($capacidades['puede_editar']) ? 'readonly disabled' : '' ?>>
+                                                    </div>
+                                                <?php elseif ($tipo === 'TEXTO' && str_contains($clave, 'descripcion')): ?>
                                                     <textarea class="form-control form-control-sm campo-configuracion"
                                                               id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
                                                               name="configuraciones[<?= e($clave) ?>]"
@@ -124,7 +136,7 @@ declare(strict_types=1);
                                                 </small>
                                                 <?php if ($esEditable && !empty($capacidades['puede_editar'])): ?>
                                                     <button type="button" class="btn btn-link btn-sm text-secondary p-0 f-s-12 btn-restaurar-cfg" data-clave="<?= e($clave) ?>" title="Restaurar a valor de fábrica">
-                                                        <i class="ti ti-rotate-clockwise me-1"></i> Restaurar
+                                                        <i class="fa-solid fa-rotate-right me-1"></i> Restaurar
                                                     </button>
                                                 <?php endif; ?>
                                             </div>
@@ -164,7 +176,19 @@ declare(strict_types=1);
                                             <?php endif; ?>
 
                                             <div class="mb-2">
-                                                <?php if ($clave === 'sistema.idioma'): ?>
+                                                <?php if ($tipo === 'FECHA'): ?>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text"><i class="fa-solid fa-calendar-days"></i></span>
+                                                        <input type="text"
+                                                               class="form-control form-control-sm campo-configuracion basic-date"
+                                                               data-provider="datepicker"
+                                                               id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
+                                                               name="configuraciones[<?= e($clave) ?>]"
+                                                               value="<?= e((string)$valor) ?>"
+                                                               placeholder="YYYY-MM-DD"
+                                                               <?= !$esEditable || empty($capacidades['puede_editar']) ? 'readonly disabled' : '' ?>>
+                                                    </div>
+                                                <?php elseif ($clave === 'sistema.idioma'): ?>
                                                     <select class="form-select form-select-sm campo-configuracion"
                                                             id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
                                                             name="configuraciones[<?= e($clave) ?>]"
@@ -188,7 +212,7 @@ declare(strict_types=1);
                                                 </small>
                                                 <?php if ($esEditable && !empty($capacidades['puede_editar'])): ?>
                                                     <button type="button" class="btn btn-link btn-sm text-secondary p-0 f-s-12 btn-restaurar-cfg" data-clave="<?= e($clave) ?>" title="Restaurar a valor de fábrica">
-                                                        <i class="ti ti-rotate-clockwise me-1"></i> Restaurar
+                                                        <i class="fa-solid fa-rotate-right me-1"></i> Restaurar
                                                     </button>
                                                 <?php endif; ?>
                                             </div>
@@ -252,6 +276,18 @@ declare(strict_types=1);
                                                            name="configuraciones[<?= e($clave) ?>]"
                                                            value="<?= e((string)$valor) ?>"
                                                            <?= !$esEditable || empty($capacidades['puede_editar']) ? 'readonly disabled' : '' ?>>
+                                                <?php elseif ($tipo === 'FECHA'): ?>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text"><i class="fa-solid fa-calendar-days"></i></span>
+                                                        <input type="text"
+                                                               class="form-control form-control-sm campo-configuracion basic-date"
+                                                               data-provider="datepicker"
+                                                               id="cfg_<?= e(str_replace('.', '_', $clave)) ?>"
+                                                               name="configuraciones[<?= e($clave) ?>]"
+                                                               value="<?= e((string)$valor) ?>"
+                                                               placeholder="YYYY-MM-DD"
+                                                               <?= !$esEditable || empty($capacidades['puede_editar']) ? 'readonly disabled' : '' ?>>
+                                                    </div>
                                                 <?php else: ?>
                                                     <input type="text"
                                                            class="form-control form-control-sm campo-configuracion"
@@ -268,7 +304,7 @@ declare(strict_types=1);
                                                 </small>
                                                 <?php if ($esEditable && !empty($capacidades['puede_editar'])): ?>
                                                     <button type="button" class="btn btn-link btn-sm text-secondary p-0 f-s-12 btn-restaurar-cfg" data-clave="<?= e($clave) ?>" title="Restaurar a valor de fábrica">
-                                                        <i class="ti ti-rotate-clockwise me-1"></i> Restaurar
+                                                        <i class="fa-solid fa-rotate-right me-1"></i> Restaurar
                                                     </button>
                                                 <?php endif; ?>
                                             </div>
@@ -283,11 +319,11 @@ declare(strict_types=1);
 
             <div class="card-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
                 <small class="text-muted">
-                    <i class="ti ti-info-circle me-1"></i> Los cambios en la configuración se aplican de manera inmediata y auditable en todo el sistema.
+                    <i class="fa-solid fa-circle-info me-1"></i> Los cambios en la configuración se aplican de manera inmediata y auditable en todo el sistema.
                 </small>
                 <?php if (!empty($capacidades['puede_editar'])): ?>
                     <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-configuracion-footer">
-                        <i class="ti ti-device-floppy me-1"></i> Guardar Cambios
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios
                     </button>
                 <?php endif; ?>
             </div>

@@ -23,8 +23,8 @@ declare(strict_types=1);
 
     <title><?= e($titulo ?? 'Iniciar Sesión — Camargo PMS') ?></title>
 
-    <!-- Tabler icons -->
-    <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/tabler-icons/tabler-icons.css') ?>">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/fontawesome/css/all.css') ?>">
 
     <!-- Bootstrap css -->
     <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/bootstrap/bootstrap.min.css') ?>">
@@ -63,7 +63,7 @@ declare(strict_types=1);
                             <?php if (!empty($error)): ?>
                                 <div class="col-12">
                                     <div class="alert alert-danger d-flex align-items-center gap-2 mb-3 py-2 px-3 b-r-12" role="alert">
-                                        <i class="ti ti-alert-circle f-s-20 flex-shrink-0"></i>
+                                        <i class="fa-solid fa-circle-exclamation f-s-20 flex-shrink-0"></i>
                                         <span class="f-s-14"><?= e($error) ?></span>
                                     </div>
                                 </div>

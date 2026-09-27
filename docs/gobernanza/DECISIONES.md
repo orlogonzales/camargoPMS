@@ -657,6 +657,30 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - **Preservación Histórica del Ciclo de Vida:** Principio `CANCELACIÓN / EXPIRACIÓN ≠ DELETE`. Las tablas `reservas` y `reserva_unidades` preservan todos sus registros históricos sin operaciones de eliminación física (`DELETE` = 0). Las cancelaciones exigen un motivo explicativo obligatorio (1 a 255 caracteres).
    - **Trazabilidad Canónica de Autoría bajo D-061 (`ACTOR ≠ USUARIO`):** Toda mutación de estado registra eventos de auditoría (`REGISTRAR`, `EDITAR`, `CANCELAR`, `EXPIRAR`) resolviendo el actor ejecutor correspondiente: asociando `USR_X` cuando el ejecutor es un usuario humano autenticado (`usuario_id`) o el actor de sistema `CAMARGO_PMS` en procesos automáticos de hold, garantizando estrictamente que jamás se use un `usuario_id` como `actor_id` directo por coincidencia numérica.
 
+### D-071 — Estandarización transversal de recursos de interfaz (Iconografía Font Awesome 6 y Selectores Flatpickr Alina)
+
+1. **Librería de Iconos Oficial y Exclusiva:**
+   - Font Awesome 6 Free (v6.3.0) es la única librería de iconos permitida en todo el código propio de Camargo PMS (`app/`, `public/assets/`, esquemas y datos de menú en base de datos).
+   - Queda estrictamente prohibido el uso de Tabler Icons (`ti ti-*`, `ti-*`) o librerías alternativas en vistas, layouts, JavaScript propio o registros de menú.
+   - El catálogo de menú en base de datos (`opciones_menu.icono`) y el esquema SQL base (`SQL/camargo_pms.sql`) se migran y estandarizan con clases de Font Awesome (`fa-solid fa-*`).
+
+2. **Selectores de Fecha y Hora Alina (Flatpickr):**
+   - El componente **Date Picker** de Alina (basado en Flatpickr v4.6.13 local) es de adopción obligatoria para todo campo de entrada de fecha individual en la interfaz de Camargo PMS.
+   - El componente **Range Picker** de Alina (Flatpickr en modo `range`) es de adopción obligatoria para toda selección de intervalo temporal o rango de fechas (`fecha_entrada` y `fecha_salida` en módulos de Disponibilidad, Reservas y filtros cronológicos).
+
+3. **Preservación Inviolable del Contrato D-066:**
+   - El Range Picker opera exclusivamente como un componente de experiencia de usuario (UX) en el cliente.
+   - La arquitectura backend preserva de forma estricta e independiente los campos canónicos `fecha_entrada` y `fecha_salida` en formato ISO `YYYY-MM-DD` (`DATE`), con intervalo semiabierto $[ \text{entrada}, \text{salida} )$, donde la noche de salida permanece liberada para un nuevo ingreso en esa misma fecha hotelera.
+   - Los campos de entrada canónicos (`#consulta-fecha-entrada`, `#consulta-fecha-salida`, `#crear-fecha-entrada`, `#crear-fecha-salida`, etc.) se mantienen como elementos subyacentes sincronizados por el controlador `public/assets/js/camargo-pickers.js`, garantizando compatibilidad total con validadores, serializadores y payloads HTTP.
+
+4. **Assets 100% Locales (Local Assets First):**
+   - Todos los recursos requeridos (CSS de Font Awesome 6, fuentes web asociadas en formato WOFF2/TTF, Flatpickr JS y CSS) residen localmente en el repositorio bajo `public/assets/vendor/` y `public/assets/fonts/`.
+   - Queda prohibida la dependencia de CDN externas para componentes base de la interfaz.
+   - La distribución original de la plantilla bajo `admin-dashboard/` permanece 100% intacta e inmutable como catálogo y referencia histórica.
+
+5. **Cero Dependencia de jQuery:**
+   - Toda la inicialización, sincronización de eventos y manipulación de selectores se realiza exclusivamente mediante JavaScript moderno nativo (Vanilla JS ES6+).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

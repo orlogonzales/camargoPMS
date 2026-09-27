@@ -23,7 +23,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-building f-s-22"></i>
+                        <i class="fa-solid fa-building f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Maestro Central de Propiedades</h4>
@@ -35,7 +35,7 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_crear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-abrir-crear-propiedad">
-                            <i class="ti ti-plus me-1"></i> Nueva Propiedad
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Propiedad
                         </button>
                     <?php endif; ?>
                 </div>
@@ -46,11 +46,11 @@ declare(strict_types=1);
                 <div class="row g-2 align-items-center">
                     <div class="col-md-5 col-12">
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" class="form-control" id="filtro-busqueda-propiedad"
                                    placeholder="Buscar por código, nombre, dirección, distrito..." autocomplete="off">
                             <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda-propiedad" title="Limpiar búsqueda">
-                                <i class="ti ti-x"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
@@ -71,7 +71,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-12 text-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btn-recargar-propiedades" title="Refrescar datos">
-                            <i class="ti ti-refresh me-1"></i> Recargar
+                            <i class="fa-solid fa-rotate me-1"></i> Recargar
                         </button>
                     </div>
                 </div>
@@ -128,7 +128,7 @@ declare(strict_types=1);
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-propiedad-titulo">
-                    <i class="ti ti-building me-1"></i> <span id="modal-propiedad-accion">Nueva</span> Propiedad Física
+                    <i class="fa-solid fa-building me-1"></i> <span id="modal-propiedad-accion">Nueva</span> Propiedad Física
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -230,7 +230,7 @@ declare(strict_types=1);
                 <div class="modal-footer bg-light border-top py-2 px-4">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-propiedad">
-                        <i class="ti ti-check me-1"></i> Guardar Propiedad
+                        <i class="fa-solid fa-check me-1"></i> Guardar Propiedad
                     </button>
                 </div>
             </form>

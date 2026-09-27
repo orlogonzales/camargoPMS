@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbodyReservas.innerHTML = `
                     <tr>
                         <td colspan="8" class="text-center py-4 text-danger">
-                            <i class="ti ti-alert-triangle me-1"></i> ${json.mensaje || 'Error al cargar reservas'}
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i> ${json.mensaje || 'Error al cargar reservas'}
                         </td>
                     </tr>
                 `;
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyReservas.innerHTML = `
                 <tr>
                     <td colspan="8" class="text-center py-4 text-danger">
-                        <i class="ti ti-wifi-off me-1"></i> Error de conexión con el servidor.
+                        <i class="fa-solid fa-wifi me-1"></i> Error de conexión con el servidor.
                     </td>
                 </tr>
             `;
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyReservas.innerHTML = `
                 <tr>
                     <td colspan="8" class="text-center py-4 text-muted">
-                        <i class="ti ti-calendar-off f-s-20 d-block mb-1"></i> No se encontraron reservas registradas con los filtros aplicados.
+                        <i class="fa-solid fa-calendar-xmark f-s-20 d-block mb-1"></i> No se encontraron reservas registradas con los filtros aplicados.
                     </td>
                 </tr>
             `;
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (r.unidades && r.unidades.length > 0) {
                 unidadesHtml = r.unidades.map(u => `
                     <span class="badge bg-light text-dark border me-1 mb-1" title="${u.propiedad_nombre || ''}">
-                        <i class="ti ti-door f-s-11 me-1"></i>${u.unidad_codigo}
+                        <i class="fa-solid fa-door-open f-s-11 me-1"></i>${u.unidad_codigo}
                     </span>
                 `).join('');
             } else {
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${r.titular_documento_numero ? `<div class="f-s-11 text-muted">${r.titular_documento_tipo || 'DOC'}: ${r.titular_documento_numero}</div>` : ''}
                     </td>
                     <td class="f-s-13">
-                        <i class="ti ti-calendar-event me-1 text-secondary"></i>${r.fecha_entrada} &rarr; ${r.fecha_salida}
+                        <i class="fa-solid fa-calendar-days me-1 text-secondary"></i>${r.fecha_entrada} &rarr; ${r.fecha_salida}
                     </td>
                     <td class="f-s-13 text-center">
                         <span class="badge bg-secondary-subtle text-secondary">${r.noches} n</span>
@@ -238,18 +238,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-center pe-3">
                         <div class="dropdown">
                             <button class="btn btn-light btn-sm p-1 dropdown-toggle no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ti ti-dots-vertical f-s-16"></i>
+                                <i class="fa-solid fa-ellipsis-vertical f-s-16"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 f-s-13">
                                 <li>
                                     <a class="dropdown-item btn-ver-detalle" href="javascript:void(0)" data-id="${r.id}">
-                                        <i class="ti ti-eye me-2 text-primary"></i> Ver Detalle
+                                        <i class="fa-solid fa-eye me-2 text-primary"></i> Ver Detalle
                                     </a>
                                 </li>
                                 ${r.estado === 'PENDIENTE' ? `
                                 <li>
                                     <a class="dropdown-item btn-confirmar-directo text-success" href="javascript:void(0)" data-id="${r.id}" data-codigo="${r.codigo}">
-                                        <i class="ti ti-check me-2"></i> Confirmar Reserva
+                                        <i class="fa-solid fa-check me-2"></i> Confirmar Reserva
                                     </a>
                                 </li>
                                 ` : ''}
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item btn-abrir-cancelar text-danger" href="javascript:void(0)" data-id="${r.id}" data-codigo="${r.codigo}">
-                                        <i class="ti ti-x me-2"></i> Cancelar Reserva
+                                        <i class="fa-solid fa-xmark me-2"></i> Cancelar Reserva
                                     </a>
                                 </li>
                                 ` : ''}
@@ -276,13 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function obtenerBadgeEstado(estado) {
         switch (estado) {
             case 'PENDIENTE':
-                return '<span class="badge bg-warning-subtle text-warning f-s-11"><i class="ti ti-clock me-1"></i>PENDIENTE</span>';
+                return '<span class="badge bg-warning-subtle text-warning f-s-11"><i class="fa-solid fa-clock me-1"></i>PENDIENTE</span>';
             case 'CONFIRMADA':
-                return '<span class="badge bg-success-subtle text-success f-s-11"><i class="ti ti-check me-1"></i>CONFIRMADA</span>';
+                return '<span class="badge bg-success-subtle text-success f-s-11"><i class="fa-solid fa-check me-1"></i>CONFIRMADA</span>';
             case 'CANCELADA':
-                return '<span class="badge bg-danger-subtle text-danger f-s-11"><i class="ti ti-x me-1"></i>CANCELADA</span>';
+                return '<span class="badge bg-danger-subtle text-danger f-s-11"><i class="fa-solid fa-xmark me-1"></i>CANCELADA</span>';
             case 'EXPIRADA':
-                return '<span class="badge bg-secondary-subtle text-secondary f-s-11"><i class="ti ti-clock-pause me-1"></i>EXPIRADA</span>';
+                return '<span class="badge bg-secondary-subtle text-secondary f-s-11"><i class="fa-solid fa-hourglass-half me-1"></i>EXPIRADA</span>';
             default:
                 return `<span class="badge bg-light text-dark f-s-11">${estado}</span>`;
         }
@@ -392,6 +392,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputFechaEntrada) inputFechaEntrada.value = fmtDate(hoy);
         if (inputFechaSalida) inputFechaSalida.value = fmtDate(manana);
 
+        // Sincronizar Range Picker Alina (Flatpickr) del modal crear
+        const rangeCrear = document.getElementById('crear-rango-fechas');
+        if (rangeCrear && rangeCrear._flatpickr) {
+            rangeCrear._flatpickr.setDate([fmtDate(hoy), fmtDate(manana)], false);
+        }
+
         recalcularNoches();
 
         // Iniciar con 1 fila de unidad vacía
@@ -477,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="col-md-1 col-2 text-end">
                 <button type="button" class="btn btn-outline-danger btn-sm p-1 btn-quitar-fila" title="Quitar unidad">
-                    <i class="ti ti-trash"></i>
+                    <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>
         `;
@@ -727,9 +733,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (r.estado === 'PENDIENTE') {
             detalleAvisoHold.classList.remove('d-none');
             if (r.ha_expirado) {
-                detalleAvisoHold.innerHTML = `<span class="text-danger f-w-600"><i class="ti ti-alert-triangle me-1"></i> Hold vencido en: ${r.expira_en}</span>`;
+                detalleAvisoHold.innerHTML = `<span class="text-danger f-w-600"><i class="fa-solid fa-triangle-exclamation me-1"></i> Hold vencido en: ${r.expira_en}</span>`;
             } else {
-                detalleAvisoHold.innerHTML = `<span class="text-warning f-w-600"><i class="ti ti-clock me-1"></i> Hold activo hasta: ${r.expira_en}</span>`;
+                detalleAvisoHold.innerHTML = `<span class="text-warning f-w-600"><i class="fa-solid fa-clock me-1"></i> Hold activo hasta: ${r.expira_en}</span>`;
             }
         } else {
             detalleAvisoHold.classList.add('d-none');
@@ -985,6 +991,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLimpiarBusqueda?.addEventListener('click', () => {
         if (filtroBusqueda) filtroBusqueda.value = '';
+        cargarReservas(1);
+    });
+
+    const btnLimpiarFiltroFechas = document.getElementById('btn-limpiar-filtro-fechas');
+    btnLimpiarFiltroFechas?.addEventListener('click', () => {
+        const rangeFiltro = document.getElementById('filtro-rango-fechas');
+        if (rangeFiltro && rangeFiltro._flatpickr) {
+            rangeFiltro._flatpickr.clear();
+        }
+        if (filtroFechaDesde) filtroFechaDesde.value = '';
+        if (filtroFechaHasta) filtroFechaHasta.value = '';
         cargarReservas(1);
     });
 

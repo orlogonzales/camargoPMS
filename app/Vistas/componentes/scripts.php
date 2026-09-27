@@ -12,5 +12,11 @@ declare(strict_types=1);
 <!-- Simplebar Scrollbar JS -->
 <script src="<?= url_asset('vendor/simplebar/simplebar.js') ?>"></script>
 
+<!-- Selector de fechas oficial: Flatpickr (Alina) -->
+<script src="<?= url_asset('vendor/flatpickr/flatpickr.js') ?>"></script>
+
+<!-- Controlador propio defensivo de selectores de fecha Camargo PMS -->
+<script src="<?= url_asset('js/camargo-pickers.js') ?>"></script>
+
 <!-- Controlador propio defensivo de interfaz Camargo PMS -->
 <script src="<?= url_asset('js/camargo-layout.js') ?>"></script>

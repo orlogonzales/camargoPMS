@@ -39,6 +39,6 @@ $destinoRetorno = $urlRetorno ?? url_ruta('/');
     <a class="btn btn-lg app-btn bg-gradient-primary text-white mt-2 px-4 py-2"
        href="<?= e($destinoRetorno) ?>"
        role="button">
-        <i class="ti ti-arrow-bar-to-left f-s-20 align-text-top me-2"></i> <?= e($textoAccion) ?>
+        <i class="fa-solid fa-arrow-left f-s-20 align-text-top me-2"></i> <?= e($textoAccion) ?>
     </a>
 </div>

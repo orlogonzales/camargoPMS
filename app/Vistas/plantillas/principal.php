@@ -48,7 +48,7 @@ use CamargoPMS\Nucleo\Vista;
     <!-- Botón volver arriba -->
     <div class="go-top">
         <span class="progress-value">
-            <i class="ti ti-chevron-up"></i>
+            <i class="fa-solid fa-chevron-up"></i>
         </span>
     </div>
 

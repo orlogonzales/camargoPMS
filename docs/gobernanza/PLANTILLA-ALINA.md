@@ -9,6 +9,8 @@ Los archivos bajo `admin-dashboard/` son referencias originales e inmutables: no
 | Layout general | `admin-dashboard/alina/template/blank.html` | Estructura principal autenticada |
 | Login / Acceso | `admin-dashboard/alina/template/sign_in.html` | Referencia visual de autenticación |
 | Dashboard / Home | `admin-dashboard/alina/template/index.html` | Referencia visual de dashboard |
+| Font Awesome | `admin-dashboard/alina/template/fontawesome.html` | Catálogo de referencia de iconos Font Awesome 6 |
+| Date Picker | `admin-dashboard/alina/template/date_picker.html` | Referencia de Date Picker y Range Picker Flatpickr |
 | Error HTTP 400 | `admin-dashboard/alina/template/error_400.html` | Bad Request |
 | Error HTTP 403 | `admin-dashboard/alina/template/error_403.html` | Forbidden / Acceso denegado |
 | Error HTTP 404 | `admin-dashboard/alina/template/error_404.html` | Not Found / Recurso no encontrado |
@@ -19,7 +21,7 @@ Todo `admin-dashboard/` se conserva intacto. La aplicación utiliza copias selec
 
 ## Clasificación de Assets
 
-- **GLOBAL:** Fuentes Lexend Deca, Tabler Icons, Bootstrap CSS/JS base, CSS propio `camargo.css`.
+- **GLOBAL (D-071):** Fuentes Lexend Deca, Font Awesome 6 Free v6.3.0 (`all.css` y 8 fuentes web locales en `public/assets/`), Flatpickr v4.6.13 (`flatpickr.min.css` y `flatpickr.js`), controlador `camargo-pickers.js`, Bootstrap CSS/JS base, CSS propio `camargo.css`. Queda prohibido Tabler Icons en código propio.
 - **LAYOUT:** Simplebar, `style.css`, `responsive.css`, `camargo-layout.js`, avatares y logos.
 - **AUTENTICACIÓN:** Estilos de formulario flotante y recursos visuales específicos de `sign_in.html` (previstos para fase de autenticación).
 - **DASHBOARD:** Librerías gráficas (ej. Apexcharts) o widgets específicos de `index.html` (previstos para fase de dashboard con datos reales).

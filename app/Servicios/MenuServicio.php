@@ -135,7 +135,7 @@ class MenuServicio
                     'titulo' => $hijo->obtenerNombre(),
                     'url' => $rutaHijo !== null ? url_ruta($rutaHijo) : '#',
                     'ruta' => $rutaHijo,
-                    'icono' => $hijo->obtenerIcono() ?? 'ti ti-point',
+                    'icono' => $hijo->obtenerIcono() ?? 'fa-solid fa-circle-dot',
                     'activo' => $esOpcionActiva,
                 ];
             }
@@ -150,7 +150,7 @@ class MenuServicio
                 'id' => $principal->obtenerId(),
                 'clave' => $clavePrincipal,
                 'etiqueta' => $principal->obtenerNombre(),
-                'icono' => $principal->obtenerIcono() ?? 'ti ti-folder',
+                'icono' => $principal->obtenerIcono() ?? 'fa-solid fa-folder',
                 'activo' => $algunHijoActivo,
                 'grupos' => $hijosVisibles,
             ];

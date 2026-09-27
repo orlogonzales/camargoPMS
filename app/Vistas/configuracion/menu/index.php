@@ -20,7 +20,7 @@ $permisos = $datosGestion['permisos'] ?? [];
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-menu-2 f-s-22"></i>
+                        <i class="fa-solid fa-bars f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Gestión de Menú y Navegación Dinámica</h4>
@@ -31,10 +31,10 @@ $permisos = $datosGestion['permisos'] ?? [];
                 </div>
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <button type="button" class="btn btn-outline-primary btn-sm" onclick="abrirModalCrearOpcion(null)">
-                        <i class="ti ti-folder-plus me-1"></i> Nueva Categoría
+                        <i class="fa-solid fa-folder-plus me-1"></i> Nueva Categoría
                     </button>
                     <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalCrearOpcion()">
-                        <i class="ti ti-plus me-1"></i> Nueva Opción
+                        <i class="fa-solid fa-plus me-1"></i> Nueva Opción
                     </button>
                 </div>
             </div>
@@ -69,7 +69,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <span class="bg-secondary-subtle text-dark p-1 b-r-6 me-2 d-flex-center">
-                                                    <i class="<?= e($principal['icono'] ?? 'ti ti-folder') ?> f-s-16"></i>
+                                                    <i class="<?= e($principal['icono'] ?? 'fa-solid fa-folder') ?> f-s-16"></i>
                                                 </span>
                                                 <strong class="f-s-14 text-dark"><?= e($principal['nombre']) ?></strong>
                                                 <?php if (!empty($principal['es_sistema'])): ?>
@@ -82,7 +82,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                         <td>
                                             <?php if (!empty($principal['permiso_codigo'])): ?>
                                                 <span class="badge bg-light text-dark border f-s-11">
-                                                    <i class="ti ti-key f-s-10 me-1"></i><?= e($principal['permiso_codigo']) ?>
+                                                    <i class="fa-solid fa-key f-s-10 me-1"></i><?= e($principal['permiso_codigo']) ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="text-muted f-s-11">Abierto</span>
@@ -100,28 +100,28 @@ $permisos = $datosGestion['permisos'] ?? [];
                                             <div class="btn-group btn-group-sm">
                                                 <button type="button" class="btn btn-outline-secondary" title="Mover arriba"
                                                         onclick="moverOrdenOpcion(<?= (int) $principal['id'] ?>, null, 'arriba')">
-                                                    <i class="ti ti-chevron-up"></i>
+                                                    <i class="fa-solid fa-chevron-up"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-secondary" title="Mover abajo"
                                                         onclick="moverOrdenOpcion(<?= (int) $principal['id'] ?>, null, 'abajo')">
-                                                    <i class="ti ti-chevron-down"></i>
+                                                    <i class="fa-solid fa-chevron-down"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-success" title="Agregar opción secundaria"
                                                         onclick="abrirModalCrearOpcion(<?= (int) $principal['id'] ?>)">
-                                                    <i class="ti ti-plus"></i>
+                                                    <i class="fa-solid fa-plus"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-primary" title="Editar categoría"
                                                         onclick='abrirModalEditarOpcion(<?= json_encode($principal, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>
-                                                    <i class="ti ti-pencil"></i>
+                                                    <i class="fa-solid fa-pencil"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-warning" title="Alternar Estado"
                                                         onclick="alternarEstadoOpcion(<?= (int) $principal['id'] ?>, '<?= e($principal['nombre']) ?>', '<?= e($principal['estado']) ?>')">
-                                                    <i class="ti ti-power"></i>
+                                                    <i class="fa-solid fa-power-off"></i>
                                                 </button>
                                                 <?php if (empty($principal['es_sistema'])): ?>
                                                     <button type="button" class="btn btn-outline-danger" title="Eliminar"
                                                             onclick="eliminarOpcionMenu(<?= (int) $principal['id'] ?>, '<?= e($principal['nombre']) ?>')">
-                                                        <i class="ti ti-trash"></i>
+                                                        <i class="fa-solid fa-trash"></i>
                                                     </button>
                                                 <?php endif; ?>
                                             </div>
@@ -136,7 +136,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                 <td class="ps-4">
                                                     <div class="d-flex align-items-center ps-3">
                                                         <span class="text-secondary me-2">└─</span>
-                                                        <span class="text-muted me-2"><i class="<?= e($hijo['icono'] ?? 'ti ti-point') ?> f-s-14"></i></span>
+                                                        <span class="text-muted me-2"><i class="<?= e($hijo['icono'] ?? 'fa-solid fa-circle-dot') ?> f-s-14"></i></span>
                                                         <span class="f-s-13"><?= e($hijo['nombre']) ?></span>
                                                         <?php if (!empty($hijo['es_sistema'])): ?>
                                                             <span class="badge bg-info-subtle text-info ms-2 f-s-10">Sistema</span>
@@ -148,7 +148,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                 <td>
                                                     <?php if (!empty($hijo['permiso_codigo'])): ?>
                                                         <span class="badge bg-light text-dark border f-s-11" title="<?= e($hijo['permiso_nombre'] ?? '') ?>">
-                                                            <i class="ti ti-key f-s-10 me-1"></i><?= e($hijo['permiso_codigo']) ?>
+                                                            <i class="fa-solid fa-key f-s-10 me-1"></i><?= e($hijo['permiso_codigo']) ?>
                                                         </span>
                                                     <?php else: ?>
                                                         <span class="text-muted f-s-11">Público</span>
@@ -166,24 +166,24 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                     <div class="btn-group btn-group-sm">
                                                         <button type="button" class="btn btn-outline-secondary" title="Mover arriba"
                                                                 onclick="moverOrdenOpcion(<?= (int) $hijo['id'] ?>, <?= (int) $principal['id'] ?>, 'arriba')">
-                                                            <i class="ti ti-chevron-up"></i>
+                                                            <i class="fa-solid fa-chevron-up"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-secondary" title="Mover abajo"
                                                                 onclick="moverOrdenOpcion(<?= (int) $hijo['id'] ?>, <?= (int) $principal['id'] ?>, 'abajo')">
-                                                            <i class="ti ti-chevron-down"></i>
+                                                            <i class="fa-solid fa-chevron-down"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-primary" title="Editar opción"
                                                                 onclick='abrirModalEditarOpcion(<?= json_encode($hijo, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>
-                                                            <i class="ti ti-pencil"></i>
+                                                            <i class="fa-solid fa-pencil"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-warning" title="Alternar Estado"
                                                                 onclick="alternarEstadoOpcion(<?= (int) $hijo['id'] ?>, '<?= e($hijo['nombre']) ?>', '<?= e($hijo['estado']) ?>')">
-                                                            <i class="ti ti-power"></i>
+                                                            <i class="fa-solid fa-power-off"></i>
                                                         </button>
                                                         <?php if (empty($hijo['es_sistema'])): ?>
                                                             <button type="button" class="btn btn-outline-danger" title="Eliminar"
                                                                     onclick="eliminarOpcionMenu(<?= (int) $hijo['id'] ?>, '<?= e($hijo['nombre']) ?>')">
-                                                                <i class="ti ti-trash"></i>
+                                                                <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         <?php endif; ?>
                                                     </div>
@@ -193,7 +193,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                                     <?php else: ?>
                                         <tr>
                                             <td colspan="7" class="ps-5 text-muted f-s-12 py-2">
-                                                <i class="ti ti-info-circle me-1 text-warning"></i>
+                                                <i class="fa-solid fa-circle-info me-1 text-warning"></i>
                                                 Esta categoría no tiene opciones secundarias asignadas. No se mostrará en la navegación hasta que tenga al menos una opción secundaria visible.
                                             </td>
                                         </tr>
@@ -262,13 +262,13 @@ $permisos = $datosGestion['permisos'] ?? [];
                     </div>
 
                     <div class="row">
-                        <!-- Icono Tabler -->
+                        <!-- Icono Font Awesome -->
                         <div class="col-md-6 mb-3">
-                            <label for="opcion-icono" class="form-label f-s-13 f-w-600">Icono (Tabler)</label>
+                            <label for="opcion-icono" class="form-label f-s-13 f-w-600">Icono (Font Awesome)</label>
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text"><i class="ti ti-icons"></i></span>
+                                <span class="input-group-text"><i class="fa-solid fa-icons"></i></span>
                                 <input type="text" class="form-control" id="opcion-icono" name="icono"
-                                       placeholder="ti ti-menu-2" maxlength="100">
+                                       placeholder="fa-solid fa-bars" maxlength="100">
                             </div>
                         </div>
 
@@ -322,7 +322,7 @@ $permisos = $datosGestion['permisos'] ?? [];
                 <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-opcion">
-                        <i class="ti ti-device-floppy me-1"></i> Guardar Cambios
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios
                     </button>
                 </div>
             </form>

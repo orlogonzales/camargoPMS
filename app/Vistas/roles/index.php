@@ -23,7 +23,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-shield-lock f-s-22"></i>
+                        <i class="fa-solid fa-shield-halved f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Roles y Permisos</h4>
@@ -35,7 +35,7 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_crear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-abrir-crear-rol">
-                            <i class="ti ti-plus me-1"></i> Nuevo Rol
+                            <i class="fa-solid fa-plus me-1"></i> Nuevo Rol
                         </button>
                     <?php endif; ?>
                 </div>
@@ -46,11 +46,11 @@ declare(strict_types=1);
                 <div class="row g-2 align-items-center">
                     <div class="col-md-7 col-12">
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" class="form-control" id="filtro-busqueda-rol"
                                    placeholder="Buscar por nombre, clave técnica o descripción..." autocomplete="off">
                             <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda-rol" title="Limpiar búsqueda">
-                                <i class="ti ti-x"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
@@ -63,7 +63,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-4 text-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btn-recargar-roles" title="Refrescar datos">
-                            <i class="ti ti-refresh me-1"></i> Recargar
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Recargar
                         </button>
                     </div>
                 </div>
@@ -108,7 +108,7 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white py-3 px-4">
                 <h5 class="modal-title f-s-16 f-w-600 text-white" id="modal-crear-rol-titulo">
-                    <i class="ti ti-shield-plus me-2"></i> Crear Nuevo Rol
+                    <i class="fa-solid fa-shield-halved me-2"></i> Crear Nuevo Rol
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -154,7 +154,7 @@ declare(strict_types=1);
                 <div class="modal-footer bg-light border-top py-2 px-4">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-crear-rol">
-                        <i class="ti ti-device-floppy me-1"></i> Guardar Rol
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Rol
                     </button>
                 </div>
             </form>
@@ -168,7 +168,7 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white py-3 px-4">
                 <h5 class="modal-title f-s-16 f-w-600 text-white" id="modal-editar-rol-titulo">
-                    <i class="ti ti-edit me-2"></i> Editar Rol
+                    <i class="fa-solid fa-pen-to-square me-2"></i> Editar Rol
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -208,7 +208,7 @@ declare(strict_types=1);
                 <div class="modal-footer bg-light border-top py-2 px-4">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-editar-rol">
-                        <i class="ti ti-device-floppy me-1"></i> Actualizar Rol
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Actualizar Rol
                     </button>
                 </div>
             </form>
@@ -223,7 +223,7 @@ declare(strict_types=1);
             <div class="modal-header bg-dark text-white py-3 px-4">
                 <div>
                     <h5 class="modal-title f-s-16 f-w-600 text-white mb-0" id="modal-gestionar-permisos-titulo">
-                        <i class="ti ti-key me-2"></i> Matriz de Permisos
+                        <i class="fa-solid fa-key me-2"></i> Matriz de Permisos
                     </h5>
                     <div class="f-s-12 text-light-subtle mt-1" id="subtitulo-permisos-rol">
                         Configurando permisos del rol
@@ -237,7 +237,7 @@ declare(strict_types=1);
                 <!-- Alerta informativa para Superadministrador -->
                 <div id="alerta-superadmin-permisos" class="alert alert-warning d-none py-2 px-3 mb-3 f-s-13">
                     <div class="d-flex align-items-center">
-                        <i class="ti ti-shield-alert f-s-20 me-2 text-warning"></i>
+                        <i class="fa-solid fa-triangle-exclamation f-s-20 me-2 text-warning"></i>
                         <div>
                             <strong>Rol Estructural SUPERADMINISTRADOR:</strong>
                             Los permisos críticos de administración no pueden revocarse para preservar la integridad del sistema.
@@ -249,10 +249,10 @@ declare(strict_types=1);
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm btn-outline-primary" id="btn-marcar-todos-permisos">
-                            <i class="ti ti-check-all me-1"></i> Marcar Todos
+                            <i class="fa-solid fa-check-double me-1"></i> Marcar Todos
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-desmarcar-todos-permisos">
-                            <i class="ti ti-square-x me-1"></i> Desmarcar Todos
+                            <i class="fa-solid fa-square-xmark me-1"></i> Desmarcar Todos
                         </button>
                     </div>
                     <div class="text-secondary f-s-12">
@@ -270,12 +270,12 @@ declare(strict_types=1);
             </div>
             <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between">
                 <span class="text-muted f-s-12">
-                    <i class="ti ti-info-circle me-1"></i> Los cambios se aplican de inmediato en tiempo real sin requerir re-login.
+                    <i class="fa-solid fa-circle-info me-1"></i> Los cambios se aplican de inmediato en tiempo real sin requerir re-login.
                 </span>
                 <div>
                     <button type="button" class="btn btn-secondary btn-sm me-2" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-permisos-rol">
-                        <i class="ti ti-device-floppy me-1"></i> Guardar Cambios
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios
                     </button>
                 </div>
             </div>
@@ -290,7 +290,7 @@ declare(strict_types=1);
             <div class="modal-header bg-white py-3 px-4 border-bottom">
                 <div>
                     <h5 class="modal-title f-s-16 f-w-600 mb-0" id="modal-usuarios-rol-titulo">
-                        <i class="ti ti-users me-2 text-primary"></i> Usuarios Vinculados
+                        <i class="fa-solid fa-users me-2 text-primary"></i> Usuarios Vinculados
                     </h5>
                     <div class="f-s-12 text-muted mt-1" id="subtitulo-usuarios-rol">
                         Listado de cuentas que ostentan este rol

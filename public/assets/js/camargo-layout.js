@@ -268,11 +268,11 @@
             if (tema === 'dark') {
                 document.body.classList.add('dark');
                 document.body.classList.remove('light');
-                if (iconoTema) iconoTema.className = 'ti ti-sun';
+                if (iconoTema) iconoTema.className = 'fa-solid fa-sun';
             } else {
                 document.body.classList.add('light');
                 document.body.classList.remove('dark');
-                if (iconoTema) iconoTema.className = 'ti ti-moon-stars';
+                if (iconoTema) iconoTema.className = 'fa-solid fa-moon';
             }
         };
 

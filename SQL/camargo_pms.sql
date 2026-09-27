@@ -469,18 +469,18 @@ CREATE TABLE IF NOT EXISTS `opciones_menu` (
 
 -- Semillas Estructurales del Menú (Nivel 1 y Nivel 2)
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`) VALUES
-(NULL, 'inicio', 'Inicio', 'ti ti-smart-home', NULL, 1, 'ACTIVO', NULL, 1),
-(NULL, 'configuracion', 'Configuración', 'ti ti-settings', NULL, 99, 'ACTIVO', NULL, 1)
+(NULL, 'inicio', 'Inicio', 'fa-solid fa-house', NULL, 1, 'ACTIVO', NULL, 1),
+(NULL, 'configuracion', 'Configuración', 'fa-solid fa-gear', NULL, 99, 'ACTIVO', NULL, 1)
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `icono` = VALUES(`icono`), `orden` = VALUES(`orden`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'inicio_panel', 'Panel General', 'ti ti-dashboard', '/', 1, 'ACTIVO', NULL, 1
+SELECT p.`id`, 'inicio_panel', 'Panel General', 'fa-solid fa-gauge-high', '/', 1, 'ACTIVO', NULL, 1
 FROM `opciones_menu` p
 WHERE p.`clave` = 'inicio' AND p.`padre_id` IS NULL
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'config_menu', 'Gestión de menú', 'ti ti-menu-2', '/configuracion/menu', 1, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'config_menu', 'Gestión de menú', 'fa-solid fa-bars', '/configuracion/menu', 1, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
@@ -488,7 +488,7 @@ WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`), `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'config_sistema', 'Configuración General', 'ti ti-adjustments', '/configuracion/sistema', 1, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'config_sistema', 'Configuración General', 'fa-solid fa-sliders', '/configuracion/sistema', 1, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
@@ -496,7 +496,7 @@ WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `icono` = VALUES(`icono`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`), `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'config_usuarios', 'Usuarios', 'ti ti-users', '/usuarios', 2, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'config_usuarios', 'Usuarios', 'fa-solid fa-users', '/usuarios', 2, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
@@ -504,7 +504,7 @@ WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`), `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'config_roles', 'Roles y Permisos', 'ti ti-shield-lock', '/configuracion/roles', 3, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'config_roles', 'Roles y Permisos', 'fa-solid fa-shield-halved', '/configuracion/roles', 3, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
@@ -512,11 +512,11 @@ WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `icono` = VALUES(`icono`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`), `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`) VALUES
-(NULL, 'propiedades', 'Propiedades', 'ti ti-building', NULL, 10, 'ACTIVO', NULL, 1)
+(NULL, 'propiedades', 'Propiedades', 'fa-solid fa-building', NULL, 10, 'ACTIVO', NULL, 1)
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `icono` = VALUES(`icono`), `orden` = VALUES(`orden`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'propiedades_catalogo', 'Propiedades', 'ti ti-building', '/propiedades', 1, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'propiedades_catalogo', 'Propiedades', 'fa-solid fa-building', '/propiedades', 1, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'propiedades' AND p.`padre_id` IS NULL
@@ -529,7 +529,7 @@ ON DUPLICATE KEY UPDATE
     `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'unidades_catalogo', 'Unidades', 'ti ti-door', '/unidades', 2, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'unidades_catalogo', 'Unidades', 'fa-solid fa-door-open', '/unidades', 2, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'propiedades' AND p.`padre_id` IS NULL
@@ -542,7 +542,7 @@ ON DUPLICATE KEY UPDATE
     `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'disponibilidad_calendario', 'Disponibilidad', 'ti ti-calendar-event', '/disponibilidad', 3, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'disponibilidad_calendario', 'Disponibilidad', 'fa-solid fa-calendar-plus', '/disponibilidad', 3, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'propiedades' AND p.`padre_id` IS NULL
@@ -556,7 +556,7 @@ ON DUPLICATE KEY UPDATE
 
 -- Nivel 1: Categoría Principal 'Reservas'
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`) VALUES
-(NULL, 'reservas', 'Reservas', 'ti ti-calendar-check', NULL, 15, 'ACTIVO', NULL, 1)
+(NULL, 'reservas', 'Reservas', 'fa-solid fa-calendar-check', NULL, 15, 'ACTIVO', NULL, 1)
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),
@@ -564,7 +564,7 @@ ON DUPLICATE KEY UPDATE
 
 -- Nivel 2: Opción Secundaria 'Gestión de Reservas'
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'reservas_catalogo', 'Reservas', 'ti ti-list-check', '/reservas', 1, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'reservas_catalogo', 'Reservas', 'fa-solid fa-list-check', '/reservas', 1, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL

@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyRoles.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4 text-danger">
-                        <i class="ti ti-alert-triangle f-s-20 me-1"></i>
+                        <i class="fa-solid fa-triangle-exclamation f-s-20 me-1"></i>
                         No se pudo cargar el listado de roles: ${escapeHtml(error.message)}
                     </td>
                 </tr>
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyRoles.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4 text-muted">
-                        <i class="ti ti-info-circle f-s-18 me-1"></i>
+                        <i class="fa-solid fa-circle-info f-s-18 me-1"></i>
                         No se encontraron roles con los criterios de búsqueda seleccionados.
                     </td>
                 </tr>
@@ -305,29 +305,29 @@ document.addEventListener('DOMContentLoaded', () => {
             // Badge de Tipo
             let badgeTipo = '';
             if (esSuper) {
-                badgeTipo = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle f-s-11"><i class="ti ti-crown me-1"></i>Superadmin</span>';
+                badgeTipo = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle f-s-11"><i class="fa-solid fa-crown me-1"></i>Superadmin</span>';
             } else if (esSistema) {
-                badgeTipo = '<span class="badge bg-info-subtle text-info border border-info-subtle f-s-11"><i class="ti ti-cpu me-1"></i>Sistema</span>';
+                badgeTipo = '<span class="badge bg-info-subtle text-info border border-info-subtle f-s-11"><i class="fa-solid fa-microchip me-1"></i>Sistema</span>';
             } else {
-                badgeTipo = '<span class="badge bg-secondary-subtle text-secondary f-s-11"><i class="ti ti-user me-1"></i>Personalizado</span>';
+                badgeTipo = '<span class="badge bg-secondary-subtle text-secondary f-s-11"><i class="fa-solid fa-user me-1"></i>Personalizado</span>';
             }
 
             // Badge de Estado
             const badgeEstado = estaActivo
-                ? '<span class="badge bg-success-subtle text-success border border-success-subtle f-s-11"><i class="ti ti-check me-1"></i>ACTIVO</span>'
-                : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11"><i class="ti ti-ban me-1"></i>INACTIVO</span>';
+                ? '<span class="badge bg-success-subtle text-success border border-success-subtle f-s-11"><i class="fa-solid fa-check me-1"></i>ACTIVO</span>'
+                : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11"><i class="fa-solid fa-ban me-1"></i>INACTIVO</span>';
 
             // Botones de acción
             let botonesAccion = `
                 <div class="d-flex justify-content-end gap-1">
                     <button type="button" class="btn btn-outline-primary btn-sm btn-permisos-rol" data-id="${r.id}" title="Gestionar permisos">
-                        <i class="ti ti-key"></i>
+                        <i class="fa-solid fa-key"></i>
                     </button>
                     <button type="button" class="btn btn-outline-info btn-sm btn-usuarios-rol" data-id="${r.id}" title="Ver usuarios asignados">
-                        <i class="ti ti-users"></i>
+                        <i class="fa-solid fa-users"></i>
                     </button>
                     <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-rol" data-id="${r.id}" title="Editar rol">
-                        <i class="ti ti-edit"></i>
+                        <i class="fa-solid fa-pen-to-square"></i>
                     </button>
             `;
 
@@ -336,13 +336,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (estaActivo) {
                     botonesAccion += `
                         <button type="button" class="btn btn-outline-warning btn-sm btn-estado-rol" data-id="${r.id}" data-estado="INACTIVO" title="Desactivar rol">
-                            <i class="ti ti-ban"></i>
+                            <i class="fa-solid fa-ban"></i>
                         </button>
                     `;
                 } else {
                     botonesAccion += `
                         <button type="button" class="btn btn-outline-success btn-sm btn-estado-rol" data-id="${r.id}" data-estado="ACTIVO" title="Activar rol">
-                            <i class="ti ti-check"></i>
+                            <i class="fa-solid fa-check"></i>
                         </button>
                     `;
                 }
@@ -363,13 +363,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-center">${badgeEstado}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-light btn-sm btn-permisos-rol border" data-id="${r.id}">
-                            <i class="ti ti-key me-1 text-primary"></i>
+                            <i class="fa-solid fa-key me-1 text-primary"></i>
                             <strong>${r.total_permisos}</strong> asignado(s)
                         </button>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-light btn-sm btn-usuarios-rol border" data-id="${r.id}">
-                            <i class="ti ti-users me-1 text-info"></i>
+                            <i class="fa-solid fa-users me-1 text-info"></i>
                             <strong>${r.total_usuarios}</strong> vinculado(s)
                         </button>
                     </td>
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 if (btnGuardarCrear) {
                     btnGuardarCrear.disabled = false;
-                    btnGuardarCrear.innerHTML = '<i class="ti ti-device-floppy me-1"></i> Guardar Rol';
+                    btnGuardarCrear.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Guardar Rol';
                 }
             }
         });
@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 if (btnGuardarEditar) {
                     btnGuardarEditar.disabled = false;
-                    btnGuardarEditar.innerHTML = '<i class="ti ti-device-floppy me-1"></i> Actualizar Rol';
+                    btnGuardarEditar.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Actualizar Rol';
                 }
             }
         });
@@ -920,7 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 notificar('error', error.message, 'No se pudo guardar la matriz de permisos');
             } finally {
                 btnGuardarPermisos.disabled = false;
-                btnGuardarPermisos.innerHTML = '<i class="ti ti-device-floppy me-1"></i> Guardar Cambios';
+                btnGuardarPermisos.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios';
             }
         });
     }
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbodyUsuariosRol.innerHTML = `
                     <tr>
                         <td colspan="4" class="text-center py-4 text-muted">
-                            <i class="ti ti-info-circle me-1"></i> Este rol no cuenta con usuarios asignados actualmente.
+                            <i class="fa-solid fa-circle-info me-1"></i> Este rol no cuenta con usuarios asignados actualmente.
                         </td>
                     </tr>
                 `;

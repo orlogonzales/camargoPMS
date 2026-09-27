@@ -23,7 +23,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-users f-s-22"></i>
+                        <i class="fa-solid fa-users f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Administración de Usuarios</h4>
@@ -35,7 +35,7 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_crear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-abrir-crear-usuario">
-                            <i class="ti ti-user-plus me-1"></i> Nuevo Usuario
+                            <i class="fa-solid fa-user-plus me-1"></i> Nuevo Usuario
                         </button>
                     <?php endif; ?>
                 </div>
@@ -46,11 +46,11 @@ declare(strict_types=1);
                 <div class="row g-2 align-items-center">
                     <div class="col-md-5 col-12">
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" class="form-control" id="filtro-busqueda-usuario"
                                    placeholder="Buscar por usuario, persona o documento..." autocomplete="off">
                             <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" title="Limpiar búsqueda">
-                                <i class="ti ti-x"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
@@ -72,7 +72,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-1 col-12 text-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btn-recargar-usuarios" title="Refrescar datos">
-                            <i class="ti ti-refresh"></i>
+                            <i class="fa-solid fa-arrows-rotate"></i>
                         </button>
                     </div>
                 </div>
@@ -130,7 +130,7 @@ declare(strict_types=1);
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-crear-usuario-titulo">
-                    <i class="ti ti-user-plus me-1"></i> Alta de Nueva Cuenta de Usuario
+                    <i class="fa-solid fa-user-plus me-1"></i> Alta de Nueva Cuenta de Usuario
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -211,7 +211,7 @@ declare(strict_types=1);
                 <div class="modal-footer bg-light border-top py-2 px-3">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-crear-usuario">
-                        <i class="ti ti-device-floppy me-1"></i> Crear Usuario
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Crear Usuario
                     </button>
                 </div>
             </form>
@@ -225,7 +225,7 @@ declare(strict_types=1);
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-warning text-dark py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-reset-clave-titulo">
-                    <i class="ti ti-key me-1"></i> Restablecer Contraseña Administrativa
+                    <i class="fa-solid fa-key me-1"></i> Restablecer Contraseña Administrativa
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -233,7 +233,7 @@ declare(strict_types=1);
                 <input type="hidden" id="reset-usuario-id" name="usuario_id">
                 <div class="modal-body p-4">
                     <div class="alert alert-warning f-s-12 py-2 px-3 mb-3">
-                        <i class="ti ti-alert-triangle me-1"></i>
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
                         Esta acción generará una nueva contraseña para <strong id="reset-nombre-usuario-txt">usuario</strong>.
                         <strong>Todas sus sesiones activas serán revocadas</strong> inmediatamente por seguridad.
                     </div>
@@ -265,7 +265,7 @@ declare(strict_types=1);
                 <div class="modal-footer bg-light border-top py-2 px-3">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-warning btn-sm text-dark" id="btn-guardar-reset-clave">
-                        <i class="ti ti-check me-1"></i> Restablecer Contraseña
+                        <i class="fa-solid fa-check me-1"></i> Restablecer Contraseña
                     </button>
                 </div>
             </form>
@@ -279,7 +279,7 @@ declare(strict_types=1);
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-dark text-white py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-roles-usuario-titulo">
-                    <i class="ti ti-shield-lock me-1"></i> Roles del Usuario: <span id="roles-modal-usuario-txt"></span>
+                    <i class="fa-solid fa-shield-halved me-1"></i> Roles del Usuario: <span id="roles-modal-usuario-txt"></span>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -304,7 +304,7 @@ declare(strict_types=1);
                         </div>
                         <div class="col-4">
                             <button type="submit" class="btn btn-outline-primary btn-sm w-100" id="btn-ejecutar-asignar-rol">
-                                <i class="ti ti-plus me-1"></i> Asignar
+                                <i class="fa-solid fa-plus me-1"></i> Asignar
                             </button>
                         </div>
                     </form>
@@ -323,7 +323,7 @@ declare(strict_types=1);
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-info-subtle py-3 border-bottom">
                 <h5 class="modal-title f-s-16 f-w-700 text-dark" id="modal-sesiones-usuario-titulo">
-                    <i class="ti ti-devices me-1"></i> Sesiones Activas: <span id="sesiones-modal-usuario-txt"></span>
+                    <i class="fa-solid fa-laptop me-1"></i> Sesiones Activas: <span id="sesiones-modal-usuario-txt"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -336,7 +336,7 @@ declare(strict_types=1);
                     </p>
                     <?php if (!empty($capacidades['puede_editar'])): ?>
                         <button type="button" class="btn btn-outline-danger btn-sm" id="btn-cerrar-todas-sesiones">
-                            <i class="ti ti-logout me-1"></i> Cerrar Todas las Sesiones
+                            <i class="fa-solid fa-right-from-bracket me-1"></i> Cerrar Todas las Sesiones
                         </button>
                     <?php endif; ?>
                 </div>

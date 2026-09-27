@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-2 — Estandarización transversal obligatoria de recursos de interfaz
+
+- **Estandarización de Iconografía Oficial Font Awesome 6 (D-071):**
+  - Adopción exclusiva de Font Awesome 6 Free (v6.3.0) en todo el código propio del sistema.
+  - Erradicación total (0 ocurrencias) de Tabler Icons (`ti ti-*`, `ti-*`) en todas las vistas PHP (`app/Vistas/`), layouts, controladores y módulos JavaScript propios (`public/assets/js/`).
+  - Actualización de catálogo de iconos de menú en base de datos (`opciones_menu.icono`) y esquema maestro `SQL/camargo_pms.sql` a formato `fa-solid fa-*`.
+  - Despliegue de assets locales: `public/assets/vendor/fontawesome/css/all.css` y 8 archivos de fuentes web en `public/assets/fonts/fontawesome/` con política estricta de *Local Assets First* (0 CDNs).
+- **Selectores de Fecha Alina Transversales (Flatpickr / D-071):**
+  - Implementación del componente oficial Date Picker de Alina (`.camargo-datepicker`) para fechas individuales.
+  - Implementación del componente oficial Range Picker de Alina (`.camargo-rangepicker`) para selección de intervalos y períodos en Disponibilidad y Reservas.
+  - Controlador modular `public/assets/js/camargo-pickers.js` en Vanilla JS (0 jQuery) con sincronización atómica de inputs canónicos ocultos, despacho de eventos nativos `input` y `change` compatibles con PristineJS y soporte modal/mobile (`disableMobile: true`).
+  - **Preservación Inviolable de D-066:** El Range Picker opera puramente como experiencia de usuario (UX); la arquitectura backend conserva `fecha_entrada` y `fecha_salida` independientes como `DATE` (`YYYY-MM-DD`) e intervalo semiabierto $[ \text{entrada}, \text{salida} )$.
+- **Cero Dependencia de jQuery:**
+  - Código propio 100% en Vanilla JS (ES6+) moderno y nativo.
+- **Gobernanza y Documentación:**
+  - Registro de decisión vinculante `D-071` en `docs/gobernanza/DECISIONES.md`.
+  - Actualización integral de `docs/gobernanza/FRONTEND.md`, `PLANTILLA-ALINA.md`, `CONVENCIONES.md` y `.skills/camargo-ui-alina/SKILL.md`.
+  - Preservación íntegra de `admin-dashboard/` (0 modificaciones) y `.env` (0 modificaciones).
+  - 0 migraciones de base de datos añadidas (permanece en 001–014).
+
 ### Microfase RESERVAS-1A — Corrección Fiscal, Configuración de Hold y Semántica D-061
 
 - **Corrección de Política Fiscal y Snapshot Tributario (D-069 / D-070):**

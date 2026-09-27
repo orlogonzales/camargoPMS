@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyUnidades.innerHTML = `
                 <tr>
                     <td colspan="7" class="text-center py-4 text-danger">
-                        <i class="ti ti-alert-triangle me-1"></i> No se pudo cargar el catálogo de unidades.
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> No se pudo cargar el catálogo de unidades.
                     </td>
                 </tr>
             `;
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td>
                         <a href="/propiedades/${u.propiedad_id}/perfil" class="text-decoration-none text-secondary">
-                            <i class="ti ti-building me-1 text-muted"></i>${escapeHtml(u.propiedad_nombre || 'Propiedad #' + u.propiedad_id)}
+                            <i class="fa-solid fa-building me-1 text-muted"></i>${escapeHtml(u.propiedad_nombre || 'Propiedad #' + u.propiedad_id)}
                         </a>
                     </td>
                     <td>
@@ -179,10 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="f-s-12 text-secondary">
                         ${pisoTxt}
-                        <span title="Capacidad de personas"><i class="ti ti-users me-1 text-muted"></i>${u.capacidad_personas}</span> · 
-                        <span title="Dormitorios"><i class="ti ti-bed me-1 text-muted"></i>${u.dormitorios}</span> · 
-                        <span title="Baños"><i class="ti ti-bath me-1 text-muted"></i>${u.banos}</span>
-                        ${areaTxt ? ` · <span title="Área"><i class="ti ti-dimensions me-1 text-muted"></i>${areaTxt}</span>` : ''}
+                        <span title="Capacidad de personas"><i class="fa-solid fa-users me-1 text-muted"></i>${u.capacidad_personas}</span> · 
+                        <span title="Dormitorios"><i class="fa-solid fa-bed me-1 text-muted"></i>${u.dormitorios}</span> · 
+                        <span title="Baños"><i class="fa-solid fa-bath me-1 text-muted"></i>${u.banos}</span>
+                        ${areaTxt ? ` · <span title="Área"><i class="fa-solid fa-ruler-combined me-1 text-muted"></i>${areaTxt}</span>` : ''}
                     </td>
                     <td class="text-center">
                         ${estadoBadge}
@@ -190,17 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="/unidades/${u.id}/perfil" class="btn btn-outline-secondary" title="Ver ficha técnica">
-                                <i class="ti ti-eye"></i>
+                                <i class="fa-solid fa-eye"></i>
                             </a>
                             <button type="button" class="btn btn-outline-primary btn-editar-unidad" data-id="${u.id}" title="Editar unidad">
-                                <i class="ti ti-edit"></i>
+                                <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             ${esActiva
                                 ? `<button type="button" class="btn btn-outline-danger btn-cambiar-estado" data-id="${u.id}" data-nuevo-estado="INACTIVO" title="Desactivar unidad">
-                                        <i class="ti ti-ban"></i>
+                                        <i class="fa-solid fa-ban"></i>
                                    </button>`
                                 : `<button type="button" class="btn btn-outline-success btn-cambiar-estado" data-id="${u.id}" data-nuevo-estado="ACTIVO" title="Activar unidad">
-                                        <i class="ti ti-check"></i>
+                                        <i class="fa-solid fa-check"></i>
                                    </button>`
                             }
                         </div>
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formUnidad.reset();
         document.getElementById('unidad-id').value = '';
         if (modalUnidadTitulo) {
-            modalUnidadTitulo.innerHTML = '<i class="ti ti-door me-2 text-primary"></i>Nueva Unidad';
+            modalUnidadTitulo.innerHTML = '<i class="fa-solid fa-door-open me-2 text-primary"></i>Nueva Unidad';
         }
 
         // Si hay una propiedad preseleccionada en el filtro, asignarla
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('unidad-observaciones').value = u.observaciones || '';
 
             if (modalUnidadTitulo) {
-                modalUnidadTitulo.innerHTML = `<i class="ti ti-edit me-2 text-primary"></i>Editar Unidad: ${escapeHtml(u.codigo)}`;
+                modalUnidadTitulo.innerHTML = `<i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Editar Unidad: ${escapeHtml(u.codigo)}`;
             }
 
             modalUnidad.show();

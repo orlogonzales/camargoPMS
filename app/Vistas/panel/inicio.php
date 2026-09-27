@@ -15,7 +15,7 @@ declare(strict_types=1);
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3">
-                        <i class="ti ti-layers-linked f-s-22"></i>
+                        <i class="fa-solid fa-network-wired f-s-22"></i>
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">Arquitectura MVC</h5>
@@ -35,7 +35,7 @@ declare(strict_types=1);
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="bg-info-subtle text-info p-2 b-r-8 me-3">
-                        <i class="ti ti-layout-dashboard f-s-22"></i>
+                        <i class="fa-solid fa-table-columns f-s-22"></i>
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">Plantilla Alina</h5>
@@ -55,7 +55,7 @@ declare(strict_types=1);
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="bg-warning-subtle text-warning p-2 b-r-8 me-3">
-                        <i class="ti ti-brand-javascript f-s-22"></i>
+                        <i class="fa-brands fa-js f-s-22"></i>
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">JavaScript Propio</h5>
@@ -75,7 +75,7 @@ declare(strict_types=1);
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="bg-secondary-subtle text-secondary p-2 b-r-8 me-3">
-                        <i class="ti ti-shield-check f-s-22"></i>
+                        <i class="fa-solid fa-shield-halved f-s-22"></i>
                     </span>
                     <div>
                         <h5 class="card-title mb-0 f-s-16">Gobernanza Activa</h5>
@@ -96,7 +96,7 @@ declare(strict_types=1);
         <div class="card tarjeta-comprobacion">
             <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">
                 <h6 class="mb-0 text-dark f-w-600">
-                    <i class="ti ti-server-cog text-primary me-2 f-s-18"></i> Estado de la Infraestructura de UI-0
+                    <i class="fa-solid fa-server text-primary me-2 f-s-18"></i> Estado de la Infraestructura de UI-0
                 </h6>
                 <span class="badge bg-primary text-white">Camargo PMS &bull; Fase UI-0</span>
             </div>
@@ -130,7 +130,7 @@ declare(strict_types=1);
 
                 <div class="alert alert-light border mt-4 mb-0" role="alert">
                     <div class="d-flex align-items-center">
-                        <i class="ti ti-info-circle f-s-22 text-primary me-3"></i>
+                        <i class="fa-solid fa-circle-info f-s-22 text-primary me-3"></i>
                         <div>
                             <strong>Comprobación de Layout exitosa:</strong>
                             Esta vista neutra confirma que el Front Controller, el Enrutador mínimo, la Plantilla Alina y el renderizado por capas se encuentran operativos. No existen métricas simuladas ni acceso a base de datos.

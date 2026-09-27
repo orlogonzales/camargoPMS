@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyPropiedades.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4 text-danger">
-                        <i class="ti ti-alert-triangle f-s-18 me-1"></i>
+                        <i class="fa-solid fa-triangle-exclamation f-s-18 me-1"></i>
                         No se pudo cargar el catálogo de propiedades. (${escapeHtml(error.message)})
                     </td>
                 </tr>
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyPropiedades.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4 text-muted">
-                        <i class="ti ti-folder-off f-s-24 d-block mb-1"></i>
+                        <i class="fa-solid fa-folder-open f-s-24 d-block mb-1"></i>
                         No se encontraron propiedades registradas con los criterios seleccionados.
                     </td>
                 </tr>
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (p.departamento) partesUbicacion.push(p.departamento);
             if (p.pais_nombre) partesUbicacion.push(p.pais_nombre);
             const ubicacionTxt = partesUbicacion.length > 0 ? partesUbicacion.join(', ') : 'No especificada';
-            const direccionTxt = p.direccion ? `<br><small class="text-muted"><i class="ti ti-map-pin f-s-11"></i> ${escapeHtml(p.direccion)}</small>` : '';
+            const direccionTxt = p.direccion ? `<br><small class="text-muted"><i class="fa-solid fa-location-dot f-s-11"></i> ${escapeHtml(p.direccion)}</small>` : '';
 
             // Coordenadas GPS
             let coordsHtml = '<span class="text-muted f-s-12">No registradas</span>';
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 coordsHtml = `
                     <a href="https://www.google.com/maps?q=${p.latitud},${p.longitud}" target="_blank" rel="noopener noreferrer"
                        class="badge bg-primary-subtle text-primary text-decoration-none" title="Ver en Google Maps">
-                        <i class="ti ti-map-pin me-1"></i>${latFormatted}, ${lngFormatted}
+                        <i class="fa-solid fa-location-dot me-1"></i>${latFormatted}, ${lngFormatted}
                     </a>
                 `;
             }
@@ -250,16 +250,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="/propiedades/${p.id}/perfil" class="btn btn-outline-info" title="Ver Ficha Técnica">
-                                <i class="ti ti-eye"></i>
+                                <i class="fa-solid fa-eye"></i>
                             </a>
                             <button type="button" class="btn btn-outline-primary btn-accion-editar"
                                     data-id="${p.id}" title="Editar Propiedad">
-                                <i class="ti ti-edit"></i>
+                                <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <button type="button" class="btn btn-outline-${esActivo ? 'warning' : 'success'} btn-accion-estado"
                                     data-id="${p.id}" data-nombre="${escapeHtml(p.nombre)}" data-estado="${p.estado}"
                                     title="${esActivo ? 'Desactivar Propiedad' : 'Activar Propiedad'}">
-                                <i class="ti ti-power"></i>
+                                <i class="fa-solid fa-power-off"></i>
                             </button>
                         </div>
                     </td>
@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             if (btnGuardarPropiedad) {
                 btnGuardarPropiedad.disabled = false;
-                btnGuardarPropiedad.innerHTML = '<i class="ti ti-check me-1"></i> ' + (esEdicion ? 'Guardar Cambios' : 'Guardar Propiedad');
+                btnGuardarPropiedad.innerHTML = '<i class="fa-solid fa-check me-1"></i> ' + (esEdicion ? 'Guardar Cambios' : 'Guardar Propiedad');
             }
         }
     }

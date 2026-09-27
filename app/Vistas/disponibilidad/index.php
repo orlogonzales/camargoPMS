@@ -29,7 +29,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-calendar-event f-s-22"></i>
+                        <i class="fa-solid fa-calendar-days f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Motor Central de Disponibilidad</h4>
@@ -41,7 +41,7 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_bloquear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-abrir-nuevo-bloqueo">
-                            <i class="ti ti-lock me-1"></i> Bloquear Unidad
+                            <i class="fa-solid fa-lock me-1"></i> Bloquear Unidad
                         </button>
                     <?php endif; ?>
                 </div>
@@ -53,7 +53,7 @@ declare(strict_types=1);
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
                             <div class="bg-primary-subtle text-primary p-2 b-r-6 me-3">
-                                <i class="ti ti-door f-s-20"></i>
+                                <i class="fa-solid fa-door-open f-s-20"></i>
                             </div>
                             <div>
                                 <span class="text-secondary f-s-12 text-uppercase d-block">Unidades Totales</span>
@@ -64,7 +64,7 @@ declare(strict_types=1);
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
                             <div class="bg-success-subtle text-success p-2 b-r-6 me-3">
-                                <i class="ti ti-circle-check f-s-20"></i>
+                                <i class="fa-solid fa-circle-check f-s-20"></i>
                             </div>
                             <div>
                                 <span class="text-secondary f-s-12 text-uppercase d-block">Disponibles</span>
@@ -75,7 +75,7 @@ declare(strict_types=1);
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
                             <div class="bg-danger-subtle text-danger p-2 b-r-6 me-3">
-                                <i class="ti ti-lock f-s-20"></i>
+                                <i class="fa-solid fa-lock f-s-20"></i>
                             </div>
                             <div>
                                 <span class="text-secondary f-s-12 text-uppercase d-block">Bloqueadas / Ocupadas</span>
@@ -86,7 +86,7 @@ declare(strict_types=1);
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
                             <div class="bg-info-subtle text-info p-2 b-r-6 me-3">
-                                <i class="ti ti-percentage f-s-20"></i>
+                                <i class="fa-solid fa-percent f-s-20"></i>
                             </div>
                             <div>
                                 <span class="text-secondary f-s-12 text-uppercase d-block">Tasa de Disponibilidad</span>
@@ -103,19 +103,19 @@ declare(strict_types=1);
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active f-s-14 f-w-600" id="tab-consulta-btn" data-bs-toggle="tab"
                                 data-bs-target="#tab-consulta" type="button" role="tab">
-                            <i class="ti ti-search me-1"></i> Consulta de Disponibilidad
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Consulta de Disponibilidad
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-14 f-w-600" id="tab-matriz-btn" data-bs-toggle="tab"
                                 data-bs-target="#tab-matriz" type="button" role="tab">
-                            <i class="ti ti-calendar me-1"></i> Matriz Mensual (Rack)
+                            <i class="fa-solid fa-calendar-days me-1"></i> Matriz Mensual (Rack)
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-14 f-w-600" id="tab-bloqueos-btn" data-bs-toggle="tab"
                                 data-bs-target="#tab-bloqueos" type="button" role="tab">
-                            <i class="ti ti-lock me-1"></i> Bloqueos Activos
+                            <i class="fa-solid fa-lock me-1"></i> Bloqueos Activos
                         </button>
                     </li>
                 </ul>
@@ -129,19 +129,21 @@ declare(strict_types=1);
                         <div class="card border mb-3">
                             <div class="card-body p-3 bg-light-subtle">
                                 <form id="form-consulta-disponibilidad" class="row g-2 align-items-end">
-                                    <div class="col-md-2 col-6">
-                                        <label for="consulta-fecha-entrada" class="form-label f-s-12 f-w-600 mb-1">
-                                            <i class="ti ti-calendar-event me-1"></i> Entrada (Check-in)
+                                    <div class="col-md-4 col-12">
+                                        <label for="consulta-rango-fechas" class="form-label f-s-12 f-w-600 mb-1">
+                                            <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo de Estadía (Check-in → Check-out)
                                         </label>
-                                        <input type="date" class="form-control form-control-sm" id="consulta-fecha-entrada"
-                                               name="fecha_entrada" value="<?= e($fechaEntradaDefecto) ?>" required>
-                                    </div>
-                                    <div class="col-md-2 col-6">
-                                        <label for="consulta-fecha-salida" class="form-label f-s-12 f-w-600 mb-1">
-                                            <i class="ti ti-calendar-off me-1"></i> Salida (Check-out)
-                                        </label>
-                                        <input type="date" class="form-control form-control-sm" id="consulta-fecha-salida"
-                                               name="fecha_salida" value="<?= e($fechaSalidaDefecto) ?>" required>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
+                                            <input type="text" class="form-control" id="consulta-rango-fechas"
+                                                   placeholder="Seleccione intervalo..."
+                                                   data-provider="rangepicker"
+                                                   data-target-inicio="#consulta-fecha-entrada"
+                                                   data-target-fin="#consulta-fecha-salida"
+                                                   autocomplete="off" readonly>
+                                        </div>
+                                        <input type="hidden" id="consulta-fecha-entrada" name="fecha_entrada" value="<?= e($fechaEntradaDefecto) ?>">
+                                        <input type="hidden" id="consulta-fecha-salida" name="fecha_salida" value="<?= e($fechaSalidaDefecto) ?>">
                                     </div>
                                     <div class="col-md-3 col-6">
                                         <label for="consulta-propiedad-id" class="form-label f-s-12 f-w-600 mb-1">Propiedad</label>
@@ -163,7 +165,7 @@ declare(strict_types=1);
                                     </div>
                                     <div class="col-md-3 col-12 d-flex gap-2">
                                         <button type="submit" class="btn btn-primary btn-sm flex-grow-1" id="btn-ejecutar-consulta">
-                                            <i class="ti ti-search me-1"></i> Consultar
+                                            <i class="fa-solid fa-magnifying-glass me-1"></i> Consultar
                                         </button>
                                         <div class="form-check form-switch pt-1 d-flex align-items-center">
                                             <input class="form-check-input" type="checkbox" id="check-solo-disponibles">
@@ -177,7 +179,7 @@ declare(strict_types=1);
                         <!-- Banner Informativo del Intervalo -->
                         <div class="alert alert-info py-2 px-3 f-s-13 mb-3 d-flex align-items-center justify-content-between" id="banner-intervalo-info">
                             <div>
-                                <i class="ti ti-info-circle me-1"></i>
+                                <i class="fa-solid fa-circle-info me-1"></i>
                                 Intervalo consultado: <strong id="info-rango-texto"><?= e($fechaEntradaDefecto) ?> al <?= e($fechaSalidaDefecto) ?></strong>
                                 (<span id="info-noches-texto">1 noche</span>).
                                 Modelo: <strong>[entrada, salida)</strong>. La noche de salida queda liberada para check-in.
@@ -229,18 +231,18 @@ declare(strict_types=1);
                             </div>
                             <div class="col-md-2 col-6 d-flex align-items-end">
                                 <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn-recargar-matriz">
-                                    <i class="ti ti-refresh me-1"></i> Cargar Matriz
+                                    <i class="fa-solid fa-arrows-rotate me-1"></i> Cargar Matriz
                                 </button>
                             </div>
                             <div class="col-md-3 col-12 d-flex justify-content-md-end align-items-center gap-2 pt-2 pt-md-0">
                                 <span class="badge bg-success-subtle text-success border border-success-subtle f-s-11">
-                                    <i class="ti ti-circle-filled me-1"></i> Libre
+                                    <i class="fa-solid fa-circle me-1"></i> Libre
                                 </span>
                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-11">
-                                    <i class="ti ti-circle-filled me-1"></i> Bloqueado
+                                    <i class="fa-solid fa-circle me-1"></i> Bloqueado
                                 </span>
                                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle f-s-11">
-                                    <i class="ti ti-circle-filled me-1"></i> Mantenimiento
+                                    <i class="fa-solid fa-circle me-1"></i> Mantenimiento
                                 </span>
                             </div>
                         </div>
@@ -289,7 +291,7 @@ declare(strict_types=1);
                             </div>
                             <div class="col-md-3 col-6 text-end">
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-recargar-bloqueos">
-                                    <i class="ti ti-refresh me-1"></i> Actualizar
+                                    <i class="fa-solid fa-arrows-rotate me-1"></i> Actualizar
                                 </button>
                             </div>
                         </div>
@@ -334,14 +336,14 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom py-2 bg-light">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-crear-bloqueo-label">
-                    <i class="ti ti-lock text-primary me-1"></i> Bloquear Unidad en Inventario
+                    <i class="fa-solid fa-lock text-primary me-1"></i> Bloquear Unidad en Inventario
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <form id="form-crear-bloqueo" novalidate>
                 <div class="modal-body p-3">
                     <div class="alert alert-warning py-2 px-3 f-s-12 mb-3">
-                        <i class="ti ti-alert-triangle me-1"></i>
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
                         El bloqueo inhabilita comercialmente la unidad para el rango semiabierto <strong>[fecha_inicio, fecha_fin)</strong>.
                     </div>
 
@@ -364,16 +366,23 @@ declare(strict_types=1);
                         </select>
                     </div>
 
-                    <!-- Fechas -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label for="bloqueo-fecha-inicio" class="form-label f-s-13 f-w-600">Fecha Entrada <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control form-control-sm" id="bloqueo-fecha-inicio" name="fecha_inicio" required>
+                    <!-- Fechas Rango con Alina Range Picker -->
+                    <div class="mb-3">
+                        <label for="bloqueo-rango-fechas" class="form-label f-s-13 f-w-600">
+                            <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo del Bloqueo <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
+                            <input type="text" class="form-control" id="bloqueo-rango-fechas"
+                                   placeholder="Seleccione fecha de inicio y fin..."
+                                   data-provider="rangepicker"
+                                   data-target-inicio="#bloqueo-fecha-inicio"
+                                   data-target-fin="#bloqueo-fecha-fin"
+                                   autocomplete="off" readonly required>
                         </div>
-                        <div class="col-6">
-                            <label for="bloqueo-fecha-fin" class="form-label f-s-13 f-w-600">Fecha Salida <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control form-control-sm" id="bloqueo-fecha-fin" name="fecha_fin" required>
-                        </div>
+                        <input type="hidden" id="bloqueo-fecha-inicio" name="fecha_inicio" required>
+                        <input type="hidden" id="bloqueo-fecha-fin" name="fecha_fin" required>
+                        <div class="form-text f-s-11 text-muted">Intervalo semiabierto [entrada, salida). La noche de salida queda liberada para check-in.</div>
                     </div>
 
                     <!-- Tipo de Bloqueo -->
@@ -396,7 +405,7 @@ declare(strict_types=1);
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-bloqueo">
                         <span class="spinner-border spinner-border-sm me-1 d-none" id="spinner-guardar-bloqueo"></span>
-                        <i class="ti ti-lock me-1"></i> Confirmar Bloqueo
+                        <i class="fa-solid fa-lock me-1"></i> Confirmar Bloqueo
                     </button>
                 </div>
             </form>
@@ -412,7 +421,7 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom py-2 bg-light">
                 <h6 class="modal-title f-s-14 f-w-700 text-danger" id="modal-liberar-bloqueo-label">
-                    <i class="ti ti-lock-open me-1"></i> Liberar Bloqueo
+                    <i class="fa-solid fa-lock-open me-1"></i> Liberar Bloqueo
                 </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>

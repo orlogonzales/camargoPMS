@@ -50,31 +50,38 @@ Todos los modales resetean el formulario e instancias del validador en `hidden.b
 
 ## Assets
 
-Globales mínimos:
+Globales mínimos (D-071):
 
-- Bootstrap.
-- Tabler Icons y fuentes.
+- Bootstrap 5.
+- Font Awesome 6 Free (v6.3.0) y fuentes web locales en `public/assets/vendor/fontawesome/` y `public/assets/fonts/fontawesome/` (librería de iconos oficial y obligatoria; 0 Tabler Icons en código propio).
+- Flatpickr v4.6.13 local (CSS y JS en `public/assets/vendor/flatpickr/`) para Date Picker y Range Picker Alina transversales.
 - Simplebar.
-- CSS esencial de Alina.
-- CSS y JavaScript propios del layout Camargo PMS.
+- CSS esencial de Alina (`style.css`, `responsive.css`).
+- CSS y JavaScript propios del layout y componentes (`camargo.css`, `camargo-layout.js`, `camargo-pickers.js`).
 
 Por módulo:
 
-- FullCalendar, DataTables, SweetAlert, PristineJS, gráficos, editores o uploads únicamente donde se usan.
+- FullCalendar, DataTables, SweetAlert2, PristineJS, gráficos, editores o uploads únicamente donde se usan.
 
-El orden de CSS y scripts debe ser determinista y sin duplicados. Las rutas de assets parten de una URL base, no de `../` dependiente de la ruta actual.
+El orden de CSS y scripts debe ser determinista y sin duplicados. Las rutas de assets parten de una URL base, no de `../` dependiente de la ruta actual. Cero uso de CDNs externas: política estricta de *Local Assets First*.
 
 ## JavaScript
 
-`camargo-layout.js` reproducirá solo lo necesario: selección de área, enlace activo, colapsables, sidebar responsive, Simplebar, loader, tema y volver arriba según decisiones de producto. Debe tolerar componentes opcionales mediante comprobaciones de existencia.
+`camargo-layout.js` reproduce las funciones del shell: selección de área, enlace activo, colapsables, sidebar responsive, Simplebar, loader, tema y volver arriba con comprobaciones defensivas de existencia.
 
-No modificar vendor ni cargar `script.js` o `theme_customizer.js` original como núcleo definitivo. Evitar jQuery en código nuevo; si se mantiene temporalmente, documentar el comportamiento que impide retirarlo.
+`camargo-pickers.js` estandariza de forma transversal la inicialización de Date Pickers y Range Pickers de Alina mediante Flatpickr en Vanilla JS puro:
+- **Range Picker UX:** Captura rangos de fechas (ej. `YYYY-MM-DD to YYYY-MM-DD`) y los sincroniza de forma atómica e invisible con los inputs canónicos individuales `fecha_entrada` y `fecha_salida`.
+- **Preservación D-066:** La capa backend recibe fechas discretas independientes en formato ISO `YYYY-MM-DD` bajo el modelo de intervalo semiabierto $[ \text{entrada}, \text{salida} )$. El Range Picker es una mejora exclusiva de experiencia de usuario en cliente.
+- **Validación reactiva:** Emite eventos nativos `input` y `change` para desencadenar validaciones PristineJS y recálculos reactivos en tiempo real.
+
+Regla vinculante: **0 jQuery en código propio**. Todo desarrollo de frontend propio se escribe en JavaScript moderno nativo (Vanilla JS ES6+). No modificar vendor ni cargar `script.js` o `theme_customizer.js` original como núcleo definitivo.
 
 ## Formularios y accesibilidad
 
 - Etiquetas asociadas, navegación por teclado y foco visible.
 - Errores vinculados al campo y resumen comprensible.
 - PristineJS complementa, no reemplaza, la validación servidor.
+- Selectores de fecha integrados con PristineJS y alertas accesibles.
 - Confirmaciones destructivas explican el objeto y consecuencia.
 - Mantener semántica, ARIA y contraste al adaptar componentes Alina.
 

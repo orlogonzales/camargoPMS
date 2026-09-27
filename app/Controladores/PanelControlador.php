@@ -147,14 +147,14 @@ final class PanelControlador
             'inicio' => [
                 'clave' => 'inicio',
                 'etiqueta' => 'Inicio',
-                'icono' => 'ti ti-smart-home',
+                'icono' => 'fa-solid fa-house',
                 'activo' => true,
                 'grupos' => [
                     [
                         'tipo' => 'simple',
                         'titulo' => 'Panel Principal',
                         'url' => url_ruta('/'),
-                        'icono' => 'ti ti-dashboard',
+                        'icono' => 'fa-solid fa-gauge-high',
                         'activo' => true,
                     ]
                 ]
@@ -162,14 +162,14 @@ final class PanelControlador
             'operaciones' => [
                 'clave' => 'operaciones',
                 'etiqueta' => 'Operaciones',
-                'icono' => 'ti ti-calendar-event',
+                'icono' => 'fa-solid fa-calendar-plus',
                 'activo' => false,
                 'grupos' => [
                     [
                         'tipo' => 'colapsable',
                         'id' => 'submenu-operaciones',
                         'titulo' => 'Ocupación y Estancias',
-                        'icono' => 'ti ti-calendar',
+                        'icono' => 'fa-solid fa-calendar-days',
                         'items' => [
                             ['titulo' => 'Disponibilidad (Próximamente)', 'url' => '#'],
                             ['titulo' => 'Reservas (Próximamente)', 'url' => '#'],
@@ -181,14 +181,14 @@ final class PanelControlador
             'propiedades' => [
                 'clave' => 'propiedades',
                 'etiqueta' => 'Inmuebles',
-                'icono' => 'ti ti-building',
+                'icono' => 'fa-solid fa-building',
                 'activo' => false,
                 'grupos' => [
                     [
                         'tipo' => 'colapsable',
                         'id' => 'submenu-propiedades',
                         'titulo' => 'Catálogo Inmobiliario',
-                        'icono' => 'ti ti-building-community',
+                        'icono' => 'fa-solid fa-city',
                         'items' => [
                             ['titulo' => 'Propiedades (Próximamente)', 'url' => '#'],
                             ['titulo' => 'Unidades (Próximamente)', 'url' => '#'],
@@ -199,14 +199,14 @@ final class PanelControlador
             'personas' => [
                 'clave' => 'personas',
                 'etiqueta' => 'Personas',
-                'icono' => 'ti ti-users',
+                'icono' => 'fa-solid fa-users',
                 'activo' => false,
                 'grupos' => [
                     [
                         'tipo' => 'colapsable',
                         'id' => 'submenu-personas',
                         'titulo' => 'Contactos y Proveedores',
-                        'icono' => 'ti ti-user-check',
+                        'icono' => 'fa-solid fa-user-check',
                         'items' => [
                             ['titulo' => 'Directorio de Personas (Próximamente)', 'url' => '#'],
                             ['titulo' => 'Proveedores de Servicios (Próximamente)', 'url' => '#'],
@@ -217,14 +217,14 @@ final class PanelControlador
             'finanzas' => [
                 'clave' => 'finanzas',
                 'etiqueta' => 'Finanzas',
-                'icono' => 'ti ti-cash',
+                'icono' => 'fa-solid fa-money-bill-wave',
                 'activo' => false,
                 'grupos' => [
                     [
                         'tipo' => 'colapsable',
                         'id' => 'submenu-finanzas',
                         'titulo' => 'Caja y Cobros',
-                        'icono' => 'ti ti-receipt',
+                        'icono' => 'fa-solid fa-receipt',
                         'items' => [
                             ['titulo' => 'Movimientos de Caja (Próximamente)', 'url' => '#'],
                             ['titulo' => 'Cobros y Pagos (Próximamente)', 'url' => '#'],
@@ -235,14 +235,14 @@ final class PanelControlador
             'administracion' => [
                 'clave' => 'administracion',
                 'etiqueta' => 'Configuración',
-                'icono' => 'ti ti-settings',
+                'icono' => 'fa-solid fa-gear',
                 'activo' => false,
                 'grupos' => [
                     [
                         'tipo' => 'colapsable',
                         'id' => 'submenu-administracion',
                         'titulo' => 'Ajustes del Sistema',
-                        'icono' => 'ti ti-adjustments',
+                        'icono' => 'fa-solid fa-sliders',
                         'items' => [
                             ['titulo' => 'Empresa y Parámetros (Próximamente)', 'url' => '#'],
                             ['titulo' => 'Plantillas Documentales (Próximamente)', 'url' => '#'],

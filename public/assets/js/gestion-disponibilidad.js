@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbodyDisponibilidad.innerHTML = `
                     <tr>
                         <td colspan="7" class="text-center py-4 text-danger">
-                            <i class="ti ti-alert-triangle f-s-18 me-1"></i>
+                            <i class="fa-solid fa-triangle-exclamation f-s-18 me-1"></i>
                             ${data.mensaje || 'Error al consultar disponibilidad.'}
                         </td>
                     </tr>
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbodyDisponibilidad.innerHTML = `
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="ti ti-calendar-off f-s-32 d-block mb-2 text-secondary"></i>
+                            <i class="fa-solid fa-calendar-xmark f-s-32 d-block mb-2 text-secondary"></i>
                             No se encontraron unidades que coincidan con los criterios seleccionados.
                         </td>
                     </tr>
@@ -210,10 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const u of resultado.unidades) {
                 const disponibleBadge = u.disponible
                     ? `<span class="badge bg-success-subtle text-success border border-success-subtle f-s-12">
-                           <i class="ti ti-check me-1"></i> Disponible
+                           <i class="fa-solid fa-check me-1"></i> Disponible
                        </span>`
                     : `<span class="badge bg-danger-subtle text-danger border border-danger-subtle f-s-12" title="${u.motivo_no_disponible || 'Ocupada'}">
-                           <i class="ti ti-lock me-1"></i> ${u.motivo_no_disponible || 'Bloqueada'}
+                           <i class="fa-solid fa-lock me-1"></i> ${u.motivo_no_disponible || 'Bloqueada'}
                        </span>`;
 
                 const btnBloquear = u.disponible
@@ -223,10 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                data-unidad-nombre="${u.nombre}"
                                data-propiedad-id="${u.propiedad_id}"
                                title="Bloquear unidad para estas fechas">
-                           <i class="ti ti-lock me-1"></i> Bloquear
+                           <i class="fa-solid fa-lock me-1"></i> Bloquear
                        </button>`
                     : `<button type="button" class="btn btn-outline-secondary btn-sm" disabled title="No disponible">
-                           <i class="ti ti-lock-off"></i>
+                           <i class="fa-solid fa-lock-open"></i>
                        </button>`;
 
                 html += `
@@ -240,13 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="f-w-600 text-dark">${u.nombre}</div>
                         </td>
                         <td class="text-secondary f-s-13">
-                            <i class="ti ti-building me-1"></i> ${u.propiedad_nombre}
+                            <i class="fa-solid fa-building me-1"></i> ${u.propiedad_nombre}
                         </td>
                         <td>
                             <span class="badge bg-light text-dark border">${u.tipo_unidad_nombre || '-'}</span>
                         </td>
                         <td class="text-secondary f-s-13">
-                            <i class="ti ti-users me-1"></i> ${u.capacidad_personas} pers.
+                            <i class="fa-solid fa-users me-1"></i> ${u.capacidad_personas} pers.
                         </td>
                         <td>${disponibleBadge}</td>
                         <td class="text-end pe-3">${btnBloquear}</td>
@@ -359,17 +359,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const celda = u.dias[c.fecha];
                     const esOcupado = celda && celda.estado === 'OCUPADO';
                     let claseColor = 'bg-success-subtle text-success';
-                    let icono = 'ti ti-check';
+                    let icono = 'fa-solid fa-check';
                     let tooltip = `${c.fecha}: Disponible`;
 
                     if (esOcupado) {
                         if (celda.tipo === 'MANTENIMIENTO') {
                             claseColor = 'bg-warning text-white';
-                            icono = 'ti ti-tool';
+                            icono = 'fa-solid fa-wrench';
                             tooltip = `${c.fecha}: Mantenimiento`;
                         } else {
                             claseColor = 'bg-danger text-white';
-                            icono = 'ti ti-lock';
+                            icono = 'fa-solid fa-lock';
                             tooltip = `${c.fecha}: Bloqueado / Ocupado`;
                         }
                     }
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbodyBloqueos.innerHTML = `
                     <tr>
                         <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="ti ti-lock-off f-s-32 d-block mb-2 text-secondary"></i>
+                            <i class="fa-solid fa-lock-open f-s-32 d-block mb-2 text-secondary"></i>
                             No se encontraron bloqueos con los filtros actuales.
                         </td>
                     </tr>
@@ -471,9 +471,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                data-unidad-codigo="${b.unidad_codigo || ''}"
                                data-rango="${b.fecha_inicio} al ${b.fecha_fin}"
                                title="Liberar bloqueo de fechas">
-                           <i class="ti ti-lock-open me-1"></i> Liberar
+                           <i class="fa-solid fa-lock-open me-1"></i> Liberar
                        </button>`
-                    : `<span class="text-muted f-s-12"><i class="ti ti-check me-1"></i> Liberado</span>`;
+                    : `<span class="text-muted f-s-12"><i class="fa-solid fa-check me-1"></i> Liberado</span>`;
 
                 html += `
                     <tr>
@@ -610,6 +610,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (bloqueoFechaInicio && entrada) bloqueoFechaInicio.value = entrada;
         if (bloqueoFechaFin && salida) bloqueoFechaFin.value = salida;
+
+        // Sincronizar Range Picker Alina (Flatpickr) del modal si existe
+        const rangeBloqueoInput = document.getElementById('bloqueo-rango-fechas');
+        if (rangeBloqueoInput && rangeBloqueoInput._flatpickr) {
+            if (entrada && salida) {
+                rangeBloqueoInput._flatpickr.setDate([entrada, salida], false);
+            } else {
+                rangeBloqueoInput._flatpickr.clear();
+            }
+        }
 
         modalCrearBloqueo.show();
     }

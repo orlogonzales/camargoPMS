@@ -25,7 +25,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-door f-s-22"></i>
+                        <i class="fa-solid fa-door-open f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Maestro Central de Unidades</h4>
@@ -37,7 +37,7 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_crear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-abrir-crear-unidad">
-                            <i class="ti ti-plus me-1"></i> Nueva Unidad
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Unidad
                         </button>
                     <?php endif; ?>
                 </div>
@@ -48,11 +48,11 @@ declare(strict_types=1);
                 <div class="row g-2 align-items-center">
                     <div class="col-md-4 col-12">
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" class="form-control" id="filtro-busqueda-unidad"
                                    placeholder="Buscar por código, nombre o propiedad..." autocomplete="off">
                             <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda-unidad" title="Limpiar búsqueda">
-                                <i class="ti ti-x"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
@@ -83,7 +83,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-1 col-6 text-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btn-recargar-unidades" title="Refrescar datos">
-                            <i class="ti ti-refresh"></i>
+                            <i class="fa-solid fa-rotate"></i>
                         </button>
                     </div>
                 </div>
@@ -118,13 +118,13 @@ declare(strict_types=1);
                 <!-- Estado vacío -->
                 <div id="estado-vacio-unidades" class="text-center py-5 d-none">
                     <div class="text-muted mb-2">
-                        <i class="ti ti-door-off f-s-48 text-secondary opacity-50"></i>
+                        <i class="fa-solid fa-door-closed f-s-48 text-secondary opacity-50"></i>
                     </div>
                     <h5 class="f-s-15 text-secondary mb-1">No se encontraron unidades físicas</h5>
                     <p class="f-s-13 text-muted mb-3">Intente ajustar los filtros de búsqueda o registre una nueva unidad.</p>
                     <?php if (!empty($capacidades['puede_crear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-crear-unidad-vacio">
-                            <i class="ti ti-plus me-1"></i> Registrar Primera Unidad
+                            <i class="fa-solid fa-plus me-1"></i> Registrar Primera Unidad
                         </button>
                     <?php endif; ?>
                 </div>
@@ -151,7 +151,7 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-light border-bottom py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-unidad-titulo">
-                    <i class="ti ti-door me-2 text-primary"></i>Nueva Unidad
+                    <i class="fa-solid fa-door-open me-2 text-primary"></i>Nueva Unidad
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -223,7 +223,7 @@ declare(strict_types=1);
                         <!-- Sección de Características Físicas -->
                         <div class="col-12 mt-3">
                             <h6 class="f-s-12 text-uppercase text-secondary border-bottom pb-2 mb-2">
-                                <i class="ti ti-ruler-measure me-1"></i> Características Físicas y Ocupacionales
+                                <i class="fa-solid fa-ruler-combined me-1"></i> Características Físicas y Ocupacionales
                             </h6>
                         </div>
 
@@ -290,7 +290,7 @@ declare(strict_types=1);
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-unidad">
                         <span class="spinner-border spinner-border-sm me-1 d-none" id="spinner-guardar-unidad"></span>
-                        <i class="ti ti-device-floppy me-1"></i> Guardar Unidad
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Unidad
                     </button>
                 </div>
             </form>

@@ -31,7 +31,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <span class="bg-primary-subtle text-primary p-3 b-r-12 me-3 d-flex-center">
-                            <i class="ti ti-building f-s-32"></i>
+                            <i class="fa-solid fa-building f-s-32"></i>
                         </span>
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
@@ -46,18 +46,18 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                                 <?php endif; ?>
                             </div>
                             <p class="text-secondary f-s-13 mb-0">
-                                <i class="ti ti-map-pin me-1"></i> <?= e($propiedad->obtenerUbicacionCompleta()) ?>
+                                <i class="fa-solid fa-location-dot me-1"></i> <?= e($propiedad->obtenerUbicacionCompleta()) ?>
                             </p>
                         </div>
                     </div>
                     <div class="mt-3 mt-md-0 d-flex gap-2">
                         <a href="<?= url_ruta('/propiedades') ?>" class="btn btn-outline-secondary btn-sm">
-                            <i class="ti ti-arrow-left me-1"></i> Volver al Catálogo
+                            <i class="fa-solid fa-arrow-left me-1"></i> Volver al Catálogo
                         </a>
                         <?php if (!empty($capacidades['puede_editar'])): ?>
                             <button type="button" class="btn btn-primary btn-sm" id="btn-perfil-editar-propiedad"
                                     data-id="<?= (int) $propiedad->obtenerId() ?>">
-                                <i class="ti ti-edit me-1"></i> Editar Inmueble
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Editar Inmueble
                             </button>
                         <?php endif; ?>
                         <?php if (!empty($capacidades['puede_cambiar_estado'])): ?>
@@ -66,7 +66,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                                     data-id="<?= (int) $propiedad->obtenerId() ?>"
                                     data-nombre="<?= e($propiedad->obtenerNombre()) ?>"
                                     data-estado="<?= e($propiedad->obtenerEstado()) ?>">
-                                <i class="ti ti-power me-1"></i> <?= $propiedad->estaActiva() ? 'Desactivar' : 'Activar' ?>
+                                <i class="fa-solid fa-power-off me-1"></i> <?= $propiedad->estaActiva() ? 'Desactivar' : 'Activar' ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -83,7 +83,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-bottom">
                 <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark">
-                    <i class="ti ti-info-circle me-1 text-primary"></i> Información del Inmueble y Localización
+                    <i class="fa-solid fa-circle-info me-1 text-primary"></i> Información del Inmueble y Localización
                 </h5>
             </div>
             <div class="card-body p-4">
@@ -142,7 +142,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <i class="ti ti-door me-2 text-primary f-s-18"></i>
+                    <i class="fa-solid fa-door-open me-2 text-primary f-s-18"></i>
                     <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark me-2">
                         Unidades Físicas (<?= count($unidades ?? []) ?>)
                     </h5>
@@ -151,7 +151,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                 <div class="d-flex gap-2">
                     <?php if (!empty($puedeCrearUnidad) && $propiedad->estaActiva()): ?>
                         <a href="<?= url_ruta("/unidades?propiedad_id={$propiedad->obtenerId()}") ?>" class="btn btn-primary btn-sm">
-                            <i class="ti ti-plus me-1"></i> Nueva Unidad
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Unidad
                         </a>
                     <?php endif; ?>
                 </div>
@@ -196,7 +196,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                                         </td>
                                         <td class="text-end">
                                             <a href="<?= url_ruta("/unidades/{$u->obtenerId()}/perfil") ?>" class="btn btn-outline-secondary btn-sm" title="Ver ficha técnica de la unidad">
-                                                <i class="ti ti-eye"></i>
+                                                <i class="fa-solid fa-eye"></i>
                                             </a>
                                         </td>
                                     </tr>
@@ -207,7 +207,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                 <?php else: ?>
                     <div class="text-center py-5 p-3">
                         <div class="p-3 b-r-12 bg-light-subtle d-inline-block mb-3">
-                            <i class="ti ti-door-off f-s-36 text-muted"></i>
+                            <i class="fa-solid fa-door-closed f-s-36 text-muted"></i>
                         </div>
                         <h6 class="f-w-700 f-s-15 mb-1">Sin unidades habitacionales registradas</h6>
                         <p class="text-secondary f-s-13 mx-auto mb-3" style="max-width: 480px;">
@@ -215,7 +215,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                         </p>
                         <?php if (!empty($puedeCrearUnidad) && $propiedad->estaActiva()): ?>
                             <a href="<?= url_ruta("/unidades?propiedad_id={$propiedad->obtenerId()}") ?>" class="btn btn-primary btn-sm">
-                                <i class="ti ti-plus me-1"></i> Registrar Primera Unidad
+                                <i class="fa-solid fa-plus me-1"></i> Registrar Primera Unidad
                             </a>
                         <?php endif; ?>
                     </div>
@@ -230,7 +230,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-bottom">
                 <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark">
-                    <i class="ti ti-compass me-1 text-primary"></i> Georreferenciación GPS
+                    <i class="fa-solid fa-compass me-1 text-primary"></i> Georreferenciación GPS
                 </h5>
             </div>
             <div class="card-body p-4">
@@ -246,12 +246,12 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                     <div class="d-grid mt-3">
                         <a href="https://www.google.com/maps?q=<?= (float) $lat ?>,<?= (float) $lng ?>"
                            target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
-                            <i class="ti ti-map-2 me-1"></i> Ver en Google Maps
+                            <i class="fa-solid fa-map-location-dot me-1"></i> Ver en Google Maps
                         </a>
                     </div>
                 <?php else: ?>
                     <div class="text-center py-3 text-muted">
-                        <i class="ti ti-map-off f-s-32 d-block mb-2"></i>
+                        <i class="fa-solid fa-location-crosshairs f-s-32 d-block mb-2"></i>
                         <span class="f-s-13">Sin coordenadas GPS registradas.</span>
                     </div>
                 <?php endif; ?>
@@ -262,7 +262,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom">
                 <h5 class="card-title mb-0 f-s-15 f-w-700 text-dark">
-                    <i class="ti ti-history me-1 text-primary"></i> Auditoría y Trazabilidad
+                    <i class="fa-solid fa-clock-rotate-left me-1 text-primary"></i> Auditoría y Trazabilidad
                 </h5>
             </div>
             <div class="card-body p-4">
@@ -295,7 +295,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-propiedad-titulo">
-                    <i class="ti ti-building me-1"></i> <span id="modal-propiedad-accion">Editar</span> Propiedad Física
+                    <i class="fa-solid fa-building me-1"></i> <span id="modal-propiedad-accion">Editar</span> Propiedad Física
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -380,7 +380,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                 <div class="modal-footer bg-light border-top py-2 px-4">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-propiedad">
-                        <i class="ti ti-check me-1"></i> Guardar Cambios
+                        <i class="fa-solid fa-check me-1"></i> Guardar Cambios
                     </button>
                 </div>
             </form>

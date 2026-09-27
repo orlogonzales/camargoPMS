@@ -19,7 +19,7 @@ $menuItems = $menu ?? $menuEstatico ?? [];
             <img alt="Camargo PMS" src="<?= url_asset('images/logo/1.png') ?>" style="max-height: 38px;">
         </a>
         <span class="w-30 h-30 d-none bg-gradient-danger b-r-8 cursor-pointer side-toggle d-flex-center">
-            <i class="ti ti-x f-s-18 text-white"></i>
+            <i class="fa-solid fa-xmark f-s-18 text-white"></i>
         </span>
     </div>
 

@@ -24,14 +24,17 @@ declare(strict_types=1);
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100..900&display=swap" rel="stylesheet">
 
-<!-- Iconos oficiales: Tabler Icons -->
-<link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/tabler-icons/tabler-icons.css') ?>">
+<!-- Iconos oficiales: Font Awesome 6 -->
+<link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/fontawesome/css/all.css') ?>">
 
 <!-- Framework visual: Bootstrap 5 -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/bootstrap/bootstrap.min.css') ?>">
 
 <!-- Scroll personalizado: Simplebar -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/simplebar/simplebar.css') ?>">
+
+<!-- Selector de fechas oficial: Flatpickr (Alina) -->
+<link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/flatpickr/flatpickr.min.css') ?>">
 
 <!-- Estilos base de la plantilla Alina -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('css/style.css') ?>">

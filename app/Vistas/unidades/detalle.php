@@ -30,7 +30,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                     <div class="d-flex align-items-center mb-2 mb-md-0">
                         <span class="bg-primary-subtle text-primary p-3 b-r-10 me-3 d-flex-center">
-                            <i class="ti ti-door f-s-28"></i>
+                            <i class="fa-solid fa-door-open f-s-28"></i>
                         </span>
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
@@ -51,7 +51,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                                 Inmueble raíz: 
                                 <?php if ($propiedad !== null): ?>
                                     <a href="<?= url_ruta("/propiedades/{$propiedad->obtenerId()}/perfil") ?>" class="fw-semibold text-primary text-decoration-none">
-                                        <i class="ti ti-building me-1"></i><?= e($propiedad->obtenerNombre()) ?> (<?= e($propiedad->obtenerCodigo()) ?>)
+                                        <i class="fa-solid fa-building me-1"></i><?= e($propiedad->obtenerNombre()) ?> (<?= e($propiedad->obtenerCodigo()) ?>)
                                     </a>
                                 <?php else: ?>
                                     <span class="text-muted">Propiedad ID: <?= $unidad->obtenerPropiedadId() ?></span>
@@ -61,28 +61,28 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                     </div>
                     <div class="d-flex gap-2">
                         <a href="<?= url_ruta('/unidades') ?>" class="btn btn-outline-secondary btn-sm">
-                            <i class="ti ti-arrow-left me-1"></i> Volver a Unidades
+                            <i class="fa-solid fa-arrow-left me-1"></i> Volver a Unidades
                         </a>
                         <?php if ($propiedad !== null): ?>
                             <a href="<?= url_ruta("/propiedades/{$propiedad->obtenerId()}/perfil") ?>" class="btn btn-outline-primary btn-sm">
-                                <i class="ti ti-building me-1"></i> Ver Propiedad
+                                <i class="fa-solid fa-building me-1"></i> Ver Propiedad
                             </a>
                         <?php endif; ?>
                         <?php if (!empty($capacidades['puede_editar'])): ?>
                             <button type="button" class="btn btn-primary btn-sm" id="btn-editar-unidad-perfil" data-id="<?= (int)$unidad->obtenerId() ?>">
-                                <i class="ti ti-edit me-1"></i> Editar
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Editar
                             </button>
                         <?php endif; ?>
                         <?php if (!empty($capacidades['puede_cambiar_estado'])): ?>
                             <?php if ($esActiva): ?>
                                 <button type="button" class="btn btn-outline-danger btn-sm" id="btn-cambiar-estado-perfil"
                                         data-id="<?= (int)$unidad->obtenerId() ?>" data-nuevo-estado="INACTIVO">
-                                    <i class="ti ti-ban me-1"></i> Desactivar
+                                    <i class="fa-solid fa-ban me-1"></i> Desactivar
                                 </button>
                             <?php else: ?>
                                 <button type="button" class="btn btn-outline-success btn-sm" id="btn-cambiar-estado-perfil"
                                         data-id="<?= (int)$unidad->obtenerId() ?>" data-nuevo-estado="ACTIVO">
-                                    <i class="ti ti-check me-1"></i> Activar
+                                    <i class="fa-solid fa-check me-1"></i> Activar
                                 </button>
                             <?php endif; ?>
                         <?php endif; ?>
@@ -99,7 +99,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
         <!-- Tarjeta: Especificaciones Físicas y Ocupacionales -->
         <div class="card equal-card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-                <i class="ti ti-ruler-measure text-primary me-2 f-s-18"></i>
+                <i class="fa-solid fa-ruler-combined text-primary me-2 f-s-18"></i>
                 <h5 class="card-title mb-0 f-s-16 f-w-700">Especificaciones Físicas y Ocupacionales</h5>
             </div>
             <div class="card-body p-4">
@@ -108,7 +108,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         <div class="p-3 bg-light rounded text-center">
                             <span class="text-secondary f-s-12 text-uppercase d-block mb-1">Capacidad Máxima</span>
                             <span class="f-s-20 f-w-700 text-dark">
-                                <i class="ti ti-users me-1 text-primary"></i><?= $unidad->obtenerCapacidadPersonas() ?>
+                                <i class="fa-solid fa-users me-1 text-primary"></i><?= $unidad->obtenerCapacidadPersonas() ?>
                             </span>
                             <small class="text-muted d-block f-s-11">personas</small>
                         </div>
@@ -117,7 +117,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         <div class="p-3 bg-light rounded text-center">
                             <span class="text-secondary f-s-12 text-uppercase d-block mb-1">Dormitorios</span>
                             <span class="f-s-20 f-w-700 text-dark">
-                                <i class="ti ti-bed me-1 text-primary"></i><?= $unidad->obtenerDormitorios() ?>
+                                <i class="fa-solid fa-bed me-1 text-primary"></i><?= $unidad->obtenerDormitorios() ?>
                             </span>
                             <small class="text-muted d-block f-s-11"><?= $unidad->obtenerDormitorios() === 0 ? 'tipo estudio' : 'habitaciones' ?></small>
                         </div>
@@ -126,7 +126,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         <div class="p-3 bg-light rounded text-center">
                             <span class="text-secondary f-s-12 text-uppercase d-block mb-1">Baños</span>
                             <span class="f-s-20 f-w-700 text-dark">
-                                <i class="ti ti-bath me-1 text-primary"></i><?= $unidad->obtenerBanos() ?>
+                                <i class="fa-solid fa-bath me-1 text-primary"></i><?= $unidad->obtenerBanos() ?>
                             </span>
                             <small class="text-muted d-block f-s-11">completos / medios</small>
                         </div>
@@ -135,7 +135,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         <div class="p-3 bg-light rounded">
                             <span class="text-secondary f-s-12 text-uppercase d-block mb-1">Área Construida</span>
                             <span class="f-s-18 f-w-700 text-dark">
-                                <i class="ti ti-dimensions me-1 text-primary"></i>
+                                <i class="fa-solid fa-vector-square me-1 text-primary"></i>
                                 <?= $unidad->obtenerAreaM2() !== null ? e((string)$unidad->obtenerAreaM2()) . ' m²' : 'No registrada' ?>
                             </span>
                         </div>
@@ -144,7 +144,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         <div class="p-3 bg-light rounded">
                             <span class="text-secondary f-s-12 text-uppercase d-block mb-1">Piso / Nivel</span>
                             <span class="f-s-18 f-w-700 text-dark">
-                                <i class="ti ti-layers-subtract me-1 text-primary"></i>
+                                <i class="fa-solid fa-layer-group me-1 text-primary"></i>
                                 <?= $unidad->obtenerPisoNivel() ? e($unidad->obtenerPisoNivel()) : 'No especificado' ?>
                             </span>
                         </div>
@@ -156,7 +156,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
         <!-- Tarjeta: Descripción y Observaciones -->
         <div class="card equal-card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-                <i class="ti ti-notes text-primary me-2 f-s-18"></i>
+                <i class="fa-solid fa-clipboard text-primary me-2 f-s-18"></i>
                 <h5 class="card-title mb-0 f-s-16 f-w-700">Descripción y Notas</h5>
             </div>
             <div class="card-body p-4">
@@ -180,7 +180,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
             <div class="card-body p-4">
                 <div class="d-flex align-items-start">
                     <span class="bg-info-subtle text-info p-2 rounded me-3 mt-1">
-                        <i class="ti ti-calendar-stats f-s-24"></i>
+                        <i class="fa-solid fa-calendar-day f-s-24"></i>
                     </span>
                     <div>
                         <h6 class="f-s-15 f-w-700 text-dark mb-1">Operativa Inmobiliaria y Comercial (Fases Futuras)</h6>
@@ -203,14 +203,14 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
         <!-- Tarjeta: Inmueble Contenedor -->
         <div class="card equal-card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-                <i class="ti ti-building text-primary me-2 f-s-18"></i>
+                <i class="fa-solid fa-building text-primary me-2 f-s-18"></i>
                 <h5 class="card-title mb-0 f-s-15 f-w-700">Propiedad Contenedora</h5>
             </div>
             <div class="card-body p-3">
                 <?php if ($propiedad !== null): ?>
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-primary text-white p-2 rounded me-2">
-                            <i class="ti ti-building f-s-20"></i>
+                            <i class="fa-solid fa-building f-s-20"></i>
                         </div>
                         <div>
                             <h6 class="f-s-14 f-w-700 mb-0"><?= e($propiedad->obtenerNombre()) ?></h6>
@@ -218,12 +218,12 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                         </div>
                     </div>
                     <ul class="list-unstyled f-s-12 text-secondary mb-3">
-                        <li class="mb-1"><i class="ti ti-map-pin me-1 text-muted"></i><?= e($propiedad->obtenerDireccion()) ?></li>
-                        <li class="mb-1"><i class="ti ti-world me-1 text-muted"></i><?= e($propiedad->obtenerUbicacionCompleta()) ?></li>
-                        <li><i class="ti ti-activity me-1 text-muted"></i>Estado: <span class="badge <?= $propiedad->estaActiva() ? 'bg-success' : 'bg-danger' ?> f-s-10"><?= $propiedad->obtenerEstado() ?></span></li>
+                        <li class="mb-1"><i class="fa-solid fa-location-dot me-1 text-muted"></i><?= e($propiedad->obtenerDireccion()) ?></li>
+                        <li class="mb-1"><i class="fa-solid fa-globe me-1 text-muted"></i><?= e($propiedad->obtenerUbicacionCompleta()) ?></li>
+                        <li><i class="fa-solid fa-wave-square me-1 text-muted"></i>Estado: <span class="badge <?= $propiedad->estaActiva() ? 'bg-success' : 'bg-danger' ?> f-s-10"><?= $propiedad->obtenerEstado() ?></span></li>
                     </ul>
                     <a href="<?= url_ruta("/propiedades/{$propiedad->obtenerId()}/perfil") ?>" class="btn btn-outline-primary btn-sm w-100">
-                        <i class="ti ti-external-link me-1"></i> Abrir Ficha de Propiedad
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Abrir Ficha de Propiedad
                     </a>
                 <?php else: ?>
                     <p class="text-muted f-s-13 mb-0">Información de propiedad no disponible.</p>
@@ -234,7 +234,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
         <!-- Tarjeta: Trazabilidad y Auditoría Transversal -->
         <div class="card equal-card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
-                <i class="ti ti-history text-primary me-2 f-s-18"></i>
+                <i class="fa-solid fa-clock-rotate-left text-primary me-2 f-s-18"></i>
                 <h5 class="card-title mb-0 f-s-15 f-w-700">Trazabilidad y Auditoría (D-061)</h5>
             </div>
             <div class="card-body p-3">
@@ -275,7 +275,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-light border-bottom py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modal-unidad-titulo">
-                    <i class="ti ti-edit me-2 text-primary"></i>Editar Unidad
+                    <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Editar Unidad
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -353,7 +353,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
                 <div class="modal-footer bg-light border-top py-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-unidad">
-                        <i class="ti ti-device-floppy me-1"></i> Guardar Cambios
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios
                     </button>
                 </div>
             </form>

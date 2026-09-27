@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 notificar('error', error.message, 'Error de Validación');
             } finally {
                 btnGuardarOpcion.disabled = false;
-                btnGuardarOpcion.innerHTML = '<i class="ti ti-device-floppy me-1"></i> Guardar Cambios';
+                btnGuardarOpcion.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios';
             }
         });
     }

@@ -25,7 +25,7 @@ declare(strict_types=1);
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
                     <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
-                        <i class="ti ti-calendar-check f-s-22"></i>
+                        <i class="fa-solid fa-calendar-check f-s-22"></i>
                     </span>
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Gestión Comercial de Reservas Directas</h4>
@@ -37,12 +37,12 @@ declare(strict_types=1);
                 <div class="mt-2 mt-md-0 d-flex gap-2">
                     <?php if (!empty($capacidades['puede_expirar'])): ?>
                         <button type="button" class="btn btn-outline-warning btn-sm" id="btn-expirar-holds" title="Verificar y liberar holds vencidos">
-                            <i class="ti ti-clock-pause me-1"></i> Expirar Holds
+                            <i class="fa-solid fa-clock me-1"></i> Expirar Holds
                         </button>
                     <?php endif; ?>
                     <?php if (!empty($capacidades['puede_crear'])): ?>
                         <button type="button" class="btn btn-primary btn-sm" id="btn-abrir-crear-reserva">
-                            <i class="ti ti-plus me-1"></i> Nueva Reserva Directa
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Reserva Directa
                         </button>
                     <?php endif; ?>
                 </div>
@@ -53,11 +53,11 @@ declare(strict_types=1);
                 <div class="row g-2 align-items-center">
                     <div class="col-md-3 col-12">
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" class="form-control" id="filtro-busqueda-reserva"
                                    placeholder="Código, titular, documento..." autocomplete="off">
                             <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" title="Limpiar">
-                                <i class="ti ti-x"></i>
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
@@ -78,15 +78,25 @@ declare(strict_types=1);
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col-md-2 col-6">
-                        <input type="date" class="form-control form-control-sm" id="filtro-fecha-desde" placeholder="Desde" title="Fecha salida >= Desde">
-                    </div>
-                    <div class="col-md-2 col-6">
-                        <input type="date" class="form-control form-control-sm" id="filtro-fecha-hasta" placeholder="Hasta" title="Fecha entrada <= Hasta">
+                    <div class="col-md-4 col-12">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
+                            <input type="text" class="form-control" id="filtro-rango-fechas"
+                                   placeholder="Filtrar por rango de fechas..."
+                                   data-provider="rangepicker"
+                                   data-target-inicio="#filtro-fecha-desde"
+                                   data-target-fin="#filtro-fecha-hasta"
+                                   autocomplete="off" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-filtro-fechas" title="Limpiar fechas">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <input type="hidden" id="filtro-fecha-desde">
+                        <input type="hidden" id="filtro-fecha-hasta">
                     </div>
                     <div class="col-md-1 col-12 text-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btn-recargar-reservas" title="Refrescar catálogo">
-                            <i class="ti ti-refresh"></i>
+                            <i class="fa-solid fa-arrows-rotate"></i>
                         </button>
                     </div>
                 </div>
@@ -140,7 +150,7 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom py-2 bg-light">
                 <h5 class="modal-title f-s-15 f-w-700" id="modal-crear-reserva-label">
-                    <i class="ti ti-calendar-plus me-1 text-primary"></i> Registrar Nueva Reserva Directa
+                    <i class="fa-solid fa-calendar-plus me-1 text-primary"></i> Registrar Nueva Reserva Directa
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -160,18 +170,26 @@ declare(strict_types=1);
                             </div>
                         </div>
 
-                        <!-- Intervalo Temporal Semiabierto [entrada, salida) -->
-                        <div class="col-md-5">
-                            <label class="form-label f-s-12 f-w-600 mb-1" for="crear-fecha-entrada">
-                                Fecha de Entrada (Check-in) <span class="text-danger">*</span>
+                        <!-- Intervalo Temporal Semiabierto [entrada, salida) con Alina Range Picker -->
+                        <div class="col-md-10">
+                            <label class="form-label f-s-12 f-w-600 mb-1" for="crear-rango-fechas">
+                                <i class="fa-solid fa-calendar-days me-1 text-primary"></i> Intervalo de Estadía (Check-in → Check-out) <span class="text-danger">*</span>
                             </label>
-                            <input type="date" class="form-control form-control-sm" id="crear-fecha-entrada" name="fecha_entrada" required>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label f-s-12 f-w-600 mb-1" for="crear-fecha-salida">
-                                Fecha de Salida (Check-out) <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" class="form-control form-control-sm" id="crear-fecha-salida" name="fecha_salida" required>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-calendar-days text-primary"></i></span>
+                                <input type="text" class="form-control" id="crear-rango-fechas"
+                                       placeholder="Seleccione fecha de entrada y salida..."
+                                       data-provider="rangepicker"
+                                       data-target-inicio="#crear-fecha-entrada"
+                                       data-target-fin="#crear-fecha-salida"
+                                       data-target-noches="#crear-noches-calculadas"
+                                       autocomplete="off" readonly required>
+                            </div>
+                            <input type="hidden" id="crear-fecha-entrada" name="fecha_entrada" required>
+                            <input type="hidden" id="crear-fecha-salida" name="fecha_salida" required>
+                            <div class="form-text f-s-11">
+                                Contrato D-066: Intervalo semiabierto [entrada, salida). La noche de salida queda liberada para check-in.
+                            </div>
                         </div>
                         <div class="col-md-2 text-center d-flex flex-column justify-content-center">
                             <span class="f-s-11 text-secondary">Noches:</span>
@@ -185,7 +203,7 @@ declare(strict_types=1);
                                     Unidades Alojables Asignadas (1 Reserva : N Unidades) <span class="text-danger">*</span>
                                 </label>
                                 <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 f-s-11" id="btn-agregar-fila-unidad">
-                                    <i class="ti ti-plus me-1"></i> Añadir Unidad
+                                    <i class="fa-solid fa-plus me-1"></i> Añadir Unidad
                                 </button>
                             </div>
                             <div class="border b-r-8 p-2 bg-light-subtle">
@@ -283,7 +301,7 @@ declare(strict_types=1);
                     <div class="col-md-6">
                         <div class="card border p-2 h-100 bg-light-subtle">
                             <h6 class="f-s-12 f-w-700 text-uppercase text-secondary mb-2">
-                                <i class="ti ti-user me-1"></i> Persona Titular
+                                <i class="fa-solid fa-user me-1"></i> Persona Titular
                             </h6>
                             <p class="f-s-14 f-w-600 mb-1" id="detalle-titular-nombre"></p>
                             <p class="f-s-12 text-secondary mb-1">
@@ -299,7 +317,7 @@ declare(strict_types=1);
                     <div class="col-md-6">
                         <div class="card border p-2 h-100 bg-light-subtle">
                             <h6 class="f-s-12 f-w-700 text-uppercase text-secondary mb-2">
-                                <i class="ti ti-calendar me-1"></i> Período Hotelero
+                                <i class="fa-solid fa-calendar-days me-1"></i> Período Hotelero
                             </h6>
                             <p class="f-s-13 mb-1">
                                 Entrada: <strong id="detalle-fecha-entrada"></strong>
@@ -318,7 +336,7 @@ declare(strict_types=1);
                     <!-- Desglose de Unidades Asignadas -->
                     <div class="col-12">
                         <h6 class="f-s-12 f-w-700 text-uppercase text-secondary mb-2">
-                            <i class="ti ti-door me-1"></i> Unidades Asignadas y Snapshot Económico (D-069)
+                            <i class="fa-solid fa-door-open me-1"></i> Unidades Asignadas y Snapshot Económico (D-069)
                         </h6>
                         <div class="table-responsive border b-r-8">
                             <table class="table table-sm align-middle mb-0">
@@ -360,10 +378,10 @@ declare(strict_types=1);
             <div class="modal-footer border-top py-2 d-flex justify-content-between">
                 <div>
                     <button type="button" class="btn btn-outline-danger btn-sm d-none" id="btn-detalle-cancelar">
-                        <i class="ti ti-x me-1"></i> Cancelar Reserva
+                        <i class="fa-solid fa-xmark me-1"></i> Cancelar Reserva
                     </button>
                     <button type="button" class="btn btn-success btn-sm d-none" id="btn-detalle-confirmar">
-                        <i class="ti ti-check me-1"></i> Confirmar Reserva
+                        <i class="fa-solid fa-check me-1"></i> Confirmar Reserva
                     </button>
                 </div>
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
@@ -380,7 +398,7 @@ declare(strict_types=1);
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom py-2 bg-light">
                 <h6 class="modal-title f-s-14 f-w-700 text-danger" id="modal-cancelar-reserva-label">
-                    <i class="ti ti-alert-triangle me-1"></i> Cancelar Reserva
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Cancelar Reserva
                 </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -391,7 +409,7 @@ declare(strict_types=1);
                         ¿Confirma la cancelación de la reserva <strong id="cancelar-reserva-codigo" class="text-dark"></strong>?
                     </p>
                     <p class="f-s-11 text-danger mb-3">
-                        <i class="ti ti-info-circle me-1"></i> Las noches retenidas en el inventario diario serán liberadas inmediatamente.
+                        <i class="fa-solid fa-circle-info me-1"></i> Las noches retenidas en el inventario diario serán liberadas inmediatamente.
                     </p>
                     <div>
                         <label class="form-label f-s-12 f-w-600 mb-1" for="cancelar-motivo">

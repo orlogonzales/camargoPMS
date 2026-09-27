@@ -19,12 +19,19 @@ Todo identificador propio se escribe en español. Se conservan keywords de PHP/J
 
 ## JavaScript
 
-- Archivos en minúsculas y kebab-case cuando tengan varias palabras: `camargo-layout.js`, `detalle-reserva.js`.
+- Archivos en minúsculas y kebab-case cuando tengan varias palabras: `camargo-layout.js`, `detalle-reserva.js`, `camargo-pickers.js`.
 - Funciones y variables en camelCase español: `cargarDisponibilidad()`.
 - Constantes en MAYUSCULAS_CON_GUION_BAJO.
 - Módulos propios separados de vendor y de los originales Alina.
 - JSDoc en módulos, funciones exportadas y lógica relevante.
+- Cero jQuery en código propio: uso exclusivo de Vanilla JS moderno (ES6+).
 - No insertar HTML sin escapar datos externos ni usar `innerHTML` con contenido no confiable.
+
+## Interfaz y componentes (D-071)
+
+- **Iconografía:** Font Awesome 6 Free (v6.3.0) es la única librería autorizada para código propio (`fa-solid fa-*`, `fa-regular fa-*`). Prohibido el uso de Tabler Icons (`ti ti-*`) u otras librerías externas.
+- **Selectores de fecha:** Flatpickr Alina local es obligatorio para inputs de fecha (`.camargo-datepicker`) y rangos (`.camargo-rangepicker`).
+- **Contrato D-066 en formularios:** Los Range Pickers actúan exclusivamente como capa de experiencia de usuario, sincronizando automáticamente campos canónicos `fecha_entrada` y `fecha_salida` como cadenas ISO `YYYY-MM-DD` con semántica de intervalo semiabierto $[ \text{entrada}, \text{salida} )$.
 
 ## Vistas y rutas
 

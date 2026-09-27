@@ -40,7 +40,7 @@ class OpcionMenu
      * @param int|null $padreId
      * @param string $clave Identificador técnico único y estable
      * @param string $nombre Etiqueta visible
-     * @param string|null $icono Clase de icono (ej. 'ti ti-smart-home')
+     * @param string|null $icono Clase de icono (ej. 'fa-solid fa-house')
      * @param string|null $ruta Ruta local interna (ej. '/usuarios')
      * @param int $orden Posición relativa entre hermanos
      * @param string $estado 'ACTIVO' o 'INACTIVO'
