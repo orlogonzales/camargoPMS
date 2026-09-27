@@ -613,6 +613,49 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
    - Se prohíbe la eliminación física (`DELETE FROM`) de cobros, pagos, asientos o movimientos de caja.
    - Cualquier corrección, devolución o cancelación operativa se implementa mediante transacciones de reverso (contra-asientos) o transiciones explícitas a estados `ANULADO` con registro de motivo, actor ejecutor humano y fecha (bajo D-061), preservando la trazabilidad contable y tributaria.
 
+### D-070 — Núcleo Transaccional de Reservas Directas Multiunidad, Snapshot Económico Inmutable y Ciclo de Hold (RESERVAS-1)
+
+1. Delimitación ontológica estricta de dominio:
+   - `RESERVA ≠ DISPONIBILIDAD ≠ INVENTARIO ≠ ESTANCIA ≠ PAGO`.
+   - La reserva formaliza el acuerdo comercial de alojamiento para un huésped titular (`persona_titular_id`) sobre una o varias unidades físicas (`reserva_unidades`) dentro de un intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$ con $\text{noches} \ge 1$ (D-066).
+   - Se excluyen rigurosamente de esta fase: pagos, cobros, caja, pasarelas, webhooks, check-in, check-out, llaves, contratos PDF, recibos y facturación electrónica.
+
+2. Soporte nativo de multiunidad (1 Reserva : N Unidades):
+   - Una reserva puede agrupar múltiples unidades físicas de una o varias propiedades dentro del mismo rango temporal hotelero.
+   - La persistencia se normaliza en dos niveles:
+     - Cabecera comercial (`reservas`): código único alfanumérico (`RES-YYYYMMDD-XXXX`), titular, fechas, noches, estado, canal, origen, snapshot económico acumulado y auditoría.
+     - Detalle de unidades (`reserva_unidades`): vínculo a la unidad física, precio unitario por noche, noches asignadas, subtotal, impuesto (IGV) y total individual.
+
+3. Snapshot financiero inmutable y autoridad del backend (D-069):
+   - En el instante de creación, el backend calcula y congela el desglose económico de la reserva en base a las noches y tarifas unitarias aplicables:
+     - Moneda canónica: `PEN` (ISO 4217).
+     - Columnas: `subtotal`, `impuesto` (18% IGV) y `total` en `DECIMAL(15,2)`.
+   - Los importes son inmutables: cambios posteriores en el catálogo de tarifas o normativas tributarias futuras jamás alteran ni recalculan reservas existentes.
+   - El frontend es puramente estimativo; el backend es la única autoridad financiera que valida y computa los importes con aritmética exacta (BCMath) y redondeo `ROUND_HALF_UP`.
+
+4. Ciclo de vida de estados y gestión de inventario:
+   - Estados válidos: `PENDIENTE`, `CONFIRMADA`, `CANCELADA`, `EXPIRADA`.
+   - Estados activos que retienen inventario en `inventario_diario_unidades`: `PENDIENTE` y `CONFIRMADA`.
+   - Estados terminales que liberan inventario: `CANCELADA` y `EXPIRADA`.
+   - Las reservas en estado `PENDIENTE` poseen un tiempo de expiración técnica (`expira_en`), calculado a partir de la configuración `reservas.duracion_hold_minutos` (30 minutos por defecto). Al cumplirse el plazo sin confirmación, el hold se considera vencido y la reserva es candidata a expiración automática.
+
+5. Atomicidad transaccional, orden determinista y concurrencia (D-067):
+   - Toda creación, confirmación, cancelación y expiración de reservas se ejecuta bajo una única transacción ACID en el motor MySQL 8.4 InnoDB.
+   - El inventario diario sparse se bloquea con ordenamiento determinista estricto: `ORDER BY unidad_id ASC, fecha ASC`.
+   - La restricción `UNIQUE (unidad_id, fecha)` en `inventario_diario_unidades` garantiza la prevención inviolable de sobreventas (*overbooking*).
+   - Cualquier error de concurrencia (códigos MySQL 1062 Clave Duplicada, 1205 Lock Wait Timeout, 1213 Deadlock) es capturado explícitamente en la capa de servicio, provocando `ROLLBACK` total inmediato y emitiendo `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict).
+   - Atomicidad multiunidad completa: Si la unidad $N$ de una reserva colisiona, la transacción revierte íntegramente las unidades previas sin dejar noches huérfanas en inventario.
+
+6. Liberación atómica e inmediata:
+   - La cancelación voluntaria o la expiración de un hold vencido elimina atómicamente todas las filas correspondientes en `inventario_diario_unidades` (`DELETE FROM inventario_diario_unidades WHERE origen_tipo = 'RESERVA' AND origen_id = ?`).
+   - Las fechas quedan liberadas y disponibles de forma instantánea para otros clientes y canales comerciales.
+
+7. Trazabilidad, inmutabilidad y cero eliminación física (D-061):
+   - Principio: `CANCELACIÓN / EXPIRACIÓN ≠ DELETE`.
+   - Las tablas `reservas` y `reserva_unidades` preservan todos sus registros históricos sin operaciones de eliminación física (`DELETE` = 0).
+   - Las cancelaciones exigen un motivo explicativo obligatorio (1 a 255 caracteres).
+   - Toda mutación de estado registra eventos de auditoría (`REGISTRAR`, `EDITAR`, `CANCELAR`) asociando el actor ejecutor humano autenticado (USR_X) o el actor de sistema en procesos automáticos de hold.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
@@ -624,3 +667,4 @@ El parámetro de ruta de retorno (`return`) en el flujo de inicio de sesión se 
 | P-007 | Librería PDF | Antes de contratos/recibos | Pendiente |
 | P-008 | Proveedor inicial de pagos | Antes de integración de pagos | Pendiente |
 | P-009 | Retención de datos y auditoría | Antes de producción | Pendiente |
+

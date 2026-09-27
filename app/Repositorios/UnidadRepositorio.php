@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CamargoPMS\Repositorios;
 
 use CamargoPMS\Modelos\Unidad;
+use CamargoPMS\Nucleo\BaseDatos;
 use PDO;
 
 /**
@@ -17,9 +18,9 @@ class UnidadRepositorio
 {
     private PDO $pdo;
 
-    public function __construct(PDO $pdo)
+    public function __construct(?PDO $pdo = null)
     {
-        $this->pdo = $pdo;
+        $this->pdo = $pdo ?? BaseDatos::conexion();
     }
 
     /**

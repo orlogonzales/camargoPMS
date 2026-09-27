@@ -283,6 +283,32 @@ $enrutador->get('/disponibilidad/matriz', [\CamargoPMS\Controladores\Disponibili
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
 ]);
 
+// Rutas de Reservas Directas (RESERVAS-1)
+$enrutador->get('/reservas', [\CamargoPMS\Controladores\ReservaControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.ver'),
+]);
+$enrutador->get('/reservas/datos', [\CamargoPMS\Controladores\ReservaControlador::class, 'datos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.ver'),
+]);
+$enrutador->get('/reservas/auxiliares', [\CamargoPMS\Controladores\ReservaControlador::class, 'auxiliares'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.ver'),
+]);
+$enrutador->post('/reservas/expirar', [\CamargoPMS\Controladores\ReservaControlador::class, 'expirar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.expirar'),
+]);
+$enrutador->post('/reservas', [\CamargoPMS\Controladores\ReservaControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.crear'),
+]);
+$enrutador->get('/reservas/{id}', [\CamargoPMS\Controladores\ReservaControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.ver'),
+]);
+$enrutador->post('/reservas/{id}/confirmar', [\CamargoPMS\Controladores\ReservaControlador::class, 'confirmar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.confirmar'),
+]);
+$enrutador->post('/reservas/{id}/cancelar', [\CamargoPMS\Controladores\ReservaControlador::class, 'cancelar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reservas.cancelar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

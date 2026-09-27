@@ -203,8 +203,12 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **DISPONIBILIDAD-1A**| `test_1205_1213.php` (G-1205 y G-1213) | 2 | — | 2/2 PASS |
 | **DISPONIBILIDAD-1**| `test_e2e_disponibilidad.php` (E2E-DISP-01..12) | — | 12 (`E2E-DISP`) | 12/12 PASS |
 | **GATE FINANCIERO-1**| `test_finanzas_p005.php` (FIN-01..20) | 20 | — | 20/20 PASS |
-| **TOTALES CANÓNICOS**| **16 suites ejecutadas** | **560** | **94** | **654 casos (660 ejecuciones) PASS (100%)** |
+| **RESERVAS-1** | `test_reservas_matriz_50.php` (RES-01..50) | 50 | — | 50/50 PASS |
+| **RESERVAS-1** | `test_reservas_concurrencia.php` (RES-CONC-01..05, EXP-01) | 6 | — | 6/6 PASS |
+| **RESERVAS-1** | `test_e2e_reservas.php` (E2E-RES-01..15) | — | 15 (`E2E-RES`) | 15/15 PASS |
+| **TOTALES CANÓNICOS**| **19 suites ejecutadas** | **616** | **109** | **725 casos (731 ejecuciones) PASS (100%)** |
 
-  - **Casos Independientes de Dominio e Integración:** 540 (previos) + 20 (FIN-01..20) = **560 casos**.
-  - **Pruebas HTTP E2E Reales (Apache HTTPS):** **94 casos**.
-  - **Total Bruto Acumulado:** 640 (previos a7ad7b2) + 20 (FIN-01..20) = **660 ejecuciones (660 PASS / 0 FAIL)**.
+  - **Casos Independientes de Dominio e Integración:** 560 (previos) + 50 (RES-01..50) + 6 (RES-CONC-01..05, EXP-01) = **616 casos**.
+  - **Pruebas HTTP E2E Reales (Apache HTTPS):** 94 (previos) + 15 (E2E-RES-01..15) = **109 casos**.
+  - **Total Bruto Acumulado:** 660 (previos c2d41cc) + 71 (RESERVAS-1) = **731 ejecuciones (731 PASS / 0 FAIL)**.
+

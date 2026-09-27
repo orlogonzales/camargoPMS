@@ -218,9 +218,37 @@ Confirmar reserva, estancia, arrendamiento o bloqueo es una operación crítica.
    - Verificación empírica en MySQL 8.4.3 LTS: comprobado que tanto el error 1205 (lock wait timeout) como el 1213 (deadlock detectado por InnoDB) ejecutan rollback completo e inmediato y emiten `ConflictoDisponibilidadExcepcion` (HTTP 409).
    - Si todas las noches se persisten exitosamente, ejecutar `commit()`.
 4. **Liberación atómica:**
-   - La cancelación o liberación ejecuta `DELETE FROM inventario_diario_unidades WHERE origen_tipo = 'BLOQUEO_MANUAL' AND origen_id = ?`, liberando las noches de forma inmediata sin residuos.
-5. **Estado de migraciones:**
-   - Las migraciones productivas activas son estrictamente `001` a `013` (26 tablas, 29 Foreign Keys).
+   - La cancelación o liberación ejecuta `DELETE FROM inventario_diario_unidades WHERE origen_tipo IN ('BLOQUEO_MANUAL', 'RESERVA') AND origen_id = ?`, liberando las noches de forma inmediata sin residuos.
+
+## Reservas directas y multiunidad (Implementado — RESERVAS-1 / D-070)
+
+En RESERVAS-1 se introduce el núcleo transaccional comercial de reservas directas con soporte multiunidad y snapshot financiero inmutable:
+
+1. **Tabla de reservas cabecera (`reservas`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `codigo VARCHAR(32) NOT NULL UNIQUE`, `persona_titular_id BIGINT UNSIGNED NOT NULL`, `fecha_entrada DATE NOT NULL`, `fecha_salida DATE NOT NULL`, `noches INT UNSIGNED NOT NULL`, `estado ENUM('PENDIENTE','CONFIRMADA','CANCELADA','EXPIRADA') NOT NULL DEFAULT 'PENDIENTE'`, `expira_en DATETIME NULL DEFAULT NULL`, `canal ENUM('DIRECTO_PMS','DIRECTO_WEB','DIRECTO_WHATSAPP','DIRECTO_TELEFONO','OTRO') NOT NULL DEFAULT 'DIRECTO_PMS'`, `origen VARCHAR(50) NOT NULL DEFAULT 'PMS'`, `moneda_codigo VARCHAR(3) NOT NULL DEFAULT 'PEN'`, `subtotal DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `impuesto DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `total DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `observaciones TEXT NULL`, `motivo_cancelacion VARCHAR(255) NULL`, `cancelado_en DATETIME NULL`, `cancelado_por_actor_id BIGINT UNSIGNED NULL`, `confirmado_en DATETIME NULL`, `confirmado_por_actor_id BIGINT UNSIGNED NULL`, `creado_por_actor_id BIGINT UNSIGNED NOT NULL`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`, `actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+   - Restricciones FK:
+     - `fk_reservas_persona_titular`: `FOREIGN KEY (persona_titular_id) REFERENCES personas(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_reservas_creado_actor`: `FOREIGN KEY (creado_por_actor_id) REFERENCES actores(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_reservas_confirmado_actor`: `FOREIGN KEY (confirmado_por_actor_id) REFERENCES actores(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_reservas_cancelado_actor`: `FOREIGN KEY (cancelado_por_actor_id) REFERENCES actores(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+   - Índices para alto desempeño: `idx_reservas_fechas (fecha_entrada, fecha_salida)`, `idx_reservas_estado (estado)`, `idx_reservas_titular (persona_titular_id)`, `idx_reservas_expiracion (estado, expira_en)`.
+
+2. **Tabla de unidades de reserva (`reserva_unidades`):**
+   - Columnas: `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`, `reserva_id BIGINT UNSIGNED NOT NULL`, `unidad_id BIGINT UNSIGNED NOT NULL`, `precio_unitario_noche DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `noches INT UNSIGNED NOT NULL DEFAULT 1`, `subtotal DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `impuesto DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `total DECIMAL(15,2) NOT NULL DEFAULT 0.00`, `creado_en DATETIME DEFAULT CURRENT_TIMESTAMP`.
+   - Restricciones FK:
+     - `fk_reserva_unidades_reserva`: `FOREIGN KEY (reserva_id) REFERENCES reservas(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+     - `fk_reserva_unidades_unidad`: `FOREIGN KEY (unidad_id) REFERENCES unidades(id) ON DELETE RESTRICT ON UPDATE CASCADE`
+   - Clave única de protección: `UNIQUE KEY uq_reserva_unidad (reserva_id, unidad_id)`.
+
+3. **Modificación a `inventario_diario_unidades`:**
+   - La columna `tipo_bloqueo` se amplía a: `ENUM('BLOQUEO_MANUAL', 'MANTENIMIENTO', 'RESERVA') NOT NULL DEFAULT 'BLOQUEO_MANUAL'`.
+
+4. **Estado general de la base de datos:**
+   - **28 tablas** físicas.
+   - **35 Foreign Keys** referenciales inviolables.
+   - **30 permisos** RBAC en catálogo (`reservas.ver`, `reservas.crear`, `reservas.confirmar`, `reservas.cancelar`, `reservas.expirar`).
+   - **14 migraciones** aplicadas (`001` a `014`), cero pendientes.
+
 
 ## Migraciones
 

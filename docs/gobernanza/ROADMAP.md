@@ -196,6 +196,39 @@ Formalización vinculante del contrato monetario, financiero y fiscal del PMS, c
   - Cero migración 014 (migraciones permanecen estrictamente en 001–013).
   - `admin-dashboard/` y `.env` intactos.
 
+Estado: homologada (micro-baseline oficial c2d41cc).
+
+## RESERVAS-1 — Núcleo Transaccional de Reservas Directas
+
+Implementación del dominio transaccional de reservas directas con soporte nativo de multiunidad, snapshot financiero inmutable y ciclo de expiración de holds:
+- **Modelo de Dominio y Persistencia (D-070):**
+  - Entidades `Reserva` y `ReservaUnidad` con tipado estricto y desacoplamiento de presentación.
+  - Tablas `reservas` y `reserva_unidades` persistidas mediante la migración `014_reservas.sql` (28 tablas, 35 Foreign Keys en el esquema consolidado).
+  - Delimitación ontológica estricta: `RESERVA ≠ DISPONIBILIDAD ≠ INVENTARIO ≠ ESTANCIA ≠ PAGO`.
+- **Soporte Multiunidad (1 Reserva : N Unidades):**
+  - Permite agrupar múltiples unidades en un mismo contrato de reserva, con desglose individual de precio por noche, noches, subtotal e impuesto.
+  - Asignación atómica de inventario en `inventario_diario_unidades` con orden determinista `ORDER BY unidad_id ASC, fecha ASC`.
+- **Snapshot Financiero Inmutable (D-069):**
+  - Cálculo centralizado en el backend con aritmética exacta `BCMath` y redondeo `ROUND_HALF_UP` a 2 decimales.
+  - Almacenamiento obligatorio de `moneda_codigo = 'PEN'`, `subtotal`, `impuesto` (18% IGV) y `total` en `DECIMAL(15,2)`.
+  - Inmutabilidad histórica garantizada: cambios de catálogo posteriores no alteran los snapshots pactados.
+- **Ciclo de Estados y Expiración Automática de Holds:**
+  - Estados: `PENDIENTE`, `CONFIRMADA`, `CANCELADA`, `EXPIRADA`.
+  - Retención de inventario en estados activos (`PENDIENTE` y `CONFIRMADA`); liberación atómica e inmediata en estados terminales (`CANCELADA` y `EXPIRADA`).
+  - Lógica de hold temporal: parámetro configurable `reservas.duracion_hold_minutos` (30 min por defecto); expiración idempotente vía web (`POST /reservas/expirar`) o comando CLI (`bin/expirar-reservas.php`).
+- **Concurrencia, Locking y Manejo de Conflictos (D-067):**
+  - Transacciones ACID en MySQL 8.4 InnoDB con captura de errores 1062, 1205 y 1213 convertidos a `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict).
+  - Rollback integral multiunidad: ante colisión en cualquier unidad, revierte atómicamente todas las unidades previas sin dejar noches huérfanas.
+- **Interfaz Alina y Experiencia de Usuario:**
+  - Módulo completo en `/reservas` con KPIs en tiempo real, catálogo paginado, filtros multicriterio, modal de reserva multiunidad reactivo, modal de detalle con snapshot y modal de cancelación con motivo obligatorio.
+  - Vanilla JS moderno (0 jQuery), validación PristineJS, notificaciones SweetAlert2 y token CSRF en todas las mutaciones.
+- **Suites de Pruebas:**
+  - Matriz de dominio e integración: RES-01..50 (50/50 PASS).
+  - Concurrencia y locking: RES-CONC-01..05 + RES-EXP-01 (6/6 PASS).
+  - Pruebas HTTP E2E reales contra Apache HTTPS: E2E-RES-01..15 (15/15 PASS).
+  - Regresiones históricas: 205/205 PASS.
+  - Total consolidado del sistema: 725 casos únicos / 731 ejecuciones brutas (100% PASS).
+
 Estado: completada (candidata a micro-baseline).
 
 ## Dominio operativo

@@ -4,6 +4,51 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Fase RESERVAS-1 — Núcleo Transaccional de Reservas Directas
+
+- **Dominio Transaccional y Persistencia Relacional (D-070):**
+  - **Entidades de Dominio:** Implementación de `Reserva` y `ReservaUnidad` con tipado estricto, métodos de estado (`retieneInventario()`, `haExpirado()`, `estaActiva()`), normalización y serialización desacoplada de la presentación.
+  - **Esquema de Base de Datos:** Migración `014_reservas.sql` aplicada exitosamente, creando las tablas `reservas` (cabecera comercial con 4 Foreign Keys y 4 índices optimizados) y `reserva_unidades` (detalle multiunidad con 2 Foreign Keys y restricción única `(reserva_id, unidad_id)`). Esquema general consolidado en 28 tablas físicas y 35 Foreign Keys.
+  - **Ampliación de Inventario Diario:** Extensión de `inventario_diario_unidades.tipo_bloqueo` incorporando el valor `RESERVA`.
+  - **Parámetro de Configuración:** Semilla `reservas.duracion_hold_minutos` (30 minutos) registrada en `configuraciones` para el control de holds temporales.
+  - **Permisos RBAC:** Semillas `reservas.ver`, `reservas.crear`, `reservas.confirmar`, `reservas.cancelar` y `reservas.expirar` asignadas al rol `SUPERADMINISTRADOR` (catálogo ampliado a 30 permisos).
+  - **Navegación Alina:** Registrada opción de menú `reservas_directas` bajo el área de operaciones con ruta `/reservas`.
+- **Soporte Multiunidad Nativo (1 Reserva : N Unidades):**
+  - Capacidad de reservar una o múltiples unidades en una misma operación atómica.
+  - Desglose individual de precio por noche, noches, subtotal e impuesto en `reserva_unidades`.
+  - Asignación ordenada deterministamente: `ORDER BY unidad_id ASC, fecha ASC` en `inventario_diario_unidades`.
+- **Snapshot Financiero Inmutable (D-069):**
+  - Cálculo centralizado exclusivamente en el backend; rechazo estricto de totales enviados por clientes o APIs externas.
+  - Aritmética de precisión arbitraria mediante `BCMath` en PHP 8.3 y persistencia en tipos `DECIMAL(15,2)` en MySQL 8.4.
+  - Moneda canónica `PEN` (ISO 4217), subtotal, 18% IGV y total congelados en el instante de emisión; inmutabilidad histórica garantizada frente a cambios futuros de tarifas maestras o alícuotas tributarias.
+  - Redondeo mercantil `ROUND_HALF_UP` en el límite contractual final preservando precisión intermedia sin redondeo prematuro acumulativo.
+- **Ciclo de Estados y Expiración Automática de Holds:**
+  - Ciclo de estados formalizado: `PENDIENTE`, `CONFIRMADA`, `CANCELADA`, `EXPIRADA`.
+  - Retención de inventario en `PENDIENTE` y `CONFIRMADA`; liberación atómica e inmediata en `CANCELADA` y `EXPIRADA`.
+  - Expiración de holds vencidos: método `expirarReservasPendientes()` en `ReservaServicio` con procesamiento en lote, reversión atómica de inventario diario y trazabilidad en auditoría.
+  - Endpoint web seguro `POST /reservas/expirar` y comando de consola CLI `bin/expirar-reservas.php` para integración en cron o tareas programadas del sistema.
+- **Concurrencia, Locking y Rollback Integral (D-067):**
+  - Transacciones ACID sobre motor MySQL 8.4.3 LTS InnoDB.
+  - Captura explícita de errores 1062 (clave duplicada), 1205 (lock wait timeout) y 1213 (deadlock) con `ROLLBACK` total y emisión de `ConflictoDisponibilidadExcepcion` (HTTP 409 Conflict).
+  - Rollback multiunidad completo: si la unidad $N$ de una reserva multinoche colisiona, revierte íntegramente las unidades previas sin dejar noches huérfanas en el inventario.
+- **Trazabilidad y Cero Eliminación Física (D-061):**
+  - Principio `CANCELACIÓN / EXPIRACIÓN ≠ DELETE`: cero eliminación física en `reservas` y `reserva_unidades`.
+  - Cancelación exige motivo obligatorio (1-255 caracteres).
+  - Auditoría transversal registrando eventos de dominio con autoría humana resuelta (`USR_X`) o actor de sistema.
+- **Interfaz Alina y Controladores:**
+  - Controlador `ReservaControlador` protegiendo cada acción con RBAC (`reservas.ver`, `reservas.crear`, etc.) y validación CSRF.
+  - Vista Alina responsive en `app/Vistas/reservas/index.php` con KPIs operativos, filtros en tiempo real, modales de reserva multiunidad reactivo, detalle con desglose de snapshot y modal de cancelación con validación.
+  - JavaScript moderno `public/assets/js/gestion-reservas.js` en Vanilla JS (0 jQuery), Fetch API, PristineJS y SweetAlert2.
+- **Verificación Automatizada Completa:**
+  - Matriz de dominio e integración: 50/50 PASS (`test_reservas_matriz_50.php`).
+  - Suite de concurrencia y locking: 6/6 PASS (`test_reservas_concurrencia.php`).
+  - Suite HTTP E2E Real Apache HTTPS: 15/15 PASS (`test_e2e_reservas.php`).
+  - Regresiones históricas: 205/205 PASS.
+  - Total acumulado del sistema: 725 casos únicos / 731 ejecuciones brutas (100% PASS).
+- **Invariantes del Incremento:**
+  - `admin-dashboard/` y `.env` intactos.
+  - Paridad 100% entre `SQL/camargo_pms.sql` y `SQL/migraciones/001_...` a `014_reservas.sql`.
+
 ### Microfase GATE FINANCIERO-1 — Definición del Contrato Monetario y Cierre de P-005
 
 - **Formalización de la Decisión D-069 (Cierre Definitivo de P-005):**

@@ -48,4 +48,9 @@ class ConflictoDisponibilidadExcepcion extends Exception
     {
         return $this->fechaConflicto;
     }
+
+    public function obtenerFecha(): ?string
+    {
+        return $this->fechaConflicto;
+    }
 }
