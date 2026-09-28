@@ -4,7 +4,37 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
-### Microfase HOUSEKEEPING-1 — Housekeeping, Pisos, Inspección, Reproceso y Control Textil de Lencería (D-083)
+### Microfase SESIONES-1 — Monitoreo, Presencia y Revocación Administrativa de Sesiones (D-088)
+
+- **Axioma Ontológico Hexagonal:**
+  - Consagración del cuarteto ontológico vinculante: $\text{SESIÓN PHP} \neq \text{REGISTRO DE SESIÓN} \neq \text{USUARIO ACTIVO} \neq \text{PRESENCIA RECIENTE}$.
+  - La sesión PHP de runtime (cookie/PHPSESSID) es un mecanismo de transporte efímero y desacoplado del registro de persistencia en `sesiones_usuario`.
+  - Un usuario activo en catálogo puede sostener 0 o $N$ sesiones concurrentes. Desactivar un usuario revoca sus sesiones de inmediato pero la revocación de una sesión no desactiva al usuario.
+- **Relojes de Expiración Independientes:**
+  - Expiración por inactividad ($30\text{ min}$ deslizante con throttling de persistencia a $60\text{ s}$).
+  - Expiración absoluta ($12\text{ h}$ fija desde `iniciada_en` computada soberanamente).
+  - Presencia reciente ($\le 15\text{ min}$ desde última actividad HTTP) como heurística de supervisión visual que no constituye un tercer timeout ni muta el estado de validez de la sesión.
+- **Estados Soberanos y Motivos Normativos:**
+  - Estados soberanos: `ACTIVA`, `EXPIRADA_INACTIVIDAD`, `EXPIRADA_ABSOLUTA`, `REVOCADA`.
+  - Motivos normativos: `LOGOUT`, `EXPIRACION_INACTIVIDAD`, `EXPIRACION_ABSOLUTA`, `REVOCACION_ADMINISTRATIVA`, `CAMBIO_CONTRASENA`, `CAMBIO_ESTADO_USUARIO`, `DESACTIVACION_PERSONA`.
+  - Irreversibilidad estricta: una sesión revocada o cerrada no puede reactivarse.
+- **Aislamiento RBAC y Autorrevocación Defensiva:**
+  - Permisos atómicos dedicados en módulo `seguridad`: `sesiones.ver` y `sesiones.revocar` (asignados al rol `SUPERADMINISTRADOR`). El permiso `usuarios.editar` no confiere facultades de revocación de sesiones.
+  - Intermediarios `AutenticacionIntermediario` y `AutorizacionIntermediario` responden con `HTTP 401 Unauthorized` y JSON opaco (`codigo: SESION_NO_VALIDA`, `error: La sesión ya no es válida.`) ante peticiones asíncronas no autenticadas, previniendo fuga de detalles internos.
+  - Autorrevocación administrativa: cuando un usuario revoca su propia sesión en curso, se revoca en base de datos, se registra auditoría inmutable D-061 (`CERRAR_SESION`), se destruye la sesión PHP local y se invalidan las cookies.
+  - Idempotencia: la revocación de una sesión ya revocada retorna éxito seguro con `ya_revocada = true`.
+- **Economía de Esquema Estricta:**
+  - Cero tablas nuevas: se preservan exactamente las 104 tablas preexistentes del esquema de Camargo PMS.
+  - Cero migraciones nuevas: la ranura `027_*` permanece libre.
+- **Consola Alina y Endpoints JSON:**
+  - Vista `/seguridad/sesiones` con 4 KPIs en tiempo real (Sesiones Activas, Actividad Reciente, Expiradas, Revocadas), filtros por estado, presencia, búsqueda y paginación reactiva.
+  - Endpoints REST: `GET /api/seguridad/sesiones`, `GET /api/seguridad/sesiones/metricas`, `POST /api/seguridad/sesiones/{id}/revocar`, `POST /api/seguridad/sesiones/usuario/{id}/revocar-todas`, `POST /api/seguridad/sesiones/purgar-expiradas`.
+- **Certificación Automatizada Exhaustiva (80/80 PASS):**
+  - Matriz de dominio y axiomas: `tests/test_sesiones_matriz_40.php` (40/40 PASS).
+  - Seguridad, RBAC, CSRF y Auditoría D-061: `tests/test_sesiones_seguridad.php` (20/20 PASS).
+  - Concurrencia, multi-sesión e invariantes: `tests/test_sesiones_concurrencia.php` (10/10 PASS).
+  - End-to-End HTTP/API: `tests/test_e2e_sesiones.php` (10/10 PASS).
+  - Regresión integral de la suite completa: 42 suites ejecutadas, 42/42 PASS (100%).
 
 - **Axioma Ontológico Hexagonal:**
   - Consagración del axioma $\text{ESTADO COMERCIAL} \neq \text{ESTADO DE OCUPACIÓN} \neq \text{ESTADO DE LIMPIEZA} \neq \text{DISPONIBILIDAD} \neq \text{MANTENIMIENTO}$.

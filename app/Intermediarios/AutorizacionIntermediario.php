@@ -49,8 +49,17 @@ class AutorizacionIntermediario
     {
         $usuario = $this->sesionServicio->validarSesionActual();
 
-        // Si no está autenticado, redirigir a inicio de sesión
+        // Si no está autenticado, responder 401 si espera JSON o redirigir a inicio de sesión
         if ($usuario === null) {
+            if (AutenticacionIntermediario::esperaRespuestaJson()) {
+                return Respuesta::json([
+                    'ok' => false,
+                    'exito' => false,
+                    'error' => 'La sesión ya no es válida.',
+                    'codigo' => 'SESION_NO_VALIDA',
+                ], 401);
+            }
+
             $rutaRetorno = AutenticacionIntermediario::sanitizarRutaRetorno($rutaSolicitada);
             $urlLogin = Ayudante::ruta('/login');
 
@@ -63,11 +72,7 @@ class AutorizacionIntermediario
 
         // Si está autenticado, validar permiso de autorización RBAC
         if (!$this->autorizacionServicio->puede($usuario->obtenerId(), $this->permisoRequerido)) {
-            $esperaJson = (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))
-                || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string) $_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
-                || (isset($_SERVER['CONTENT_TYPE']) && str_contains($_SERVER['CONTENT_TYPE'], 'application/json'));
-
-            if ($esperaJson) {
+            if (AutenticacionIntermediario::esperaRespuestaJson()) {
                 return Respuesta::json([
                     'ok' => false,
                     'exito' => false,

@@ -135,7 +135,75 @@ class SesionUsuario
 
     public function estaActiva(?string $ahora = null): bool
     {
-        return !$this->estaRevocada() && !$this->haExpirado($ahora);
+        return $this->obtenerEstadoSoberano(30, 12, $ahora ? strtotime($ahora) : null) === 'ACTIVA';
+    }
+
+    /**
+     * Calcula soberanamente la fecha y hora de expiración absoluta (12 horas fijas desde iniciada_en).
+     */
+    public function obtenerExpiracionAbsoluta(int $horasDuracionMaxima = 12): string
+    {
+        $tsIniciada = strtotime($this->iniciadaEn);
+        return date('Y-m-d H:i:s', $tsIniciada + ($horasDuracionMaxima * 3600));
+    }
+
+    /**
+     * Deriva el estado soberano de validez de la sesión según D-088:
+     * - 'REVOCADA'
+     * - 'EXPIRADA_ABSOLUTA'
+     * - 'EXPIRADA_INACTIVIDAD'
+     * - 'ACTIVA'
+     */
+    public function obtenerEstadoSoberano(
+        int $minutosInactividad = 30,
+        int $horasDuracionMaxima = 12,
+        ?int $timestampAhora = null
+    ): string {
+        if ($this->estaRevocada()) {
+            return 'REVOCADA';
+        }
+
+        $ahora = $timestampAhora ?? time();
+        $tsIniciada = strtotime($this->iniciadaEn);
+        $tsUltimaActividad = strtotime($this->ultimaActividadEn);
+
+        // 1. Expiración absoluta soberana
+        if (($ahora - $tsIniciada) > ($horasDuracionMaxima * 3600)) {
+            return 'EXPIRADA_ABSOLUTA';
+        }
+
+        // 2. Expiración por inactividad
+        if (($ahora - $tsUltimaActividad) > ($minutosInactividad * 60)) {
+            return 'EXPIRADA_INACTIVIDAD';
+        }
+
+        return 'ACTIVA';
+    }
+
+    /**
+     * Deriva el indicador heurístico de presencia HTTP reciente:
+     * - 'PRESENCIA_RECIENTE' (actividad <= 15 min en sesión ACTIVA)
+     * - 'SIN_ACTIVIDAD_RECIENTE' (actividad > 15 min o sesión no activa)
+     */
+    public function obtenerPresenciaReciente(
+        int $minutosVentana = 15,
+        int $minutosInactividad = 30,
+        int $horasDuracionMaxima = 12,
+        ?int $timestampAhora = null
+    ): string {
+        $estado = $this->obtenerEstadoSoberano($minutosInactividad, $horasDuracionMaxima, $timestampAhora);
+        if ($estado !== 'ACTIVA') {
+            return 'SIN_ACTIVIDAD_RECIENTE';
+        }
+
+        $ahora = $timestampAhora ?? time();
+        $tsUltimaActividad = strtotime($this->ultimaActividadEn);
+
+        if (($ahora - $tsUltimaActividad) <= ($minutosVentana * 60)) {
+            return 'PRESENCIA_RECIENTE';
+        }
+
+        return 'SIN_ACTIVIDAD_RECIENTE';
     }
 
     /**
@@ -162,24 +230,35 @@ class SesionUsuario
     }
 
     /**
+     * Exporta la sesión a un arreglo seguro sin exponer secretos ni hashes (token_hash protegido).
+     *
+     * @param bool $incluirTokenHash Para uso estrictamente interno si se requiere
      * @return array<string, mixed>
      */
-    public function aArreglo(): array
+    public function aArreglo(bool $incluirTokenHash = false): array
     {
-        return [
+        $arreglo = [
             'id' => $this->id,
             'usuario_id' => $this->usuarioId,
-            'token_hash' => $this->tokenHash,
             'iniciada_en' => $this->iniciadaEn,
             'ultima_actividad_en' => $this->ultimaActividadEn,
             'expira_en' => $this->expiraEn,
+            'expiracion_absoluta_en' => $this->obtenerExpiracionAbsoluta(),
             'revocada_en' => $this->revocadaEn,
             'motivo_cierre' => $this->motivoCierre,
             'ip' => $this->ip,
             'user_agent' => $this->userAgent,
             'creado_en' => $this->creadoEn,
             'usuario' => $this->usuario ? $this->usuario->aArreglo() : null,
+            'estado_sesion' => $this->obtenerEstadoSoberano(),
+            'presencia_reciente' => $this->obtenerPresenciaReciente(),
             'esta_activa' => $this->estaActiva(),
         ];
+
+        if ($incluirTokenHash) {
+            $arreglo['token_hash'] = $this->tokenHash;
+        }
+
+        return $arreglo;
     }
 }

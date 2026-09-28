@@ -27,13 +27,22 @@ class AutenticacionIntermediario
      * Evalúa la petición entrante.
      *
      * @param string $rutaSolicitada
-     * @return Respuesta|null Retorna Respuesta de redirección si no está autenticado, o null si puede continuar.
+     * @return Respuesta|null Retorna Respuesta de redirección o 401 si no está autenticado, o null si puede continuar.
      */
     public function manejar(string $rutaSolicitada = '/'): ?Respuesta
     {
         $usuario = $this->sesionServicio->validarSesionActual();
 
         if ($usuario === null) {
+            if (self::esperaRespuestaJson()) {
+                return Respuesta::json([
+                    'ok' => false,
+                    'exito' => false,
+                    'error' => 'La sesión ya no es válida.',
+                    'codigo' => 'SESION_NO_VALIDA',
+                ], 401);
+            }
+
             // Protección contra Open Redirect: sanitizar ruta de retorno para aceptar solo rutas internas
             $rutaRetorno = $this->sanitizarRutaRetorno($rutaSolicitada);
             $urlLogin = Ayudante::ruta('/login');
@@ -46,6 +55,22 @@ class AutenticacionIntermediario
         }
 
         return null;
+    }
+
+    /**
+     * Determina si la petición HTTP entrante espera una respuesta en formato JSON (AJAX, Fetch o API).
+     */
+    public static function esperaRespuestaJson(): bool
+    {
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $xRequestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+
+        return str_contains($accept, 'application/json')
+            || strtolower((string) $xRequestedWith) === 'xmlhttprequest'
+            || str_contains($contentType, 'application/json')
+            || str_starts_with($uri, '/api/');
     }
 
     /**

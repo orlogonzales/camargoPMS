@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace CamargoPMS\Servicios;
 
+use CamargoPMS\Excepciones\EntidadNoEncontradaExcepcion;
+use CamargoPMS\Modelos\AccionAuditoria;
 use CamargoPMS\Modelos\SesionUsuario;
 use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
@@ -32,6 +34,7 @@ class SesionServicio
     private SesionUsuarioRepositorio $sesionRepo;
     private UsuarioRepositorio $usuarioRepo;
     private PersonaRepositorio $personaRepo;
+    private AuditoriaServicio $auditoriaServicio;
 
     private int $minutosInactividad;
     private int $horasDuracionMaxima;
@@ -41,12 +44,14 @@ class SesionServicio
         ?PDO $pdo = null,
         ?SesionUsuarioRepositorio $sesionRepo = null,
         ?UsuarioRepositorio $usuarioRepo = null,
-        ?PersonaRepositorio $personaRepo = null
+        ?PersonaRepositorio $personaRepo = null,
+        ?AuditoriaServicio $auditoriaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->sesionRepo = $sesionRepo ?? new SesionUsuarioRepositorio($this->pdo);
         $this->usuarioRepo = $usuarioRepo ?? new UsuarioRepositorio($this->pdo);
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
+        $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
 
         $this->minutosInactividad = (int) Configuracion::obtener('SESION_INACTIVIDAD_MINUTOS', 30);
         $this->horasDuracionMaxima = (int) Configuracion::obtener('SESION_DURACION_MAXIMA_HORAS', 12);
@@ -306,10 +311,10 @@ class SesionServicio
      */
     public function destruirSesionLocal(): void
     {
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            $_SESSION = [];
+        $_SESSION = [];
 
-            if (ini_get('session.use_cookies')) {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if (ini_get('session.use_cookies') && !headers_sent()) {
                 $params = session_get_cookie_params();
                 setcookie(
                     session_name(),
@@ -339,5 +344,244 @@ class SesionServicio
         }
 
         return null;
+    }
+
+    /**
+     * Consulta paginada y filtrada del universo global de sesiones en el sistema.
+     *
+     * @param array<string, mixed> $filtros
+     * @param int $limite
+     * @param int $pagina
+     * @return array{items: array<int, array<string, mixed>>, total: int, pagina: int, limite: int, total_paginas: int}
+     */
+    public function listarSesionesGlobales(array $filtros = [], int $limite = 20, int $pagina = 1): array
+    {
+        $limiteSeguro = max(1, min(100, $limite));
+        $paginaSegura = max(1, $pagina);
+
+        $total = $this->sesionRepo->contarSesionesGlobales(
+            $filtros,
+            $this->minutosInactividad,
+            $this->horasDuracionMaxima
+        );
+
+        $items = $this->sesionRepo->listarSesionesGlobales(
+            $filtros,
+            $limiteSeguro,
+            $paginaSegura,
+            $this->minutosInactividad,
+            $this->horasDuracionMaxima
+        );
+
+        // Identificar si alguna de las sesiones mostradas corresponde a la sesión en curso del cliente
+        $tokenClaroActual = $_SESSION[self::CLAVE_SESION_TOKEN] ?? null;
+        $hashActual = is_string($tokenClaroActual) && trim($tokenClaroActual) !== '' ? hash('sha256', $tokenClaroActual) : null;
+
+        foreach ($items as &$item) {
+            // Evaluamos si el ID coincide con la sesión del usuario autenticado
+            $esActual = false;
+            if ($hashActual !== null) {
+                $sesionEnBD = $this->sesionRepo->buscarPorId($item['id'], false);
+                if ($sesionEnBD !== null && $sesionEnBD->obtenerTokenHash() === $hashActual) {
+                    $esActual = true;
+                }
+            }
+            $item['es_sesion_actual'] = $esActual;
+        }
+        unset($item);
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'pagina' => $paginaSegura,
+            'limite' => $limiteSeguro,
+            'total_paginas' => (int) ceil($total / max(1, $limiteSeguro)),
+        ];
+    }
+
+    /**
+     * Obtiene el resumen de métricas de concurrencia y actividad en tiempo real.
+     *
+     * @return array<string, int>
+     */
+    public function obtenerResumenMetricas(): array
+    {
+        return $this->sesionRepo->obtenerResumenMetricas(
+            $this->minutosInactividad,
+            $this->horasDuracionMaxima,
+            15
+        );
+    }
+
+    /**
+     * Revoca administrativamente una sesión concreta con auditoría D-061 y control de idempotencia.
+     *
+     * Reglas vinculantes:
+     * - Si la sesión ya estaba REVOCADA: operación idempotente sin error.
+     * - Si es la propia sesión del usuario actual: se revoca, se audita, se destruye la sesión PHP local y se retorna indicador de redirección a /login.
+     * - Si es la sesión de otro usuario: se revoca, se audita y la sesión del administrador permanece intacta.
+     *
+     * @param int $sesionId
+     * @param int $ejecutadoPorUsuarioId
+     * @param string $motivo
+     * @return array{exito: bool, ya_revocada: bool, es_sesion_actual: bool, mensaje: string}
+     * @throws EntidadNoEncontradaExcepcion
+     */
+    public function revocarSesionAdministrativa(
+        int $sesionId,
+        int $ejecutadoPorUsuarioId,
+        string $motivo = 'REVOCACION_ADMINISTRATIVA'
+    ): array {
+        $sesion = $this->sesionRepo->buscarPorId($sesionId, true);
+        if ($sesion === null) {
+            throw new EntidadNoEncontradaExcepcion('SesionUsuario', $sesionId);
+        }
+
+        // Idempotencia: Si ya está revocada, no producir error ni duplicar eventos de auditoría contradictorios
+        if ($sesion->estaRevocada()) {
+            return [
+                'exito' => true,
+                'ya_revocada' => true,
+                'es_sesion_actual' => false,
+                'mensaje' => 'La sesión ya se encontraba revocada previamente.',
+            ];
+        }
+
+        $esSesionActual = $this->esSesionActual($sesion);
+
+        // Ejecutar revocación en BD
+        $this->sesionRepo->revocar($sesionId, $motivo);
+
+        // Registro de auditoría D-061 inmutable
+        $this->auditoriaServicio->registrar(
+            AccionAuditoria::CERRAR_SESION,
+            'seguridad',
+            'sesiones_usuario',
+            (string) $sesionId,
+            "Revocación administrativa de sesión ID {$sesionId} para el usuario ID {$sesion->obtenerUsuarioId()}",
+            ['estado' => 'ACTIVA'],
+            ['estado' => 'REVOCADA', 'motivo_cierre' => $motivo],
+            [
+                'sesion_id' => $sesionId,
+                'usuario_afectado_id' => $sesion->obtenerUsuarioId(),
+                'es_autorrevocacion' => $esSesionActual,
+                'ip' => $sesion->obtenerIp(),
+            ],
+            null,
+            $ejecutadoPorUsuarioId
+        );
+
+        if ($esSesionActual) {
+            $this->destruirSesionLocal();
+            return [
+                'exito' => true,
+                'ya_revocada' => false,
+                'es_sesion_actual' => true,
+                'mensaje' => 'Su propia sesión actual ha sido revocada. Será redirigido al inicio de sesión.',
+            ];
+        }
+
+        return [
+            'exito' => true,
+            'ya_revocada' => false,
+            'es_sesion_actual' => false,
+            'mensaje' => "La sesión ID {$sesionId} ha sido revocada exitosamente.",
+        ];
+    }
+
+    /**
+     * Revoca administrativamente todas las sesiones activas de un usuario determinado.
+     *
+     * @param int $usuarioId
+     * @param int $ejecutadoPorUsuarioId
+     * @param string $motivo
+     * @return array{exito: bool, es_sesion_actual: bool, sesiones_revocadas: int, mensaje: string}
+     * @throws EntidadNoEncontradaExcepcion
+     */
+    public function revocarTodasDeUsuarioAdministrativa(
+        int $usuarioId,
+        int $ejecutadoPorUsuarioId,
+        string $motivo = 'REVOCACION_ADMINISTRATIVA'
+    ): array {
+        $usuario = $this->usuarioRepo->buscarPorId($usuarioId, false);
+        if ($usuario === null) {
+            throw new EntidadNoEncontradaExcepcion('Usuario', $usuarioId);
+        }
+
+        self::iniciarSesionPhp();
+        $esSesionActualPropia = ((int) ($_SESSION[self::CLAVE_USUARIO_ID] ?? 0) === $usuarioId);
+
+        $totalRevocadas = $this->sesionRepo->revocarTodasDeUsuario($usuarioId, $motivo);
+
+        // Registro de auditoría D-061
+        $this->auditoriaServicio->registrar(
+            AccionAuditoria::CERRAR_SESION,
+            'seguridad',
+            'sesiones_usuario',
+            (string) $usuarioId,
+            "Cierre administrativo de todas las sesiones ({$totalRevocadas} afectadas) del usuario ID {$usuarioId}",
+            null,
+            ['sesiones_revocadas' => $totalRevocadas, 'motivo_cierre' => $motivo],
+            [
+                'usuario_afectado_id' => $usuarioId,
+                'es_autorrevocacion_masiva' => $esSesionActualPropia,
+            ],
+            null,
+            $ejecutadoPorUsuarioId
+        );
+
+        if ($esSesionActualPropia) {
+            $this->destruirSesionLocal();
+            return [
+                'exito' => true,
+                'es_sesion_actual' => true,
+                'sesiones_revocadas' => $totalRevocadas,
+                'mensaje' => "Se revocaron {$totalRevocadas} sesiones (incluyendo la actual). Será redirigido al inicio de sesión.",
+            ];
+        }
+
+        return [
+            'exito' => true,
+            'es_sesion_actual' => false,
+            'sesiones_revocadas' => $totalRevocadas,
+            'mensaje' => "Se revocaron {$totalRevocadas} sesiones activas del usuario exitosamente.",
+        ];
+    }
+
+    /**
+     * Marca en lote las sesiones expiradas en base de datos para saneamiento analítico.
+     */
+    public function purgarExpiradasLote(): int
+    {
+        return $this->sesionRepo->marcarExpiradasLote($this->minutosInactividad, $this->horasDuracionMaxima);
+    }
+
+    /**
+     * Determina si una instancia de SesionUsuario coincide con la sesión del cliente actual.
+     */
+    public function esSesionActual(SesionUsuario $sesion): bool
+    {
+        self::iniciarSesionPhp();
+        $tokenClaroActual = $_SESSION[self::CLAVE_SESION_TOKEN] ?? null;
+        if (!is_string($tokenClaroActual) || trim($tokenClaroActual) === '') {
+            return false;
+        }
+
+        return hash('sha256', $tokenClaroActual) === $sesion->obtenerTokenHash();
+    }
+
+    public function obtenerMinutosInactividad(): int
+    {
+        return $this->minutosInactividad;
+    }
+
+    public function obtenerHorasDuracionMaxima(): int
+    {
+        return $this->horasDuracionMaxima;
+    }
+
+    public function obtenerSegundosThrottle(): int
+    {
+        return $this->segundosThrottleActividad;
     }
 }

@@ -1067,6 +1067,26 @@ $enrutador->get('/reportes/exportar/pdf', [\CamargoPMS\Controladores\ReporteCont
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.exportar'),
 ]);
 
+// Rutas de Monitoreo y Revocación Administrativa de Sesiones (SESIONES-1 / D-088)
+$enrutador->get('/seguridad/sesiones', [\CamargoPMS\Controladores\SesionControlador::class, 'mostrarConsolaSesiones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.ver'),
+]);
+$enrutador->get('/api/seguridad/sesiones', [\CamargoPMS\Controladores\SesionControlador::class, 'apiListarSesiones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.ver'),
+]);
+$enrutador->get('/api/seguridad/sesiones/metricas', [\CamargoPMS\Controladores\SesionControlador::class, 'apiMetricas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.ver'),
+]);
+$enrutador->post('/api/seguridad/sesiones/{id}/revocar', [\CamargoPMS\Controladores\SesionControlador::class, 'apiRevocarSesion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.revocar'),
+]);
+$enrutador->post('/api/seguridad/sesiones/usuario/{usuarioId}/revocar-todas', [\CamargoPMS\Controladores\SesionControlador::class, 'apiRevocarUsuario'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.revocar'),
+]);
+$enrutador->post('/api/seguridad/sesiones/purgar-expiradas', [\CamargoPMS\Controladores\SesionControlador::class, 'apiPurgarExpiradas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.revocar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

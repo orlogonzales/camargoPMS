@@ -403,6 +403,8 @@ INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `
 ('usuarios.crear', 'Crear usuarios', 'Permite registrar nuevas cuentas de usuario en el sistema', 'usuarios', 'ACTIVO', 1),
 ('usuarios.editar', 'Editar usuarios', 'Permite modificar datos de cuentas de usuario existentes', 'usuarios', 'ACTIVO', 1),
 ('usuarios.bloquear', 'Bloquear usuarios', 'Permite bloquear o desactivar cuentas de usuario', 'usuarios', 'ACTIVO', 1),
+('sesiones.ver', 'Ver sesiones de usuario', 'Permite consultar el monitor y listado de sesiones de usuario en el sistema', 'seguridad', 'ACTIVO', 1),
+('sesiones.revocar', 'Revocar sesiones de usuario', 'Permite revocar administrativamente sesiones activas de usuarios', 'seguridad', 'ACTIVO', 1),
 ('roles.ver', 'Ver roles', 'Permite consultar los roles y sus permisos asociados', 'roles', 'ACTIVO', 1),
 ('roles.crear', 'Crear roles', 'Permite definir nuevos roles de autorización en el sistema', 'roles', 'ACTIVO', 1),
 ('roles.editar', 'Editar roles', 'Permite modificar nombres y descripciones de roles', 'roles', 'ACTIVO', 1),
@@ -3781,6 +3783,32 @@ FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'gastos.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+-- ----------------------------------------------------------------------------
+-- Asignación de Permisos de Sesiones (SESIONES-1)
+-- ----------------------------------------------------------------------------
+INSERT IGNORE INTO `roles_permisos` (`rol_id`, `permiso_id`)
+SELECT r.`id`, p.`id`
+FROM `roles` r
+CROSS JOIN `permisos` p
+WHERE r.`codigo` = 'SUPERADMINISTRADOR'
+  AND p.`codigo` LIKE 'sesiones.%';
+
+-- ----------------------------------------------------------------------------
+-- Opción de Menú Alina para Sesiones (Bajo Configuración id 2)
+-- ----------------------------------------------------------------------------
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'seguridad_sesiones', 'Sesiones Activas', 'fa-solid fa-laptop-code', '/seguridad/sesiones', 5, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'sesiones.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),

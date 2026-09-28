@@ -1319,6 +1319,24 @@ Se formaliza la arquitectura analítica y ejecutiva de Camargo PMS para la toma 
 10. **Seguridad RBAC Específica:**
     Protección de endpoints mediante permisos atómicos: `reportes.ver`, `reportes.operaciones`, `reportes.finanzas`, `reportes.morosidad` y `reportes.exportar`.
 
+### D-088 — Monitoreo, presencia y revocación administrativa de sesiones
+
+Gobierna la observabilidad, ciclo de vida, semántica de presencia y revocación administrativa de sesiones de usuario en Camargo PMS (`SESIONES-1`):
+
+1. **SESIÓN PHP $\neq$ REGISTRO DE SESIÓN:** La sesión PHP es un runtime efímero local (`PHPSESSID`, `$_SESSION`); el registro en base de datos (`sesiones_usuario`) es una entidad persistente, auditable y revocable con hash criptográfico SHA-256.
+2. **USUARIO ACTIVO $\neq$ USUARIO CON SESIÓN:** Un usuario en estado `ACTIVO` tiene permiso de acceso según catálogo; no implica que esté conectado ni posea sesiones abiertas (puede tener cero o múltiples sesiones).
+3. **SESIÓN ACTIVA $\neq$ PRESENCIA RECIENTE:** Una sesión puede estar plenamente válida (`ACTIVA`, inactividad < 30m) sin que el usuario haya interactuado en los últimos minutos.
+4. **PRESENCIA HTTP $\neq$ ONLINE EN TIEMPO REAL:** El protocolo HTTP no ofrece presencia continua; la presencia se estima heurísticamente como `PRESENCIA_RECIENTE` si la última petición ocurrió hace $\le 15$ minutos, o `SIN_ACTIVIDAD_RECIENTE` si ocurrió hace $> 15$ minutos. Nunca se promete un estado "online" físico.
+5. **Idle Timeout $\neq$ Absolute Timeout:** La expiración por inactividad (`30m` deslizante con cada petición) es independiente de la expiración absoluta (`12h` fija desde `iniciada_en`). Ambos relojes se evalúan y derivan soberanamente.
+6. **REVOCAR SESIÓN $\neq$ DESACTIVAR USUARIO:** La revocación cancela una concesión de acceso puntual; la cuenta del usuario permanece activa y puede volver a iniciar sesión si presenta sus credenciales.
+7. **REVOCAR SESIÓN $\neq$ CAMBIAR CONTRASEÑA:** El cambio de contraseña revoca sesiones por seguridad, pero la revocación de una sesión no altera las credenciales de la cuenta.
+8. **Revocación Administrativa Auditable:** Toda revocación manual o masiva se registra en la bitácora append-only D-061 con actor, usuario afectado, sesión, motivo y timestamp, sin exponer secretos ni hashes.
+9. **Irreversibilidad de Revocación:** Una sesión con `revocada_en IS NOT NULL` no vuelve a ser válida jamás.
+10. **Navegación HTML sin Sesión:** Peticiones HTML no autenticadas o con sesión revocada redirigen con HTTP 302 hacia `/login?return=...`.
+11. **Fetch / AJAX sin Sesión:** Peticiones asíncronas o que esperan JSON sin sesión válida o revocada retornan inmediatamente `HTTP 401 Unauthorized` con payload JSON opaco (`{"ok": false, "error": "La sesión ya no es válida.", "codigo": "SESION_NO_VALIDA"}`) sin revelar detalles internos de seguridad.
+12. **Economía de Esquema:** Reutilización íntegra de la tabla `sesiones_usuario` (Migración 005) sin modificaciones DDL (104 tablas preservadas).
+13. **Ranura 027 Libre:** `SESIONES-1` no consume archivo en `SQL/migraciones/027_*`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
