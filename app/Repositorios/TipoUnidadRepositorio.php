@@ -14,9 +14,9 @@ class TipoUnidadRepositorio
 {
     private PDO $pdo;
 
-    public function __construct(PDO $pdo)
+    public function __construct(?PDO $pdo = null)
     {
-        $this->pdo = $pdo;
+        $this->pdo = $pdo ?? \CamargoPMS\Nucleo\BaseDatos::conexion();
     }
 
     /**

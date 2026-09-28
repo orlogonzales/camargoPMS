@@ -230,3 +230,213 @@
     min-height: 1.5rem;
 }
 
+/* ==========================================================================
+   TAPE CHART / RACK OPERACIONAL (TAPE-CHART-1 / D-084)
+   ========================================================================== */
+
+.tape-chart-container {
+    position: relative;
+    border-radius: var(--app-border-radius, 1rem);
+    border: 1px solid rgba(var(--secondary), 0.2);
+    background-color: var(--bs-body-bg, #fff);
+    overflow: hidden;
+}
+
+.tape-chart-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+/* Encabezado y Columna de Unidades Sticky */
+.tape-sticky-corner {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 25;
+    background-color: var(--bs-card-bg, #fff) !important;
+    min-width: 220px;
+    max-width: 220px;
+    border-bottom: 2px solid rgba(var(--secondary), 0.3) !important;
+    border-right: 2px solid rgba(var(--secondary), 0.3) !important;
+}
+
+.tape-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: var(--bs-card-bg, #fff) !important;
+    border-bottom: 2px solid rgba(var(--secondary), 0.3) !important;
+    text-align: center;
+    min-width: 95px;
+    user-select: none;
+}
+
+.tape-sticky-unit {
+    position: sticky;
+    left: 0;
+    z-index: 15;
+    background-color: var(--bs-card-bg, #fff) !important;
+    min-width: 220px;
+    max-width: 220px;
+    border-right: 2px solid rgba(var(--secondary), 0.3) !important;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
+}
+
+/* Columna de la fecha de Hoy */
+.tape-col-hoy {
+    background-color: rgba(var(--primary), 0.04) !important;
+}
+
+.tape-header-hoy {
+    background-color: rgba(var(--primary), 0.1) !important;
+    color: rgba(var(--primary), 1) !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid rgba(var(--primary), 0.8) !important;
+}
+
+/* Celda interactiva del Tape Chart */
+.tape-celda {
+    min-width: 95px;
+    height: 52px;
+    padding: 3px 5px;
+    vertical-align: middle;
+    border-right: 1px solid rgba(var(--secondary), 0.15);
+    border-bottom: 1px solid rgba(var(--secondary), 0.15);
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.tape-celda:hover {
+    filter: brightness(0.96);
+    box-shadow: inset 0 0 0 2px rgba(var(--primary), 0.4);
+}
+
+/* Bloques y barras de estancia */
+.tape-bloque {
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.tape-bloque .tape-bloque-titulo {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tape-bloque .tape-bloque-subtitulo {
+    font-size: 0.7rem;
+    opacity: 0.85;
+}
+
+/* Clases de color Alina Soft (sin degradados, sin punteados) */
+.tape-celda-estadia .tape-bloque {
+    background-color: rgba(var(--primary), 0.15);
+    color: rgba(var(--primary), 1);
+    border-color: rgba(var(--primary), 0.35);
+}
+
+.tape-celda-reserva .tape-bloque {
+    background-color: rgba(var(--success), 0.15);
+    color: rgba(var(--success), 1);
+    border-color: rgba(var(--success), 0.35);
+}
+
+.tape-celda-hold .tape-bloque {
+    background-color: rgba(var(--warning), 0.15);
+    color: rgba(var(--warning), 1);
+    border-color: rgba(var(--warning), 0.4);
+}
+
+.tape-celda-arrendamiento .tape-bloque {
+    background-color: rgba(var(--info), 0.15);
+    color: rgba(var(--info), 1);
+    border-color: rgba(var(--info), 0.4);
+}
+
+.tape-celda-ooo .tape-bloque {
+    background-color: rgba(var(--dark), 0.18);
+    color: rgba(var(--dark), 1);
+    border-color: rgba(var(--dark), 0.4);
+}
+
+.tape-celda-bloqueo .tape-bloque {
+    background-color: rgba(var(--danger), 0.15);
+    color: rgba(var(--danger), 1);
+    border-color: rgba(var(--danger), 0.35);
+}
+
+.tape-celda-vr .tape-bloque {
+    background-color: rgba(var(--success), 0.1);
+    color: rgba(var(--success), 1);
+    border-color: rgba(var(--success), 0.25);
+}
+
+.tape-celda-vd .tape-bloque {
+    background-color: rgba(var(--danger), 0.08);
+    color: rgba(var(--danger), 1);
+    border-color: rgba(var(--danger), 0.2);
+}
+
+.tape-celda-vcl .tape-bloque {
+    background-color: rgba(var(--warning), 0.1);
+    color: rgba(var(--warning), 1);
+    border-color: rgba(var(--warning), 0.3);
+}
+
+.tape-celda-vacante {
+    background-color: transparent;
+}
+
+.tape-celda-vacante .tape-bloque-vacio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(var(--secondary), 0.4);
+    font-size: 0.75rem;
+}
+
+/* Indicadores de conflicto secundario */
+.tape-badge-conflicto {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.65rem;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background-color: rgba(var(--danger), 0.9);
+    color: #fff;
+    z-index: 5;
+}
+
+/* Tarjetas KPI clicables como filtros */
+.kpi-filtro-card {
+    cursor: pointer;
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.kpi-filtro-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.kpi-filtro-card.activo {
+    box-shadow: inset 0 0 0 2px rgba(var(--primary), 1);
+}
+

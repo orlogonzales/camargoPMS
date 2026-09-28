@@ -997,6 +997,19 @@ $enrutador->post('/api/housekeeping/lavanderia/lotes/{id}/recibir', [\CamargoPMS
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.lavanderia.gestionar'),
 ]);
 
+// =========================================================================
+// Rutas de Centro Operacional de Recepción / Tape Chart (TAPE-CHART-1 / D-084)
+// =========================================================================
+$enrutador->get('/tape-chart', [\CamargoPMS\Controladores\TapeChartControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+$enrutador->get('/tape-chart/datos', [\CamargoPMS\Controladores\TapeChartControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+$enrutador->get('/tape-chart/rack-hoy', [\CamargoPMS\Controladores\TapeChartControlador::class, 'rackHoyJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

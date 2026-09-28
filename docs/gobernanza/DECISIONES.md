@@ -1208,6 +1208,41 @@ Se formaliza el diseño arquitectónico del subsistema de Housekeeping en Camarg
 18. **Ausencia de Schedulers Prematuros:**
     - Tareas de `PROFUNDA` y `RETOQUE` se gestionan bajo demanda manual en esta fase.
 
+### D-084 — Tape Chart y Rack Hotelero como Proyección Operacional No Persistente (GATE TAPE-CHART-1)
+
+Se formaliza el diseño arquitectónico y de gobernanza para el Centro Operacional de Recepción de Camargo PMS:
+
+1. **Axioma Arquitectónico Central:**
+   $$\mathbf{TAPE\ CHART} \neq \mathbf{FUENTE\ DE\ VERDAD}$$
+   $$\mathbf{TAPE\ CHART} = \mathbf{PROYECCIÓN\ OPERACIONAL\ DE\ DOMINIOS\ SOBERANOS\ EXISTENTES}$$
+   Queda estrictamente prohibida la creación de tablas como `tape_chart`, `rack_unificado` o columnas persistentes redundantes en base de datos.
+2. **Cero Consumo de Migración SQL:**
+   TAPE-CHART-1 opera como una microfase de agregación backend/frontend sin migraciones DDL ni alteraciones al esquema relacional. El slot `026_*.sql` permanece estrictamente libre y reservado para `GASTOS-1`.
+3. **Escalabilidad y Consultas Acotadas $O(1)$:**
+   Se prohíbe terminantemente el antipatrón $N \times M$ de consultas (cero consultas por celda o por unidad $\times$ día). Las extracciones se realizan por lotes acotados mediante `TapeChartRepositorio` con tiempo de respuesta predecible independientemente del tamaño de la cuadrícula.
+4. **Prioridad Visual sin Destrucción de Información:**
+   La jerarquía visual (`OOO` $\rightarrow$ `ARRENDAMIENTO` $\rightarrow$ `IN-HOUSE` $\rightarrow$ `RESERVA` $\rightarrow$ `HOLD` $\rightarrow$ `BLOQUEO` $\rightarrow$ `VACANTE`) rige exclusivamente el estilo dominante de la celda. Las celdas conservan obligatoriamente sus `indicadores_secundarios[]` y `conflictos[]` sin ocultar eventos concurrentes (ej. mantenimiento sobre reserva).
+5. **Semántica Temporal Hotelera D-066 Estricta:**
+   La cuadrícula representa noches físicas en el intervalo semiabierto $[\text{fecha}, \text{fecha} + 1)$ según el huso horario IANA de la propiedad. La fecha de salida no consume noche adicional. El estado higiénico de Housekeeping (`VR`, `VD`, `VCL`) se proyecta en la fecha hotelera actual ("Hoy"); fechas futuras se muestran en disponibilidad comercial neutra sin asumir higienes hipotéticas.
+6. **Definición Matemática de Métricas Operativas:**
+   - $\text{ARRIVAL}(F) = \text{estadía o reserva con fecha de entrada} = F$ y estado compatible.
+   - $\text{DEPARTURE}(F) = \text{estadía con fecha de salida} = F$ y estado compatible.
+   - $\text{STAYOVER}(F) = \text{estadía en curso que pernocta atravesando } F \ (\text{entrada} < F \land \text{salida} > F)$.
+7. **Cero Doble Conteo de Ocupación:**
+   Si una reserva confirmada ya generó una estadía en curso, la estadía es el hecho dominante; la reserva no se cuenta dos veces ni en las celdas ni en los contadores del Rack de Hoy.
+8. **Expiración Real de Holds Temporales:**
+   Reservas en estado `PENDIENTE` cuyo hold temporal ha expirado según el parámetro operacional y timestamp de creación dejan de proyectarse como bloqueos visuales activos.
+9. **Consistencia Estricta entre Calendario y Rack de Hoy:**
+   El Tablero Calendario y el Rack Operacional de Hoy se alimentan del mismo agregador en memoria (`TapeChartServicio`). Las métricas del Rack de Hoy coinciden de forma matemática exacta con el estado de las celdas en la fecha hotelera actual.
+10. **KPIs Clicables como Filtros:**
+    Las tarjetas métricas del Rack de Hoy operan como filtros instantáneos en la interfaz para focalizar unidades por su condición (Llegadas, Salidas, En casa, VR, VD, VCL, OOO).
+11. **Información Personal Mínima por Defecto:**
+    Las celdas muestran únicamente código de referencia, apellido/nombre corto y ocupantes. Datos personales sensibles pertenecen al modal de detalle protegido por RBAC.
+12. **Seguridad Transaccional y Desacople de Autorización:**
+    La proyección visual no autoriza operaciones. Toda acción contextual (check-in, check-out, bloqueo) viaja al backend y revalida transaccionalmente con bloqueos pesimistas (`FOR UPDATE`) en sus servicios soberanos (`EstadiaServicio::realizarCheckin()`).
+13. **Exclusiones Explícitas del Alcance:**
+    Drag & Drop, edición directa in-line de celdas, WebSockets y sincronizaciones externas OTA/WordPress quedan categóricamente fuera de esta fase.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
