@@ -450,7 +450,23 @@ Implementación del dominio de suministros y consumos periódicos bajo la decisi
 - **Frontera Estricta:** Culmina en el devengo del cargo. Cero emisión de recibos PDF ni cobranza en esta fase (reservado a `RECIBOS-1`).
 - **Persistencia Relacional (Migración 023):** Tablas `suministros`, `suministro_tarifas`, `suministro_medidores`, `suministro_lecturas`, `suministro_liquidaciones`, `suministro_liquidacion_tramos` y permisos RBAC (`suministros.*`).
 
-Estado: candidata pre-commit (60/60 pruebas específicas PASS, 818/818 regresión activa PASS).
+Estado: homologada (micro-baseline oficial 75e5a5e, 71/71 pruebas específicas PASS, 889/889 regresión activa PASS).
+
+## RECIBOS-1 — Emisión de Recibos de Cobranza, Snapshots Financieros $T_0$, Preservación Criptográfica Inmutable e Integración con FINANCIERO-2 y DOCUMENTOS-1
+
+Implementación del dominio de recibos de cobranza, constancias históricas probatorias inmutables e integración documental bajo la decisión vinculante D-082:
+- **Axioma Ontológico Hexagonal:** $\text{CARGO} \neq \text{PAGO} \neq \text{APLICACIÓN} \neq \text{RECIBO} \neq \text{PDF}$.
+- **Definición Vinculante de Recibo:** $\text{RECIBO} = \text{CONSTANCIA HISTÓRICA INMUTABLE DE UN HECHO DE COBRO}$. No es un extracto mutable de cuenta corriente.
+- **Congelamiento Temporal en $T_0$:** El recibo congela la realidad económica del instante exacto de emisión: cargos amortizados, saldo restante de cada cargo (`cargo_saldo_restante`) y deuda total del folio (`folio_saldo_pendiente_historico`). Pagos o liquidaciones en $T_1$ devengan sus propios recibos y no mutan los de $T_0$.
+- **Ecuación Contable Universal:** $\text{monto\_recaudado} = \text{monto\_imputado} + \text{monto\_no\_aplicado\_pago}$. Soporte para abonos exactos, parciales, compuestos multipropósito y anticipos sin imputación previa (`monto_no_aplicado_pago > 0`).
+- **Garantías Segregadas:** Tipificación formal de depósitos en garantía (`cargo_origen_tipo = DEPOSITO_GARANTIA`), preservando la custodia no operativa de fondos.
+- **Unicidad Relacional:** 1 Pago Confirmado = Máximo 1 Recibo Activo, blindado físicamente en InnoDB por la columna virtual `recibo_activo_idx` y la clave única `uq_rec_pago_activo`.
+- **Inviolabilidad Criptográfica y Física:** Integración con Dompdf 3.1.6 vía `DOCUMENTOS-1`. Cálculo de `hash_pdf_sha256` sobre bytes en disco y folio `REC-YYYYMM-XXXX`. Al anularse, el recibo pasa a `ANULADO`; el archivo físico en disco y su hash jamás se sobreescriben ni corrompen.
+- **Desacople con FINANCIERO-2:** Anular un recibo NO revierte el pago en caja/folio. Reversar un pago en FINANCIERO-2 conserva el recibo emitido en BD como prueba histórica inmutable.
+- **Persistencia Relacional (Migración 024):** Tablas `recibos` (tabla 79) y `recibo_lineas` (tabla 80), con índices rápidos, constraints `ON DELETE RESTRICT` y permisos RBAC (`recibos.*`).
+- **Interfaz Alina Conforme a D-075 y D-076:** Módulo en `/recibos` con 4 KPIs en vivo, modales `app-form app-icon-form`, bordes `b-r-20`, Select2 42px y controlador JS modular `gestion-recibos.js`.
+
+Estado: candidata pre-commit (60/60 pruebas específicas PASS, 949/949 regresión activa PASS).
 
 ## Dominio operativo
 

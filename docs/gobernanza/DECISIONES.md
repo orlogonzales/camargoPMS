@@ -1117,6 +1117,53 @@ Se formaliza el diseño arquitectónico del dominio de servicios básicos, medid
     - SUMINISTROS-1 culmina en el devengo del cargo en la cuenta folio.
     - Cero emisión de recibos PDF, fraccionamientos o cobranzas en esta fase, reservadas a `RECIBOS-1`.
 
+### D-082 — Arquitectura de Recibos, Snapshots Financieros T0 y Preservación Documental (GATE RECIBOS-1)
+
+Se formaliza el diseño arquitectónico del dominio de emisión de recibos de cobranza, snapshots financieros y preservación documental criptográfica en Camargo PMS:
+
+1. **Axioma Ontológico Hexagonal:**
+   $$\text{CARGO} \neq \text{PAGO} \neq \text{APLICACIÓN} \neq \text{RECIBO} \neq \text{PDF}$$
+   $$\text{RECIBO} = \text{CONSTANCIA HISTÓRICA INMUTABLE DE UN HECHO DE COBRO EN } T_0$$
+   Un recibo no es una proyección viva o mutable del estado de cuenta; congela fehacientemente qué pago ocurrió y qué obligaciones amortizó en el instante específico de su emisión ($T_0$).
+2. **Snapshot Estricto en $T_0$:**
+   - Todo recibo congela los importes amortizados y los saldos resultantes de los cargos en $T_0$.
+   - Pagos posteriores que terminen de saldar un cargo no alteran retrospectivamente los recibos emitidos con anterioridad.
+3. **Cardinalidad Unívoca (1 Pago Confirmado = 1 Recibo Original):**
+   - Cada pago confirmado genera exactamente un único recibo original.
+   - Las aplicaciones a múltiples cargos se expresan como líneas del recibo (`recibo_lineas`), nunca como múltiples recibos para el mismo cobro.
+   - Clave única en base de datos (`uq_rec_pago_activo`) que impide doble emisión activa sobre el mismo pago.
+4. **Inviolabilidad Criptográfica del Binario PDF:**
+   - La anulación de un recibo nunca sobreescribe ni altera el binario PDF físico en disco ni su hash SHA-256 en `documentos_emitidos`.
+   - El estado `ANULADO` se asienta a nivel relacional con actor, fecha y motivo; si se requiere una constancia visual de anulación, se emite un nuevo artefacto documental relacionado, preservando el original intacto.
+5. **Desacople Operativo (Anular Recibo $\neq$ Reversar Pago):**
+   - Anular un recibo es un acto administrativo sobre el comprobante emitido; no revierte el pago en `FINANCIERO-2` ni altera los fondos en caja.
+   - Si un pago es revertido con posterioridad, el recibo histórico permanece registrado y la reversión financiera queda trazada; `RECIBOS-1` no genera movimientos de caja por su cuenta.
+6. **Ecuación Contable Inviolable y Nomenclatura Desacoplada:**
+   $$\text{monto\_recaudado} = \text{monto\_imputado} + \text{monto\_no\_aplicado\_pago}$$
+   - `monto_no_aplicado_pago`: porción no aplicada de este pago específico que queda disponible a favor del titular en el folio.
+   - Protegida en motor InnoDB mediante `CHECK (monto_recaudado = monto_imputado + monto_no_aplicado_pago)`.
+   - Se congelan por separado informativamente `saldo_pendiente_folio_despues >= 0` y `saldo_favor_folio_despues >= 0`.
+7. **Custodia Segregada de Garantías:**
+   - $\text{GARANTÍA} \neq \text{RENTA} \neq \text{SALDO A FAVOR ORDINARIO}$.
+   - Los cobros de garantía amortizan el cargo formal `ARRENDAMIENTO_GARANTIA` en custodia segregada y no se mezclan con crédito ordinario de libre amortización.
+8. **Transparencia en Pagos sin Imputación:**
+   - Un pago sin aplicaciones refleja transparentemente `monto_imputado = 0.00` y `monto_no_aplicado_pago = monto_recaudado`, sin inferir ficticiamente un anticipo comercial.
+9. **Snapshot Histórico de Persona y Cobro:**
+   - Congelamiento inmutable de `persona_nombre_snapshot`, `persona_documento_tipo_snapshot`, `persona_documento_numero_snapshot`, método de pago, referencia de operación y moneda.
+10. **Trazabilidad Contractual Coherente:**
+    - `arrendamiento_id` y `reserva_id` se derivan transaccionalmente de la cuenta folio asociada (`cuentas_folios`), garantizando coherencia absoluta.
+11. **Desacople de Folios y Secuencias:**
+    - El folio comercial (`REC-YYYYMM-XXXX`) pertenece al dominio `RECIBOS`. Se reutiliza la infraestructura atómica de `documento_secuencias` con namespace `RECIBO` bajo bloqueo pesimista `SELECT ... FOR UPDATE`.
+12. **Resiliencia Transaccional Motor-Filesystem:**
+    - Transacción DB -> Inserción de recibo y líneas -> Renderizado PDF -> Escritura en disco -> Persistencia en `documentos_emitidos` con hash SHA-256 -> Commit.
+    - Ante cualquier fallo en renderizado o disco, rollback total en BD y limpieza de archivos temporales, impidiendo recibos huérfanos sin PDF.
+13. **Reimpresión $\neq$ Nuevo Recibo ni Nuevo Cobro:**
+    - La descarga repetida entrega el binario PDF soberano validando su integridad física contra `hash_pdf_sha256`, sin consumir folios ni alterar la BD.
+14. **Invarianza ante Reversiones Posteriores (Caso SUM-FIN-01):**
+    - Si un cargo o liquidación es corregida posteriormente, el recibo original emitido en $T_0$ mantiene su contenido inalterado.
+15. **Delimitación No Tributaria:**
+    - El recibo es una Constancia Administrativa Interna de Cobranza. No es factura electrónica ni comprobante fiscal SUNAT.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

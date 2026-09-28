@@ -224,6 +224,37 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
   - `E2E-DOC-12`: Publicación de versión inmutable V2 (HTTP 201) y conmutación atómica en InnoDB (HTTP 200).
   - `E2E-DOC-13`: Anulación formal del contrato revocando validez legal y preservando histórico (HTTP 200).
   - `E2E-DOC-14`: Detección en vivo de corrupción física de archivo (HTTP 500) y regeneración asistida controlada desde snapshot (HTTP 200).
+- **Matriz Formal de Recibos de Cobranza (REC-01 a REC-40 — RECIBOS-1 / D-082):** 40 verificaciones automáticas cubriendo:
+  - *Bloque 1: Pago Exacto, Parcial y Balance Algebraico (T01..T05):* Emisión sobre pago exacto, amortización al 100%, abono parcial con congelamiento de `cargo_saldo_restante`, y verificación de la ecuación contable inviolable $\text{monto\_recaudado} = \text{monto\_imputado} + \text{monto\_no\_aplicado\_pago}$.
+  - *Bloque 2: Pago Compuesto Multipropósito (T06..T10):* Generación correlativa de líneas en `recibo_lineas` para múltiples cargos devengados (renta, servicios, suministros), preservación fiel de conceptos y amortización total con saldo 0.00 en $T_0$.
+  - *Bloque 3: Monto No Aplicado y Pagos sin Imputación (T11..T15):* Desglose exacto de excedentes no aplicados (`monto_no_aplicado_pago > 0`), pagos sin imputación previa (0 líneas en BD y documento formal con leyenda institucional de fondos en custodia).
+  - *Bloque 4: Depósito de Garantía Segregada y Unicidad (T16..T20):* Tipificación fiel de garantías (`DEPOSITO_GARANTIA`), preservación de no-negatividad en saldos informativos de folio en $T_0$ y bloqueo de segundo recibo activo sobre el mismo pago (`ConflictoReciboExcepcion`).
+  - *Bloque 5: Inmutabilidad Temporal en $T_0$ (T21..T25):* Constancia histórica inmutable: abonos posteriores o reliquidaciones de suministros en $T_1$ no alteran el recibo ni los saldos congelados en $T_0$.
+  - *Bloque 6: Snapshot de Titular y Prevención de Corrupción (T26..T30):* Snapshot congelado de nombre y DNI del titular sin afectación por mutaciones posteriores en `personas`, búsqueda pesimista por folio y delimitación no tributaria (`REC-YYYYMM-XXXX`).
+  - *Bloque 7: Anulación Formal Auditada (T31..T35):* Transición a estado `ANULADO` con motivo, fecha y actor, preservación física absoluta del archivo PDF original en disco (cero sobreescritura), desacople con `FINANCIERO-2` (anular recibo no revierte pago) y rechazo de re-anulación.
+  - *Bloque 8: Reversión en FINANCIERO-2 y Estadísticas (T36..T40):* Reversión de pago no destruye recibo histórico, bloqueo de emisión sobre pagos reversados o inexistentes, descarga binaria con mime canónico y KPIs estadísticos consistentes.
+- **Suite de Concurrencia e Integridad Transaccional (REC-C01 a REC-C06 — RECIBOS-1):** 6 verificaciones de resistencia concurrente y defensiva:
+  - `REC-C01`: Generación secuencial atómica y pesimista de folios (`REC-YYYYMM-XXXX`) bajo `FOR UPDATE` sin saltos ni colisiones.
+  - `REC-C02`: Restricción física relacional InnoDB `uq_rec_pago_activo` sobre columna virtual generada: bloqueo estricto contra doble emisión activa simultánea.
+  - `REC-C03`: Atomicidad integral y rollback transaccional: ante fallo en generación documental, no quedan recibos ni líneas huérfanas en BD.
+  - `REC-C04`: Ciclo de vida y reemisión legítima tras anulación formal liberando `recibo_activo_idx`.
+  - `REC-C05`: Integridad referencial (`ON DELETE RESTRICT`): recibo formal bloquea eliminación destructiva de pagos y folios vinculados.
+  - `REC-C06`: Integridad criptográfica SHA-256 en disco y detección automática de discrepancias físicas.
+- **Suite E2E HTTP Real contra Apache (E2E-REC-01 a E2E-REC-14 — RECIBOS-1):** 14 pruebas end-to-end con cURL contra el servidor web real Apache en HTTPS (`https://app.camargo-pms.test/`):
+  - `E2E-REC-01`: Redirección anónima de `/recibos` hacia `/login` (HTTP 302).
+  - `E2E-REC-02`: Bloqueo RBAC a usuario autenticado sin permiso `recibos.ver` (HTTP 403 Forbidden).
+  - `E2E-REC-03`: Carga autorizada de `/recibos` con vista Alina, 4 KPIs y modales reactivos (HTTP 200).
+  - `E2E-REC-04`: Endpoint GET `/api/recibos/catalogos` retorna pagos confirmados candidatos (HTTP 200).
+  - `E2E-REC-05`: Catálogo incluye cuentas folios activas estructuradas (HTTP 200).
+  - `E2E-REC-06`: Rechazo CSRF estricto en emisión mutacional POST (HTTP 403 Forbidden).
+  - `E2E-REC-07`: Emisión formal exitosa POST `/api/recibos/emitir` generando folio atómico y PDF (HTTP 201).
+  - `E2E-REC-08`: Bloqueo de segundo recibo activo sobre el mismo pago retornando HTTP 409 Conflicto.
+  - `E2E-REC-09`: Endpoint GET `/api/recibos` lista recibos emitidos con paginación y búsqueda (HTTP 200).
+  - `E2E-REC-10`: Endpoint GET `/api/recibos/{id}` entrega detalle exhaustivo con líneas congeladas en $T_0$ (HTTP 200).
+  - `E2E-REC-11`: Descarga binaria GET `/api/recibos/{id}/pdf` con cabecera `application/pdf` y `X-Document-SHA256` (HTTP 200).
+  - `E2E-REC-12`: Endpoint GET `/api/recibos/{id}/verificar-hash` valida correspondencia criptográfica en disco (HTTP 200).
+  - `E2E-REC-13`: Anulación formal POST `/api/recibos/{id}/anular` cambia estado a `ANULADO` sin afectar el pago (HTTP 200).
+  - `E2E-REC-14`: Intento de re-anular recibo ya anulado retorna HTTP 409 Conflicto preservando el histórico.
 - **Reconciliación Canónica y Matemática Suite por Suite:**
 
 | Módulo / Fase | Suite de Prueba | Casos Dominio / Integración | Casos HTTP E2E (Apache) | Estado |
@@ -280,7 +311,10 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **SUMINISTROS-1**    | `test_suministros_concurrencia.php` (SUM-C01..C06) | 6 | — | 6/6 PASS |
 | **SUMINISTROS-1**    | `test_e2e_suministros.php` (E2E-SUM-01..14) | — | 14 (`E2E-SUM`) | 14/14 PASS |
 | **SUMINISTROS-1**    | `test_suministros_gate_fin01.php` (SUM-FIN-01) | 11 | — | 11/11 PASS |
-| **TOTALES CANÓNICOS**| **51 suites ejecutadas** | **1193** | **238** | **1431 casos PASS (100%)** |
+| **RECIBOS-1**       | `test_recibos_matriz_40.php` (T01..40) | 40 | — | 40/40 PASS |
+| **RECIBOS-1**       | `test_recibos_concurrencia.php` (REC-C01..C06) | 6 | — | 6/6 PASS |
+| **RECIBOS-1**       | `test_e2e_recibos.php` (E2E-REC-01..14) | — | 14 (`E2E-REC`) | 14/14 PASS |
+| **TOTALES CANÓNICOS**| **54 suites ejecutadas** | **1239** | **252** | **1491 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
     - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
@@ -295,5 +329,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Documentos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Compras-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Suministros-1 Matriz (40) + Concurrencia (6) + E2E (14) + Gate Financiero (11) = 71 casos
-    - **Total Consolidado de Regresión Activa: 889/889 PASS (100%)**.
+    - Recibos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
+    - **Total Consolidado de Regresión Activa: 949/949 PASS (100%)**.
 

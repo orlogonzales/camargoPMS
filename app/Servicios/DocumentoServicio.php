@@ -399,6 +399,218 @@ class DocumentoServicio
         ];
     }
 
+    /**
+     * Emite un Recibo Oficial de Cobranza en PDF A4 bajo el motor homologado Dompdf (D-082).
+     *
+     * @param int $reciboId
+     * @param int $actorId
+     * @param int|null $versionId
+     * @param bool $esBorrador
+     * @return array{documento: ?DocumentoEmitido, binario_pdf: string, nombre_archivo: string}
+     */
+    public function emitirReciboPago(
+        int $reciboId,
+        int $actorId,
+        ?int $versionId = null,
+        bool $esBorrador = false
+    ): array {
+        // 1. Obtener plantilla y versión
+        $plantilla = $this->docRepo->obtenerPlantillaPorCodigo('RECIBO_PAGO');
+        if (!$plantilla || !$plantilla->estaActivo()) {
+            throw new PlantillaNoEncontradaExcepcion('Plantilla activa [RECIBO_PAGO]');
+        }
+
+        if ($versionId !== null) {
+            $version = $this->docRepo->obtenerVersionPorId($versionId);
+        } else {
+            $version = $this->docRepo->obtenerVersionActivaPorPlantillaId((int) $plantilla->obtenerId());
+        }
+
+        if (!$version) {
+            throw new PlantillaNoEncontradaExcepcion("No existe versión activa para la plantilla [{$plantilla->obtenerCodigo()}].");
+        }
+
+        // 2. Extraer datos tipados del recibo y sus líneas
+        $datosRecibo = $this->extraerDatosReciboPago($reciboId, $esBorrador);
+        $codigoFolio = $datosRecibo['documento.folio'];
+        $fechaActual = new DateTimeImmutable();
+
+        // 3. Resolver ruta del membrete si correspondiera
+        $rutaMembrete = null;
+        if ($plantilla->requiereMembrete() && $plantilla->obtenerArchivoMembreteFondo()) {
+            $rutaMembrete = $this->storagePath . DIRECTORY_SEPARATOR . 'membretes' . DIRECTORY_SEPARATOR . $plantilla->obtenerArchivoMembreteFondo();
+        }
+
+        // 4. Compilar HTML y generar snapshot inmutable
+        $marcaAgua = $esBorrador ? 'BORRADOR - SIN VALIDEZ' : null;
+        $compilacion = $this->compilador->compilar(
+            $plantilla,
+            $version,
+            $datosRecibo,
+            $marcaAgua,
+            $rutaMembrete
+        );
+
+        // 5. Renderizar PDF con Dompdf
+        $renderPdf = $this->generadorPdf->renderizar($compilacion['snapshot_html'], true);
+        $nombreArchivo = "{$codigoFolio}.pdf";
+
+        if ($esBorrador) {
+            return [
+                'documento' => null,
+                'binario_pdf' => $renderPdf['binario_pdf'],
+                'nombre_archivo' => $nombreArchivo,
+            ];
+        }
+
+        // 6. Persistencia física
+        $subcarpetaYm = $fechaActual->format('Y') . DIRECTORY_SEPARATOR . $fechaActual->format('m');
+        $directorioDestino = $this->storagePath . DIRECTORY_SEPARATOR . 'documentos' . DIRECTORY_SEPARATOR . $subcarpetaYm;
+
+        if (!is_dir($directorioDestino)) {
+            mkdir($directorioDestino, 0775, true);
+        }
+
+        $rutaFisicaAbsoluta = $directorioDestino . DIRECTORY_SEPARATOR . $nombreArchivo;
+        file_put_contents($rutaFisicaAbsoluta, $renderPdf['binario_pdf']);
+
+        $rutaRelativaStorage = 'documentos/' . $fechaActual->format('Y') . '/' . $fechaActual->format('m') . '/' . $nombreArchivo;
+
+        // 7. Persistir documento emitido
+        $docEmitido = new DocumentoEmitido(
+            null,
+            $codigoFolio,
+            (int) $plantilla->obtenerId(),
+            (int) $version->obtenerId(),
+            'RECIBO',
+            $reciboId,
+            $compilacion['snapshot_datos_json'],
+            $compilacion['snapshot_html'],
+            $rutaRelativaStorage,
+            $renderPdf['tamano_bytes'],
+            $renderPdf['hash_pdf_sha256'],
+            $compilacion['hash_snapshot_sha256'],
+            $renderPdf['numero_paginas'],
+            $actorId,
+            $fechaActual->format('Y-m-d H:i:s')
+        );
+
+        $docId = $this->docRepo->crearDocumentoEmitido($docEmitido);
+        $documentoPersistido = $this->docRepo->obtenerDocumentoEmitidoPorId($docId);
+
+        return [
+            'documento' => $documentoPersistido,
+            'binario_pdf' => $renderPdf['binario_pdf'],
+            'nombre_archivo' => $nombreArchivo,
+        ];
+    }
+
+    private function extraerDatosReciboPago(int $reciboId, bool $esBorrador): array
+    {
+        $pdo = $this->docRepo->obtenerPdo();
+        $stmt = $pdo->prepare(
+            'SELECT r.*,
+                    cf.codigo AS folio_codigo,
+                    pc.codigo AS pago_codigo,
+                    mp.nombre AS metodo_nombre_catalogo,
+                    arr.codigo AS arrendamiento_codigo,
+                    res.codigo AS reserva_codigo,
+                    COALESCE(prop_arr.nombre, prop_res.nombre, prop_cf.nombre, "Camargo Hostelería") AS propiedad_nombre,
+                    COALESCE(prop_arr.direccion, prop_res.direccion, prop_cf.direccion, "Principal") AS propiedad_direccion,
+                    COALESCE(u_arr.nombre, u_res.nombre, "General") AS unidad_nombre
+             FROM recibos r
+             JOIN cuentas_folios cf ON cf.id = r.cuenta_folio_id
+             JOIN pagos_cuenta pc ON pc.id = r.pago_id
+             LEFT JOIN metodos_pago mp ON mp.id = pc.metodo_pago_id
+             LEFT JOIN arrendamientos arr ON arr.id = r.arrendamiento_id
+             LEFT JOIN unidades u_arr ON u_arr.id = arr.unidad_id
+             LEFT JOIN propiedades prop_arr ON prop_arr.id = u_arr.propiedad_id
+             LEFT JOIN reservas res ON res.id = r.reserva_id
+             LEFT JOIN unidades u_res ON u_res.id = (SELECT ru.unidad_id FROM reserva_unidades ru WHERE ru.reserva_id = res.id LIMIT 1)
+             LEFT JOIN propiedades prop_res ON prop_res.id = u_res.propiedad_id
+             LEFT JOIN propiedades prop_cf ON prop_cf.id = 1
+             WHERE r.id = :id'
+        );
+        $stmt->execute(['id' => $reciboId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            throw new ValidacionExcepcion("Recibo de cobranza [{$reciboId}] no encontrado.");
+        }
+
+        $email = 'S/E';
+        $telefono = 'S/T';
+        if (!empty($row['persona_id'])) {
+            $stmtC = $pdo->prepare('SELECT tipo_contacto, valor FROM personas_contactos WHERE persona_id = :pId AND estado = \'ACTIVO\' ORDER BY es_principal DESC');
+            $stmtC->execute(['pId' => $row['persona_id']]);
+            while ($c = $stmtC->fetch(PDO::FETCH_ASSOC)) {
+                if ($c['tipo_contacto'] === 'EMAIL' && $email === 'S/E') {
+                    $email = $c['valor'];
+                } elseif ($c['tipo_contacto'] === 'TELEFONO' && $telefono === 'S/T') {
+                    $telefono = $c['valor'];
+                }
+            }
+        }
+
+        $stmtL = $pdo->prepare(
+            'SELECT * FROM recibo_lineas WHERE recibo_id = :id ORDER BY numero_linea ASC'
+        );
+        $stmtL->execute(['id' => $reciboId]);
+        $lineas = $stmtL->fetchAll(PDO::FETCH_ASSOC);
+
+        $tablaHtml = '<table class="tabla-amort-doc"><thead><tr><th style="width:6%;">Item</th><th style="width:18%;">Código Cargo</th><th>Concepto / Detalle</th><th style="width:16%;">Total Cargo</th><th style="width:16%;">Amortizado</th><th style="width:16%;">Saldo Restante</th></tr></thead><tbody>';
+
+        if (empty($lineas)) {
+            $tablaHtml .= '<tr><td colspan="6" style="text-align:center; padding:12px; color:#666; font-style:italic;">Sin imputaciones directas a cargos en T0 (Monto recibido como saldo a favor en cuenta folio).</td></tr>';
+        } else {
+            $item = 1;
+            foreach ($lineas as $l) {
+                $cargoCod = htmlspecialchars((string) $l['cargo_codigo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $concepto = htmlspecialchars((string) $l['cargo_concepto'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $totalCargo = number_format((float) $l['cargo_monto_total'], 2, '.', ',');
+                $amortizado = number_format((float) $l['monto_aplicado'], 2, '.', ',');
+                $saldoRest = number_format((float) $l['cargo_saldo_restante'], 2, '.', ',');
+
+                $tablaHtml .= "<tr><td style=\"text-align:center;\">{$item}</td><td style=\"text-align:center;\"><code>{$cargoCod}</code></td><td>{$concepto}</td><td style=\"text-align:right;\">{$totalCargo}</td><td style=\"text-align:right; font-weight:bold; color:#0d6efd;\">{$amortizado}</td><td style=\"text-align:right;\">{$saldoRest}</td></tr>";
+                $item++;
+            }
+        }
+        $tablaHtml .= '</tbody></table>';
+
+        $fechaEmision = new DateTimeImmutable($row['fecha_emision']);
+        $codigoFolio = $esBorrador ? 'BORRADOR-REC-' . $reciboId : (string) $row['codigo'];
+
+        return [
+            'documento.folio' => $codigoFolio,
+            'emision.fecha' => $fechaEmision->format('d/m/Y'),
+            'emision.hora' => $fechaEmision->format('H:i:s'),
+            'emision.actor' => 'Caja / Administración',
+            'cliente.nombre_completo' => (string) $row['persona_nombre_snapshot'],
+            'cliente.tipo_documento' => (string) $row['persona_documento_tipo_snapshot'],
+            'cliente.numero_documento' => (string) $row['persona_documento_numero_snapshot'],
+            'cliente.email' => $email,
+            'cliente.telefono' => $telefono,
+            'folio.codigo' => (string) $row['folio_codigo'],
+            'propiedad.nombre' => (string) $row['propiedad_nombre'],
+            'propiedad.direccion' => (string) $row['propiedad_direccion'],
+            'unidad.nombre' => (string) $row['unidad_nombre'],
+            'contrato.codigo' => !empty($row['arrendamiento_codigo']) ? (string) $row['arrendamiento_codigo'] : '-',
+            'reserva.codigo' => !empty($row['reserva_codigo']) ? (string) $row['reserva_codigo'] : '-',
+            'pago.codigo' => (string) $row['pago_codigo'],
+            'pago.metodo' => (string) $row['metodo_pago_nombre'],
+            'pago.medio_detalle' => !empty($row['referencia_cobro']) ? (string) $row['referencia_cobro'] : 'Operación Directa',
+            'pago.referencia_operacion' => !empty($row['referencia_cobro']) ? (string) $row['referencia_cobro'] : 'N/A',
+            'pago.moneda' => (string) $row['moneda_codigo'],
+            'pago.monto_recaudado' => number_format((float) $row['monto_recaudado'], 2, '.', ','),
+            'pago.monto_texto' => $this->convertirMontoATexto((string) $row['monto_recaudado'], (string) $row['moneda_codigo']),
+            'tabla_amortizaciones' => $tablaHtml,
+            'totales.monto_imputado' => number_format((float) $row['monto_imputado'], 2, '.', ','),
+            'totales.monto_no_aplicado_pago' => number_format((float) $row['monto_no_aplicado_pago'], 2, '.', ','),
+            'totales.saldo_pendiente_folio_despues' => number_format((float) $row['saldo_pendiente_folio_despues'], 2, '.', ','),
+            'totales.saldo_favor_folio_despues' => number_format((float) $row['saldo_favor_folio_despues'], 2, '.', ','),
+        ];
+    }
+
     private function extraerDatosOrdenCompra(int $ordenId, string $codigoFolio, DateTimeImmutable $fechaActual): array
     {
         $pdo = $this->docRepo->obtenerPdo();
@@ -532,6 +744,38 @@ class DocumentoServicio
             'binario_pdf' => $contenido,
             'nombre_archivo' => "{$doc->obtenerCodigoFolio()}.pdf",
             'documento' => $doc,
+        ];
+    }
+
+    /**
+     * Verifica la integridad física y criptográfica de un documento emitido contra su hash SHA-256 inmutable.
+     *
+     * @return array{valido: bool, hash_esperado: string, hash_calculado: string, ruta: string, error?: string}
+     */
+    public function verificarIntegridad(int $documentoId): array
+    {
+        $doc = $this->docRepo->obtenerDocumentoEmitidoPorId($documentoId);
+        if (!$doc) {
+            throw new PlantillaNoEncontradaExcepcion("Documento emitido ID [{$documentoId}] no encontrado.");
+        }
+
+        $rutaAbsoluta = $this->storagePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $doc->obtenerRutaArchivoPdf());
+        if (!file_exists($rutaAbsoluta)) {
+            return [
+                'valido' => false,
+                'hash_esperado' => $doc->obtenerHashPdfSha256(),
+                'hash_calculado' => '',
+                'ruta' => $rutaAbsoluta,
+                'error' => 'ARCHIVO_FALTANTE',
+            ];
+        }
+
+        $hashReal = hash_file('sha256', $rutaAbsoluta);
+        return [
+            'valido' => ($hashReal === $doc->obtenerHashPdfSha256()),
+            'hash_esperado' => $doc->obtenerHashPdfSha256(),
+            'hash_calculado' => (string) $hashReal,
+            'ruta' => $rutaAbsoluta,
         ];
     }
 

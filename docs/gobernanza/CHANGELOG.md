@@ -4,6 +4,44 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase RECIBOS-1 — Emisión de Recibos de Cobranza, Snapshots Financieros $T_0$, Preservación Criptográfica Inmutable e Integración con FINANCIERO-2 y DOCUMENTOS-1 (D-082)
+
+- **Axioma Ontológico Hexagonal:**
+  - Consagración del axioma $\text{CARGO} \neq \text{PAGO} \neq \text{APLICACIÓN} \neq \text{RECIBO} \neq \text{PDF}$.
+  - Definición vinculante: $\text{RECIBO} = \text{CONSTANCIA HISTÓRICA INMUTABLE DE UN HECHO DE COBRO}$. No es una fotografía mutable del estado vivo de la cuenta corriente.
+- **Congelamiento Temporal en $T_0$:**
+  - Cada recibo congela la realidad económica del instante exacto de su emisión: cargos amortizados, saldo restante del cargo en $T_0$ (`cargo_saldo_restante`), e importe total adeudado del folio en $T_0$ (`folio_saldo_pendiente_historico`).
+  - Los abonos o reliquidaciones posteriores en $T_1$ devengan sus propios recibos y no mutan retroactivamente los recibos emitidos en $T_0$.
+- **Ecuación Contable Inviolable y Soporte de Fondos No Aplicados:**
+  - Ecuación universal satisfecha: $\text{monto\_recaudado} = \text{monto\_imputado} + \text{monto\_no\_aplicado\_pago}$.
+  - Soporte de recibos para pagos con saldo a favor o anticipos sin imputación previa (`monto_imputado = 0.00`, `monto_no_aplicado_pago > 0.00`), generando documento formal con leyenda institucional de custodia en cuenta.
+- **Garantías Segregadas y Depósitos en Custodia:**
+  - Los recibos por depósitos de garantía segregan fielmente el concepto (`cargo_origen_tipo = DEPOSITO_GARANTIA`), preservando la naturaleza no operativa del fondo en custodia contractual.
+- **Unicidad Relacional Estricta:**
+  - Regla: 1 Pago Confirmado = Máximo 1 Recibo Activo.
+  - Implementada físicamente en InnoDB mediante la columna virtual generada `recibo_activo_idx BIGINT UNSIGNED GENERATED ALWAYS AS (IF(estado = 'EMITIDO', pago_id, NULL)) VIRTUAL` y la restricción `UNIQUE KEY uq_rec_pago_activo (recibo_activo_idx)`.
+- **Inviolabilidad Física y Criptográfica del PDF Soberano:**
+  - Integración nativa con `DOCUMENTOS-1` y Dompdf 3.1.6 sin dependencias CDN ni esquemas de red remotos.
+  - Generación de PDF A4 con membrete institucional, formato de moneda exacto `S/ #,##0.00`, hash criptográfico `hash_pdf_sha256` y correlativo atómico `REC-YYYYMM-XXXX`.
+  - La anulación formal transiciona el registro a estado `ANULADO`, registrando actor y motivo; el archivo PDF físico en disco y su hash SHA-256 jamás se sobreescriben ni mutilan (inviolabilidad de la evidencia histórica).
+- **Desacople Operativo con FINANCIERO-2:**
+  - Anular un recibo NO revierte el pago en caja/folio.
+  - Si un pago se reversa en FINANCIERO-2, el recibo probatorio emitido no se elimina de la base de datos (preservación histórica auditable).
+- **Persistencia Relacional (Migración 024_recibos.sql):**
+  - Creación de tablas `recibos` (tabla 79) y `recibo_lineas` (tabla 80), con índices de búsqueda rápida, constraints de integridad referencial (`ON DELETE RESTRICT`) y columna virtual de unicidad.
+  - Folios atómicos concurrency-safe (`REC-YYYYMM-XXXX`) mediante `documento_secuencias` con `FOR UPDATE`.
+  - Permisos RBAC (`recibos.ver`, `recibos.emitir`, `recibos.anular`, `recibos.descargar`) y opción de menú Alina bajo Menú Reservas/Finanzas.
+- **Interfaz Alina Conforme a D-075 y D-076:**
+  - Módulo en `/recibos` con 4 KPIs en vivo (Emitidos, Recaudado Total, Anulados, Pagos Pendientes de Recibo).
+  - Modales reactivos `modal-emitir-recibo`, `modal-detalle-recibo`, `modal-anular-recibo`, maquetados con `app-form app-icon-form`, bordes píldora `b-r-20` y Select2 42px.
+  - Controlador JavaScript `public/assets/js/gestion-recibos.js` con SweetAlert2 y Fetch asíncrono.
+- **Verificación Automatizada Exhaustiva (60/60 PASS):**
+  - Matriz de dominio y reglas de negocio: `tests/test_recibos_matriz_40.php` (40/40 PASS).
+  - Concurrencia e integridad transaccional: `tests/test_recibos_concurrencia.php` (6/6 PASS).
+  - Flujo HTTP E2E real contra Apache HTTPS: `tests/test_e2e_recibos.php` (14/14 PASS).
+
+## [75e5a5e] - 2026-09-27
+
 ### Microfase SUMINISTROS-1 — Servicios Básicos, Medidores, Tarifas con Vigencia Histórica e Imputación a Folios de Arrendamiento (D-081)
 
 - **Axioma Ontológico Hexagonal:**

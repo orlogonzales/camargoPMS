@@ -920,6 +920,37 @@ $enrutador->post('/api/suministros/liquidaciones/{id}/reliquidar', [\CamargoPMS\
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.liquidar'),
 ]);
 
+// =========================================================================
+// Rutas de Recibos de Cobranza y Snapshots Históricos (RECIBOS-1 / D-082)
+// =========================================================================
+$enrutador->get('/recibos', [\CamargoPMS\Controladores\ReciboControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.ver'),
+]);
+$enrutador->get('/api/recibos/catalogos', [\CamargoPMS\Controladores\ReciboControlador::class, 'apiCatalogos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.ver'),
+]);
+$enrutador->get('/api/recibos', [\CamargoPMS\Controladores\ReciboControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.ver'),
+]);
+$enrutador->get('/api/recibos/{id}', [\CamargoPMS\Controladores\ReciboControlador::class, 'apiObtener'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.ver'),
+]);
+$enrutador->post('/api/recibos/emitir', [\CamargoPMS\Controladores\ReciboControlador::class, 'apiEmitir'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.emitir'),
+]);
+$enrutador->post('/api/recibos/{id}/anular', [\CamargoPMS\Controladores\ReciboControlador::class, 'apiAnular'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.anular'),
+]);
+$enrutador->get('/api/recibos/{id}/pdf', [\CamargoPMS\Controladores\ReciboControlador::class, 'descargarPdf'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.descargar'),
+]);
+$enrutador->get('/recibos/{id}/pdf', [\CamargoPMS\Controladores\ReciboControlador::class, 'descargarPdf'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.descargar'),
+]);
+$enrutador->get('/api/recibos/{id}/verificar-hash', [\CamargoPMS\Controladores\ReciboControlador::class, 'apiVerificarHash'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

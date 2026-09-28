@@ -91,6 +91,46 @@ class RegistroVariablesDocumentales
             'totales.total' => ['tipo' => 'money', 'requerido' => true],
             'totales.texto' => ['tipo' => 'string', 'requerido' => true],
         ],
+        'RECIBO' => [
+            // Identificación y Emisión
+            'documento.folio' => ['tipo' => 'string', 'requerido' => true],
+            'emision.fecha' => ['tipo' => 'date', 'requerido' => true],
+            'emision.hora' => ['tipo' => 'string', 'requerido' => true],
+            'emision.actor' => ['tipo' => 'string', 'requerido' => false],
+
+            // Cliente / Titular
+            'cliente.nombre_completo' => ['tipo' => 'string', 'requerido' => true],
+            'cliente.tipo_documento' => ['tipo' => 'string', 'requerido' => true],
+            'cliente.numero_documento' => ['tipo' => 'string', 'requerido' => true],
+            'cliente.email' => ['tipo' => 'string', 'requerido' => false],
+            'cliente.telefono' => ['tipo' => 'string', 'requerido' => false],
+
+            // Origen Contractual / Inmueble
+            'folio.codigo' => ['tipo' => 'string', 'requerido' => true],
+            'propiedad.nombre' => ['tipo' => 'string', 'requerido' => true],
+            'propiedad.direccion' => ['tipo' => 'string', 'requerido' => false],
+            'unidad.nombre' => ['tipo' => 'string', 'requerido' => false],
+            'contrato.codigo' => ['tipo' => 'string', 'requerido' => false],
+            'reserva.codigo' => ['tipo' => 'string', 'requerido' => false],
+
+            // Hecho Económico de Cobro
+            'pago.codigo' => ['tipo' => 'string', 'requerido' => true],
+            'pago.metodo' => ['tipo' => 'string', 'requerido' => true],
+            'pago.medio_detalle' => ['tipo' => 'string', 'requerido' => false],
+            'pago.referencia_operacion' => ['tipo' => 'string', 'requerido' => false],
+            'pago.moneda' => ['tipo' => 'string', 'requerido' => true],
+            'pago.monto_recaudado' => ['tipo' => 'money', 'requerido' => true],
+            'pago.monto_texto' => ['tipo' => 'string', 'requerido' => true],
+
+            // Tabla Estructurada de Amortizaciones
+            'tabla_amortizaciones' => ['tipo' => 'html', 'requerido' => true],
+
+            // Resumen y Saldos en T0
+            'totales.monto_imputado' => ['tipo' => 'money', 'requerido' => true],
+            'totales.monto_no_aplicado_pago' => ['tipo' => 'money', 'requerido' => true],
+            'totales.saldo_pendiente_folio_despues' => ['tipo' => 'money', 'requerido' => true],
+            'totales.saldo_favor_folio_despues' => ['tipo' => 'money', 'requerido' => true],
+        ],
     ];
 
     /**
