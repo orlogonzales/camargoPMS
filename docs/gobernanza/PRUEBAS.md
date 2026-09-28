@@ -276,7 +276,11 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **COMPRAS-1**       | `test_compras_matriz_40.php` (MAT-01..40) | 40 | — | 40/40 PASS |
 | **COMPRAS-1**       | `test_compras_concurrencia.php` (COMP-C01..C06) | 6 | — | 6/6 PASS |
 | **COMPRAS-1**       | `test_e2e_compras.php` (E2E-COMP-01..14) | — | 14 (`E2E-COMP`) | 14/14 PASS |
-| **TOTALES CANÓNICOS**| **47 suites ejecutadas** | **1136** | **224** | **1360 casos PASS (100%)** |
+| **SUMINISTROS-1**    | `test_suministros_matriz_40.php` (T01..40) | 40 | — | 40/40 PASS |
+| **SUMINISTROS-1**    | `test_suministros_concurrencia.php` (SUM-C01..C06) | 6 | — | 6/6 PASS |
+| **SUMINISTROS-1**    | `test_e2e_suministros.php` (E2E-SUM-01..14) | — | 14 (`E2E-SUM`) | 14/14 PASS |
+| **SUMINISTROS-1**    | `test_suministros_gate_fin01.php` (SUM-FIN-01) | 11 | — | 11/11 PASS |
+| **TOTALES CANÓNICOS**| **51 suites ejecutadas** | **1193** | **238** | **1431 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
     - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
@@ -290,5 +294,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Inventario-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Documentos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Compras-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - **Total Consolidado de Regresión Activa: 758/758 PASS (100%)**.
+    - Suministros-1 Matriz (40) + Concurrencia (6) + E2E (14) + Gate Financiero (11) = 71 casos
+    - **Total Consolidado de Regresión Activa: 889/889 PASS (100%)**.
 

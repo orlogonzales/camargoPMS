@@ -848,6 +848,78 @@ $enrutador->post('/api/compras/cuentas-por-pagar/{id}/pagos', [\CamargoPMS\Contr
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('compras.pagos.registrar'),
 ]);
 
+// =========================================================================
+// Rutas de Suministros y Servicios Periódicos (SUMINISTROS-1 / D-081)
+// =========================================================================
+$enrutador->get('/suministros', [\CamargoPMS\Controladores\SuministroControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->get('/api/suministros/catalogos', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiCatalogos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->get('/api/suministros', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiListarSuministros'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->post('/api/suministros', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiCrearSuministro'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.gestionar'),
+]);
+$enrutador->get('/api/suministros/{id}', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiObtenerSuministro'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->post('/api/suministros/{id}', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiActualizarSuministro'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.gestionar'),
+]);
+$enrutador->put('/api/suministros/{id}', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiActualizarSuministro'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.gestionar'),
+]);
+
+// Tarifas
+$enrutador->get('/api/suministros/{id}/tarifas', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiListarTarifas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->post('/api/suministros/tarifas', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiCrearTarifa'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.tarifas.gestionar'),
+]);
+
+// Medidores
+$enrutador->get('/api/suministros/medidores', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiListarMedidores'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->post('/api/suministros/medidores', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiInstalarMedidor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.medidores.gestionar'),
+]);
+$enrutador->post('/api/suministros/medidores/{id}/reemplazar', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiReemplazarMedidor'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.medidores.gestionar'),
+]);
+
+// Lecturas
+$enrutador->get('/api/suministros/medidores/{id}/lecturas', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiListarLecturas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->post('/api/suministros/lecturas', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiRegistrarLectura'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.lecturas.registrar'),
+]);
+$enrutador->post('/api/suministros/lecturas/{id}/corregir', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiCorregirLectura'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.lecturas.corregir'),
+]);
+
+// Liquidaciones
+$enrutador->get('/api/suministros/liquidaciones', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiListarLiquidaciones'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->get('/api/suministros/liquidaciones/{id}', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiObtenerLiquidacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.ver'),
+]);
+$enrutador->post('/api/suministros/liquidaciones', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiLiquidarPeriodo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.liquidar'),
+]);
+$enrutador->post('/api/suministros/liquidaciones/{id}/anular', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiAnularLiquidacion'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.anular'),
+]);
+$enrutador->post('/api/suministros/liquidaciones/{id}/reliquidar', [\CamargoPMS\Controladores\SuministroControlador::class, 'apiReliquidar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('suministros.liquidar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

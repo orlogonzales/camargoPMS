@@ -4,6 +4,50 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase SUMINISTROS-1 — Servicios Básicos, Medidores, Tarifas con Vigencia Histórica e Imputación a Folios de Arrendamiento (D-081)
+
+- **Axioma Ontológico Hexagonal:**
+  - Consagración del axioma $\text{SUMINISTRO} \neq \text{MEDIDOR} \neq \text{LECTURA} \neq \text{TARIFA} \neq \text{CONSUMO VALORIZADO} \neq \text{CARGO} \neq \text{PAGO}$.
+  - Desacople estricto entre ubicación física (`unidades`) y responsabilidad económica (`arrendamientos` / `cuentas_folios`).
+- **Modalidades de Suministro sin Hardcoding de Conceptos:**
+  - Modalidad `MEDIDO`: para recursos con instrumento físico de conteo (electricidad por kWh, agua por $m^3$). Cálculo volumétrico por diferencia de lecturas ($\Delta = L_{\text{fin}} - L_{\text{ini}}$) con soporte formal para dial cíclico (`permite_rollover`).
+  - Modalidad `FIJO_PERIODICO`: para servicios recurrentes de tarifa plana (Internet dedicado, cuotas de mantenimiento común) que no requieren medidor ni lecturas intermedias.
+- **Precedencia Tarifaria Jerárquica y Bloqueo Pesimista Anti-Solapamiento:**
+  - Resolución de tarifa efectiva según orden jerárquico estricto: $\text{UNIDAD} > \text{PROPIEDAD} > \text{GLOBAL}$.
+  - Protección de concurrencia en InnoDB mediante bloqueo pesimista `SELECT ... FOR UPDATE` en `suministro_tarifas`, impidiendo la creación concurrente de tarifas que se solapen temporalmente en el mismo ámbito territorial.
+- **Medidores Físicos y Reemplazo Atómico:**
+  - Gestión integral del parque de medidores físicos asociados a unidades habitacionales.
+  - Reemplazo atómico en una única transacción: el medidor saliente se marca como `RETIRADO` (consignando fecha de corte y lectura final obligatoria) y el nuevo medidor se activa inmediatamente con su lectura inicial base.
+  - Columna virtual y clave única `medidor_activo_idx` en `suministro_medidores` que impide colisiones físicas de dos medidores activos simultáneos para el mismo suministro en una unidad.
+- **Lecturas Inmutables Append-Only y Correcciones Auditadas:**
+  - Cero mutaciones destructivas sobre lecturas históricas. Toda lectura registrada queda preservada con trazabilidad inmutable.
+  - Las correcciones operativas generan un nuevo registro de lectura de tipo `CORRECCION` referenciando a la lectura previa y marcando la original como `CORREGIDA`.
+  - Columna virtual y clave única `correccion_activa_idx` en `suministro_lecturas` que impide bifurcaciones concurrentes sobre la misma lectura.
+- **Liquidación Multitramo y Devengo Financiero en Folio (`FINANCIERO-2`):**
+  - Cómputo aritmético determinista con BCMath a 4 decimales en cantidades y 2 decimales en moneda.
+  - Desglose transparente en `suministro_liquidacion_tramos` cuando ocurren cambios de tarifa o reemplazos de medidor dentro del período de facturación.
+  - Devengo atómico del cargo en la cuenta folio del contrato de arrendamiento (`cargos_cuenta` con tipo `SUMINISTRO_CONSUMO` o `SUMINISTRO_CUOTA_FIJA`).
+  - Columna virtual y clave única `liquidacion_activa_idx` que bloquea la doble liquidación activa de un mismo período.
+- **Anulación y Reliquidación con Preservación Contable e Invariantes FINANCIERO-2 (SUM-FIN-01):**
+  - Al anular una liquidación, su cargo asociado pasa formalmente a `ANULADO`.
+  - Des-aplicación formal no destructiva: toda aplicación previa transiciona a estado `REVERTIDA` sellando fecha y actor, preservando su `monto_aplicado` histórico original positivo (conforme a `chk_aplp_monto_positivo`).
+  - Reintegración de fondos: el saldo aplicado se descuenta del pago liberando saldo disponible a favor del titular en su folio, sin generar movimientos ficticios en caja (`movimientos_caja` permanece estrictamente intacto).
+  - En reliquidaciones por corrección (`revision = N + 1`), los fondos liberados se re-aplican de manera automática mediante una nueva aplicación activa (`ACTIVA`) hacia el nuevo cargo devengado, quedando el saldo residual disponible en el folio (Escenario A) o el saldo pendiente exigible (Escenarios B y C).
+- **Persistencia Relacional (Migración 023_suministros.sql):**
+  - 6 tablas estructuradas (tablas 73 a 78 del esquema canónico): `suministros`, `suministro_tarifas`, `suministro_medidores`, `suministro_lecturas`, `suministro_liquidaciones`, `suministro_liquidacion_tramos`.
+  - Folios atómicos concurrency-safe (`LIQ-SUM-YYYYMM-XXXX`) mediante `documento_secuencias` con `FOR UPDATE`.
+  - Permisos RBAC (`suministros.*`) y opción de menú Alina bajo Menú Reservas/Operaciones.
+- **Interfaz Alina Conforme a D-075 y D-076:**
+  - Módulo en `/suministros` con 4 KPIs en vivo, navegación por pestañas (Catálogo de Suministros, Parque de Medidores, Registro de Lecturas, Liquidaciones a Folios), modales nativos `app-form app-icon-form`, bordes píldora `b-r-20` y Select2 42px.
+  - Controlador JavaScript modular `public/assets/js/gestion-suministros.js` en Vanilla Fetch y SweetAlert2.
+- **Verificación Automatizada Exhaustiva (71/71 PASS):**
+  - Matriz de dominio y reglas de negocio: `tests/test_suministros_matriz_40.php` (40/40 PASS).
+  - Concurrencia e integridad transaccional: `tests/test_suministros_concurrencia.php` (6/6 PASS).
+  - Flujo HTTP E2E real contra Apache HTTPS: `tests/test_e2e_suministros.php` (14/14 PASS).
+  - Gate Financiero de Auditoría Contable: `tests/test_suministros_gate_fin01.php` (11/11 PASS).
+
+## [aff5c4a] - 2026-09-27
+
 ### Microfase COMPRAS-1 — Abastecimiento, Órdenes de Compra, Recepción Física, Conformidad de Servicios, Comprobantes de Proveedor y Cuentas por Pagar (D-080)
 
 - **Axioma Ontológico Hexagonal y Desacople de Dominio:**

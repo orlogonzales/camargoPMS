@@ -1078,6 +1078,45 @@ Se formaliza el diseño arquitectónico del dominio de abastecimiento y cuentas 
 18. **Integración Documental:** La orden de compra aprobada emite su PDF A4 oficial mediante `DOCUMENTOS-1` (Dompdf 3.1.6) con snapshot inmutable y hash SHA-256.
 19. **Auditoría D-061 y Prohibición de Borrado:** Cero `DELETE` físico. Auditoría integral con actor humano/sistema y `correlacion_id`.
 
+### D-081 — Arquitectura y Ontología de Suministros, Medidores, Tarifas Históricas y Liquidación a Folios (GATE SUMINISTROS-1)
+
+Se formaliza el diseño arquitectónico del dominio de servicios básicos, medidores y consumos periódicos de Camargo PMS:
+
+1. **Axioma Ontológico Hexagonal:**
+   $$\text{SUMINISTRO} \neq \text{MEDIDOR} \neq \text{LECTURA} \neq \text{TARIFA} \neq \text{CONSUMO VALORIZADO} \neq \text{CARGO} \neq \text{PAGO}$$
+   Se prohíbe fundir o equiparar la realidad física del instrumento de medición con las reglas comerciales de la tarifa, el consumo matemático valorizado o la obligación financiera en cuenta.
+2. **Desacople entre Ubicación Física y Sujeto Económico:**
+   - La **Unidad Alojable** (`unidades`) contiene el medidor y consume físicamente el recurso.
+   - El **Contrato de Arrendamiento** (`arrendamientos`) y su **Cuenta Folio** (`cuentas_folios`) identifican al arrendatario titular responsable del pago.
+3. **Modalidad Dual sin Hardcoding de Servicios:**
+   - `MEDIDO`: Requiere medidor físico activo, lecturas periódicas y cálculo por delta ($\Delta = L_{\text{fin}} - L_{\text{ini}}$). Admite dial cíclico (`permite_rollover`).
+   - `FIJO_PERIODICO`: No requiere medidor ni lecturas (Internet, cuotas fijas de mantenimiento). Se devenga directamente con cantidad 1 por período.
+4. **Precedencia y Resolución Tarifaria con Bloqueo Pesimista:**
+   - Jerarquía estricta: `UNIDAD > PROPIEDAD > GLOBAL`.
+   - La tarifa efectiva se resuelve a la fecha de inicio del período o corte de tramo.
+   - Anti-solapamiento temporal protegido en motor InnoDB mediante bloqueo pesimista `SELECT ... FOR UPDATE` en `suministro_tarifas`.
+5. **Lecturas Inmutables Append-Only y Correcciones Auditadas:**
+   - Cero mutaciones destructivas sobre lecturas históricas.
+   - Toda corrección registra una nueva fila referenciando a la anterior con motivo obligatorio de auditoría.
+   - Columna virtual y clave única `correccion_activa_idx` que previene bifurcaciones concurrentes sobre la misma lectura.
+6. **Reemplazo Atómico de Medidores Físicos:**
+   - Transacción atómica que retira el medidor saliente (con fecha de corte y lectura final obligatoria) e instala el nuevo medidor (con lectura inicial base), garantizando continuidad en el consumo.
+   - Índice virtual `medidor_activo_idx` que restringe a máximo un medidor activo por unidad física y suministro.
+7. **Liquidación Multitramo Determinista:**
+   - Cómputo exacto con BCMath a 4 decimales en cantidades y 2 decimales en moneda.
+   - Si ocurren cortes tarifarios o reemplazos de medidor dentro del período de liquidación, se generan tramos desagregados en `suministro_liquidacion_tramos`.
+   - Índice virtual `liquidacion_activa_idx` que impide doble devengo en el mismo período.
+8. **Devengo Financiero Atómico e Integración con FINANCIERO-2:**
+   - La liquidación devenga atómicamente un `CargoCuenta` en el folio del arrendamiento (`SUMINISTRO_CONSUMO` o `SUMINISTRO_CUOTA_FIJA`).
+   - El saldo pendiente del cargo refleja de inmediato la obligación devengada.
+9. **Anulación y Reliquidación con Preservación Contable:**
+   - Al anular una liquidación, su cargo asociado pasa a `CANCELADO`.
+   - Todo pago previamente aplicado al cargo se des-aplica formalmente (`monto_aplicado = 0.00`, estado de aplicación `REVERTIDA`), liberando el saldo del pago a favor del cliente en la cuenta folio. Cero egresos automáticos ni alteración arbitraria de fondos.
+   - La reliquidación incrementa el correlativo de revisión (`revision = N + 1`) manteniendo trazabilidad inmutable hacia la liquidación previa.
+10. **Frontera de Fase Estricta:**
+    - SUMINISTROS-1 culmina en el devengo del cargo en la cuenta folio.
+    - Cero emisión de recibos PDF, fraccionamientos o cobranzas en esta fase, reservadas a `RECIBOS-1`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

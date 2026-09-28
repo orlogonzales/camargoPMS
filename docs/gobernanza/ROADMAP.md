@@ -434,7 +434,23 @@ Implementación del dominio de compras, abastecimiento y cuentas por pagar bajo 
 - **Integración Documental:** La orden aprobada emite su PDF A4 oficial mediante `DOCUMENTOS-1` (Dompdf 3.1.6).
 - **Persistencia Relacional (Migración 022):** Tablas `compra_solicitudes`, `compra_solicitud_lineas`, `compra_ordenes`, `compra_orden_lineas`, `compra_recepciones`, `compra_recepcion_lineas`, `compra_conformidades`, `compra_comprobantes`, `compra_comprobante_aplicaciones`, `cuentas_por_pagar`, `cxp_pagos`, `compra_historial_estados` y permisos RBAC (`compras.*`).
 
-Estado: candidata pre-commit (60/60 pruebas específicas PASS, 758/758 regresión activa PASS).
+Estado: homologada (micro-baseline oficial aff5c4a).
+
+## SUMINISTROS-1 — Servicios Básicos, Medidores, Tarifas con Vigencia Histórica e Imputación a Folios de Arrendamiento
+
+Implementación del dominio de suministros y consumos periódicos bajo la decisión vinculante D-081:
+- **Axioma Ontológico Hexagonal:** $\text{SUMINISTRO} \neq \text{MEDIDOR} \neq \text{LECTURA} \neq \text{TARIFA} \neq \text{CONSUMO VALORIZADO} \neq \text{CARGO} \neq \text{PAGO}$.
+- **Desacople Ubicación vs. Sujeto Económico:** La unidad aloja físicamente el medidor; el contrato de arrendamiento y su cuenta folio asumen la obligación de pago.
+- **Modalidades de Suministro:** Soporte dual para modalidad `MEDIDO` (cálculo por delta de lecturas volumétricas con dial cíclico / rollover) y `FIJO_PERIODICO` (cuotas fijas sin medidor como Internet o áreas comunes).
+- **Precedencia Tarifaria Jerárquica:** $\text{UNIDAD} > \text{PROPIEDAD} > \text{GLOBAL}$, protegida en InnoDB mediante bloqueo pesimista `SELECT ... FOR UPDATE` anti-solapamiento.
+- **Medidores Físicos y Reemplazo Atómico:** Parque de medidores con reemplazo atómico (retiro con lectura final obligatoria + alta con lectura inicial) e índice virtual `medidor_activo_idx`.
+- **Lecturas Inmutables Append-Only:** Cero mutación destructiva sobre lecturas previas. Correcciones auditadas mediante nuevo registro referenciado e índice virtual `correccion_activa_idx`.
+- **Liquidación Multitramo y Devengo en Folio (`FINANCIERO-2`):** Cómputo aritmético determinista con BCMath a 4 decimales en cantidad y 2 en moneda. Desglose en `suministro_liquidacion_tramos` ante cambios tarifarios o de medidor. Devengo formal atómico del cargo en cuenta folio (`SUMINISTRO_CONSUMO` o `SUMINISTRO_CUOTA_FIJA`).
+- **Anulación y Reliquidación con Preservación Contable:** Anulación del cargo con des-aplicación formal de pagos (`monto_aplicado = 0.00`, aplicación `REVERTIDA`) liberando saldo a favor en cuenta folio sin egresos ficticios de caja.
+- **Frontera Estricta:** Culmina en el devengo del cargo. Cero emisión de recibos PDF ni cobranza en esta fase (reservado a `RECIBOS-1`).
+- **Persistencia Relacional (Migración 023):** Tablas `suministros`, `suministro_tarifas`, `suministro_medidores`, `suministro_lecturas`, `suministro_liquidaciones`, `suministro_liquidacion_tramos` y permisos RBAC (`suministros.*`).
+
+Estado: candidata pre-commit (60/60 pruebas específicas PASS, 818/818 regresión activa PASS).
 
 ## Dominio operativo
 
