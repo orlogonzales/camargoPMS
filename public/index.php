@@ -1044,6 +1044,29 @@ $enrutador->post('/api/gastos/pagos/{id}/reversar', [\CamargoPMS\Controladores\G
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.pagar'),
 ]);
 
+// Rutas de Reportes Analíticos y Gerenciales (REPORTES-1 / D-087)
+$enrutador->get('/reportes', [\CamargoPMS\Controladores\ReporteControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.ver'),
+]);
+$enrutador->get('/api/reportes/diario', [\CamargoPMS\Controladores\ReporteControlador::class, 'diarioJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.operaciones'),
+]);
+$enrutador->get('/api/reportes/flujo-caja', [\CamargoPMS\Controladores\ReporteControlador::class, 'flujoCajaJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.finanzas'),
+]);
+$enrutador->get('/api/reportes/aging-cxc', [\CamargoPMS\Controladores\ReporteControlador::class, 'agingCxcJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.morosidad'),
+]);
+$enrutador->get('/api/reportes/aging-cxp', [\CamargoPMS\Controladores\ReporteControlador::class, 'agingCxpJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.morosidad'),
+]);
+$enrutador->get('/reportes/exportar/csv', [\CamargoPMS\Controladores\ReporteControlador::class, 'exportarCsv'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.exportar'),
+]);
+$enrutador->get('/reportes/exportar/pdf', [\CamargoPMS\Controladores\ReporteControlador::class, 'exportarPdf'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.exportar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

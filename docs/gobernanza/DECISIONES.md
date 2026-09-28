@@ -1290,6 +1290,35 @@ Se formaliza la arquitectura del dominio de gastos y su articulación con el mot
 9. **Exclusión de Nómina:**
    Planillas, sueldos, beneficios y cargas sociales quedan categóricamente excluidos de GASTOS-1 para ser gobernados por un futuro dominio de Personal/Nómina.
 
+### D-087 — Capa Analítica de Solo Lectura, Reporte Diario Gerencial (MDR), Flujo de Caja Consolidado y Aging Segregado (GATE REPORTES-1)
+
+Se formaliza la arquitectura analítica y ejecutiva de Camargo PMS para la toma de decisiones gerenciales:
+
+1. **Axioma de Proyección Analítica de Solo Lectura:**
+   $$\mathbf{REPORTES} \neq \mathbf{FUENTE\ DE\ VERDAD} \quad \text{y} \quad \mathbf{REPORTES\ son\ READ-ONLY}$$
+   Toda cifra, métrica y estado operacional proviene estrictamente de los dominios soberanos existentes (`HABITACIONES`, `ESTADIAS`, `ARRENDAMIENTOS`, `MANTENIMIENTO`, `HOUSEKEEPING`, `FINANCIERO-2`, `COMPRAS-1`, `GASTOS-1`). Prohibición absoluta de mutar registros, modificar estados o generar persistencias analíticas colaterales.
+2. **Economía de Esquema Estricta (027 Libre / 104 Tablas):**
+   CERO tablas nuevas, CERO migraciones de esquema. La ranura `027_*` permanece estrictamente libre. La base de datos se conserva en exactamente 104 tablas.
+3. **Comprobación de Solo Lectura: ADR y RevPAR Históricos Diferidos:**
+   La auditoría técnica constató que `cargos_cuenta` registra un único cargo total por estancia completa al confirmarse la reserva (`devengado_en = NOW()`, `cantidad = noches`) y no un devengo noche a noche. En ausencia de un proceso soberano de auditoría nocturna (*Night Audit*), se prohíbe promediar artificialmente (`total / noches`) o atribuir el devengo a la fecha de cobro de caja. **ADR y RevPAR históricos quedan explícitamente DECLARADOS COMO NO RECONSTRUIBLES CON FIDELIDAD Y DIFERIDOS a la futura fase `DEVENGO-ALOJAMIENTO-1`**.
+4. **Semántica Real de Habitaciones Fuera de Orden (OOO):**
+   La exclusión del inventario vendible como *Out of Order* (OOO) se deriva estrictamente de órdenes en `mantenimiento_ordenes` con `requiere_bloqueo = 1` vigentes en la fecha de corte. Las incidencias técnicas menores con `requiere_bloqueo = 0` se clasifican como OOS no bloqueante y no disminuyen el denominador de vendibles.
+5. **Ocupación Comercial Neta:**
+   $$U_{\text{vendibles}} = \max(0, U_{\text{total}} - U_{\text{OOO}})$$
+   $$\text{Ocupación Neta \%} = \left( \frac{U_{\text{ocupadas}}}{U_{\text{vendibles}}} \right) \times 100$$
+   Para V1, toda unidad ocupada con cargo computable de alojamiento o arrendamiento se considera vendida; cortesías y house-use quedan diferidos.
+6. **Flujo de Caja Consolidado con Cuadre Algebraico Inmutable:**
+   $$\text{SALDO INICIAL} + \text{INGRESOS COBRADOS} - \text{EGRESOS DESEMBOLSADOS} = \text{SALDO FINAL}$$
+   Presentación en tres dimensiones analíticas: `EFECTIVO` (cajas físicas), `BANCOS` (cuentas bancarias) y `CONSOLIDADO`. La vista consolidada elimina transferencias internas entre caja y bancos para evitar doble cómputo patrimonial.
+7. **Segregación Estricta de Aging ($\mathbf{CxC \neq CxP}$):**
+   Cuentas por Cobrar y Cuentas por Pagar representan direcciones económicas contrarias. Se prohíbe terminantemente consolidar ambas bajo una sola cifra de "morosidad". Ambas carteras adoptan buckets estándar idénticos de antigüedad: `POR VENCER`, `1–30 DÍAS`, `31–60 DÍAS`, `61–90 DÍAS`, `> 90 DÍAS`.
+8. **Neutralización Obligatoria contra CSV Injection:**
+   Toda exportación CSV incluye BOM UTF-8 (`\xEF\xBB\xBF`) y sanitiza defensivamente cualquier celda que inicie con los caracteres `=`, `+`, `-` o `@`, anteponiendo un apóstrofe `'` para impedir ejecución arbitraria de fórmulas en hojas de cálculo.
+9. **Exportación PDF mediante DOCUMENTOS-1:**
+   Se reutiliza exclusivamente el motor homologado Dompdf a través de `GeneradorPdf`, garantizando formato A4 con tipografía oficial Fira Sans Condensed (`D-085`), membrete y hash de verificación SHA-256.
+10. **Seguridad RBAC Específica:**
+    Protección de endpoints mediante permisos atómicos: `reportes.ver`, `reportes.operaciones`, `reportes.finanzas`, `reportes.morosidad` y `reportes.exportar`.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
