@@ -1010,6 +1010,40 @@ $enrutador->get('/tape-chart/rack-hoy', [\CamargoPMS\Controladores\TapeChartCont
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('disponibilidad.ver'),
 ]);
 
+// =========================================================================
+// Rutas del Módulo de Gastos Operativos y Egresos (GASTOS-1 / D-086)
+// =========================================================================
+$enrutador->get('/gastos', [\CamargoPMS\Controladores\GastoControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.ver'),
+]);
+$enrutador->get('/api/gastos', [\CamargoPMS\Controladores\GastoControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.ver'),
+]);
+$enrutador->get('/api/gastos/categorias', [\CamargoPMS\Controladores\GastoControlador::class, 'apiCategorias'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.ver'),
+]);
+$enrutador->get('/api/gastos/{id}', [\CamargoPMS\Controladores\GastoControlador::class, 'apiDetalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.ver'),
+]);
+$enrutador->post('/api/gastos', [\CamargoPMS\Controladores\GastoControlador::class, 'apiCrear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.crear'),
+]);
+$enrutador->post('/api/gastos/{id}/aprobar', [\CamargoPMS\Controladores\GastoControlador::class, 'apiAprobar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.aprobar'),
+]);
+$enrutador->post('/api/gastos/{id}/anular', [\CamargoPMS\Controladores\GastoControlador::class, 'apiAnular'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.anular'),
+]);
+$enrutador->post('/api/gastos/{id}/pagar', [\CamargoPMS\Controladores\GastoControlador::class, 'apiPagar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.pagar'),
+]);
+$enrutador->post('/api/gastos/{id}/evidencias', [\CamargoPMS\Controladores\GastoControlador::class, 'apiAdjuntarEvidencia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.crear'),
+]);
+$enrutador->post('/api/gastos/pagos/{id}/reversar', [\CamargoPMS\Controladores\GastoControlador::class, 'apiReversarPago'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('gastos.pagar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

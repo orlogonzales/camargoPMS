@@ -76,6 +76,9 @@ $tipoUnidadId = (int) $stmtTu->fetchColumn();
 // Crear unidad de prueba para concurrencia
 $pdo->prepare('INSERT INTO unidades (propiedad_id, tipo_unidad_id, codigo, nombre, piso_nivel, capacidad_personas, estado, creado_en) VALUES (?, ?, "HK-CONC-101", "Habitación Conc 101", "1", 2, "ACTIVO", NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)')->execute([$propiedadId, $tipoUnidadId]);
 $unidadConcId = (int) $pdo->lastInsertId();
+$pdo->prepare("UPDATE mantenimiento_ordenes SET estado = 'COMPLETADA' WHERE unidad_id = ? AND estado IN ('PROGRAMADA', 'EN_PROCESO')")->execute([$unidadConcId]);
+
+
 
 // -------------------------------------------------------------------------
 // CASO 1: Generación Concurrente de Códigos HK-YYYYMMDD-XXXX sin duplicación

@@ -88,6 +88,8 @@ $tipoUnidadId = (int) $stmtTu->fetchColumn();
 // Crear unidad de suite E2E
 $pdo->prepare('INSERT INTO unidades (propiedad_id, tipo_unidad_id, codigo, nombre, piso_nivel, capacidad_personas, estado, creado_en) VALUES (?, ?, "HK-E2E-201", "Suite Presidencial E2E", "2", 2, "ACTIVO", NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)')->execute([$propiedadId, $tipoUnidadId]);
 $unidadE2eId = (int) $pdo->lastInsertId();
+$pdo->prepare("UPDATE mantenimiento_ordenes SET estado = 'COMPLETADA' WHERE unidad_id = ? AND estado IN ('PROGRAMADA', 'EN_PROCESO')")->execute([$unidadE2eId]);
+
 
 // Crear Office y Lavandería para E2E
 $pdo->prepare('INSERT INTO inventario_ubicaciones (propiedad_id, codigo, nombre, tipo, estado, creado_en) VALUES (?, "ALM-E2E-OFFICE", "Office Piso 2 E2E", "ALMACEN", "ACTIVO", NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)')->execute([$propiedadId]);

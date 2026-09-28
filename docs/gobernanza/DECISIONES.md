@@ -1262,6 +1262,34 @@ Se formaliza el diseño arquitectónico y de gobernanza para el Centro Operacion
 8. **Conservación de Geometría y Tamaños Tipográficos:**
    La adopción de Fira Sans Condensed sustituye exclusivamente la familia tipográfica sin alterar arbitrariamente tamaños de fuente (`font-size`), alturas de línea (`line-height`), espaciados ni paddings de los componentes de Alina y Camargo PMS.
 
+### D-086 — Gastos Operativos, Egresos Administrativos y Tesorería (GATE GASTOS-1)
+
+Se formaliza la arquitectura del dominio de gastos y su articulación con el motor financiero:
+
+1. **Axioma Ontológico Fundamental:**
+   $$\mathbf{GASTO} \neq \mathbf{COMPRA} \neq \mathbf{CxP} \neq \mathbf{PAGO} \neq \mathbf{MOVIMIENTO\ DE\ TESORERÍA}$$
+   $$\mathbf{GASTOS-1\ NO\ CREA\ UNA\ SEGUNDA\ TESORERÍA\ NI\ UNA\ SEGUNDA\ CxP}$$
+2. **El Gasto representa el Hecho Económico Soberano:**
+   El gasto reconoce la obligación o consumo corriente devengado (ej. luz, agua, honorarios, mantenimiento in-situ de urgencia, consumos de caja chica). Permanece como un hecho económico inmutable independiente de si se cancela en una o varias cuotas.
+3. **Prohibición de Campos Soberanos de Saldo Mutable:**
+   La tabla `gastos` no almacena columnas mutables de amortización (`monto_pagado`, `saldo_pendiente`). El saldo es 100% reconstructible deterministamente:
+   $$\text{Saldo Pendiente} = \text{Total Gasto} - \sum(\text{gasto\_aplicaciones\_pago.monto\_aplicado WHERE estado = 'ACTIVO'})$$
+4. **Separación Estricta entre Estado del Gasto y Situación Financiera:**
+   - Estado del Gasto: `BORRADOR` $\rightarrow$ `REGISTRADO` $\rightarrow$ `APROBADO` $\rightarrow$ `ANULADO`.
+   - Situación Financiera (calculada dinámicamente / DTO): `PENDIENTE` $\rightarrow$ `PARCIAL` $\rightarrow$ `PAGADO`.
+5. **Reutilización Soberana de FINANCIERO-2:**
+   Los pagos de gasto se emiten a través de la entidad extendida `pagos_egreso` y se aplican a los gastos mediante `gasto_aplicaciones_pago` (M:N). Se reutilizan directamente `sesiones_caja`, `movimientos_caja` (`EGRESO_GASTO_MENOR`), `cuentas_bancarias` y `movimientos_bancarios` (`EGRESO_TRANSFERENCIA`).
+6. **Ámbito de Imputación Analítica Tri-partito:**
+   - `CORPORATIVO`: `propiedad_id = NULL`, `unidad_id = NULL`.
+   - `PROPIEDAD`: `propiedad_id != NULL`, `unidad_id = NULL`.
+   - `UNIDAD`: `propiedad_id != NULL`, `unidad_id != NULL` (la unidad debe pertenecer a la propiedad indicada).
+7. **Soporte de N Evidencias Documentales:**
+   Se desacopla el comprobante fiscal formal (tipo, serie, número, fecha) de los archivos de sustento físico mediante la tabla `gasto_evidencias` con hash SHA-256 por cada archivo adjunto.
+8. **Invariante de Anulación:**
+   Un gasto con aplicaciones de pago activas no puede ser anulado. Se exige reversar previamente los pagos en tesorería para restituir los fondos en caja o banco antes de permitir la anulación. Cero DELETE físico.
+9. **Exclusión de Nómina:**
+   Planillas, sueldos, beneficios y cargas sociales quedan categóricamente excluidos de GASTOS-1 para ser gobernados por un futuro dominio de Personal/Nómina.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
