@@ -466,7 +466,23 @@ Implementación del dominio de recibos de cobranza, constancias históricas prob
 - **Persistencia Relacional (Migración 024):** Tablas `recibos` (tabla 79) y `recibo_lineas` (tabla 80), con índices rápidos, constraints `ON DELETE RESTRICT` y permisos RBAC (`recibos.*`).
 - **Interfaz Alina Conforme a D-075 y D-076:** Módulo en `/recibos` con 4 KPIs en vivo, modales `app-form app-icon-form`, bordes `b-r-20`, Select2 42px y controlador JS modular `gestion-recibos.js`.
 
-Estado: candidata pre-commit (60/60 pruebas específicas PASS, 949/949 regresión activa PASS).
+Estado: homologada (micro-baseline oficial 439b16f, 60/60 pruebas específicas PASS, 949/949 regresión activa PASS).
+
+## HOUSEKEEPING-1 — Housekeeping, Pisos, Inspección de Habitaciones, Reproceso y Control Textil de Lencería
+
+Implementación del subsistema de pisos, gobernanza operativa de limpieza, checklists inmutables, derivación dinámica de disponibilidad hotelera y circuito textil bajo la decisión vinculante D-083:
+- **Axioma Ontológico Hexagonal:** $\text{ESTADO COMERCIAL} \neq \text{ESTADO DE OCUPACIÓN} \neq \text{ESTADO DE LIMPIEZA} \neq \text{DISPONIBILIDAD} \neq \text{MANTENIMIENTO}$.
+- **Derivación Dinámica en Vivo:** $\text{UNIDAD LISTA PARA CHECK-IN} = \text{resultado operacional derivado}$ (VR - Vacant Ready). Prohibición estricta de guardar VR, VD, OD, OOO como columnas redundantes en BD; cálculo transparente en tiempo real mediante el DTO `HousekeepingDerivacionOperativa`.
+- **Acoplamiento Atómico en Check-out:** En `EstadiaServicio::realizarCheckout()`, la actualización de la estadía a `FINALIZADA`, el pase de la unidad a `SUCIA` y la creación de la tarea operativa de `SALIDA` ocurren dentro de la misma transacción PDO de forma indivisible.
+- **Idempotencia Transaccional:** Múltiples ejecuciones del check-out sobre una misma estadía devuelven la tarea de salida preexistente sin duplicar órdenes de trabajo.
+- **Validación Estricta de Check-in (Cero Bypass):** En `EstadiaServicio::realizarCheckin()`, hook vinculante `validarAptaParaCheckin()`. Bloqueo absoluto de check-in si la unidad no se encuentra en estado `LIMPIA_INSPECCIONADA` (VR), arrojando `UnidadNoListaExcepcion` (HTTP 409).
+- **Checklists Inmutables y Puntos Críticos:** Snapshot inmutable de la plantilla asignada a la tarea con evaluación tri-valente (`CONFORME`, `NO_CONFORME`, `NO_APLICA`). Puntos de control marcados como críticos impiden forzar la aprobación si están no conformes (`ValidacionHousekeepingExcepcion` 422), obligando al envío a reproceso (`RECHAZADA` / `RETOQUE_REQUERIDO`).
+- **Integración con Kardex e Inventario (INVENTARIO-1):** Salida de consumibles de amenities mediante movimiento de Kardex (`SALIDA_CONSUMO`) y descuento seguro de inventario sin permitir saldos negativos en existencias.
+- **Circuito Textil de Lavandería con Custodia Externa:** Despacho de lencería mediante traslado de dos patas (`ALMACEN -> CUSTODIA_EXTERNA`), retorno con registro de prendas conformes y mermas por deterioro, y cálculo de discrepancias en columna virtual `cantidad_diferencia`.
+- **Persistencia Relacional (Migración 025):** Tablas 81 a 89 (`housekeeping_unidades_limpieza`, `housekeeping_tareas`, `housekeeping_tarea_checklist`, `housekeeping_tarea_consumos`, `housekeeping_tarea_historial`, `housekeeping_lotes_lavanderia`, `housekeeping_lote_lineas`, `housekeeping_checklist_plantillas`, `housekeeping_checklist_plantilla_items`) y permisos RBAC (`housekeeping.*`).
+- **Interfaz Alina Conforme a D-075 y D-076:** Módulo `/housekeeping` con 4 KPIs (VR, VD, VCL, OOO), Rack Operacional interactivo, pestaña de Tareas con modales dinámicos y pestaña de Lotes de Lavandería Textil.
+
+Estado: candidata pre-commit (60/60 pruebas específicas PASS, 1,009/1,009 regresión activa PASS).
 
 ## Dominio operativo
 

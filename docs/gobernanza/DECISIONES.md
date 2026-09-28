@@ -1164,6 +1164,50 @@ Se formaliza el diseño arquitectónico del dominio de emisión de recibos de co
 15. **Delimitación No Tributaria:**
     - El recibo es una Constancia Administrativa Interna de Cobranza. No es factura electrónica ni comprobante fiscal SUNAT.
 
+### D-083 — Arquitectura de Housekeeping, Limpieza, Pisos y Coordinación Operativa (GATE HOUSEKEEPING-1)
+
+Se formaliza el diseño arquitectónico del subsistema de Housekeeping en Camargo PMS:
+
+1. **Axioma Ontológico Hexagonal y Estados Derivados:**
+   $$\mathbf{ESTADO\ COMERCIAL} \neq \mathbf{ESTADO\ DE\ OCUPACIÓN} \neq \mathbf{ESTADO\ DE\ LIMPIEZA} \neq \mathbf{DISPONIBILIDAD\ COMERCIAL} \neq \mathbf{MANTENIMIENTO\ TÉCNICO}$$
+   $$\mathbf{UNIDAD\ LISTA\ PARA\ CHECK-IN} = \mathbf{RESULTADO\ OPERACIONAL\ DERIVADO}$$
+   - Las siglas hoteleras (`VR`, `VD`, `VCL`, `VUI`, `OD`, `OC`, `OOO`, `OOS`) son proyecciones operacionales dinámicas en tiempo real (UI / DTOs), calculadas a partir de las fuentes soberanas de verdad del sistema. No se persisten como una segunda fuente de verdad en base de datos.
+2. **Desacople de Ocupación en Housekeeping:**
+   - La ocupación pertenece exclusivamente a `ESTADÍAS-1` (`estadias.estado = EN_CURSO`). Housekeeping almacena únicamente el estado físico de higiene en `housekeeping_unidades_limpieza` (`estado_limpieza` $\in$ {`SUCIA`, `EN_LIMPIEZA`, `LIMPIA_POR_INSPECCIONAR`, `LIMPIA_INSPECCIONADA`, `RETOQUE_REQUERIDO`}).
+3. **Atomicidad Transaccional de Check-out:**
+   - En una única transacción atómica en InnoDB: finalización de la estadía + transición de la unidad a `SUCIA` + formulación de la tarea canónica de tipo `SALIDA`. Si falla Housekeeping, ocurre rollback total.
+4. **Cero Bypass de Check-in por Equipaje:**
+   - No existe bypass para hacer check-in ordinario bajo el pretexto de "guardar maletas". Custodia de equipaje $\neq$ Check-in.
+   - `puedeCheckIn(unidadId)` exige: unidad comercialmente activa $\land$ estadía válida $\land$ unidad desocupada $\land$ `estado_limpieza = LIMPIA_INSPECCIONADA` $\land$ ausencia de orden de mantenimiento bloqueante.
+5. **Diferenciación de Limpieza:**
+   - `LIMPIA_POR_INSPECCIONAR` $\neq$ `LIMPIA_INSPECCIONADA`. Solo la segunda satisface el requisito higiénico para check-in.
+6. **Condiciones Operacionales Temporales (DND):**
+   - `DND` (Do Not Disturb), `SIN_ACCESO` o `RECHAZO_HUESPED` son incidencias operacionales de la tarea y no sustituyen el estado físico de limpieza de la unidad.
+7. **Inhabilitación Técnica Centralizada en Mantenimiento:**
+   - `OOO` (*Out of Order*) es una proyección derivada de `MANTENIMIENTO-1` y `DISPONIBILIDAD`. Housekeeping reporta desperfectos vía `MantenimientoServicio::reportarIncidencia()` con `origen_reporte = 'HOUSEKEEPING'`. Si la avería es crítica, Mantenimiento formula la orden con `requiere_bloqueo = 1`. Housekeeping jamás inserta filas en `inventario_diario_unidades`.
+8. **Segregación Camarera / Supervisor Flexible:**
+   - Se admite configuración de supervisión (`housekeeping.inspeccion_requiere_distinto_usuario`). En establecimientos pequeños con un solo colaborador autorizado, se admite auto-inspección dejando constancia auditada bajo D-061.
+9. **Checklists Versionados con Snapshots Inmutables:**
+   - Al generarse la tarea, los puntos de control del estándar se copian inmutables como snapshot en `housekeeping_tarea_checklist`. Modificaciones futuras a las plantillas maestras no alteran tareas históricas.
+10. **Evaluación de Ítems Tri-Valente:**
+    - Cada punto de control registra `resultado` $\in$ {`CONFORME`, `NO_CONFORME`, `NO_APLICA`}, con observaciones obligatorias ante no conformidad.
+11. **Reproceso Explícito tras Rechazo:**
+    - Rechazar una inspección transiciona la tarea a `RECHAZADA` / `REQUIERE_REPROCESO` y la unidad a `EN_LIMPIEZA`. Al subsanar, la camarera re-envía a inspección (`POR_INSPECCIONAR`), preservando el historial append-only de cada intento.
+12. **Historial Append-Only de Tareas:**
+    - Registro de cada cambio de estado en `housekeeping_tarea_historial` con actor, motivo y timestamp.
+13. **Idempotencia Estricta de Tareas de Salida:**
+    - 1 check-out de estadía $\rightarrow$ máximo 1 tarea de `SALIDA` canónica, protegida mediante índice único/columna virtual sobre `(tipo_tarea, estadia_id)`.
+14. **Consumo Atómico de Amenities y Protección de Kardex:**
+    - Al concluir la limpieza, los amenities repuestos generan `SALIDA_CONSUMO` en `INVENTARIO-1`. Si el stock es insuficiente, se revierte la operación impidiendo existencias negativas. Reintentos no duplican movimientos.
+15. **Baja de Lencería Dañada $\neq$ Ajuste Ciego:**
+    - Prendas textiles destruidas o manchadas irreparablemente en lavandería se asientan como baja/merma explícita (`MERMA_LENCERIA_BAJA`), preservando la diferencia ontológica entre merma y ajuste de inventario.
+16. **Circuito Textil vía Ubicaciones de Inventario:**
+    - El envío y retorno de ropa con lavandería (`CUSTODIA_EXTERNA`) se ejecuta mediante traslados de dos patas en `INVENTARIO-1`, conservando la cantidad física total. Discrepancias en retorno quedan registradas en el lote.
+17. **Preservación de Disponibilidad en Limpiezas de Estadía:**
+    - Las tareas `ESTADIA` (Stay-over) limpian unidades ocupadas sin alterar el calendario sparse ni liberar noches hoteleras.
+18. **Ausencia de Schedulers Prematuros:**
+    - Tareas de `PROFUNDA` y `RETOQUE` se gestionan bajo demanda manual en esta fase.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

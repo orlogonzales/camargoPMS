@@ -19,6 +19,7 @@ use CamargoPMS\Modelos\EstadiaHuesped;
 use CamargoPMS\Modelos\Reserva;
 use CamargoPMS\Nucleo\BaseDatos;
 use CamargoPMS\Repositorios\EstadiaRepositorio;
+use CamargoPMS\Repositorios\HousekeepingRepositorio;
 use CamargoPMS\Repositorios\PersonaRepositorio;
 use CamargoPMS\Repositorios\ReservaRepositorio;
 use CamargoPMS\Repositorios\UnidadRepositorio;
@@ -48,6 +49,7 @@ class EstadiaServicio
     private UnidadRepositorio $unidadRepo;
     private PersonaRepositorio $personaRepo;
     private AuditoriaServicio $auditoriaServicio;
+    private HousekeepingServicio $housekeepingServicio;
 
     public function __construct(
         ?PDO $pdo = null,
@@ -55,7 +57,8 @@ class EstadiaServicio
         ?ReservaRepositorio $reservaRepo = null,
         ?UnidadRepositorio $unidadRepo = null,
         ?PersonaRepositorio $personaRepo = null,
-        ?AuditoriaServicio $auditoriaServicio = null
+        ?AuditoriaServicio $auditoriaServicio = null,
+        ?HousekeepingServicio $housekeepingServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->estadiaRepo = $estadiaRepo ?? new EstadiaRepositorio($this->pdo);
@@ -63,6 +66,13 @@ class EstadiaServicio
         $this->unidadRepo = $unidadRepo ?? new UnidadRepositorio($this->pdo);
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
         $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
+        $this->housekeepingServicio = $housekeepingServicio ?? new HousekeepingServicio(
+            new HousekeepingRepositorio($this->pdo),
+            $this->auditoriaServicio,
+            null,
+            null,
+            $this->pdo
+        );
     }
 
     public function obtenerPdo(): PDO
@@ -136,6 +146,9 @@ class EstadiaServicio
             throw new UnidadNoEncontradaExcepcion($unidadId);
         }
         $capacidadMaxima = $unidad->obtenerCapacidadPersonas();
+
+        // 5b. Validar condición operacional para check-in (VR - Vacant Ready / D-083)
+        $this->housekeepingServicio->validarAptaParaCheckin($unidadId);
 
         // 6. Validar lista de huéspedes
         $huespedesRaw = $datos['huespedes'] ?? [];
@@ -298,6 +311,14 @@ class EstadiaServicio
                 checkoutEn: $checkoutEn,
                 checkoutPorActorId: $actorIdFinal,
                 observacionesCheckout: $obsCheckout
+            );
+
+            // D-083: Al completar check-out, marcar la unidad como SUCIA y generar tarea de salida atómicamente
+            $this->housekeepingServicio->marcarSuciaPorCheckout(
+                $estadia->obtenerUnidadId(),
+                $estadiaId,
+                $actorIdFinal,
+                $obsCheckout
             );
 
             // Auditoría transversal D-061

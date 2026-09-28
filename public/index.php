@@ -951,6 +951,52 @@ $enrutador->get('/api/recibos/{id}/verificar-hash', [\CamargoPMS\Controladores\R
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('recibos.ver'),
 ]);
 
+// =========================================================================
+// Rutas de Housekeeping, Pisos y Control de Lencería (HOUSEKEEPING-1 / D-083)
+// =========================================================================
+$enrutador->get('/housekeeping', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.ver'),
+]);
+$enrutador->get('/api/housekeeping/rack', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiRackOperacional'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.ver'),
+]);
+$enrutador->get('/api/housekeeping/tareas', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiListarTareas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.ver'),
+]);
+$enrutador->get('/api/housekeeping/tareas/{id}', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiDetalleTarea'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.ver'),
+]);
+$enrutador->post('/api/housekeeping/tareas', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiCrearTarea'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.tareas.gestionar'),
+]);
+$enrutador->post('/api/housekeeping/tareas/{id}/asignar', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiAsignarTarea'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.tareas.gestionar'),
+]);
+$enrutador->post('/api/housekeeping/tareas/{id}/iniciar', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiIniciarLimpieza'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.limpieza.ejecutar'),
+]);
+$enrutador->post('/api/housekeeping/tareas/{id}/finalizar', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiFinalizarLimpieza'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.limpieza.ejecutar'),
+]);
+$enrutador->post('/api/housekeeping/tareas/{id}/inspeccionar', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiInspeccionarTarea'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.inspeccion.ejecutar'),
+]);
+$enrutador->post('/api/housekeeping/tareas/{id}/desperfecto', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiReportarDesperfecto'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.limpieza.ejecutar'),
+]);
+$enrutador->get('/api/housekeeping/lavanderia/lotes', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiListarLotesLavanderia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.lavanderia.gestionar'),
+]);
+$enrutador->get('/api/housekeeping/lavanderia/lotes/{id}', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiDetalleLoteLavanderia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.lavanderia.gestionar'),
+]);
+$enrutador->post('/api/housekeeping/lavanderia/despachar', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiDespacharLoteLavanderia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.lavanderia.gestionar'),
+]);
+$enrutador->post('/api/housekeeping/lavanderia/lotes/{id}/recibir', [\CamargoPMS\Controladores\HousekeepingControlador::class, 'apiRecibirLoteLavanderia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('housekeeping.lavanderia.gestionar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

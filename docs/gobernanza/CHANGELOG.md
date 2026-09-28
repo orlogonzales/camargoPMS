@@ -4,6 +4,44 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase HOUSEKEEPING-1 — Housekeeping, Pisos, Inspección, Reproceso y Control Textil de Lencería (D-083)
+
+- **Axioma Ontológico Hexagonal:**
+  - Consagración del axioma $\text{ESTADO COMERCIAL} \neq \text{ESTADO DE OCUPACIÓN} \neq \text{ESTADO DE LIMPIEZA} \neq \text{DISPONIBILIDAD} \neq \text{MANTENIMIENTO}$.
+  - Derivación dinámica en vivo: $\text{UNIDAD LISTA PARA CHECK-IN} = \text{resultado operacional derivado}$ (VR - Vacant Ready).
+  - Cero columnas redundantes en BD: `VR`, `VD`, `VCL`, `OD`, `OC`, `OOO`, `OOS` son proyecciones computadas por el DTO `HousekeepingDerivacionOperativa` sin desincronización posible.
+- **Acoplamiento Atómico de Check-out e Idempotencia:**
+  - Finalización de estadía, marcación de unidad a `SUCIA` y generación de tarea de `SALIDA` en estado `PENDIENTE` consolidados en la misma transacción PDO de `EstadiaServicio::realizarCheckout()`.
+  - Idempotencia estricta: múltiples invocaciones sobre la misma estadía devuelven la tarea existente sin duplicar órdenes de trabajo.
+- **Check-in Hotelero Estricto (Cero Bypass):**
+  - `validarAptaParaCheckin()` inyectado en `EstadiaServicio::realizarCheckin()`.
+  - Bloqueo absoluto de check-in si la habitación no está `LIMPIA_INSPECCIONADA` (VR) lanzando `UnidadNoListaExcepcion` (HTTP 409) con detalle exhaustivo de causa (ocupada, sucia, en limpieza, vcl o mantenimiento).
+- **Checklists Versionados con Snapshots Inmutables:**
+  - Clonado inmutable de puntos de control hacia `housekeeping_tarea_checklist` en el momento de crear la tarea.
+  - Evaluación tri-valente estricta (`CONFORME`, `NO_CONFORME`, `NO_APLICA`).
+  - Puntos de control críticos: si algún ítem crítico está `NO_CONFORME`, el sistema impide la aprobación formal mediante `ValidacionHousekeepingExcepcion` (422) forzando el envío a reproceso (`RECHAZADA` / `RETOQUE_REQUERIDO`).
+- **Integración Atómica con Kardex e Inventario (INVENTARIO-1):**
+  - Débito automático de amenities (jabón, shampoo, kits dentales) desde `almacen_origen_id` mediante `SALIDA_CONSUMO` en `inventario_movimientos` y descuento seguro sin saldos negativos en `inventario_existencias`.
+  - Trazabilidad con clave foránea `inventario_movimiento_id` en `housekeeping_tarea_consumos`.
+- **Circuito Textil de Lavandería en Custodia Externa:**
+  - Registro de lotes de lavandería con folios correlativos `LAV-YYYYMMDD-XXXX`.
+  - Doble pata de Kardex (`Office -> Custodia Externa`) con custodia técnica de prendas de blancos y lencería.
+  - Retorno con desglose formal de prendas limpias recibidas y bajas por merma irrecuperable.
+  - Preservación explícita de discrepancias mediante columna virtual `cantidad_diferencia GENERATED ALWAYS AS (cantidad_enviada - (cantidad_recibida + cantidad_baja_merma)) VIRTUAL` y estado `CON_DISCREPANCIA`.
+- **Persistencia Relacional (Migración 025_housekeeping.sql):**
+  - Creación de 9 tablas relacionales (tablas 81 a 89): `housekeeping_unidades_limpieza`, `housekeeping_tareas`, `housekeeping_tarea_checklist`, `housekeeping_tarea_consumos`, `housekeeping_tarea_historial`, `housekeeping_lotes_lavanderia`, `housekeeping_lote_lineas`, `housekeeping_checklist_plantillas`, `housekeeping_checklist_plantilla_items`.
+  - Folios correlativos `HK-YYYYMMDD-XXXX` y `LAV-YYYYMMDD-XXXX` administrados en `documento_secuencias` con `FOR UPDATE`.
+  - Permisos RBAC (`housekeeping.ver`, `housekeeping.tareas.gestionar`, `housekeeping.limpieza.ejecutar`, `housekeeping.inspeccion.ejecutar`, `housekeeping.lavanderia.gestionar`, `housekeeping.reportes.ver`) y opción de menú Alina.
+- **Interfaz Gráfica Alina (D-075 / D-076):**
+  - Vista modular en `/housekeeping` con 4 KPIs operacionales (VR, VD, VCL, OOO), Rack Operacional en vivo, pestaña de Tareas con modales de acción rápida y pestaña de Lotes de Lavandería Textil.
+  - Script Vanilla `public/assets/js/gestion-housekeeping.js` con SweetAlert2 y Fetch JSON.
+- **Verificación Automatizada Exhaustiva (60/60 PASS):**
+  - Matriz de dominio y reglas de negocio: `tests/test_housekeeping_matriz_40.php` (40/40 PASS).
+  - Concurrencia, locking e integridad física: `tests/test_housekeeping_concurrencia.php` (6/6 PASS).
+  - Flujo HTTP E2E real: `tests/test_e2e_housekeeping.php` (14/14 PASS).
+
+## [439b16f] - 2026-09-27
+
 ### Microfase RECIBOS-1 — Emisión de Recibos de Cobranza, Snapshots Financieros $T_0$, Preservación Criptográfica Inmutable e Integración con FINANCIERO-2 y DOCUMENTOS-1 (D-082)
 
 - **Axioma Ontológico Hexagonal:**

@@ -314,7 +314,10 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **RECIBOS-1**       | `test_recibos_matriz_40.php` (T01..40) | 40 | — | 40/40 PASS |
 | **RECIBOS-1**       | `test_recibos_concurrencia.php` (REC-C01..C06) | 6 | — | 6/6 PASS |
 | **RECIBOS-1**       | `test_e2e_recibos.php` (E2E-REC-01..14) | — | 14 (`E2E-REC`) | 14/14 PASS |
-| **TOTALES CANÓNICOS**| **54 suites ejecutadas** | **1239** | **252** | **1491 casos PASS (100%)** |
+| **HOUSEKEEPING-1**  | `test_housekeeping_matriz_40.php` (T01..40) | 40 | — | 40/40 PASS |
+| **HOUSEKEEPING-1**  | `test_housekeeping_concurrencia.php` (HK-C01..C06) | 6 | — | 6/6 PASS |
+| **HOUSEKEEPING-1**  | `test_e2e_housekeeping.php` (E2E-HK-01..14) | — | 14 (`E2E-HK`) | 14/14 PASS |
+| **TOTALES CANÓNICOS**| **57 suites ejecutadas** | **1285** | **266** | **1551 casos PASS (100%)** |
 
   - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
     - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
@@ -330,5 +333,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Compras-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
     - Suministros-1 Matriz (40) + Concurrencia (6) + E2E (14) + Gate Financiero (11) = 71 casos
     - Recibos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - **Total Consolidado de Regresión Activa: 949/949 PASS (100%)**.
+    - Housekeeping-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
+    - **Total Consolidado de Regresión Activa: 1,009/1,009 PASS (100%)**.
 
