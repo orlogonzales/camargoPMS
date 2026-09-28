@@ -23,9 +23,9 @@ use CamargoPMS\Servicios\SesionServicio;
 class AutorizacionIntermediario
 {
     private string $permisoRequerido;
-    private SesionServicio $sesionServicio;
-    private AutorizacionServicio $autorizacionServicio;
-    private PanelControlador $panelControlador;
+    private ?SesionServicio $sesionServicio = null;
+    private ?AutorizacionServicio $autorizacionServicio = null;
+    private ?PanelControlador $panelControlador = null;
 
     public function __construct(
         string $permisoRequerido,
@@ -34,9 +34,24 @@ class AutorizacionIntermediario
         ?PanelControlador $panelControlador = null
     ) {
         $this->permisoRequerido = trim($permisoRequerido);
-        $this->sesionServicio = $sesionServicio ?? new SesionServicio();
-        $this->autorizacionServicio = $autorizacionServicio ?? new AutorizacionServicio();
-        $this->panelControlador = $panelControlador ?? new PanelControlador();
+        $this->sesionServicio = $sesionServicio;
+        $this->autorizacionServicio = $autorizacionServicio;
+        $this->panelControlador = $panelControlador;
+    }
+
+    private function obtenerSesionServicio(): SesionServicio
+    {
+        return $this->sesionServicio ??= new SesionServicio();
+    }
+
+    private function obtenerAutorizacionServicio(): AutorizacionServicio
+    {
+        return $this->autorizacionServicio ??= new AutorizacionServicio();
+    }
+
+    private function obtenerPanelControlador(): PanelControlador
+    {
+        return $this->panelControlador ??= new PanelControlador();
     }
 
     /**
@@ -47,7 +62,7 @@ class AutorizacionIntermediario
      */
     public function manejar(string $rutaSolicitada = '/'): ?Respuesta
     {
-        $usuario = $this->sesionServicio->validarSesionActual();
+        $usuario = $this->obtenerSesionServicio()->validarSesionActual();
 
         // Si no está autenticado, responder 401 si espera JSON o redirigir a inicio de sesión
         if ($usuario === null) {
@@ -71,7 +86,7 @@ class AutorizacionIntermediario
         }
 
         // Si está autenticado, validar permiso de autorización RBAC
-        if (!$this->autorizacionServicio->puede($usuario->obtenerId(), $this->permisoRequerido)) {
+        if (!$this->obtenerAutorizacionServicio()->puede($usuario->obtenerId(), $this->permisoRequerido)) {
             if (AutenticacionIntermediario::esperaRespuestaJson()) {
                 return Respuesta::json([
                     'ok' => false,
@@ -80,7 +95,7 @@ class AutorizacionIntermediario
                 ], 403);
             }
 
-            return $this->panelControlador->error(403);
+            return $this->obtenerPanelControlador()->error(403);
         }
 
         return null;

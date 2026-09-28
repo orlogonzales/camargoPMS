@@ -52,10 +52,12 @@ if ($scriptDir !== '/' && $scriptDir !== '' && str_starts_with($uriPeticion, $sc
 $urlBase = rtrim($urlBase, '/');
 \CamargoPMS\Nucleo\Ayudante::definirUrlBase($urlBase);
 
-// Inicialización del Enrutador
-$enrutador = new \CamargoPMS\Nucleo\Enrutador();
+// Inicialización y despacho de la petición HTTP
+try {
+    // Inicialización del Enrutador
+    $enrutador = new \CamargoPMS\Nucleo\Enrutador();
 
-// Registro de rutas del sistema
+    // Registro de rutas del sistema
 $enrutador->get('/login', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'mostrarLogin']);
 $enrutador->post('/login', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'procesarLogin']);
 $enrutador->post('/logout', [\CamargoPMS\Controladores\AutenticacionControlador::class, 'cerrarSesion']);
@@ -1090,27 +1092,45 @@ $enrutador->post('/api/seguridad/sesiones/purgar-expiradas', [\CamargoPMS\Contro
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP
-try {
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     $uri = $_SERVER['REQUEST_URI'] ?? '/';
 
     $respuesta = $enrutador->despachar($metodo, $uri);
     $respuesta->enviar();
 } catch (\Throwable $error) {
-    // Manejo defensivo de error 500 separando vista segura de diagnóstico técnico
-    http_response_code(500);
+    // Determinar código HTTP adecuado según el tipo de excepción
+    $codigoHttp = 500;
+    if ($error instanceof \CamargoPMS\Excepciones\CsrfInvalidoExcepcion) {
+        $codigoHttp = 403;
+    } elseif ($error instanceof \CamargoPMS\Excepciones\EntidadNoEncontradaExcepcion) {
+        $codigoHttp = 404;
+    } elseif ($error->getCode() >= 400 && $error->getCode() < 500) {
+        $codigoHttp = (int) $error->getCode();
+    }
+
+    http_response_code($codigoHttp);
 
     // Registro seguro en log del sistema sin exponer detalles al usuario
     error_log((string) $error);
 
     try {
+        if (\CamargoPMS\Intermediarios\AutenticacionIntermediario::esperaRespuestaJson()) {
+            \CamargoPMS\Nucleo\Respuesta::json([
+                'ok' => false,
+                'exito' => false,
+                'error' => $error->getMessage(),
+                'codigo' => 'ERROR_' . $codigoHttp,
+            ], $codigoHttp)->enviar();
+            exit;
+        }
+
         $controlador = new \CamargoPMS\Controladores\PanelControlador();
-        $respuesta500 = $controlador->error(500);
-        $respuesta500->enviar();
+        $respuestaError = $controlador->error($codigoHttp);
+        $respuestaError->enviar();
     } catch (\Throwable $errorVista) {
-        echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Error 500 — Camargo PMS</title></head><body>';
+        echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Error ' . $codigoHttp . ' — Camargo PMS</title></head><body>';
         echo '<div style="font-family:sans-serif;padding:3rem;text-align:center;">';
-        echo '<h2>Error del Servidor (500)</h2>';
+        echo '<h2>Error ' . $codigoHttp . '</h2>';
         echo '<p>Ha ocurrido una falla inesperada en Camargo PMS.</p>';
         echo '</div></body></html>';
     }

@@ -16,11 +16,16 @@ use CamargoPMS\Servicios\SesionServicio;
  */
 class AutenticacionIntermediario
 {
-    private SesionServicio $sesionServicio;
+    private ?SesionServicio $sesionServicio = null;
 
     public function __construct(?SesionServicio $sesionServicio = null)
     {
-        $this->sesionServicio = $sesionServicio ?? new SesionServicio();
+        $this->sesionServicio = $sesionServicio;
+    }
+
+    private function obtenerSesionServicio(): SesionServicio
+    {
+        return $this->sesionServicio ??= new SesionServicio();
     }
 
     /**
@@ -31,7 +36,7 @@ class AutenticacionIntermediario
      */
     public function manejar(string $rutaSolicitada = '/'): ?Respuesta
     {
-        $usuario = $this->sesionServicio->validarSesionActual();
+        $usuario = $this->obtenerSesionServicio()->validarSesionActual();
 
         if ($usuario === null) {
             if (self::esperaRespuestaJson()) {
