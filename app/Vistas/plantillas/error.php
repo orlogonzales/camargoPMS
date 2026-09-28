@@ -23,10 +23,6 @@ declare(strict_types=1);
     <link rel="icon" type="image/x-icon" href="<?= url_asset('images/logo/favicon.png') ?>">
     <link rel="shortcut icon" type="image/x-icon" href="<?= url_asset('images/logo/favicon.png') ?>">
 
-    <!-- Tipografía oficial Google Fonts: Lexend Deca -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100..900&display=swap" rel="stylesheet">
 
     <!-- Iconos oficiales: Font Awesome 6 -->
     <link rel="stylesheet" type="text/css" href="<?= url_asset('vendor/fontawesome/css/all.css') ?>">

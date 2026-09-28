@@ -1,7 +1,75 @@
 /**
  * Camargo PMS — Estilos específicos del layout
  * Complementa style.css y responsive.css originales sin modificarlos.
+ *
+ * D-085: Tipografía oficial Fira Sans Condensed (assets locales WOFF2)
+ * y consolidación de Font Awesome 6.3 Free.
  */
+
+/* ==========================================================================
+   TIPOGRAFÍA OFICIAL — FIRA SANS CONDENSED (D-085)
+   ========================================================================== */
+
+@font-face {
+    font-family: "Fira Sans Condensed";
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url("../fonts/fira-sans-condensed/fira-sans-condensed-300.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Fira Sans Condensed";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../fonts/fira-sans-condensed/fira-sans-condensed-400.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Fira Sans Condensed";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../fonts/fira-sans-condensed/fira-sans-condensed-500.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Fira Sans Condensed";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("../fonts/fira-sans-condensed/fira-sans-condensed-600.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Fira Sans Condensed";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../fonts/fira-sans-condensed/fira-sans-condensed-700.woff2") format("woff2");
+}
+
+:root {
+    --theme-fonts: "Fira Sans Condensed", Arial, sans-serif;
+    --bs-body-font-family: "Fira Sans Condensed", Arial, sans-serif;
+}
+
+body {
+    font-family: var(--theme-fonts);
+}
+
+/* Selectores textuales explícitos para componentes de terceros e inputs */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+input, textarea, select, button,
+.form-control, .form-select,
+.select2-container--default .select2-selection,
+.select2-dropdown,
+.flatpickr-calendar,
+.swal2-popup, .swal2-title, .swal2-html-container {
+    font-family: "Fira Sans Condensed", Arial, sans-serif;
+}
 
 /* Transición suave para el cargador neutro */
 .loader-wrapper {

@@ -1243,6 +1243,25 @@ Se formaliza el diseño arquitectónico y de gobernanza para el Centro Operacion
 13. **Exclusiones Explícitas del Alcance:**
     Drag & Drop, edición directa in-line de celdas, WebSockets y sincronizaciones externas OTA/WordPress quedan categóricamente fuera de esta fase.
 
+### D-085 — Tipografía Oficial Única de Interfaz (Fira Sans Condensed) y Consolidación de Font Awesome 6.3 Free (UI-FONT-1)
+
+1. **Tipografía Oficial Única:**
+   `Fira Sans Condensed`, con fallbacks estándar `Arial, sans-serif`, queda aprobada como la tipografía corporativa oficial y exclusiva para todos los elementos textuales de la interfaz de Camargo PMS (body, títulos, formularios, inputs, selectores, Select2, botones, tablas, modales, alertas, badges, Flatpickr, SweetAlert2, Tape Chart y vistas de autenticación).
+2. **Prohibición de Variantes Concurrentes y Descarte de Lexend Deca:**
+   Se prohíbe el uso concurrente de `Fira Sans` estándar y `Fira Sans Extra Condensed`. `Lexend Deca` deja de formar parte del diseño oficial de Camargo PMS y no se incluye en el código propio productivo.
+3. **Soberanía y Assets 100% Locales (Cero Google Fonts en Runtime):**
+   Se prohíbe la dependencia en tiempo de ejecución de proveedores remotos como Google Fonts (`fonts.googleapis.com` o `fonts.gstatic.com`). Los archivos webfont de Fira Sans Condensed se sirven exclusivamente de forma local en formato WOFF2 desde `public/assets/fonts/fira-sans-condensed/` para los pesos autorizados: 300 (Light), 400 (Regular), 500 (Medium), 600 (SemiBold) y 700 (Bold).
+4. **Inmutabilidad de la Plantilla Original Alina:**
+   El catálogo de referencia `admin-dashboard/` permanece 100% inmutable. La adaptación tipográfica se implementa en la capa de Camargo PMS (`app/Vistas/componentes/head.php` y `public/assets/css/camargo.css`) sin modificar innecesariamente los archivos originales de Alina (`style.css`, `responsive.css`).
+5. **Arquitectura Limpia en Cascada y Prohibición del Selector Universal:**
+   Queda terminantemente prohibido el uso del selector universal con forzado (`* { font-family: ... !important; }`). La tipografía se gobierna mediante la redefinición limpia de las variables de tema en `:root` (`--theme-fonts`, `--bs-body-font-family`) y `body`, complementada con selectores textuales específicos para componentes de terceros que no hereden automáticamente. Se evitan guerras de `!important`.
+6. **Iconografía Oficial Ratificada (Font Awesome 6.3 Free):**
+   Font Awesome 6.3 Free es el sistema oficial y exclusivo de iconografía de la aplicación para navegación, acciones CRUD, estados, KPIs, modales y formularios. No se agregan overrides preventivos con `!important` a las clases de Font Awesome para evitar colisiones.
+7. **Preservación de Gráficos Estructurales de Dependencias:**
+   Los elementos vectoriales y mecánicas internas generadas por librerías de terceros (SVGs de navegación de meses en Flatpickr y animaciones/gráficos nativos en SweetAlert2) se preservan intactos, delimitando con claridad la iconografía visual de aplicación de los componentes internos de plugins.
+8. **Conservación de Geometría y Tamaños Tipográficos:**
+   La adopción de Fira Sans Condensed sustituye exclusivamente la familia tipográfica sin alterar arbitrariamente tamaños de fuente (`font-size`), alturas de línea (`line-height`), espaciados ni paddings de los componentes de Alina y Camargo PMS.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
