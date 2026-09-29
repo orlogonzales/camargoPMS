@@ -43,17 +43,24 @@ $menuItems = $menu ?? $menuEstatico ?? [];
                                 </a>
                             </li>
                         <?php elseif ($grupo['tipo'] === 'colapsable'): ?>
+                            <?php $grupoActivo = !empty($grupo['activo']); ?>
                             <li>
-                                <a aria-expanded="false" data-bs-toggle="collapse" href="#<?= e($grupo['id']) ?>">
+                                <a aria-expanded="<?= $grupoActivo ? 'true' : 'false' ?>"
+                                   data-bs-toggle="collapse"
+                                   href="#menu-sub-<?= e($grupo['clave']) ?>"
+                                   class="<?= $grupoActivo ? '' : 'collapsed' ?>">
                                     <?php if (!empty($grupo['icono'])): ?>
                                         <i class="<?= e($grupo['icono']) ?> me-2"></i>
                                     <?php endif; ?>
                                     <?= e($grupo['titulo']) ?>
                                 </a>
-                                <ul class="collapse" id="<?= e($grupo['id']) ?>">
+                                <ul class="collapse <?= $grupoActivo ? 'show' : '' ?>" id="menu-sub-<?= e($grupo['clave']) ?>">
                                     <?php foreach ($grupo['items'] as $subItem): ?>
                                         <li>
-                                            <a href="<?= e($subItem['url']) ?>">
+                                            <a href="<?= e($subItem['url']) ?>" class="<?= !empty($subItem['activo']) ? 'active' : '' ?>">
+                                                <?php if (!empty($subItem['icono'])): ?>
+                                                    <i class="<?= e($subItem['icono']) ?> me-2"></i>
+                                                <?php endif; ?>
                                                 <?= e($subItem['titulo']) ?>
                                             </a>
                                         </li>

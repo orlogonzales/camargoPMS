@@ -4,6 +4,27 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1A — Gobernanza + Menú Dinámico Real de 3 Niveles + Reorganización Funcional (D-093)
+
+- **Gobernanza del Sistema de Diseño Alina:**
+  - Consagración del principio superior: **ALINA ES EL SISTEMA DE DISEÑO DE CAMARGO PMS**. Bootstrap 5 actúa como infraestructura interna, no como catálogo visual alternativo.
+  - Prohibición transversal vinculante del estilo `border-style: dotted/dashed` en cualquier componente propio.
+  - Documentación del catálogo canónico de 23 componentes de referencia en `FRONTEND.md` y `PLANTILLA-ALINA.md`.
+- **Evolución a Menú Dinámico de Hasta 3 Niveles:**
+  - Soporte de 3 niveles reales en el motor de navegación: Nivel 1 (Dominio Principal), Nivel 2 (Módulo), Nivel 3 (Función/Submódulo).
+  - Profundidad máxima acotada estrictamente a 3 niveles: rechazo de nivel 4+ con `NivelMenuInvalidoExcepcion` en backend y controles en interfaz.
+  - Detección y rechazo de ciclos y autorreferencias ($A \to A$, $A \to B \to A$).
+  - Prevención de desbordamiento de profundidad en movimientos de subárboles.
+  - Renderizado nativo Alina en `menu-secundario.php` con clases `another-level` y colapso ordenado `data-bs-toggle="collapse"`.
+  - Propagación de estado activo (active state) en cascada desde la función de nivel 3 hasta el dominio de nivel 1.
+  - Ordenamiento independiente y transaccional entre hermanos bajo el mismo padre.
+  - Acciones contextuales acotadas: Nivel 1 agrega hijo Nivel 2; Nivel 2 agrega hijo Nivel 3; Nivel 3 no permite agregar hijos.
+- **Reorganización Funcional de la Navegación en 9 Dominios:**
+  - Descongestión del catálogo histórico de *Reservas*, distribuyendo las 27+ opciones en 9 dominios operativos: `INICIO`, `CONFIGURACIÓN`, `PROPIEDADES`, `COMERCIAL Y RESERVAS`, `OPERACIONES`, `CAJA Y FINANZAS`, `ABASTECIMIENTO`, `DOCUMENTOS` y `ATENCIÓN AL CLIENTE`.
+  - Separación formal de responsabilidades: $\text{COMPRA} \neq \text{PAGO} \neq \text{MOVIMIENTO DE CAJA}$.
+  - Preservación 100% de rutas URL, controladores, intermediarios y contratos de dominio existentes sin rotura de bookmarks.
+  - Modelo autorreferenciado de `opciones_menu` sin alteraciones DDL; 118 tablas mantenidas y ranura 033 estrictamente libre.
+
 ### Microfase RECLAMACIONES-1A — Throttling Progresivo No Impeditivo en Canal Público (D-092)
 
 - **Defensa Progresiva No Impeditiva (`ANTIABUSO ≠ DENEGACIÓN DEL DERECHO A RECLAMAR`):**

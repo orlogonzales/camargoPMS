@@ -120,17 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
             true
         );
 
-        // Validador de categoría padre: obligatorio si el modo es secundaria
+        // Validador de categoría padre: obligatorio si el modo es módulo o submódulo
         validadorPristine.addValidator(
             selectPadre,
             function(valor) {
-                const esModoSecundaria = formOpcion.dataset.modo === 'secundaria';
-                if (esModoSecundaria && (!valor || valor.trim() === '')) {
+                const esModoHijo = formOpcion.dataset.modo === 'modulo' || formOpcion.dataset.modo === 'submodulo' || formOpcion.dataset.modo === 'secundaria';
+                if (esModoHijo && (!valor || valor.trim() === '')) {
                     return false;
                 }
                 return true;
             },
-            'Debe seleccionar una categoría principal para asignar esta opción secundaria.',
+            'Debe seleccionar un dominio o módulo padre.',
             10,
             false
         );
@@ -149,12 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
             false
         );
 
-        // Validador de ruta: inocua, sin esquemas externos ni scripts (solo aplicable a secundarias)
+        // Validador de ruta: inocua, sin esquemas externos ni scripts (solo aplicable a módulos y submódulos)
         validadorPristine.addValidator(
             inputRuta,
             function(valor) {
-                const esSecundaria = selectPadre.value !== '' || formOpcion.dataset.modo === 'secundaria';
-                if (!esSecundaria) {
+                const esPrincipal = selectPadre.value === '' && formOpcion.dataset.modo === 'principal';
+                if (esPrincipal) {
                     return true;
                 }
                 if (!valor || valor.trim() === '') {
@@ -187,11 +187,19 @@ document.addEventListener('DOMContentLoaded', () => {
      * Ajusta la visibilidad y requerimiento del campo ruta según el nivel seleccionado.
      */
     function sincronizarVisibilidadRuta() {
-        const esSecundaria = selectPadre.value !== '';
+        const tienePadre = selectPadre.value !== '';
         if (contenedorRuta) {
-            contenedorRuta.style.display = esSecundaria ? 'block' : 'none';
+            contenedorRuta.style.display = tienePadre ? 'block' : 'none';
         }
-        formOpcion.dataset.modo = esSecundaria ? 'secundaria' : 'principal';
+
+        if (tienePadre) {
+            const opcionSel = selectPadre.options[selectPadre.selectedIndex];
+            const nivelPadre = opcionSel && opcionSel.dataset.nivelPadre ? parseInt(opcionSel.dataset.nivelPadre, 10) : 1;
+            formOpcion.dataset.modo = (nivelPadre === 2) ? 'submodulo' : 'modulo';
+        } else {
+            formOpcion.dataset.modo = 'principal';
+        }
+
         if (validadorPristine) {
             validadorPristine.reset();
         }
@@ -213,26 +221,32 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Abre el modal en modo creación.
      *
-     * @param {number|string|null} [padreIdPredeterminado]
+     * @param {number|string|null} [padreIdPredeterminado] ID del elemento padre si se anida.
+     * @param {number|null} [nivelSugerido] Nivel que se creará (1, 2 o 3).
      */
-    window.abrirModalCrearOpcion = function(padreIdPredeterminado = null) {
+    window.abrirModalCrearOpcion = function(padreIdPredeterminado = null, nivelSugerido = null) {
         formOpcion.reset();
         inputId.value = '';
         inputClave.readOnly = false;
         selectPadre.disabled = false;
 
         if (padreIdPredeterminado !== null && padreIdPredeterminado !== undefined) {
-            formOpcion.dataset.modo = 'secundaria';
             selectPadre.value = String(padreIdPredeterminado);
-            modalTitulo.textContent = 'Nueva Opción Secundaria';
+            if (nivelSugerido === 3) {
+                formOpcion.dataset.modo = 'submodulo';
+                modalTitulo.textContent = 'Nuevo Submódulo (Nivel 3)';
+            } else {
+                formOpcion.dataset.modo = 'modulo';
+                modalTitulo.textContent = 'Nuevo Módulo (Nivel 2)';
+            }
         } else if (padreIdPredeterminado === undefined) {
-            formOpcion.dataset.modo = 'secundaria';
+            formOpcion.dataset.modo = 'modulo';
             selectPadre.value = '';
-            modalTitulo.textContent = 'Nueva Opción Secundaria';
+            modalTitulo.textContent = 'Nueva Opción de Menú';
         } else {
             formOpcion.dataset.modo = 'principal';
             selectPadre.value = '';
-            modalTitulo.textContent = 'Nueva Categoría Principal';
+            modalTitulo.textContent = 'Nuevo Dominio Principal (Nivel 1)';
         }
 
         if (selectPadre) selectPadre.dispatchEvent(new Event('change'));
@@ -259,8 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.abrirModalEditarOpcion = function(datos) {
         formOpcion.reset();
         inputId.value = datos.id || '';
-        const esSecundaria = Boolean(datos.padre_id);
-        formOpcion.dataset.modo = esSecundaria ? 'secundaria' : 'principal';
         selectPadre.value = datos.padre_id ? String(datos.padre_id) : '';
         inputClave.value = datos.clave || '';
         inputNombre.value = datos.nombre || '';
@@ -285,7 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         sincronizarVisibilidadRuta();
-        modalTitulo.textContent = `Editar: ${datos.nombre}`;
+        const nivel = datos.nivel || (datos.padre_id ? 2 : 1);
+        modalTitulo.textContent = `Editar: ${datos.nombre} (Nivel ${nivel})`;
 
         if (modalBootstrap) {
             modalBootstrap.show();

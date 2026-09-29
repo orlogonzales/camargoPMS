@@ -97,7 +97,7 @@ class MenuServicio
                 }
             }
 
-            $hijosVisibles = [];
+            $modulosVisibles = [];
             $algunHijoActivo = false;
 
             foreach ($principal->obtenerHijos() as $hijo) {
@@ -105,7 +105,7 @@ class MenuServicio
                     continue;
                 }
 
-                // Evaluar permiso RBAC de la opción secundaria
+                // Evaluar permiso RBAC de la opción secundaria (Nivel 2)
                 if ($hijo->obtenerPermisoId() !== null) {
                     $permisoHijo = $hijo->obtenerPermiso();
                     if ($permisoHijo !== null) {
@@ -123,25 +123,95 @@ class MenuServicio
                 $rutaHijoNorm = $rutaHijo !== null ? $this->normalizarRutaParaComparacion($rutaHijo) : '';
                 $esOpcionActiva = ($rutaHijoNorm !== '' && $rutaHijoNorm === $rutaNormalizada);
 
-                if ($esOpcionActiva) {
-                    $algunHijoActivo = true;
-                    $categoriaCoincidente = $principal->obtenerClave();
-                }
+                // Evaluar hijos de Nivel 3 si existen
+                $subHijos = $hijo->obtenerHijos();
+                if (!empty($subHijos)) {
+                    $subHijosVisibles = [];
+                    $algunSubHijoActivo = false;
 
-                $hijosVisibles[] = [
-                    'id' => $hijo->obtenerId(),
-                    'clave' => $hijo->obtenerClave(),
-                    'tipo' => 'simple',
-                    'titulo' => $hijo->obtenerNombre(),
-                    'url' => $rutaHijo !== null ? url_ruta($rutaHijo) : '#',
-                    'ruta' => $rutaHijo,
-                    'icono' => $hijo->obtenerIcono() ?? 'fa-solid fa-circle-dot',
-                    'activo' => $esOpcionActiva,
-                ];
+                    foreach ($subHijos as $sub) {
+                        if (!$sub->esActivo()) {
+                            continue;
+                        }
+
+                        // Evaluar permiso RBAC de la función de tercer nivel
+                        if ($sub->obtenerPermisoId() !== null) {
+                            $permisoSub = $sub->obtenerPermiso();
+                            if ($permisoSub !== null) {
+                                if (!$permisoSub->esActivo()) {
+                                    continue;
+                                }
+                                $tienePermisoSub = $esSuperadmin || $this->autorizacionServicio->puede($usuarioId, $permisoSub->obtenerCodigo());
+                                if (!$tienePermisoSub) {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        $rutaSub = $sub->obtenerRuta();
+                        $rutaSubNorm = $rutaSub !== null ? $this->normalizarRutaParaComparacion($rutaSub) : '';
+                        $esSubActiva = ($rutaSubNorm !== '' && $rutaSubNorm === $rutaNormalizada);
+
+                        if ($esSubActiva) {
+                            $algunSubHijoActivo = true;
+                            $algunHijoActivo = true;
+                            $categoriaCoincidente = $principal->obtenerClave();
+                        }
+
+                        $subHijosVisibles[] = [
+                            'id' => $sub->obtenerId(),
+                            'clave' => $sub->obtenerClave(),
+                            'tipo' => 'simple',
+                            'titulo' => $sub->obtenerNombre(),
+                            'url' => $rutaSub !== null ? url_ruta($rutaSub) : '#',
+                            'ruta' => $rutaSub,
+                            'icono' => $sub->obtenerIcono() ?? 'fa-solid fa-circle-dot',
+                            'activo' => $esSubActiva,
+                        ];
+                    }
+
+                    // Si tiene subhijos pero ninguno es visible para el usuario, descartar el módulo colapsable
+                    if (empty($subHijosVisibles)) {
+                        continue;
+                    }
+
+                    if ($esOpcionActiva || $algunSubHijoActivo) {
+                        $algunHijoActivo = true;
+                        $categoriaCoincidente = $principal->obtenerClave();
+                    }
+
+                    $modulosVisibles[] = [
+                        'id' => $hijo->obtenerId(),
+                        'clave' => $hijo->obtenerClave(),
+                        'tipo' => 'colapsable',
+                        'titulo' => $hijo->obtenerNombre(),
+                        'url' => $rutaHijo !== null ? url_ruta($rutaHijo) : '#',
+                        'ruta' => $rutaHijo,
+                        'icono' => $hijo->obtenerIcono() ?? 'fa-solid fa-folder',
+                        'activo' => $esOpcionActiva || $algunSubHijoActivo,
+                        'items' => $subHijosVisibles,
+                    ];
+                } else {
+                    if ($esOpcionActiva) {
+                        $algunHijoActivo = true;
+                        $categoriaCoincidente = $principal->obtenerClave();
+                    }
+
+                    $modulosVisibles[] = [
+                        'id' => $hijo->obtenerId(),
+                        'clave' => $hijo->obtenerClave(),
+                        'tipo' => 'simple',
+                        'titulo' => $hijo->obtenerNombre(),
+                        'url' => $rutaHijo !== null ? url_ruta($rutaHijo) : '#',
+                        'ruta' => $rutaHijo,
+                        'icono' => $hijo->obtenerIcono() ?? 'fa-solid fa-circle-dot',
+                        'activo' => $esOpcionActiva,
+                    ];
+                }
             }
 
             // Regla de Visibilidad: Un principal DEBE tener al menos una opción secundaria visible
-            if (empty($hijosVisibles)) {
+            if (empty($modulosVisibles)) {
                 continue;
             }
 
@@ -152,7 +222,7 @@ class MenuServicio
                 'etiqueta' => $principal->obtenerNombre(),
                 'icono' => $principal->obtenerIcono() ?? 'fa-solid fa-folder',
                 'activo' => $algunHijoActivo,
-                'grupos' => $hijosVisibles,
+                'grupos' => $modulosVisibles,
             ];
         }
 
@@ -608,19 +678,27 @@ class MenuServicio
     }
 
     /**
-     * Valida la jerarquía estricta de dos niveles impuesta por la arquitectura Alina.
+     * Valida la jerarquía estricta de hasta tres niveles (Dominio, Módulo, Función/Submódulo),
+     * previniendo autorreferencias, ciclos directos e indirectos, y desbordamiento de profundidad.
      *
      * @param int|null $padreId
      * @param int|null $opcionId
      */
-    private function validarJerarquia(?int $padreId, ?int $opcionId): void
+    public function validarJerarquia(?int $padreId, ?int $opcionId = null): void
     {
         if ($padreId === null) {
-            // Es Nivel 1 (Categoría Principal).
+            // Es Nivel 1 (Dominio Principal).
+            // Si la opción que se está editando tiene descendientes, verificar que su subárbol no exceda 2 niveles de altura
+            if ($opcionId !== null) {
+                $profundidadSubarbol = $this->opcionRepo->calcularProfundidadSubarbol($opcionId);
+                if (1 + $profundidadSubarbol > 3) {
+                    throw new NivelMenuInvalidoExcepcion('La reorganización excede el límite máximo de tres niveles permitidos.');
+                }
+            }
             return;
         }
 
-        // 1. Prohibir autorreferencia
+        // 1. Prohibir autorreferencia directa
         if ($opcionId !== null && $padreId === $opcionId) {
             throw new NivelMenuInvalidoExcepcion('Una opción de menú no puede asignarse a sí misma como categoría padre.');
         }
@@ -631,14 +709,31 @@ class MenuServicio
             throw new OpcionMenuNoEncontradaExcepcion("La categoría padre con ID {$padreId} no existe.");
         }
 
-        // 3. Jerarquía de 2 niveles: El padre DEBE ser de Nivel 1 (padre_id = null)
-        if ($padre->obtenerPadreId() !== null) {
-            throw new NivelMenuInvalidoExcepcion('No se permite anidar una opción bajo otra opción secundaria. Camargo PMS maneja un máximo estricto de dos niveles.');
+        // 3. Prohibir ciclos indirectos (A -> B -> A)
+        if ($opcionId !== null && $this->opcionRepo->detectarCiclo($opcionId, $padreId)) {
+            throw new NivelMenuInvalidoExcepcion('Se detectó una referencia circular o ciclo indirecto en la jerarquía del menú.');
         }
 
-        // 4. Si la opción que se está editando ya tiene hijos, no puede convertirse en secundaria
-        if ($opcionId !== null && $this->opcionRepo->contarHijos($opcionId) > 0) {
-            throw new NivelMenuInvalidoExcepcion('Una categoría que ya contiene opciones secundarias no puede convertirse en secundaria.');
+        // 4. Calcular nivel del padre en el árbol
+        $nivelPadre = $this->opcionRepo->calcularNivel($padreId);
+
+        // Si el padre ya es de Nivel 3 (o superior), el hijo sería Nivel 4 (RECHAZADO)
+        if ($nivelPadre >= 3) {
+            throw new NivelMenuInvalidoExcepcion('No se permite anidar una opción más allá del tercer nivel. Camargo PMS maneja un máximo estricto de tres niveles (Dominio, Módulo, Función/Submódulo).');
+        }
+
+        if ($nivelPadre < 1) {
+            throw new NivelMenuInvalidoExcepcion('La categoría padre especificada no tiene un nivel jerárquico válido.');
+        }
+
+        // 5. Si la opción que se está editando ya tiene descendientes, verificar que al moverla no empuje
+        //    a sus descendientes a nivel 4 o superior (nivelPadre + 1 + profundidadSubarbol <= 3).
+        if ($opcionId !== null) {
+            $profundidadSubarbol = $this->opcionRepo->calcularProfundidadSubarbol($opcionId);
+            $nuevoNivelOpcion = $nivelPadre + 1;
+            if ($nuevoNivelOpcion + $profundidadSubarbol > 3) {
+                throw new NivelMenuInvalidoExcepcion('Mover esta opción generaría descendientes en nivel 4 o superior, violando el límite máximo de tres niveles.');
+            }
         }
     }
 

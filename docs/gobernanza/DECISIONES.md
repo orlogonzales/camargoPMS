@@ -1435,6 +1435,42 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - El shortcode WordPress está concebido para desplegarse en los sitios web propios administrados en WordPress de los establecimientos conectados a Camargo PMS.
    - No se promete ni asume inserción dentro de la interfaz de Airbnb u otras plataformas externas de terceros fuera de control. Toda eventual integración con plataformas externas se evaluará exclusivamente conforme a las APIs oficiales que dichas plataformas permitan en su fase respectiva.
 
+### D-093 — Sistema de Diseño Alina Oficial, Menú Dinámico Real de Hasta 3 Niveles y Reorganización de Dominios de Navegación (UI-ALINA-1A)
+
+1. **Principio Superior de Diseño:**
+   - **ALINA ES EL SISTEMA DE DISEÑO DE CAMARGO PMS.** Bootstrap 5 actúa como infraestructura interna de Alina, no como catálogo visual alternativo.
+   - Si la plantilla Alina dispone de un componente o estilo equivalente, se utiliza obligatoriamente el componente nativo de Alina extraído de su catálogo oficial.
+   - El directorio `admin-dashboard/alina/template/` permanece de solo lectura, inmutable y como referencia canónica para todas las fases de UI.
+   - Queda terminantemente prohibido el uso de `border-style: dotted` o `border-style: dashed` en cualquier componente visual propio de Camargo PMS.
+2. **Capacidad de Navegación Dinámica de Hasta 3 Niveles:**
+   - Se evoluciona formalmente el sistema de navegación para soportar una jerarquía real de hasta tres niveles:
+     - **Nivel 1 — Dominio Principal:** Cabecera/barra vertical (`.navbar-menu-list` con `data-target="clave"`).
+     - **Nivel 2 — Módulo:** Panel lateral (`.main-side-menu` $\to$ `ul.main-menu#clave > li`). Enlace directo (`li.no-sub`) o grupo colapsable si posee hijos de tercer nivel.
+     - **Nivel 3 — Función / Submódulo:** Desplegable interno nativo de Alina mediante `<li class="another-level">` o `ul.collapse` anidado.
+   - **Profundidad Máxima:** Máximo estricto de 3 niveles. Queda prohibido el Nivel 4 o superior; cualquier intento de inserción o traslado que exceda la profundidad genera `NivelMenuInvalidoExcepcion` tanto en backend como validación de interfaz.
+   - **Reglas de Integridad y Anti-Ciclos:** Se rechaza la autorreferencia directa ($A \to A$), referencias circulares indirectas ($A \to B \to A$) y traslados de opciones con subárboles que empujen descendientes más allá del nivel 3.
+   - **Acciones Contextuales Acotadas:** El botón `+` en el constructor respeta la profundidad: Nivel 1 puede agregar hijo Nivel 2; Nivel 2 puede agregar hijo Nivel 3; Nivel 3 no muestra botón de agregar hijo y el backend rechaza la operación.
+   - **Ordenamiento Independiente:** Las acciones subir/bajar operan exclusivamente entre hermanos que comparten el mismo `padre_id`.
+3. **Reorganización Funcional en 9 Dominios:**
+   - Se erradica la saturación histórica de *Reservas*, distribuyendo las 27+ opciones en 9 dominios coherentes con el negocio:
+     1. `INICIO`: Panel General.
+     2. `CONFIGURACIÓN`: Configuración General, Gestión de Menú, Usuarios, Roles y Permisos, Sesiones Activas, Empresa / Emisor, Personal / RR.HH., Calendario de Feriados.
+     3. `PROPIEDADES`: Propiedades, Unidades, Disponibilidad.
+     4. `COMERCIAL Y RESERVAS`: Reservas, Clientes, Arrendamientos, Tape Chart / Rack.
+     5. `OPERACIONES`: Estadías / Check-in, Servicios y Consumos, Housekeeping / Pisos, Mantenimiento, Libro de Guardia.
+     6. `CAJA Y FINANZAS`: Caja y Cuentas, Recibos de Pago, Gastos y Egresos, Auditoría Nocturna.
+     7. `ABASTECIMIENTO`: Compras, Inventario, Suministros ($\text{COMPRA} \neq \text{PAGO} \neq \text{MOVIMIENTO DE CAJA}$).
+     8. `DOCUMENTOS`: Documentos (acceso real unificado; sin funciones ficticias).
+     9. `ATENCIÓN AL CLIENTE`: Libro de Reclamaciones.
+   - Las rutas URL, controladores, repositorios, tablas y contratos de dominio permanecen 100% inalterados (compatibilidad total con bookmarks y enlaces existentes).
+4. **Propagación Integral de Estado Activo (Active State):**
+   - La coincidencia de la ruta actual marca como activa la función de Nivel 3 (`.active`), expande el módulo de Nivel 2 (`.show` y `aria-expanded="true"`) y activa el icono del Dominio de Nivel 1 (`.active`).
+5. **Independencia Estricta de Autorización:**
+   - $\text{MENÚ} \neq \text{AUTORIZACIÓN}$. Ocultar una opción en el menú dinámico no autoriza el acceso a la ruta. Toda petición HTTP es validada de forma soberana e ineludible por los intermediarios de autorización RBAC en el backend.
+6. **Evolución Controlada de Base de Datos:**
+   - La tabla `opciones_menu` dispone de un esquema autorreferenciado con clave ajena `padre_id` que soporta la jerarquía sin modificaciones DDL.
+   - No se crea migración 033. El esquema consolidado permanece en exactamente **118 tablas**. La ranura `033_*` se mantiene estrictamente libre y disponible.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

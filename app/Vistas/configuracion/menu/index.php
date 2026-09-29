@@ -25,15 +25,15 @@ $permisos = $datosGestion['permisos'] ?? [];
                     <div>
                         <h4 class="card-title mb-0 f-s-18 f-w-700">Gestión de Menú y Navegación Dinámica</h4>
                         <p class="text-secondary f-s-13 mb-0">
-                            Jerarquía de 2 niveles (Alina) y visibilidad gobernada por permisos RBAC. Principio: <strong>MENÚ ≠ AUTORIZACIÓN</strong>.
+                            Jerarquía de hasta 3 niveles (Dominio → Módulo → Submódulo) conforme al sistema de diseño Alina y visibilidad gobernada por permisos RBAC. Principio: <strong>MENÚ ≠ AUTORIZACIÓN</strong>.
                         </p>
                     </div>
                 </div>
                 <div class="mt-2 mt-md-0 d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="abrirModalCrearOpcion(null)">
-                        <i class="fa-solid fa-folder-plus me-1"></i> Nueva Categoría
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="abrirModalCrearOpcion(null, 1)">
+                        <i class="fa-solid fa-folder-plus me-1"></i> Nuevo Dominio (Nivel 1)
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalCrearOpcion()">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalCrearOpcion(undefined, 2)">
                         <i class="fa-solid fa-plus me-1"></i> Nueva Opción
                     </button>
                 </div>
@@ -62,18 +62,20 @@ $permisos = $datosGestion['permisos'] ?? [];
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($principales as $principal): ?>
-                                    <!-- Fila Nivel 1: Categoría Principal -->
+                                    <!-- Fila Nivel 1: Dominio Principal -->
                                     <tr class="table-light border-top border-2 border-primary-subtle"
                                         data-item-id="<?= (int) $principal['id'] ?>"
-                                        data-item-padre="null">
+                                        data-item-padre="null"
+                                        data-item-nivel="1">
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <span class="bg-secondary-subtle text-dark p-1 b-r-6 me-2 d-flex-center">
+                                                <span class="bg-primary-subtle text-primary p-1 b-r-6 me-2 d-flex-center">
                                                     <i class="<?= e($principal['icono'] ?? 'fa-solid fa-folder') ?> f-s-16"></i>
                                                 </span>
                                                 <strong class="f-s-14 text-dark"><?= e($principal['nombre']) ?></strong>
+                                                <?= insignia_chip('Nivel 1', 'primary', null, 'ms-2 f-s-10') ?>
                                                 <?php if (!empty($principal['es_sistema'])): ?>
-                                                    <?= insignia_chip('Sistema', 'info', null, 'ms-2 f-s-10') ?>
+                                                    <?= insignia_chip('Sistema', 'info', null, 'ms-1 f-s-10') ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -104,11 +106,11 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                         onclick="moverOrdenOpcion(<?= (int) $principal['id'] ?>, null, 'abajo')">
                                                     <i class="fa-solid fa-chevron-down"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-success" title="Agregar opción secundaria"
-                                                        onclick="abrirModalCrearOpcion(<?= (int) $principal['id'] ?>)">
+                                                <button type="button" class="btn btn-outline-success" title="Agregar módulo (Nivel 2)"
+                                                        onclick="abrirModalCrearOpcion(<?= (int) $principal['id'] ?>, 2)">
                                                     <i class="fa-solid fa-plus"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-primary" title="Editar categoría"
+                                                <button type="button" class="btn btn-outline-primary" title="Editar dominio"
                                                         onclick='abrirModalEditarOpcion(<?= json_encode($principal, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>
                                                     <i class="fa-solid fa-pencil"></i>
                                                 </button>
@@ -126,18 +128,20 @@ $permisos = $datosGestion['permisos'] ?? [];
                                         </td>
                                     </tr>
 
-                                    <!-- Filas Nivel 2: Opciones Secundarias -->
+                                    <!-- Filas Nivel 2: Módulos -->
                                     <?php if (!empty($principal['hijos'])): ?>
                                         <?php foreach ($principal['hijos'] as $hijo): ?>
                                             <tr data-item-id="<?= (int) $hijo['id'] ?>"
-                                                data-item-padre="<?= (int) $principal['id'] ?>">
+                                                data-item-padre="<?= (int) $principal['id'] ?>"
+                                                data-item-nivel="2">
                                                 <td class="ps-4">
                                                     <div class="d-flex align-items-center ps-3">
                                                         <span class="text-secondary me-2">└─</span>
                                                         <span class="text-muted me-2"><i class="<?= e($hijo['icono'] ?? 'fa-solid fa-circle-dot') ?> f-s-14"></i></span>
-                                                        <span class="f-s-13"><?= e($hijo['nombre']) ?></span>
+                                                        <span class="f-s-13 f-w-600"><?= e($hijo['nombre']) ?></span>
+                                                        <?= insignia_chip('Nivel 2', 'secondary', null, 'ms-2 f-s-10') ?>
                                                         <?php if (!empty($hijo['es_sistema'])): ?>
-                                                            <?= insignia_chip('Sistema', 'info', null, 'ms-2 f-s-10') ?>
+                                                            <?= insignia_chip('Sistema', 'info', null, 'ms-1 f-s-10') ?>
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
@@ -168,7 +172,11 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                                 onclick="moverOrdenOpcion(<?= (int) $hijo['id'] ?>, <?= (int) $principal['id'] ?>, 'abajo')">
                                                             <i class="fa-solid fa-chevron-down"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-primary" title="Editar opción"
+                                                        <button type="button" class="btn btn-outline-success" title="Agregar submódulo (Nivel 3)"
+                                                                onclick="abrirModalCrearOpcion(<?= (int) $hijo['id'] ?>, 3)">
+                                                            <i class="fa-solid fa-plus"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-primary" title="Editar módulo"
                                                                 onclick='abrirModalEditarOpcion(<?= json_encode($hijo, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>
                                                             <i class="fa-solid fa-pencil"></i>
                                                         </button>
@@ -185,12 +193,77 @@ $permisos = $datosGestion['permisos'] ?? [];
                                                     </div>
                                                 </td>
                                             </tr>
+
+                                            <!-- Filas Nivel 3: Submódulos / Funciones -->
+                                            <?php if (!empty($hijo['hijos'])): ?>
+                                                <?php foreach ($hijo['hijos'] as $sub): ?>
+                                                    <tr data-item-id="<?= (int) $sub['id'] ?>"
+                                                        data-item-padre="<?= (int) $hijo['id'] ?>"
+                                                        data-item-nivel="3">
+                                                        <td class="ps-5">
+                                                            <div class="d-flex align-items-center ps-4">
+                                                                <span class="text-secondary me-2">└── └─</span>
+                                                                <span class="text-muted me-2"><i class="<?= e($sub['icono'] ?? 'fa-regular fa-circle') ?> f-s-12"></i></span>
+                                                                <span class="f-s-12 text-secondary"><?= e($sub['nombre']) ?></span>
+                                                                <?= insignia_chip('Nivel 3', 'info', null, 'ms-2 f-s-10') ?>
+                                                                <?php if (!empty($sub['es_sistema'])): ?>
+                                                                    <?= insignia_chip('Sistema', 'info', null, 'ms-1 f-s-10') ?>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </td>
+                                                        <td><code class="text-secondary f-s-11"><?= e($sub['clave']) ?></code></td>
+                                                        <td><code class="text-dark f-s-12"><?= e($sub['ruta'] ?? '#') ?></code></td>
+                                                        <td>
+                                                            <?php if (!empty($sub['permiso_codigo'])): ?>
+                                                                <span class="badge bg-light-secondary font-monospace f-s-11" title="<?= e($sub['permiso_nombre'] ?? '') ?>">
+                                                                    <i class="fa-solid fa-key f-s-10 me-1"></i><?= e($sub['permiso_codigo']) ?>
+                                                                </span>
+                                                            <?php else: ?>
+                                                                <span class="text-muted f-s-11">Público</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <?= insignia_badge((string) (int) $sub['orden'], 'secondary') ?>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <?= insignia_estado($sub['estado'], false, 'f-s-11') ?>
+                                                        </td>
+                                                        <td class="text-end text-nowrap">
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button type="button" class="btn btn-outline-secondary" title="Mover arriba"
+                                                                        onclick="moverOrdenOpcion(<?= (int) $sub['id'] ?>, <?= (int) $hijo['id'] ?>, 'arriba')">
+                                                                    <i class="fa-solid fa-chevron-up"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-secondary" title="Mover abajo"
+                                                                        onclick="moverOrdenOpcion(<?= (int) $sub['id'] ?>, <?= (int) $hijo['id'] ?>, 'abajo')">
+                                                                    <i class="fa-solid fa-chevron-down"></i>
+                                                                </button>
+                                                                <!-- Nivel 3 NO permite agregar hijos (máximo 3 niveles) -->
+                                                                <button type="button" class="btn btn-outline-primary" title="Editar submódulo"
+                                                                        onclick='abrirModalEditarOpcion(<?= json_encode($sub, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)'>
+                                                                    <i class="fa-solid fa-pencil"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-warning" title="Alternar Estado"
+                                                                        onclick="alternarEstadoOpcion(<?= (int) $sub['id'] ?>, '<?= e($sub['nombre']) ?>', '<?= e($sub['estado']) ?>')">
+                                                                    <i class="fa-solid fa-power-off"></i>
+                                                                </button>
+                                                                <?php if (empty($sub['es_sistema'])): ?>
+                                                                    <button type="button" class="btn btn-outline-danger" title="Eliminar"
+                                                                            onclick="eliminarOpcionMenu(<?= (int) $sub['id'] ?>, '<?= e($sub['nombre']) ?>')">
+                                                                        <i class="fa-solid fa-trash"></i>
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
                                             <td colspan="7" class="ps-5 text-muted f-s-12 py-2">
                                                 <i class="fa-solid fa-circle-info me-1 text-warning"></i>
-                                                Esta categoría no tiene opciones secundarias asignadas. No se mostrará en la navegación hasta que tenga al menos una opción secundaria visible.
+                                                Este dominio no tiene módulos asignados. No se mostrará en la barra superior hasta que tenga al menos un módulo visible.
                                             </td>
                                         </tr>
                                     <?php endif; ?>
@@ -219,20 +292,31 @@ $permisos = $datosGestion['permisos'] ?? [];
                 <div class="modal-body p-4">
                     <!-- Nivel / Categoría Padre -->
                     <div class="mb-3">
-                        <label for="opcion-padre-id" class="form-label f-s-13 f-w-600">Nivel de Menú</label>
+                        <label for="opcion-padre-id" class="form-label f-s-13 f-w-600">Nivel y Dependencia Jerárquica</label>
                         <select class="form-select basic-select2" id="opcion-padre-id" name="padre_id"
-                                data-placeholder="Categoría Principal (Nivel 1 — Icono Superior)">
-                            <option value="">Categoría Principal (Nivel 1 — Icono Superior)</option>
-                            <optgroup label="Asignar como Opción Secundaria (Nivel 2) bajo:">
+                                data-placeholder="Dominio Principal (Nivel 1 — Icono Superior)">
+                            <option value="">Dominio Principal (Nivel 1 — Icono Superior)</option>
+                            <optgroup label="Como Módulo (Nivel 2) bajo Dominio (Nivel 1):">
                                 <?php foreach ($principales as $p): ?>
-                                    <option value="<?= (int) $p['id'] ?>">
+                                    <option value="<?= (int) $p['id'] ?>" data-nivel-padre="1">
                                         <?= e($p['nombre']) ?> (<?= e($p['clave']) ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </optgroup>
+                            <optgroup label="Como Submódulo (Nivel 3) bajo Módulo (Nivel 2):">
+                                <?php foreach ($principales as $p): ?>
+                                    <?php if (!empty($p['hijos'])): ?>
+                                        <?php foreach ($p['hijos'] as $h): ?>
+                                            <option value="<?= (int) $h['id'] ?>" data-nivel-padre="2">
+                                                <?= e($p['nombre']) ?> → <?= e($h['nombre']) ?> (<?= e($h['clave']) ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </optgroup>
                         </select>
                         <div class="form-text f-s-11">
-                            Camargo PMS maneja un máximo estricto de dos niveles conforme al contrato de navegación Alina.
+                            Camargo PMS soporta hasta 3 niveles estrictos (Dominio → Módulo → Submódulo) conforme al sistema de diseño Alina. Las opciones de Nivel 3 no admiten subopciones.
                         </div>
                     </div>
 

@@ -1,17 +1,35 @@
 # Plantilla Alina
 
-## Fuente oficial y referencias visuales
+## Principio Superior
 
-Los archivos bajo `admin-dashboard/` son referencias originales e inmutables: no deben editarse, trasladarse ni convertirse directamente en archivos productivos.
+> **ALINA ES EL SISTEMA DE DISEÑO DE CAMARGO PMS.** Bootstrap 5 es infraestructura interna de Alina, no el catálogo visual del proyecto. Si Alina dispone de un componente equivalente, debe utilizarse obligatoriamente el componente/estilo de Alina.
+
+Los archivos bajo `admin-dashboard/alina/template/` son referencias originales e inmutables: no deben editarse, trasladarse ni convertirse directamente en archivos productivos.
+
+Queda terminantemente prohibido el uso de `border-style: dotted` o `border-style: dashed` en los componentes propios de Camargo PMS.
+
+## Fuente oficial y referencias visuales
 
 | Recurso Alina | Archivo Original | Uso en Camargo PMS |
 |---|---|---|
-| Layout general | `admin-dashboard/alina/template/blank.html` | Estructura principal autenticada |
+| Layout general | `admin-dashboard/alina/template/blank.html` | Estructura principal autenticada (`.app-wrapper`, navegación) |
+| Navegación 3 niveles | `admin-dashboard/alina/template/accordions.html` | Patrón nativo `.another-level` y `.collapse` para nivel 3 |
 | Login / Acceso | `admin-dashboard/alina/template/sign_in.html` | Referencia visual de autenticación |
 | Dashboard / Home | `admin-dashboard/alina/template/index.html` | Referencia visual de dashboard |
 | Font Awesome | `admin-dashboard/alina/template/fontawesome.html` | Catálogo de referencia de iconos Font Awesome 6 |
-| Date Picker | `admin-dashboard/alina/template/date_picker.html` | Referencia de Date Picker y Range Picker Flatpickr |
+| Date Picker / Range | `admin-dashboard/alina/template/date_picker.html` | Referencia de Date Picker y Range Picker Flatpickr |
+| Select2 | `admin-dashboard/alina/template/select2.html` | Select2 alineado a 42px, borde redondeado y chevron FA6 |
+| Formularios e Iconos | `admin-dashboard/alina/template/form_elements.html` | Formularios verticales con `.icon-control`, switches y radios |
+| Subida de archivos | `admin-dashboard/alina/template/file_upload.html` | Controles de carga de documentos |
+| Wizards | `admin-dashboard/alina/template/form_wizard.html` | Flujos de varios pasos guiados |
+| Modales | `admin-dashboard/alina/template/modal.html` | Diálogos modales centrados con cabecera `bg-light` |
+| SweetAlert2 | `admin-dashboard/alina/template/sweetalert2.html` | Diálogos de confirmación interactivos |
+| Botones | `admin-dashboard/alina/template/button.html` | Botones sólidos Alina |
+| Acordeones | `admin-dashboard/alina/template/accordions.html` | Bloques colapsables con chevron |
 | Badges y Chips | `admin-dashboard/alina/template/badges.html` | Referencia oficial de Variants of badge y Variants of chip (D-071) |
+| Tablas | `admin-dashboard/alina/template/table.html` | Tablas Bordered + Striped + Hoverable |
+| Perfil de usuario | `admin-dashboard/alina/template/profile.html` | Ficha de usuario y avatar (`PERSONA ≠ USUARIO`) |
+| Theme Customizer | `admin-dashboard/alina/template/blank.html` | Flotante lateral con Configuración y Soporte `#` |
 | Error HTTP 400 | `admin-dashboard/alina/template/error_400.html` | Bad Request |
 | Error HTTP 403 | `admin-dashboard/alina/template/error_403.html` | Forbidden / Acceso denegado |
 | Error HTTP 404 | `admin-dashboard/alina/template/error_404.html` | Not Found / Recurso no encontrado |

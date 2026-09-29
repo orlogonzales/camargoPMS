@@ -41,7 +41,7 @@ class OpcionMenuRepositorio
      * @param bool $cargarPermiso
      * @return OpcionMenu|null
      */
-    public function buscarPorId(int $id, bool $cargarPermiso = false): ?OpcionMenu
+    public function buscarPorId(int $id, bool $cargarPermiso = false, bool $cargarPadre = true): ?OpcionMenu
     {
         $sql = 'SELECT * FROM opciones_menu WHERE id = :id LIMIT 1';
         $stmt = $this->pdo->prepare($sql);
@@ -59,6 +59,13 @@ class OpcionMenuRepositorio
             $opcion->asignarPermiso($permiso);
         }
 
+        if ($cargarPadre && $opcion->obtenerPadreId() !== null) {
+            $padre = $this->buscarPorId($opcion->obtenerPadreId(), false, true);
+            if ($padre !== null) {
+                $opcion->asignarPadre($padre);
+            }
+        }
+
         return $opcion;
     }
 
@@ -69,7 +76,7 @@ class OpcionMenuRepositorio
      * @param bool $cargarPermiso
      * @return OpcionMenu|null
      */
-    public function buscarPorClave(string $clave, bool $cargarPermiso = false): ?OpcionMenu
+    public function buscarPorClave(string $clave, bool $cargarPermiso = false, bool $cargarPadre = true): ?OpcionMenu
     {
         $sql = 'SELECT * FROM opciones_menu WHERE clave = :clave LIMIT 1';
         $stmt = $this->pdo->prepare($sql);
@@ -85,6 +92,13 @@ class OpcionMenuRepositorio
         if ($cargarPermiso && $opcion->obtenerPermisoId() !== null) {
             $permiso = $this->permisoRepo->buscarPorId($opcion->obtenerPermisoId());
             $opcion->asignarPermiso($permiso);
+        }
+
+        if ($cargarPadre && $opcion->obtenerPadreId() !== null) {
+            $padre = $this->buscarPorId($opcion->obtenerPadreId(), false, true);
+            if ($padre !== null) {
+                $opcion->asignarPadre($padre);
+            }
         }
 
         return $opcion;
@@ -181,7 +195,7 @@ class OpcionMenuRepositorio
     }
 
     /**
-     * Obtiene el árbol completo de 2 niveles (principales con sus opciones hijas asignadas).
+     * Obtiene el árbol completo de hasta 3 niveles (Dominio, Módulo, Función/Submódulo).
      *
      * @param bool $soloActivos
      * @param bool $cargarPermisos
@@ -189,8 +203,6 @@ class OpcionMenuRepositorio
      */
     public function obtenerArbolCompleto(bool $soloActivos = false, bool $cargarPermisos = true): array
     {
-        $principales = $this->obtenerPrincipales($soloActivos, $cargarPermisos);
-
         // Pre-cargar todos los permisos en memoria si se requiere para evitar queries N+1
         $mapaPermisos = [];
         if ($cargarPermisos) {
@@ -200,36 +212,148 @@ class OpcionMenuRepositorio
             }
         }
 
-        // Obtener todas las secundarias
-        $sqlSecundarias = 'SELECT * FROM opciones_menu WHERE padre_id IS NOT NULL';
+        // Consultar todas las opciones ordenadas
+        $sql = 'SELECT * FROM opciones_menu';
         if ($soloActivos) {
-            $sqlSecundarias .= " AND estado = 'ACTIVO'";
+            $sql .= " WHERE estado = 'ACTIVO'";
         }
-        $sqlSecundarias .= ' ORDER BY orden ASC, nombre ASC';
+        $sql .= ' ORDER BY orden ASC, nombre ASC';
 
-        $stmtSec = $this->pdo->query($sqlSecundarias);
-        $filasSec = $stmtSec->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query($sql);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        /** @var array<int, OpcionMenu> $todasPorId */
+        $todasPorId = [];
+        /** @var array<int|string, array<int, OpcionMenu>> $hijosPorPadre */
         $hijosPorPadre = [];
-        foreach ($filasSec as $fila) {
-            $hijo = OpcionMenu::hidratar($fila);
-            if ($cargarPermisos && $hijo->obtenerPermisoId() !== null && isset($mapaPermisos[$hijo->obtenerPermisoId()])) {
-                $hijo->asignarPermiso($mapaPermisos[$hijo->obtenerPermisoId()]);
+
+        foreach ($filas as $fila) {
+            $opcion = OpcionMenu::hidratar($fila);
+            if ($cargarPermisos && $opcion->obtenerPermisoId() !== null && isset($mapaPermisos[$opcion->obtenerPermisoId()])) {
+                $opcion->asignarPermiso($mapaPermisos[$opcion->obtenerPermisoId()]);
             }
-            $hijosPorPadre[$hijo->obtenerPadreId()][] = $hijo;
+            $opId = (int) $opcion->obtenerId();
+            $todasPorId[$opId] = $opcion;
+
+            $padreKey = $opcion->obtenerPadreId() ?? 'raiz';
+            $hijosPorPadre[$padreKey][] = $opcion;
         }
 
-        foreach ($principales as $principal) {
-            if ($cargarPermisos && $principal->obtenerPermisoId() !== null && isset($mapaPermisos[$principal->obtenerPermisoId()])) {
-                $principal->asignarPermiso($mapaPermisos[$principal->obtenerPermisoId()]);
+        // Asignar referencias padre-hijo bidireccionales y poblar árbol
+        foreach ($todasPorId as $opcion) {
+            $padreId = $opcion->obtenerPadreId();
+            if ($padreId !== null && isset($todasPorId[$padreId])) {
+                $opcion->asignarPadre($todasPorId[$padreId]);
             }
-            $pId = (int) $principal->obtenerId();
-            if (isset($hijosPorPadre[$pId])) {
-                $principal->asignarHijos($hijosPorPadre[$pId]);
+            $opId = (int) $opcion->obtenerId();
+            if (isset($hijosPorPadre[$opId])) {
+                $opcion->asignarHijos($hijosPorPadre[$opId]);
             }
         }
 
-        return $principales;
+        // Las raíces (Nivel 1 — Dominios) son las que tienen padre_id === null
+        return $hijosPorPadre['raiz'] ?? [];
+    }
+
+    /**
+     * Calcula el nivel jerárquico real de una opción en la base de datos (1, 2 o 3).
+     *
+     * @param int $id
+     * @return int 0 si no existe, 1 para raíz, 2 para módulo, 3 para función/submódulo.
+     */
+    public function calcularNivel(int $id): int
+    {
+        $nivel = 1;
+        $actualId = $id;
+        $limite = 10;
+
+        while ($limite-- > 0) {
+            $sql = 'SELECT padre_id FROM opciones_menu WHERE id = :id LIMIT 1';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':id', $actualId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$fila) {
+                return $actualId === $id ? 0 : $nivel;
+            }
+
+            if ($fila['padre_id'] === null) {
+                return $nivel;
+            }
+
+            $nivel++;
+            $actualId = (int) $fila['padre_id'];
+        }
+
+        return $nivel;
+    }
+
+    /**
+     * Calcula la altura del subárbol de descendientes de una opción (0 = hoja, 1 = tiene hijos, 2 = tiene nietos).
+     *
+     * @param int $id
+     * @return int
+     */
+    public function calcularProfundidadSubarbol(int $id): int
+    {
+        // Verificar si tiene hijos directos
+        $sqlHijos = 'SELECT id FROM opciones_menu WHERE padre_id = :id';
+        $stmtHijos = $this->pdo->prepare($sqlHijos);
+        $stmtHijos->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmtHijos->execute();
+        $hijosIds = $stmtHijos->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($hijosIds)) {
+            return 0; // Es una hoja
+        }
+
+        // Verificar si alguno de sus hijos tiene a su vez hijos (nietos)
+        $inParams = implode(',', array_fill(0, count($hijosIds), '?'));
+        $sqlNietos = "SELECT COUNT(*) FROM opciones_menu WHERE padre_id IN ({$inParams})";
+        $stmtNietos = $this->pdo->prepare($sqlNietos);
+        $stmtNietos->execute($hijosIds);
+        $totalNietos = (int) $stmtNietos->fetchColumn();
+
+        return $totalNietos > 0 ? 2 : 1;
+    }
+
+    /**
+     * Detecta si asignar nuevoPadreId como padre de opcionId crearía una referencia circular.
+     *
+     * @param int $opcionId
+     * @param int $nuevoPadreId
+     * @return bool True si se detecta ciclo, false si es seguro.
+     */
+    public function detectarCiclo(int $opcionId, int $nuevoPadreId): bool
+    {
+        if ($opcionId === $nuevoPadreId) {
+            return true;
+        }
+
+        $actualId = $nuevoPadreId;
+        $limite = 15;
+
+        while ($limite-- > 0) {
+            $sql = 'SELECT padre_id FROM opciones_menu WHERE id = :id LIMIT 1';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':id', $actualId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$fila || $fila['padre_id'] === null) {
+                return false;
+            }
+
+            $padreDelActual = (int) $fila['padre_id'];
+            if ($padreDelActual === $opcionId) {
+                return true; // Se detectó un ciclo (A -> ... -> B -> A)
+            }
+
+            $actualId = $padreDelActual;
+        }
+
+        return false;
     }
 
     /**

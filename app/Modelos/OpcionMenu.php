@@ -7,9 +7,10 @@ namespace CamargoPMS\Modelos;
 /**
  * Modelo de dominio puro que representa una opción en la jerarquía de navegación dinámica.
  *
- * Satisface el contrato de navegación Alina de 2 niveles:
- *   - Nivel 1: Categoría Principal (padreId = null) -> navbar-menu-list con [data-target="clave"]
- *   - Nivel 2: Opción Secundaria (padreId != null) -> main-side-menu con [id="clave"]
+ * Satisface el contrato de navegación Alina de hasta 3 niveles:
+ *   - Nivel 1: Dominio Principal (padreId = null) -> navbar-menu-list con [data-target="clave"]
+ *   - Nivel 2: Módulo (padreId = Nivel 1) -> main-side-menu con [id="clave"] (simple o colapsable)
+ *   - Nivel 3: Función / Submódulo (padreId = Nivel 2) -> desplegable nativo li.another-level / ul.collapse
  */
 class OpcionMenu
 {
@@ -142,6 +143,27 @@ class OpcionMenu
         return $this->padreId !== null;
     }
 
+    /**
+     * Calcula o deduce el nivel jerárquico dentro del árbol de 3 niveles (1, 2 o 3).
+     */
+    public function obtenerNivel(): int
+    {
+        if ($this->padreId === null) {
+            return 1;
+        }
+
+        if ($this->padre !== null) {
+            return $this->padre->obtenerPadreId() === null ? 2 : 3;
+        }
+
+        return 2;
+    }
+
+    public function tieneHijos(): bool
+    {
+        return !empty($this->hijos);
+    }
+
     public function obtenerCreadoEn(): ?string
     {
         return $this->creadoEn;
@@ -249,6 +271,8 @@ class OpcionMenu
             'permiso_id' => $this->permisoId,
             'es_sistema' => $this->esSistema,
             'es_principal' => $this->esPrincipal(),
+            'nivel' => $this->obtenerNivel(),
+            'tiene_hijos' => $this->tieneHijos(),
             'permiso_codigo' => $this->permiso ? $this->permiso->obtenerCodigo() : null,
             'permiso_nombre' => $this->permiso ? $this->permiso->obtenerNombre() : null,
             'creado_en' => $this->creadoEn,
