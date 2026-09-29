@@ -1507,6 +1507,18 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
      - Las credenciales técnicas (`APISPERU_TOKEN`) se gestionarán exclusivamente mediante variables de entorno en `.env`, jamás versionadas en Git ni expuestas en el código fuente.
      - El consumo se aislará en un servicio soberano de infraestructura/adaptador, desacoplado de las vistas y formularios, con degradación elegante si el servicio externo no responde o carece de saldo.
 
+### D-093-C2 — Paridad Semántica Integral del Dump Consolidado y Activación Defensiva de Tooltips Alina en Runtime (UI-ALINA-1A-C2)
+
+1. **Paridad Semántica Integral del Dump Consolidado (`SQL/camargo_pms.sql`):**
+   - El catálogo maestro de permisos en `SQL/camargo_pms.sql` incorpora formalmente las semillas canónicas de `personal.ver` y `personal.gestionar`, asignadas al rol `SUPERADMINISTRADOR`, asegurando que `config_personal` se resuelva de forma determinista sin omitir opciones de menú al restaurar una base de datos nueva desde el dump.
+   - Las definiciones de los permisos del módulo `documentos.*` se alinean a la migración histórica 021.
+   - La paridad semántica entre instalaciones limpias vía migraciones (`001 -> 033`) e importaciones desde el dump consolidado alcanza el 100% tanto en `opciones_menu` (39 = 39) como en `permisos` (137 = 137).
+
+2. **Inicialización Defensiva de Tooltips Alina / Bootstrap 5 en Runtime:**
+   - La activación visual interactiva de los tooltips en la barra de navegación vertical N1 se delega formalmente al ciclo de inicialización `iniciar()` de `public/assets/js/camargo-layout.js` mediante la función `inicializarTooltips()`.
+   - Se utiliza la API nativa de Bootstrap 5 (`bootstrap.Tooltip.getOrCreateInstance`), respetando el patrón canónico de Alina (`tooltips_popovers.js`), con prevención de instancias duplicadas, tolerancia ante ausencia de elementos y cero acoplamiento a librerías externas o llamadas a jQuery.
+   - Se preserva el atributo accesible `aria-label` y el rol semántico `role="tab"` en los hipervínculos para garantizar accesibilidad.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

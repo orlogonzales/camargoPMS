@@ -31,7 +31,9 @@ $menuItems = $menu ?? $menuEstatico ?? [];
                    data-target="<?= e($item['clave']) ?>"
                    data-bs-toggle="tooltip"
                    data-bs-placement="right"
-                   title="<?= e($item['etiqueta']) ?>">
+                   title="<?= e($item['etiqueta']) ?>"
+                   aria-label="<?= e($item['etiqueta']) ?>"
+                   role="tab">
                     <i class="<?= e($item['icono']) ?>"></i>
                 </a>
             </li>

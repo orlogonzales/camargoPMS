@@ -2586,6 +2586,8 @@ INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `
 ('usuarios.bloquear', 'Bloquear usuarios', 'Permite bloquear o desactivar cuentas de usuario', 'usuarios', 'ACTIVO', 1),
 ('sesiones.ver', 'Ver sesiones de usuario', 'Permite consultar el monitor y listado de sesiones de usuario en el sistema', 'seguridad', 'ACTIVO', 1),
 ('sesiones.revocar', 'Revocar sesiones de usuario', 'Permite revocar administrativamente sesiones activas de usuarios', 'seguridad', 'ACTIVO', 1),
+('personal.ver', 'Ver directorio y legajo de personal', 'Permite consultar el catálogo y detalle del personal', 'personal', 'ACTIVO', 1),
+('personal.gestionar', 'Gestionar personal y colaboradores', 'Permite registrar, actualizar y cesar personal', 'personal', 'ACTIVO', 1),
 ('roles.ver', 'Ver roles', 'Permite consultar los roles y sus permisos asociados', 'roles', 'ACTIVO', 1),
 ('roles.crear', 'Crear roles', 'Permite definir nuevos roles de autorización en el sistema', 'roles', 'ACTIVO', 1),
 ('roles.editar', 'Editar roles', 'Permite modificar nombres y descripciones de roles', 'roles', 'ACTIVO', 1),
@@ -2674,6 +2676,7 @@ WHERE r.`codigo` = 'SUPERADMINISTRADOR'
       OR p.`codigo` LIKE 'mantenimiento.%'
       OR p.`codigo` LIKE 'inventario.%'
       OR p.`modulo` = 'empresa'
+      OR p.`modulo` = 'personal'
   )
 ON DUPLICATE KEY UPDATE `permiso_id` = VALUES(`permiso_id`);
 
@@ -4482,12 +4485,12 @@ CREATE TABLE IF NOT EXISTS `documento_incidencias` (
 -- SEMILLAS DOCUMENTOS-1 (D-079): Permisos, Plantilla Canónica V1 y Menú
 -- ----------------------------------------------------------------------------
 INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `es_sistema`) VALUES
-('documentos.ver', 'Ver módulo de documentos y descargas', 'Consultar plantillas, versiones y documentos emitidos', 'documentos', 'ACTIVO', 1),
-('documentos.emitir', 'Emitir contratos y documentos oficiales', 'Generar versiones oficiales de contratos y actas con folio legal', 'documentos', 'ACTIVO', 1),
-('documentos.descargar', 'Descargar archivos PDF emitidos', 'Descargar PDFs binarios con verificación criptográfica de hash', 'documentos', 'ACTIVO', 1),
-('documentos.regenerar', 'Regenerar archivos PDF desde snapshot', 'Reconstruir binarios ante discrepancias de hash o faltantes físicos', 'documentos', 'ACTIVO', 1),
-('documentos.anular', 'Anular formalmente documentos emitidos', 'Revocar la validez legal de folios emitidos preservando el histórico', 'documentos', 'ACTIVO', 1),
-('documentos.plantillas.gestionar', 'Gestionar plantillas y versiones', 'Crear plantillas y publicar nuevas versiones inmutables', 'documentos', 'ACTIVO', 1)
+('documentos.ver', 'Ver documentos', 'Ver catálogo de plantillas y documentos emitidos', 'DOCUMENTOS', 'ACTIVO', 1),
+('documentos.emitir', 'Emitir documentos', 'Emitir documentos oficiales y contratos PDF', 'DOCUMENTOS', 'ACTIVO', 1),
+('documentos.descargar', 'Descargar documentos', 'Descargar archivos PDF emitidos', 'DOCUMENTOS', 'ACTIVO', 1),
+('documentos.regenerar', 'Regenerar documentos', 'Regenerar archivos PDF desde snapshot ante incidencias', 'DOCUMENTOS', 'ACTIVO', 1),
+('documentos.anular', 'Anular documentos', 'Anular documentos oficiales emitidos', 'DOCUMENTOS', 'ACTIVO', 1),
+('documentos.plantillas.gestionar', 'Gestionar plantillas', 'Crear y editar versiones de plantillas documentales', 'DOCUMENTOS', 'ACTIVO', 1)
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `descripcion` = VALUES(`descripcion`);
 
 INSERT INTO `roles_permisos` (`rol_id`, `permiso_id`)

@@ -321,12 +321,37 @@
     }
 
     /**
+     * Inicializa componentes flotantes de Tooltip nativos de Alina / Bootstrap 5 de forma defensiva.
+     * Reutiliza instancias existentes para evitar duplicados y degrada elegantemente si Bootstrap no está disponible.
+     * @returns {void}
+     */
+    function inicializarTooltips() {
+        if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+            return;
+        }
+
+        const elementosTooltip = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        elementosTooltip.forEach(elemento => {
+            try {
+                if (typeof bootstrap.Tooltip.getOrCreateInstance === 'function') {
+                    bootstrap.Tooltip.getOrCreateInstance(elemento);
+                } else if (!bootstrap.Tooltip.getInstance(elemento)) {
+                    new bootstrap.Tooltip(elemento);
+                }
+            } catch (error) {
+                // Degradación elegante: el atributo title nativo preserva accesibilidad
+            }
+        });
+    }
+
+    /**
      * Inicializador maestro tras la carga del DOM.
      * @returns {void}
      */
     function iniciar() {
         inicializarCargador();
         inicializarNavegacion();
+        inicializarTooltips();
         inicializarSidebarResponsive();
         inicializarSimpleBar();
         inicializarVolverArriba();

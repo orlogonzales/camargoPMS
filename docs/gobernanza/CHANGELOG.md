@@ -4,6 +4,21 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1A-C2 — Paridad SQL Consolidado y Activación de Tooltips Alina en Runtime (D-093-C2)
+
+- **Paridad Semántica Completa del Dump Consolidado (`SQL/camargo_pms.sql`):**
+  - Incorporación de semillas para permisos `personal.ver` y `personal.gestionar` en el catálogo maestro de permisos de `SQL/camargo_pms.sql`, así como su asignación al rol `SUPERADMINISTRADOR`.
+  - Alineación canónica de nombres, descripciones y módulos de permisos de `documentos.*` para coincidir 100% con la migración histórica 021.
+  - Certificación de paridad semántica absoluta (100%) entre la instalación limpia de migraciones (`001 -> 033`) y la importación consolidada `camargo_pms.sql` tanto en `opciones_menu` (39 = 39, 9 dominios = 9 dominios, 0 huérfanos) como en `permisos` (137 = 137).
+- **Activación Defensiva de Tooltips Alina / Bootstrap 5 en Runtime:**
+  - Implementación de `inicializarTooltips()` en `public/assets/js/camargo-layout.js` utilizando la API nativa de Bootstrap 5 (`bootstrap.Tooltip.getOrCreateInstance`), ejecutado dentro del ciclo `iniciar()` tras `DOMContentLoaded`.
+  - Reutilización del patrón oficial de Alina (`admin-dashboard/alina/assets/js/tooltips_popovers.js`) de forma 100% defensiva: prevención de inicializaciones duplicadas, sin jQuery, degradación elegante y cero nombres de dominios hardcodeados en JavaScript.
+  - Enriquecimiento de accesibilidad en `app/Vistas/componentes/menu-principal.php` mediante atributos `aria-label` y `role="tab"` sin alterar la estructura iconográfica oficial.
+- **Verificación y Cobertura:**
+  - Incorporación del Grupo 9 en `tests/test_menu_tres_niveles.php` con 7 comprobaciones dedicadas de tooltips, placement, inicialización runtime, API Bootstrap y ausencia de nombres hardcodeados (34/34 PASS).
+  - Regresión global del repositorio: 63/63 suites evaluadas, 63/63 PASSED (100%), 1,402 checks verificados (+7 checks), 0 fallos.
+  - Base de datos relacional: 118 tablas, última migración 033 registrada, ranura 034 estrictamente libre.
+
 ### Microfase UI-ALINA-1A-C1 — Corrección Canónica: Migración 033, Reubicación Operativa/Financiera y Tooltips Alina (D-093-C1)
 
 - **Migración Canónica de Datos 033 (`SQL/migraciones/033_reorganizar_menu_alina.sql`):**

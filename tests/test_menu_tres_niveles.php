@@ -420,6 +420,50 @@ try {
         str_contains($htmlMenuPrincipal, 'dashed');
     verificar('MENU-3N-27', 'Prohibición absoluta: Cero estilos o clases dotted/dashed en menús', $tieneDottedODashed === false);
 
+    // -----------------------------------------------------------------------------
+    // GRUPO 9: Tooltips Nativos Alina y Runtime (UI-ALINA-1A-C2)
+    // -----------------------------------------------------------------------------
+    echo "\n--- GRUPO 9: TOOLTIPS NATIVOS ALINA Y RUNTIME ---\n";
+
+    // 1. N1 genera atributo tooltip
+    $tieneTooltipAttr = str_contains($htmlMenuPrincipal, 'data-bs-toggle="tooltip"');
+    verificar('MENU-3N-28', 'N1 genera atributo data-bs-toggle="tooltip"', $tieneTooltipAttr);
+
+    // 2. Título proviene dinámicamente del nombre de la opción (etiqueta) y cuenta con accesibilidad aria-label
+    $tieneTituloDinamico = str_contains($htmlMenuPrincipal, 'title="Test Dominio N1"') &&
+        str_contains($htmlMenuPrincipal, 'aria-label="Test Dominio N1"');
+    verificar('MENU-3N-29', 'Título y aria-label provienen dinámicamente del nombre del dominio', $tieneTituloDinamico);
+
+    // 3. Placement esperado
+    $tienePlacementRight = str_contains($htmlMenuPrincipal, 'data-bs-placement="right"');
+    verificar('MENU-3N-30', 'Placement del tooltip configurado a la derecha (right)', $tienePlacementRight);
+
+    // 4. Existe inicialización runtime en camargo-layout.js
+    $jsLayout = file_get_contents(dirname(__DIR__) . '/public/assets/js/camargo-layout.js');
+    $tieneFuncionInit = str_contains($jsLayout, 'function inicializarTooltips()') &&
+        str_contains($jsLayout, 'inicializarTooltips();');
+    verificar('MENU-3N-31', 'Existe función inicializarTooltips() e invocación en el ciclo iniciar() de camargo-layout.js', $tieneFuncionInit);
+
+    // 5. Se usa API nativa de Bootstrap 5
+    $usaBootstrapApi = str_contains($jsLayout, 'bootstrap.Tooltip') &&
+        (str_contains($jsLayout, 'bootstrap.Tooltip.getOrCreateInstance') || str_contains($jsLayout, 'new bootstrap.Tooltip'));
+    verificar('MENU-3N-32', 'Se utiliza la API nativa de Bootstrap 5 (bootstrap.Tooltip)', $usaBootstrapApi);
+
+    // 6. Prohibición de jQuery para inicialización de tooltips
+    $usaJqueryTooltip = preg_match('/\\$\\s*\\([^\\)]*\\)\\.tooltip\\s*\\(/', $jsLayout) === 1;
+    verificar('MENU-3N-33', 'Prohibición absoluta: Cero llamadas jQuery para tooltips en camargo-layout.js', !$usaJqueryTooltip);
+
+    // 7. No nombres N1 hardcodeados en JavaScript
+    $nombresN1 = ['Inicio', 'Propiedades', 'Comercial y Reservas', 'Operaciones', 'Caja y Finanzas', 'Abastecimiento', 'Documentos', 'Atención al Cliente', 'Configuración'];
+    $hardcodeado = false;
+    foreach ($nombresN1 as $nom) {
+        if (str_contains($jsLayout, "'{$nom}'") || str_contains($jsLayout, "\"{$nom}\"")) {
+            $hardcodeado = true;
+            break;
+        }
+    }
+    verificar('MENU-3N-34', 'Cero nombres de dominios N1 hardcodeados en el código JavaScript', !$hardcodeado);
+
 } finally {
     // -----------------------------------------------------------------------------
     // Limpieza de fixtures de prueba
