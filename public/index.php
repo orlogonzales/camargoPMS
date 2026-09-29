@@ -1277,6 +1277,70 @@ $enrutador->post('/api/operaciones/devengos/revertir', [\CamargoPMS\Controladore
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('devengo.revertir'),
 ]);
 
+// ============================================================================
+// Rutas de Libro de Reclamaciones y Feriados (RECLAMACIONES-1 / Ley 32495)
+// ============================================================================
+// 1. Superficie Pública (Virtual / Autoservicio Anónimo)
+$enrutador->get('/libro-reclamaciones', [\CamargoPMS\Controladores\ReclamacionPublicaControlador::class, 'mostrarFormulario']);
+$enrutador->post('/libro-reclamaciones', [\CamargoPMS\Controladores\ReclamacionPublicaControlador::class, 'procesarRegistro']);
+$enrutador->get('/libro-reclamaciones/confirmacion', [\CamargoPMS\Controladores\ReclamacionPublicaControlador::class, 'mostrarConfirmacion']);
+$enrutador->get('/libro-reclamaciones/descargar-pdf', [\CamargoPMS\Controladores\ReclamacionPublicaControlador::class, 'descargarPdfPublico']);
+
+// 2. Consola Administrativa Interna
+$enrutador->get('/reclamaciones', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.ver'),
+]);
+$enrutador->get('/reclamaciones/datos', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.ver'),
+]);
+$enrutador->get('/api/reclamaciones', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.ver'),
+]);
+$enrutador->get('/reclamaciones/{id}', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.ver'),
+]);
+$enrutador->get('/reclamaciones/{id}/pdf', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'descargarPdf'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.ver'),
+]);
+$enrutador->post('/reclamaciones/crear-asistido', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'crearAsistido'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.crear'),
+]);
+$enrutador->post('/reclamaciones/{id}/notas', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'agregarNota'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.actuar'),
+]);
+$enrutador->post('/reclamaciones/{id}/ofrecimiento', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'formularOfrecimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.responder'),
+]);
+$enrutador->post('/reclamaciones/{id}/ofrecimiento/respuesta', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'responderOfrecimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.responder'),
+]);
+$enrutador->post('/reclamaciones/{id}/ofrecimiento/expirar', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'expirarOfrecimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.responder'),
+]);
+$enrutador->post('/reclamaciones/{id}/respuesta', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'emitirRespuesta'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.responder'),
+]);
+$enrutador->post('/reclamaciones/{id}/anular', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'anular'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.anular'),
+]);
+$enrutador->post('/reclamaciones/{id}/regenerar-pdf', [\CamargoPMS\Controladores\ReclamacionControlador::class, 'regenerarPdf'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
+]);
+
+// 3. Calendario de Feriados
+$enrutador->get('/configuracion/feriados', [\CamargoPMS\Controladores\FeriadoControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
+]);
+$enrutador->get('/configuracion/feriados/datos', [\CamargoPMS\Controladores\FeriadoControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
+]);
+$enrutador->post('/configuracion/feriados', [\CamargoPMS\Controladores\FeriadoControlador::class, 'guardar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
+]);
+$enrutador->post('/configuracion/feriados/{id}/alternar', [\CamargoPMS\Controladores\FeriadoControlador::class, 'alternarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 

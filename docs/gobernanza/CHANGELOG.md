@@ -4,6 +4,34 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase RECLAMACIONES-1 — Libro de Reclamaciones Peruano Integral (D-092)
+
+- **Marco Regulatorio y Cómputo Vinculante:**
+  - Implementación integral según la normativa peruana: Ley 29571 (Código de Protección y Defensa del Consumidor), D.S. 011-2011-PCM, Ley 31435 y Ley 32495 (plataformas digitales y comercio electrónico).
+  - Plazo legal de respuesta: 15 días hábiles improrrogables (computados a partir del primer día hábil siguiente a la presentación, excluyendo sábados, domingos y feriados nacionales con `aplica_sector_privado = 1`).
+  - Suspensión temporal (D.S. 101-2022-PCM): Hasta 5 días hábiles cuando la empresa formula un ofrecimiento formal de solución y espera aceptación/rechazo expreso del consumidor; reanudación automática de los días hábiles restantes ante rechazo o expiración del plazo.
+- **Arquitectura de Superficie Dual y Resiliencia:**
+  - **Portal Público Digital:** Formulario interactivo responsive en `/libro-reclamaciones` sin requerir autenticación previa, con protección anti-abuso mediante Honeypot y token CSRF con inicialización de sesión transparente. Generación inmediata de constancia con descarga de Hoja de Reclamación en PDF (`/libro-reclamaciones/confirmacion` y `/libro-reclamaciones/descargar-pdf`).
+  - **Consola Interna Administrativa Alina:** Módulo operativo en `/reclamaciones` protegido por RBAC (`reclamaciones.ver`, `reclamaciones.crear`, `reclamaciones.responder`, `reclamaciones.anular`), soporte para registro asistido de reclamos presenciales/telefónicos, bitácora cronológica append-only de actuaciones (`reclamacion_actuaciones`), formulación y respuesta de ofrecimientos de solución y respuestas finales normativas.
+  - **Gestión Soberana de Calendario Laboral y Feriados:** Módulo `/configuracion/feriados` con permiso `configuracion.feriados.gestionar` para la administración indefinida de calendarios laborales (alta y alternancia activo/inactivo).
+- **Axioma SNAPSHOT T0 e Inmutabilidad de la Evidencia:**
+  - Al asentar la reclamación en base de datos, se capturan snapshots JSON inmutables del consumidor (`snapshot_consumidor_json`, incluyendo datos de apoderado en caso de menores de edad) y del proveedor/establecimiento (`snapshot_proveedor_json`). Las modificaciones posteriores en personas, clientes o empresas no mutan la evidencia legal registrada.
+- **Axioma CERO DELETE y Trazabilidad Append-Only:**
+  - Prohibición categórica de borrado físico (`DELETE`). Toda acción (creación, notas internas, ofrecimientos, respuestas formales, anulaciones supervisadas) genera una actuación histórica en `reclamacion_actuaciones`.
+  - La anulación supervisada exige motivo justificado ($\ge 10$ caracteres) y supervisor responsable, sin alterar el correlativo ni borrar el expediente.
+- **Emisión de PDF Resiliente (Dompdf 3.x):**
+  - Asiento transaccional previo en BD antes del renderizado de la Hoja de Reclamación. Si el motor PDF fallara, la reclamación queda intacta y segura, permitiendo su regeneración en cualquier momento (`ReclamacionDocumentoServicio`).
+- **Evolución Controlada de Esquema:**
+  - Consumo formal de la migración `SQL/migraciones/032_reclamaciones_libro.sql` creando 4 tablas relacionales: `calendario_feriados`, `reclamacion_secuencias`, `reclamaciones` y `reclamacion_actuaciones`.
+  - El catálogo de base de datos evoluciona exactamente de 114 a 118 tablas. Ranura `033_*` estrictamente libre.
+  - Consolidado `SQL/camargo_pms.sql` completamente sincronizado (Sección 30).
+  - Clean install 001 → 032 verificado con paridad absoluta de 118 tablas.
+- **Certificación Automatizada Exhaustiva (63/63 PASS en el dominio, 61/61 suites globales):**
+  - Matriz de Dominio y Axiomas: `tests/test_reclamaciones_matriz_40.php` (40/40 PASS).
+  - End-to-End HTTP / Interfaz Dual: `tests/test_e2e_reclamaciones.php` (23/23 PASS).
+  - Regresión Global de la Suite Completa: 61 suites ejecutadas, 61/61 PASS (100%), 1,352 aserciones verificadas (0 fallos).
+  - Confinamiento local estricto: Cero dependencias CDN externas en vistas, asegurando fidelidad visual nativa de Alina (`test_ui3a_fidelidad_alina.php` 70/70 PASS).
+
 ### Microfase DEVENGO-ALOJAMIENTO-1 — Devengo Diario de Alojamiento, Libro Diario y Auditoría Nocturna (D-090)
 
 - **Axioma Ontológico Quíntuple:**

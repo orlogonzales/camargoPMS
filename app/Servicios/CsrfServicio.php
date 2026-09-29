@@ -23,8 +23,7 @@ class CsrfServicio
     public function obtenerToken(): string
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            // No iniciar sesión si no es necesario, pero si está inactiva y se solicita token,
-            // asegurarse de que haya contexto
+            SesionServicio::iniciarSesionPhp();
         }
 
         if (empty($_SESSION[self::CLAVE_SESION]) || !is_string($_SESSION[self::CLAVE_SESION])) {
@@ -49,6 +48,9 @@ class CsrfServicio
      */
     public function regenerarToken(): string
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            SesionServicio::iniciarSesionPhp();
+        }
         $_SESSION[self::CLAVE_SESION] = bin2hex(random_bytes(32));
         return $_SESSION[self::CLAVE_SESION];
     }
@@ -61,6 +63,10 @@ class CsrfServicio
      */
     public function validarToken(?string $token): bool
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            SesionServicio::iniciarSesionPhp();
+        }
+
         if ($token === null || trim($token) === '') {
             return false;
         }
