@@ -12,6 +12,9 @@ namespace CamargoPMS\Modelos;
  */
 final class Colaborador
 {
+    public const ESTADO_ACTIVO = 'ACTIVO';
+    public const ESTADO_INACTIVO = 'INACTIVO';
+
     private ?int $id;
     private int $personaId;
     private string $codigo;
@@ -38,15 +41,23 @@ final class Colaborador
         ?int $id,
         int $personaId,
         string $codigo,
-        string $estado = 'ACTIVO',
+        string $estado = self::ESTADO_ACTIVO,
         ?string $creadoEn = null,
         ?string $actualizadoEn = null,
         ?Persona $persona = null,
         array $episodios = []
     ) {
+        if ($personaId <= 0) {
+            throw new \InvalidArgumentException('El ID de persona debe ser un entero positivo.');
+        }
+        $codigoLimpio = strtoupper(trim($codigo));
+        if ($codigoLimpio === '') {
+            throw new \InvalidArgumentException('El código de colaborador no puede estar vacío.');
+        }
+
         $this->id = $id;
         $this->personaId = $personaId;
-        $this->codigo = strtoupper(trim($codigo));
+        $this->codigo = $codigoLimpio;
         $this->estado = strtoupper(trim($estado));
         $this->creadoEn = $creadoEn;
         $this->actualizadoEn = $actualizadoEn;
@@ -88,7 +99,12 @@ final class Colaborador
 
     public function esActivo(): bool
     {
-        return $this->estado === 'ACTIVO';
+        return $this->estado === self::ESTADO_ACTIVO;
+    }
+
+    public function estaActivo(): bool
+    {
+        return $this->esActivo();
     }
 
     public function obtenerCreadoEn(): ?string

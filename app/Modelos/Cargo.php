@@ -76,6 +76,11 @@ final class Cargo
         return $this->activo;
     }
 
+    public function estaActivo(): bool
+    {
+        return $this->esActivo();
+    }
+
     public function obtenerCreadoEn(): ?string
     {
         return $this->creadoEn;

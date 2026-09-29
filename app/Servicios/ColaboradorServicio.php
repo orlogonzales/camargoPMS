@@ -49,6 +49,8 @@ class ColaboradorServicio
     private EpisodioLaboralRepositorio $episodioRepo;
     private AsignacionCargoRepositorio $asignacionRepo;
     private CargoRepositorio $cargoRepo;
+    private AuditoriaServicio $auditoriaServicio;
+    private ?EmpresaServicio $empresaServicio;
 
     public function __construct(
         ?PDO $pdo = null,
@@ -56,7 +58,9 @@ class ColaboradorServicio
         ?PersonaRepositorio $personaRepo = null,
         ?EpisodioLaboralRepositorio $episodioRepo = null,
         ?AsignacionCargoRepositorio $asignacionRepo = null,
-        ?CargoRepositorio $cargoRepo = null
+        ?CargoRepositorio $cargoRepo = null,
+        ?AuditoriaServicio $auditoriaServicio = null,
+        ?EmpresaServicio $empresaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->colaboradorRepo = $colaboradorRepo ?? new ColaboradorRepositorio($this->pdo);
@@ -64,6 +68,8 @@ class ColaboradorServicio
         $this->episodioRepo = $episodioRepo ?? new EpisodioLaboralRepositorio($this->pdo);
         $this->asignacionRepo = $asignacionRepo ?? new AsignacionCargoRepositorio($this->pdo);
         $this->cargoRepo = $cargoRepo ?? new CargoRepositorio($this->pdo);
+        $this->auditoriaServicio = $auditoriaServicio ?? new AuditoriaServicio($this->pdo);
+        $this->empresaServicio = $empresaServicio;
     }
 
     /**
@@ -77,7 +83,7 @@ class ColaboradorServicio
      * @throws ColaboradorDuplicadoExcepcion
      * @throws Throwable
      */
-    public function crearColaborador(array $datos): Colaborador
+    public function crearColaborador(array $datos, int $actorId = 1): Colaborador
     {
         $personaId = isset($datos['persona_id']) ? (int) $datos['persona_id'] : 0;
         if ($personaId <= 0) {
@@ -172,6 +178,22 @@ class ColaboradorServicio
             );
             $this->asignacionRepo->insertar($nuevaAsignacion);
 
+            // 4. Registro de auditoría
+            $this->auditoriaServicio->registrar(
+                'CREAR',
+                'personal',
+                'colaboradores',
+                $colaboradorId,
+                "Alta de colaborador [{$codigo}] para la persona ID {$personaId}.",
+                null,
+                ['persona_id' => $personaId, 'codigo' => $codigo, 'cargo_id' => $cargoId, 'fecha_inicio' => $fechaInicio],
+                ['origen' => 'PERSONAL-1A'],
+                $actorId,
+                null,
+                null,
+                $this->pdo
+            );
+
             $this->pdo->commit();
 
             return $this->colaboradorRepo->buscarPorId($colaboradorId, true) ?? $colaboradorPersistido;
@@ -196,7 +218,7 @@ class ColaboradorServicio
      * @throws SolapamientoLaboralExcepcion
      * @throws Throwable
      */
-    public function reingresarColaborador(int $colaboradorId, array $datos): Colaborador
+    public function reingresarColaborador(int $colaboradorId, array $datos, int $actorId = 1): Colaborador
     {
         if ($colaboradorId <= 0) {
             throw new ValidacionExcepcion('Se requiere un identificador de colaborador válido.');
@@ -207,7 +229,9 @@ class ColaboradorServicio
             throw new ValidacionExcepcion('Se requiere un identificador de cargo válido.', ['cargo_id' => 'Requerido']);
         }
 
-        $fechaInicio = isset($datos['fecha_inicio']) ? trim((string) $datos['fecha_inicio']) : '';
+        $fechaInicio = isset($datos['fecha_inicio']) && trim((string) $datos['fecha_inicio']) !== ''
+            ? trim((string) $datos['fecha_inicio'])
+            : (isset($datos['fecha_reingreso']) ? trim((string) $datos['fecha_reingreso']) : '');
         if ($fechaInicio === '') {
             throw new ValidacionExcepcion('Se requiere la fecha de reingreso.', ['fecha_inicio' => 'Requerido']);
         }
@@ -220,7 +244,7 @@ class ColaboradorServicio
         $this->pdo->beginTransaction();
         try {
             // Bloqueo pesimista del colaborador
-            $stmt = $this->pdo->prepare('SELECT id, persona_id, estado FROM colaboradores WHERE id = :id FOR UPDATE');
+            $stmt = $this->pdo->prepare('SELECT id, persona_id, codigo, estado FROM colaboradores WHERE id = :id FOR UPDATE');
             $stmt->bindValue(':id', $colaboradorId, PDO::PARAM_INT);
             $stmt->execute();
             $filaColab = $stmt->fetch();
@@ -300,6 +324,22 @@ class ColaboradorServicio
             );
             $this->asignacionRepo->insertar($nuevaAsignacion);
 
+            // Registro de auditoría
+            $this->auditoriaServicio->registrar(
+                'REINGRESO',
+                'personal',
+                'colaboradores',
+                $colaboradorId,
+                "Reingreso laboral del colaborador [{$filaColab['codigo']}].",
+                ['estado' => $filaColab['estado']],
+                ['estado' => 'ACTIVO', 'episodio_id' => $episodioId, 'cargo_id' => $cargoId, 'fecha_inicio' => $fechaInicio],
+                ['origen' => 'PERSONAL-1A'],
+                $actorId,
+                null,
+                null,
+                $this->pdo
+            );
+
             $this->pdo->commit();
 
             return $this->colaboradorRepo->buscarPorId($colaboradorId, true) ?? throw new EntidadNoEncontradaExcepcion('Colaborador', $colaboradorId);
@@ -324,7 +364,7 @@ class ColaboradorServicio
      * @throws ValidacionExcepcion
      * @throws Throwable
      */
-    public function cambiarCargo(int $colaboradorId, int $nuevoCargoId, string $fechaCambio, ?string $observaciones = null): Colaborador
+    public function cambiarCargo(int $colaboradorId, int $nuevoCargoId, string $fechaCambio, ?string $observaciones = null, int $actorId = 1): Colaborador
     {
         if ($colaboradorId <= 0) {
             throw new ValidacionExcepcion('Se requiere un identificador de colaborador válido.');
@@ -340,7 +380,7 @@ class ColaboradorServicio
         $this->pdo->beginTransaction();
         try {
             // Bloqueo pesimista del colaborador
-            $stmt = $this->pdo->prepare('SELECT id, estado FROM colaboradores WHERE id = :id FOR UPDATE');
+            $stmt = $this->pdo->prepare('SELECT id, codigo, estado FROM colaboradores WHERE id = :id FOR UPDATE');
             $stmt->bindValue(':id', $colaboradorId, PDO::PARAM_INT);
             $stmt->execute();
             $filaColab = $stmt->fetch();
@@ -411,6 +451,22 @@ class ColaboradorServicio
                 $observaciones
             );
             $this->asignacionRepo->insertar($nuevaAsignacion);
+
+            // Registro de auditoría
+            $this->auditoriaServicio->registrar(
+                'CAMBIO_CARGO',
+                'personal',
+                'colaboradores',
+                $colaboradorId,
+                "Transición de cargo al puesto '{$nuevoCargo->obtenerNombre()}'.",
+                ['cargo_anterior_id' => $asignacionVigente->obtenerCargoId()],
+                ['cargo_nuevo_id' => $nuevoCargoId, 'fecha_cambio' => $fechaCambio],
+                ['origen' => 'PERSONAL-1A'],
+                $actorId,
+                null,
+                null,
+                $this->pdo
+            );
 
             $this->pdo->commit();
 
@@ -650,7 +706,7 @@ class ColaboradorServicio
      * @throws ValidacionExcepcion
      * @throws Throwable
      */
-    public function cesarColaborador(int $colaboradorId, string $fechaCese, string $motivoCese, ?string $observaciones = null): Colaborador
+    public function cesarColaborador(int $colaboradorId, string $fechaCese, string $motivoCese, ?string $observaciones = null, int $actorId = 1): Colaborador
     {
         if ($colaboradorId <= 0) {
             throw new ValidacionExcepcion('Se requiere un identificador de colaborador válido.');
@@ -670,7 +726,7 @@ class ColaboradorServicio
         $this->pdo->beginTransaction();
         try {
             // Bloqueo pesimista del colaborador
-            $stmt = $this->pdo->prepare('SELECT id, estado FROM colaboradores WHERE id = :id FOR UPDATE');
+            $stmt = $this->pdo->prepare('SELECT id, codigo, estado FROM colaboradores WHERE id = :id FOR UPDATE');
             $stmt->bindValue(':id', $colaboradorId, PDO::PARAM_INT);
             $stmt->execute();
             $filaColab = $stmt->fetch();
@@ -715,6 +771,22 @@ class ColaboradorServicio
 
             // Actualizar estado del colaborador a INACTIVO
             $this->colaboradorRepo->actualizarEstado($colaboradorId, 'INACTIVO');
+
+            // Registro de auditoría
+            $this->auditoriaServicio->registrar(
+                'CESE',
+                'personal',
+                'colaboradores',
+                $colaboradorId,
+                "Cese laboral del colaborador [{$filaColab['codigo']}] por {$motivoCese}.",
+                ['estado' => 'ACTIVO'],
+                ['estado' => 'INACTIVO', 'fecha_cese' => $fechaCese, 'motivo_cese' => $motivoCese],
+                ['origen' => 'PERSONAL-1A'],
+                $actorId,
+                null,
+                null,
+                $this->pdo
+            );
 
             $this->pdo->commit();
 
@@ -789,6 +861,90 @@ class ColaboradorServicio
     public function buscarPorPersonaId(int $personaId): ?Colaborador
     {
         return $this->colaboradorRepo->buscarPorPersonaId($personaId, true);
+    }
+
+    /**
+     * Lista colaboradores con filtros de búsqueda y paginación para el directorio administrativo.
+     *
+     * @param array<string, mixed> $filtros
+     * @param int $limite
+     * @param int $offset
+     * @return array<int, array<string, mixed>>
+     */
+    public function listarColaboradores(array $filtros = [], int $limite = 50, int $offset = 0): array
+    {
+        return $this->colaboradorRepo->listar($filtros, $limite, $offset);
+    }
+
+    /**
+     * Cuenta el total de colaboradores según filtros aplicados.
+     *
+     * @param array<string, mixed> $filtros
+     * @return int
+     */
+    public function contarColaboradores(array $filtros = []): int
+    {
+        return $this->colaboradorRepo->contar($filtros);
+    }
+
+    /**
+     * Retorna la ficha completa y consolidada del colaborador enriquecida con la empresa empleadora.
+     *
+     * @param int $colaboradorId
+     * @return array<string, mixed>|null
+     */
+    public function obtenerFichaCompleta(int $colaboradorId): ?array
+    {
+        $ficha = $this->colaboradorRepo->buscarDetalleCompleto($colaboradorId);
+        if (!$ficha) {
+            return null;
+        }
+
+        $usuario = null;
+        if (!empty($ficha['usuario_id'])) {
+            $usuario = [
+                'id' => (int) $ficha['usuario_id'],
+                'username' => $ficha['nombre_usuario'],
+                'estado' => $ficha['usuario_estado'],
+                'ultimo_acceso' => $ficha['usuario_ultimo_acceso'],
+            ];
+        }
+        $ficha['usuario'] = $usuario;
+
+        $ficha['colaborador'] = [
+            'id' => (int) $ficha['id'],
+            'persona_id' => (int) $ficha['persona_id'],
+            'codigo' => $ficha['codigo'],
+            'estado' => $ficha['estado'],
+            'creado_en' => $ficha['creado_en'],
+            'actualizado_en' => $ficha['actualizado_en'],
+        ];
+
+        $ficha['persona'] = [
+            'id' => (int) $ficha['persona_id'],
+            'nombres' => $ficha['nombres'],
+            'apellido_paterno' => $ficha['apellido_paterno'],
+            'apellido_materno' => $ficha['apellido_materno'],
+            'nombre_completo' => $ficha['nombre_completo'],
+            'numero_documento' => $ficha['numero_documento'],
+            'tipo_documento' => $ficha['tipo_documento'],
+            'telefono' => $ficha['telefono'],
+            'email' => $ficha['email'],
+            'direccion' => $ficha['direccion'] ?? null,
+        ];
+
+        // Resolver la empresa empleadora principal del PMS
+        $ficha['empresa'] = null;
+        $ficha['empresa_empleadora'] = null;
+        if ($this->empresaServicio !== null) {
+            $empresa = $this->empresaServicio->obtenerEmpresaParaPropiedad(null);
+            if ($empresa !== null) {
+                $ficha['empresa'] = $empresa->aArreglo();
+                $ficha['empresa_empleadora'] = $empresa->aArreglo();
+            }
+        }
+
+        return $ficha;
     }
 
     /**

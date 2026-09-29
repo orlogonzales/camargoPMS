@@ -236,6 +236,38 @@ $enrutador->get('/empresas/logo/{id}', [\CamargoPMS\Controladores\EmpresaControl
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.ver'),
 ]);
 
+// Rutas de Gestión Administrativa de Personal y RR.HH. (PERSONAL-1A)
+$enrutador->get('/personal', [\CamargoPMS\Controladores\PersonalControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.ver'),
+]);
+$enrutador->get('/api/personal', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.ver'),
+]);
+$enrutador->get('/api/personal/buscar-persona', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiBuscarPersona'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.ver'),
+]);
+$enrutador->get('/api/personal/{id}', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiDetalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.ver'),
+]);
+$enrutador->post('/api/personal', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiCrear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
+]);
+$enrutador->post('/api/personal/{id}', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
+]);
+$enrutador->put('/api/personal/{id}', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
+]);
+$enrutador->post('/api/personal/{id}/cargo', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiCambiarCargo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
+]);
+$enrutador->post('/api/personal/{id}/cesar', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiCesar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
+]);
+$enrutador->post('/api/personal/{id}/reingresar', [\CamargoPMS\Controladores\PersonalControlador::class, 'apiReingresar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
+]);
+
 // Rutas de Maestro Central de Propiedades (PROPIEDADES-1)
 $enrutador->get('/propiedades', [\CamargoPMS\Controladores\PropiedadControlador::class, 'index'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),
