@@ -81,7 +81,8 @@ CREATE TABLE IF NOT EXISTS `tipos_documento` (
 INSERT INTO `tipos_documento` (`codigo`, `nombre`, `descripcion`, `longitud_exacta`, `longitud_minima`, `longitud_maxima`, `formato_regex`, `pais_fijo_id`, `pais_emisor_obligatorio`, `activo`) VALUES
 ('DNI', 'Documento Nacional de Identidad', 'Documento nacional de identidad peruano para personas naturales', 8, 8, 8, '^[0-9]{8}$', 1, 0, 1),
 ('PASAPORTE', 'Pasaporte', 'Documento de identidad internacional para viajes', NULL, 6, 20, '^[A-Z0-9]{6,20}$', NULL, 1, 1),
-('CE', 'Carné de Extranjería', 'Documento oficial para extranjeros residentes en Perú', NULL, 6, 15, '^[A-Z0-9]{6,15}$', 1, 0, 1)
+('CE', 'Carné de Extranjería', 'Documento oficial para extranjeros residentes en Perú', NULL, 6, 15, '^[A-Z0-9]{6,15}$', 1, 0, 1),
+('RUC', 'Registro Único de Contribuyentes', 'Documento de identificación tributaria para personas jurídicas y naturales con negocio en Perú', 11, 11, 11, '^[0-9]{11}$', 1, 0, 1)
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `pais_fijo_id` = VALUES(`pais_fijo_id`),
@@ -469,7 +470,11 @@ INSERT INTO `permisos` (`codigo`, `nombre`, `descripcion`, `modulo`, `estado`, `
 ('inventario.movimientos.registrar', 'Registrar movimientos de inventario', 'Registrar entradas, consumos, mermas y ajustes de stock', 'inventario', 'ACTIVO', 1),
 ('inventario.traslados.ejecutar', 'Ejecutar traslados entre ubicaciones', 'Transferir stock entre almacenes, unidades y custodias externas', 'inventario', 'ACTIVO', 1),
 ('inventario.activos.gestionar', 'Gestionar activos serializables', 'Registrar, asignar, transferir y dar de baja activos fijos', 'inventario', 'ACTIVO', 1),
-('inventario.dotaciones.gestionar', 'Gestionar dotaciones estándar', 'Configurar dotaciones reglamentarias de unidades', 'inventario', 'ACTIVO', 1)
+('inventario.dotaciones.gestionar', 'Gestionar dotaciones estándar', 'Configurar dotaciones reglamentarias de unidades', 'inventario', 'ACTIVO', 1),
+('empresa.ver', 'Ver catálogo y detalle de empresas / emisores', 'Permite consultar el maestro y detalle de empresas y emisores legales', 'empresa', 'ACTIVO', 1),
+('empresa.crear', 'Crear nuevas empresas / emisores', 'Permite registrar nuevas entidades empresariales en el sistema', 'empresa', 'ACTIVO', 1),
+('empresa.editar', 'Modificar datos de empresa / emisor', 'Permite actualizar datos societarios, fiscales, representante y branding', 'empresa', 'ACTIVO', 1),
+('empresa.cambiar_estado', 'Activar o desactivar empresas', 'Permite cambiar el estado operativo entre ACTIVO e INACTIVO', 'empresa', 'ACTIVO', 1)
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `descripcion` = VALUES(`descripcion`);
 
 -- Asignar permisos al rol SUPERADMINISTRADOR
@@ -488,6 +493,7 @@ WHERE r.`codigo` = 'SUPERADMINISTRADOR'
       )
       OR p.`codigo` LIKE 'mantenimiento.%'
       OR p.`codigo` LIKE 'inventario.%'
+      OR p.`modulo` = 'empresa'
   )
 ON DUPLICATE KEY UPDATE `permiso_id` = VALUES(`permiso_id`);
 
@@ -560,6 +566,14 @@ FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'roles.ver'
+ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `icono` = VALUES(`icono`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`), `permiso_id` = VALUES(`permiso_id`);
+
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'config_empresa', 'Empresa / Emisor', 'fa-solid fa-building', '/empresas', 25, 'ACTIVO', perm.`id`, 0
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'configuracion' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'empresa.ver'
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`), `icono` = VALUES(`icono`), `ruta` = VALUES(`ruta`), `orden` = VALUES(`orden`), `permiso_id` = VALUES(`permiso_id`);
 
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`) VALUES
@@ -826,10 +840,54 @@ ON DUPLICATE KEY UPDATE
     `orden` = VALUES(`orden`);
 
 -- ----------------------------------------------------------------------------
--- 13. Maestro de Propiedades e Inmuebles Físicos (PROPIEDADES-1)
+-- 13. Maestro de Empresas Operadoras y Emisores Legales (EMPRESA-1)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `empresas` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `codigo` VARCHAR(50) NOT NULL COMMENT 'Código técnico único, ej. EMP-001 o CAMARGO-HOSTELERIA',
+    `tipo_documento_id` INT UNSIGNED NOT NULL COMMENT 'FK a tipos_documento (ej. RUC)',
+    `numero_documento` VARCHAR(30) NOT NULL COMMENT 'Número de identificación fiscal (ej. RUC de 11 dígitos)',
+    `razon_social` VARCHAR(255) NOT NULL COMMENT 'Razón social formal legal',
+    `nombre_comercial` VARCHAR(255) NULL COMMENT 'Nombre comercial / marca para difusión y branding',
+    `direccion_fiscal` VARCHAR(255) NOT NULL COMMENT 'Domicilio fiscal formal',
+    `pais_id` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'FK a paises (1 = Perú)',
+    `departamento` VARCHAR(100) NULL,
+    `provincia` VARCHAR(100) NULL,
+    `distrito` VARCHAR(100) NULL,
+    `ubigeo` VARCHAR(10) NULL COMMENT 'Código de ubigeo 6 dígitos',
+    `telefono` VARCHAR(50) NULL COMMENT 'Teléfono de contacto institucional',
+    `email` VARCHAR(150) NULL COMMENT 'Correo electrónico corporativo / facturación',
+    `sitio_web` VARCHAR(255) NULL COMMENT 'Portal web oficial',
+    `logo_url` VARCHAR(255) NULL COMMENT 'Ruta relativa del logo corporativo almacenado en storage',
+    `representante_persona_id` BIGINT UNSIGNED NULL COMMENT 'FK al registro central de personas para el representante legal',
+    `representante_cargo` VARCHAR(100) NULL DEFAULT 'Gerente General',
+    `representante_poder_partida` VARCHAR(100) NULL COMMENT 'Partida registral / poder notarial de representación',
+    `es_principal` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '1 si es la empresa operadora principal/default del sistema',
+    `estado` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+    `observaciones` TEXT NULL,
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `chk_empresas_codigo_no_vacio` CHECK (`codigo` <> ''),
+    CONSTRAINT `chk_empresas_razon_social_no_vacia` CHECK (`razon_social` <> ''),
+    CONSTRAINT `chk_empresas_num_doc_no_vacio` CHECK (`numero_documento` <> ''),
+    CONSTRAINT `chk_empresas_dir_fiscal_no_vacia` CHECK (`direccion_fiscal` <> ''),
+    CONSTRAINT `chk_empresas_es_principal` CHECK (`es_principal` IN (0, 1)),
+    CONSTRAINT `fk_empresas_tipo_documento` FOREIGN KEY (`tipo_documento_id`) REFERENCES `tipos_documento` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_empresas_pais` FOREIGN KEY (`pais_id`) REFERENCES `paises` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_empresas_representante` FOREIGN KEY (`representante_persona_id`) REFERENCES `personas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE KEY `uq_empresas_codigo` (`codigo`),
+    UNIQUE KEY `uq_empresas_num_doc` (`numero_documento`),
+    INDEX `idx_empresas_estado` (`estado`),
+    INDEX `idx_empresas_principal` (`es_principal`),
+    INDEX `idx_empresas_representante` (`representante_persona_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Maestro central de empresas operadoras y emisores legales';
+
+-- ----------------------------------------------------------------------------
+-- 14. Maestro de Propiedades e Inmuebles Físicos (PROPIEDADES-1)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `propiedades` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `empresa_id` BIGINT UNSIGNED NULL DEFAULT NULL,
     `codigo` VARCHAR(50) NOT NULL,
     `nombre` VARCHAR(150) NOT NULL,
     `descripcion` TEXT NULL,
@@ -851,8 +909,10 @@ CREATE TABLE IF NOT EXISTS `propiedades` (
     CONSTRAINT `chk_propiedades_direccion_no_vacia` CHECK (`direccion` <> ''),
     CONSTRAINT `chk_propiedades_latitud` CHECK (`latitud` IS NULL OR (`latitud` >= -90.0000000 AND `latitud` <= 90.0000000)),
     CONSTRAINT `chk_propiedades_longitud` CHECK (`longitud` IS NULL OR (`longitud` >= -180.0000000 AND `longitud` <= 180.0000000)),
+    CONSTRAINT `fk_propiedades_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_propiedades_pais` FOREIGN KEY (`pais_id`) REFERENCES `paises` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     UNIQUE KEY `uq_propiedades_codigo` (`codigo`),
+    INDEX `idx_propiedades_empresa` (`empresa_id`),
     INDEX `idx_propiedades_pais_id` (`pais_id`),
     INDEX `idx_propiedades_estado` (`estado`),
     INDEX `idx_propiedades_nombre` (`nombre`),

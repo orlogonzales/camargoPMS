@@ -129,6 +129,14 @@ final class Respuesta
     }
 
     /**
+     * Alias semántico para redirigir().
+     */
+    public static function redireccionar(string $url, int $codigo = 302): self
+    {
+        return self::redirigir($url, $codigo);
+    }
+
+    /**
      * Emite los encabezados y el cuerpo de la respuesta HTTP al cliente.
      *
      * @return void

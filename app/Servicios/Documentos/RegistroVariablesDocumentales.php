@@ -83,6 +83,11 @@ class RegistroVariablesDocumentales
             'almacen.nombre' => ['tipo' => 'string', 'requerido' => false],
             'almacen.direccion' => ['tipo' => 'string', 'requerido' => false],
 
+            // Comprador (Empresa)
+            'comprador.razon_social' => ['tipo' => 'string', 'requerido' => false],
+            'comprador.ruc' => ['tipo' => 'string', 'requerido' => false],
+            'comprador.direccion' => ['tipo' => 'string', 'requerido' => false],
+
             // Detalle y Totales
             'tabla_lineas' => ['tipo' => 'html', 'requerido' => true],
             'totales.moneda' => ['tipo' => 'string', 'requerido' => true],
@@ -97,6 +102,12 @@ class RegistroVariablesDocumentales
             'emision.fecha' => ['tipo' => 'date', 'requerido' => true],
             'emision.hora' => ['tipo' => 'string', 'requerido' => true],
             'emision.actor' => ['tipo' => 'string', 'requerido' => false],
+
+            // Emisor (Empresa)
+            'emisor.razon_social' => ['tipo' => 'string', 'requerido' => false],
+            'emisor.ruc' => ['tipo' => 'string', 'requerido' => false],
+            'emisor.nombre_comercial' => ['tipo' => 'string', 'requerido' => false],
+            'emisor.direccion_fiscal' => ['tipo' => 'string', 'requerido' => false],
 
             // Cliente / Titular
             'cliente.nombre_completo' => ['tipo' => 'string', 'requerido' => true],

@@ -17,10 +17,12 @@ storage/cache/*
 storage/logs/*
 storage/privados/*
 storage/uploads/*
+storage/logos/*
 !storage/cache/.gitkeep
 !storage/logs/.gitkeep
 !storage/privados/.gitkeep
 !storage/uploads/.gitkeep
+!storage/logos/.gitkeep
 *.log
 sess_*
 

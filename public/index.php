@@ -204,6 +204,38 @@ $enrutador->post('/configuracion/sistema/{clave}/restaurar', [\CamargoPMS\Contro
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('configuracion.editar'),
 ]);
 
+// Rutas de Maestro Central de Empresas y Emisores Legales (EMPRESA-1 / D-091)
+$enrutador->get('/empresas', [\CamargoPMS\Controladores\EmpresaControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.ver'),
+]);
+$enrutador->get('/api/empresas', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.ver'),
+]);
+$enrutador->get('/api/empresas/{id}', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiDetalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.ver'),
+]);
+$enrutador->post('/api/empresas', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiCrear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.crear'),
+]);
+$enrutador->post('/api/empresas/{id}', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.editar'),
+]);
+$enrutador->put('/api/empresas/{id}', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.editar'),
+]);
+$enrutador->post('/api/empresas/{id}/estado', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiCambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.cambiar_estado'),
+]);
+$enrutador->post('/api/empresas/{id}/propiedades', [\CamargoPMS\Controladores\EmpresaControlador::class, 'apiAsignarPropiedades'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.editar'),
+]);
+$enrutador->get('/empresas/{id}/logo', [\CamargoPMS\Controladores\EmpresaControlador::class, 'verLogo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.ver'),
+]);
+$enrutador->get('/empresas/logo/{id}', [\CamargoPMS\Controladores\EmpresaControlador::class, 'verLogo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('empresa.ver'),
+]);
+
 // Rutas de Maestro Central de Propiedades (PROPIEDADES-1)
 $enrutador->get('/propiedades', [\CamargoPMS\Controladores\PropiedadControlador::class, 'index'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),

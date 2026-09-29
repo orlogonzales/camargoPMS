@@ -19,6 +19,7 @@ use CamargoPMS\Servicios\Documentos\CompiladorDocumental;
 use CamargoPMS\Servicios\Documentos\GeneradorPdf;
 use CamargoPMS\Servicios\Documentos\RegistroVariablesDocumentales;
 use CamargoPMS\Servicios\Documentos\ValidadorHtmlDocumental;
+use CamargoPMS\Servicios\EmpresaServicio;
 use DateTimeImmutable;
 use PDO;
 
@@ -33,6 +34,7 @@ class DocumentoServicio
     private GeneradorPdf $generadorPdf;
     private ValidadorHtmlDocumental $validadorHtml;
     private RegistroVariablesDocumentales $registroVariables;
+    private EmpresaServicio $empresaServicio;
     private string $storagePath;
 
     public function __construct(
@@ -42,6 +44,7 @@ class DocumentoServicio
         ?GeneradorPdf $generadorPdf = null,
         ?ValidadorHtmlDocumental $validadorHtml = null,
         ?RegistroVariablesDocumentales $registroVariables = null,
+        ?EmpresaServicio $empresaServicio = null,
         ?string $basePath = null
     ) {
         $this->docRepo = $docRepo;
@@ -50,6 +53,7 @@ class DocumentoServicio
         $this->registroVariables = $registroVariables ?? new RegistroVariablesDocumentales();
         $this->compilador = $compilador ?? new CompiladorDocumental($this->validadorHtml, $this->registroVariables);
         $this->generadorPdf = $generadorPdf ?? new GeneradorPdf($basePath);
+        $this->empresaServicio = $empresaServicio ?? new EmpresaServicio($this->docRepo->obtenerPdo());
 
         $base = $basePath ?? dirname(__DIR__, 2);
         $this->storagePath = rtrim($base, '/\\') . DIRECTORY_SEPARATOR . 'storage';
@@ -515,6 +519,7 @@ class DocumentoServicio
                     mp.nombre AS metodo_nombre_catalogo,
                     arr.codigo AS arrendamiento_codigo,
                     res.codigo AS reserva_codigo,
+                    COALESCE(prop_arr.id, prop_res.id, prop_cf.id) AS propiedad_id,
                     COALESCE(prop_arr.nombre, prop_res.nombre, prop_cf.nombre, "Camargo Hostelería") AS propiedad_nombre,
                     COALESCE(prop_arr.direccion, prop_res.direccion, prop_cf.direccion, "Principal") AS propiedad_direccion,
                     COALESCE(u_arr.nombre, u_res.nombre, "General") AS unidad_nombre
@@ -580,11 +585,18 @@ class DocumentoServicio
         $fechaEmision = new DateTimeImmutable($row['fecha_emision']);
         $codigoFolio = $esBorrador ? 'BORRADOR-REC-' . $reciboId : (string) $row['codigo'];
 
+        $propiedadId = !empty($row['propiedad_id']) ? (int) $row['propiedad_id'] : null;
+        $empresa = $this->empresaServicio->obtenerEmpresaParaPropiedad($propiedadId);
+
         return [
             'documento.folio' => $codigoFolio,
             'emision.fecha' => $fechaEmision->format('d/m/Y'),
             'emision.hora' => $fechaEmision->format('H:i:s'),
             'emision.actor' => 'Caja / Administración',
+            'emisor.razon_social' => $empresa ? $empresa->obtenerRazonSocial() : 'Camargo Hostelería S.A.C.',
+            'emisor.ruc' => $empresa ? $empresa->obtenerNumeroDocumento() : '20601234567',
+            'emisor.nombre_comercial' => $empresa ? ($empresa->obtenerNombreComercial() ?: $empresa->obtenerRazonSocial()) : 'Camargo Hostelería',
+            'emisor.direccion_fiscal' => $empresa ? $empresa->obtenerDireccionFiscal() : 'Av. Principal 123, Miraflores, Lima - Perú',
             'cliente.nombre_completo' => (string) $row['persona_nombre_snapshot'],
             'cliente.tipo_documento' => (string) $row['persona_documento_tipo_snapshot'],
             'cliente.numero_documento' => (string) $row['persona_documento_numero_snapshot'],
@@ -616,7 +628,7 @@ class DocumentoServicio
         $pdo = $this->docRepo->obtenerPdo();
         $stmt = $pdo->prepare(
             'SELECT o.*, p.razon_social, p.numero_documento, p.telefono AS proveedor_telefono, p.email AS proveedor_email, p.direccion AS proveedor_dir,
-                    u.nombre AS almacen_nombre, prop.direccion AS almacen_dir
+                    u.nombre AS almacen_nombre, prop.id AS propiedad_id, prop.direccion AS almacen_dir
              FROM compra_ordenes o
              JOIN proveedores p ON p.id = o.proveedor_id
              LEFT JOIN inventario_ubicaciones u ON u.id = o.almacen_entrega_id
@@ -657,6 +669,9 @@ class DocumentoServicio
         $creadoEn = new DateTimeImmutable($row['creado_en']);
         $entregaEsperada = $row['fecha_entrega_esperada'] ? (new DateTimeImmutable($row['fecha_entrega_esperada']))->format('d/m/Y') : 'Por acordar';
 
+        $propiedadId = !empty($row['propiedad_id']) ? (int) $row['propiedad_id'] : null;
+        $empresa = $this->empresaServicio->obtenerEmpresaParaPropiedad($propiedadId);
+
         return [
             'documento.folio' => $codigoFolio,
             'orden.codigo' => $row['codigo'],
@@ -669,6 +684,9 @@ class DocumentoServicio
             'proveedor.telefono' => $row['proveedor_telefono'] ?? 'S/T',
             'proveedor.email' => $row['proveedor_email'] ?? 'S/E',
             'proveedor.direccion' => $row['proveedor_dir'] ?? 'Dirección no consignada',
+            'comprador.razon_social' => $empresa ? $empresa->obtenerRazonSocial() : 'Camargo Hostelería S.A.C.',
+            'comprador.ruc' => $empresa ? $empresa->obtenerNumeroDocumento() : '20601234567',
+            'comprador.direccion' => $empresa ? $empresa->obtenerDireccionFiscal() : 'Av. Principal 123, Miraflores, Lima - Perú',
             'almacen.nombre' => $row['almacen_nombre'] ?? 'Almacén Central',
             'almacen.direccion' => $row['almacen_dir'] ?? 'Sede Principal',
             'tabla_lineas' => $tablaHtml,
@@ -889,7 +907,7 @@ class DocumentoServicio
 
         // 2. Consultar tipología y dirección de la unidad e inmueble
         $stmtU = $pdo->prepare(
-            'SELECT u.nombre AS unidad_nombre, tu.nombre AS tipologia_nombre, p.nombre AS propiedad_nombre, p.direccion AS propiedad_direccion
+            'SELECT u.nombre AS unidad_nombre, tu.nombre AS tipologia_nombre, p.id AS propiedad_id, p.nombre AS propiedad_nombre, p.direccion AS propiedad_direccion
              FROM unidades u
              JOIN tipos_unidad tu ON tu.id = u.tipo_unidad_id
              JOIN propiedades p ON p.id = u.propiedad_id
@@ -910,6 +928,20 @@ class DocumentoServicio
         // 4. Bloque de inventario y dotación de la unidad
         $bloqueDotacion = $this->construirBloqueInventarioDotacion((int) $a->obtenerUnidadId());
 
+        // 5. Empresa emisora / Arrendadora
+        $propId = !empty($uInfo['propiedad_id']) ? (int) $uInfo['propiedad_id'] : null;
+        $empresa = $this->empresaServicio->obtenerEmpresaParaPropiedad($propId);
+
+        $arrendadorRazonSocial = $empresa ? $empresa->obtenerRazonSocial() : 'Camargo Hostelería S.A.C.';
+        $arrendadorRuc = $empresa ? $empresa->obtenerNumeroDocumento() : '20601234567';
+        $arrendadorDomicilio = $empresa ? $empresa->obtenerDireccionFiscal() : 'Av. Principal 123, Miraflores, Lima - Perú';
+        $arrendadorRep = $empresa && $empresa->obtenerRepresentanteNombreCompleto()
+            ? $empresa->obtenerRepresentanteNombreCompleto()
+            : 'Orlando Gonzales Camargo';
+        $arrendadorDni = $empresa && $empresa->obtenerRepresentanteDocumento()
+            ? $empresa->obtenerRepresentanteDocumento()
+            : '45879632';
+
         return [
             // Contrato
             'contrato.numero' => $a->obtenerCodigo(),
@@ -924,11 +956,11 @@ class DocumentoServicio
             'garantia.texto' => $this->convertirMontoATexto((string) $a->obtenerDepositoGarantia(), $a->obtenerMonedaCodigo()),
 
             // Arrendador
-            'arrendador.razon_social' => 'Camargo Hostelería S.A.C.',
-            'arrendador.ruc' => '20601234567',
-            'arrendador.representante_legal' => 'Orlando Gonzales Camargo',
-            'arrendador.representante_dni' => '45879632',
-            'arrendador.domicilio_legal' => 'Av. Principal 123, Miraflores, Lima - Perú',
+            'arrendador.razon_social' => $arrendadorRazonSocial,
+            'arrendador.ruc' => $arrendadorRuc,
+            'arrendador.representante_legal' => $arrendadorRep,
+            'arrendador.representante_dni' => $arrendadorDni,
+            'arrendador.domicilio_legal' => $arrendadorDomicilio,
 
             // Arrendatario
             'arrendatario.nombre_completo' => $a->obtenerTitularNombreCompleto() ?: 'Cliente Sin Nombre',
