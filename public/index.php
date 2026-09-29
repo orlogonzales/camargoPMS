@@ -282,6 +282,62 @@ $enrutador->get('/api/geografia/distritos', [\CamargoPMS\Controladores\Geografia
     new \CamargoPMS\Intermediarios\AutenticacionIntermediario(),
 ]);
 
+// Rutas de Gestión Comercial de Clientes y Ficha Integral 360° (CLIENTES-1)
+$enrutador->get('/clientes', [\CamargoPMS\Controladores\ClienteControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/clientes/datos', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/api/clientes', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/api/clientes/categorias', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiCategorias'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/api/clientes/canales', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiCanales'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/api/clientes/buscar-persona', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiBuscarPersona'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/clientes/{id}', [\CamargoPMS\Controladores\ClienteControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->get('/api/clientes/{id}', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiFicha360'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.ver'),
+]);
+$enrutador->post('/clientes', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiCrear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.crear'),
+]);
+$enrutador->post('/api/clientes', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiCrear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.crear'),
+]);
+$enrutador->post('/clientes/{id}', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.editar'),
+]);
+$enrutador->put('/clientes/{id}', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.editar'),
+]);
+$enrutador->post('/api/clientes/{id}', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.editar'),
+]);
+$enrutador->put('/api/clientes/{id}', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiActualizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.editar'),
+]);
+$enrutador->post('/clientes/{id}/bloquear', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiBloquear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.bloquear'),
+]);
+$enrutador->post('/api/clientes/{id}/bloquear', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiBloquear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.bloquear'),
+]);
+$enrutador->post('/clientes/{id}/desbloquear', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiDesbloquear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.bloquear'),
+]);
+$enrutador->post('/api/clientes/{id}/desbloquear', [\CamargoPMS\Controladores\ClienteControlador::class, 'apiDesbloquear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('clientes.bloquear'),
+]);
+
 // Rutas de Maestro Central de Propiedades (PROPIEDADES-1)
 $enrutador->get('/propiedades', [\CamargoPMS\Controladores\PropiedadControlador::class, 'index'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),
