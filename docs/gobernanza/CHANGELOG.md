@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1A-C1 — Corrección Canónica: Migración 033, Reubicación Operativa/Financiera y Tooltips Alina (D-093-C1)
+
+- **Migración Canónica de Datos 033 (`SQL/migraciones/033_reorganizar_menu_alina.sql`):**
+  - Versionamiento formal y reproducible de la reorganización de menú en 9 dominios canónicos y 39 opciones.
+  - Cero modificaciones DDL (tabla `opciones_menu` inalterada; exactamente 118 tablas en el motor relacional).
+  - Idempotencia total (`INSERT ... ON DUPLICATE KEY UPDATE` y `UPDATE`) con soporte asegurado para permisos y opciones de sesiones y personal.
+  - Reproducibilidad bidireccional certificada: idéntico resultado tanto en ruta de actualización (`032 -> 033`) como en instalación limpia desde cero (`001 -> 033`).
+  - Ranura de migración `034_*` estrictamente libre y disponible.
+- **Reubicación Operativa y Financiera:**
+  - `Estadías / Check-in` (`/estadias`, orden 1) y `Servicios y Consumos` (`/servicios`, orden 2) reubicados desde *Comercial y Reservas* al dominio **Operaciones**.
+  - `Auditoría Nocturna` (`/operaciones/night-audit`, orden 4) reubicada desde *Operaciones* al dominio **Caja y Finanzas**.
+  - Orden canónico en Operaciones: Estadías (1), Servicios (2), Housekeeping (3), Mantenimiento (4), Libro de Guardia (5).
+  - Orden canónico en Caja y Finanzas: Caja y Cuentas (1), Recibos (2), Gastos (3), Auditoría Nocturna (4).
+  - Orden canónico en Comercial y Reservas: Tape Chart (1), Reservas (2), Clientes (3), Arrendamientos (4).
+- **Usabilidad y Accesibilidad Alina:**
+  - Incorporación de tooltips nativos Bootstrap/Alina (`data-bs-toggle="tooltip"`, `data-bs-placement="right"`) en todos los enlaces de dominios principales de la barra lateral vertical N1 (`app/Vistas/componentes/menu-principal.php`).
+- **Verificación y Cobertura:**
+  - Suite de menú de 3 niveles actualizada: `tests/test_menu_tres_niveles.php` (27/27 PASS, 100%).
+  - Regresión global del repositorio: 63 suites evaluadas, 63/63 PASSED (100%), 0 fallos.
+
 ### Microfase UI-ALINA-1A — Gobernanza + Menú Dinámico Real de 3 Niveles + Reorganización Funcional (D-093)
 
 - **Gobernanza del Sistema de Diseño Alina:**

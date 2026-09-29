@@ -2849,20 +2849,6 @@ ON DUPLICATE KEY UPDATE
     `orden` = VALUES(`orden`),
     `permiso_id` = VALUES(`permiso_id`);
 
--- Nivel 2: Opción Secundaria 'Estadías (Check-in)'
-INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'estadias_catalogo', 'Estadías (Check-in)', 'fa-solid fa-key', '/estadias', 3, 'ACTIVO', perm.`id`, 1
-FROM `opciones_menu` p
-CROSS JOIN `permisos` perm
-WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
-  AND perm.`codigo` = 'estadias.ver'
-ON DUPLICATE KEY UPDATE
-    `nombre` = VALUES(`nombre`),
-    `icono` = VALUES(`icono`),
-    `ruta` = VALUES(`ruta`),
-    `orden` = VALUES(`orden`),
-    `permiso_id` = VALUES(`permiso_id`);
-
 -- Nivel 2: Opción Secundaria 'Arrendamientos'
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
 SELECT p.`id`, 'arrendamientos_catalogo', 'Arrendamientos', 'fa-solid fa-file-signature', '/arrendamientos', 4, 'ACTIVO', perm.`id`, 1
@@ -2877,13 +2863,42 @@ ON DUPLICATE KEY UPDATE
     `orden` = VALUES(`orden`),
     `permiso_id` = VALUES(`permiso_id`);
 
--- Nivel 2: Opción Secundaria 'Servicios y Consumos'
+-- Dominio 'operaciones' (Operaciones)
+-- Nivel 2: Opción Secundaria 'Estadías / Check-in'
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'servicios_catalogo', 'Servicios y Consumos', 'fa-solid fa-bell-concierge', '/servicios', 6, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'estadias_catalogo', 'Estadías / Check-in', 'fa-solid fa-key', '/estadias', 1, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
-WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
+WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'estadias.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+-- Nivel 2: Opción Secundaria 'Servicios y Consumos'
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'servicios_catalogo', 'Servicios y Consumos', 'fa-solid fa-bell-concierge', '/servicios', 2, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'servicios.ver'
+ON DUPLICATE KEY UPDATE
+    `nombre` = VALUES(`nombre`),
+    `icono` = VALUES(`icono`),
+    `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
+    `permiso_id` = VALUES(`permiso_id`);
+
+-- Nivel 2: Opción Secundaria 'Mantenimiento'
+INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
+SELECT p.`id`, 'mantenimiento_catalogo', 'Mantenimiento', 'fa-solid fa-wrench', '/mantenimiento', 4, 'ACTIVO', perm.`id`, 1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'mantenimiento.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),
@@ -2899,21 +2914,6 @@ FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'caja_finanzas' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'caja.ver'
-ON DUPLICATE KEY UPDATE
-    `nombre` = VALUES(`nombre`),
-    `icono` = VALUES(`icono`),
-    `ruta` = VALUES(`ruta`),
-    `orden` = VALUES(`orden`),
-    `permiso_id` = VALUES(`permiso_id`);
-
--- Dominio 'operaciones' (Operaciones)
--- Nivel 2: Opción Secundaria 'Mantenimiento'
-INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'mantenimiento_catalogo', 'Mantenimiento', 'fa-solid fa-wrench', '/mantenimiento', 2, 'ACTIVO', perm.`id`, 1
-FROM `opciones_menu` p
-CROSS JOIN `permisos` perm
-WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
-  AND perm.`codigo` = 'mantenimiento.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),
@@ -5813,7 +5813,7 @@ SELECT 2, p.id FROM `permisos` p WHERE p.codigo LIKE 'housekeeping.%';
 -- Opción de Menú Alina (Bajo Menú Operaciones)
 -- ----------------------------------------------------------------------------
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'housekeeping_tablero', 'Housekeeping / Pisos', 'fa-solid fa-broom', '/housekeeping', 1, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'housekeeping_tablero', 'Housekeeping / Pisos', 'fa-solid fa-broom', '/housekeeping', 3, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
@@ -6185,7 +6185,7 @@ WHERE r.`codigo` = 'SUPERADMINISTRADOR'
 -- 5. Opción de Menú Alina: Libro de Guardia (Bajo Operaciones)
 -- ----------------------------------------------------------------------------
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
-SELECT p.`id`, 'operaciones_bitacora', 'Libro de Guardia', 'fa-solid fa-book', '/operaciones/bitacora', 3, 'ACTIVO', perm.`id`, 1
+SELECT p.`id`, 'operaciones_bitacora', 'Libro de Guardia', 'fa-solid fa-book', '/operaciones/bitacora', 5, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
 WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
@@ -6340,13 +6340,13 @@ WHERE r.`codigo` = 'SUPERADMINISTRADOR'
   AND (p.`codigo` LIKE 'devengo.%' OR p.`codigo` LIKE 'night_audit.%');
 
 -- ----------------------------------------------------------------------------
--- 5. Opción de Menú Alina: Auditoría Nocturna (Bajo Operaciones)
+-- 5. Opción de Menú Alina: Auditoría Nocturna (Bajo Caja y Finanzas)
 -- ----------------------------------------------------------------------------
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
 SELECT p.`id`, 'operaciones_night_audit', 'Auditoría Nocturna', 'fa-solid fa-moon', '/operaciones/night-audit', 4, 'ACTIVO', perm.`id`, 1
 FROM `opciones_menu` p
 CROSS JOIN `permisos` perm
-WHERE p.`clave` = 'operaciones' AND p.`padre_id` IS NULL
+WHERE p.`clave` = 'caja_finanzas' AND p.`padre_id` IS NULL
   AND perm.`codigo` = 'night_audit.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
@@ -6451,7 +6451,7 @@ SELECT
     'Clientes',
     'fa-solid fa-users',
     '/clientes',
-    5,
+    3,
     'ACTIVO',
     perm.`id`,
     1

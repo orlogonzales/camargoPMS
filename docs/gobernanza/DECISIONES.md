@@ -1469,7 +1469,43 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - $\text{MENÚ} \neq \text{AUTORIZACIÓN}$. Ocultar una opción en el menú dinámico no autoriza el acceso a la ruta. Toda petición HTTP es validada de forma soberana e ineludible por los intermediarios de autorización RBAC en el backend.
 6. **Evolución Controlada de Base de Datos:**
    - La tabla `opciones_menu` dispone de un esquema autorreferenciado con clave ajena `padre_id` que soporta la jerarquía sin modificaciones DDL.
-   - No se crea migración 033. El esquema consolidado permanece en exactamente **118 tablas**. La ranura `033_*` se mantiene estrictamente libre y disponible.
+
+### D-093-C1 — Migración 033 de Datos, Reubicación Operativa/Financiera y Reproducibilidad Canónica (UI-ALINA-1A-C1)
+
+1. **Migración de Datos Canónica 033:**
+   - La reorganización estructural del menú no puede depender de scripts efímeros ni de modificaciones aisladas al dump consolidado. Se formaliza la migración versionada `SQL/migraciones/033_reorganizar_menu_alina.sql` para garantizar 100% de reproducibilidad y paridad tanto en actualizaciones de bases existentes (`032 -> 033`) como en instalaciones limpias desde cero (`001 -> 033`).
+   - Cero modificaciones DDL: La migración es puramente de datos (`INSERT ... ON DUPLICATE KEY UPDATE` y `UPDATE`), preservando exactamente **118 tablas** en el motor relacional.
+   - La ranura `034_*` queda estrictamente libre y disponible para el roadmap futuro.
+
+2. **Reubicación Funcional de Operaciones y Caja y Finanzas:**
+   - Conforme al diseño operativo y contable vinculante de Camargo PMS:
+     - **Estadías / Check-in** (`estadias_catalogo`, `/estadias`): Se reubica de *Comercial y Reservas* al dominio **Operaciones** con orden 1.
+     - **Servicios y Consumos** (`servicios_catalogo`, `/servicios`): Se reubica de *Comercial y Reservas* al dominio **Operaciones** con orden 2.
+     - **Auditoría Nocturna** (`operaciones_night_audit`, `/operaciones/night-audit`): Se reubica de *Operaciones* al dominio **Caja y Finanzas** con orden 4.
+   - Orden canónico en Operaciones:
+     1. Estadías / Check-in (`/estadias`)
+     2. Servicios y Consumos (`/servicios`)
+     3. Housekeeping / Pisos (`/housekeeping`)
+     4. Mantenimiento (`/mantenimiento`)
+     5. Libro de Guardia (`/operaciones/bitacora`)
+   - Orden canónico en Caja y Finanzas:
+     1. Caja y Cuentas (`/caja`)
+     2. Recibos de Pago (`/recibos`)
+     3. Gastos y Egresos (`/gastos`)
+     4. Auditoría Nocturna (`/operaciones/night-audit`)
+   - Orden canónico en Comercial y Reservas:
+     1. Tape Chart / Rack (`/tape-chart`)
+     2. Reservas (`/reservas`)
+     3. Clientes (`/clientes`)
+     4. Arrendamientos (`/arrendamientos`)
+
+3. **Tooltips Nativos Alina en Barra de Navegación N1:**
+   - Los iconos principales de la barra lateral vertical N1 (`app/Vistas/componentes/menu-principal.php`) implementan atributos nativos de tooltip Bootstrap/Alina: `data-bs-toggle="tooltip"` y `data-bs-placement="right"`, mejorando la usabilidad y legibilidad de los 9 dominios cuando el menú secundario se encuentra contraído.
+
+4. **Principio Rector para Futuras Integraciones Externas (APIsPERU DNI/RUC):**
+   - En fases funcionales posteriores que requieran la consulta automatizada de documentos de identidad (DNI/RUC vía servicio externo como APIsPERU):
+     - Las credenciales técnicas (`APISPERU_TOKEN`) se gestionarán exclusivamente mediante variables de entorno en `.env`, jamás versionadas en Git ni expuestas en el código fuente.
+     - El consumo se aislará en un servicio soberano de infraestructura/adaptador, desacoplado de las vistas y formularios, con degradación elegante si el servicio externo no responde o carece de saldo.
 
 ## Pendientes de decisión
 

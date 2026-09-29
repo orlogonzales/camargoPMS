@@ -29,6 +29,8 @@ $menuItems = $menu ?? $menuEstatico ?? [];
                 <a href="#"
                    class="nav-link <?= $estaActivo ? 'active' : '' ?>"
                    data-target="<?= e($item['clave']) ?>"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="right"
                    title="<?= e($item['etiqueta']) ?>">
                     <i class="<?= e($item['icono']) ?>"></i>
                 </a>
