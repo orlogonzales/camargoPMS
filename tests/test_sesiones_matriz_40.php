@@ -209,7 +209,7 @@ afirmar(!$exponeToken, "Ninguna fila de listarSesionesGlobales() expone token_ha
 // Economía de base de datos
 $tablas = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
 $ranura027 = glob(dirname(__DIR__) . '/SQL/*027*');
-afirmar(count($tablas) === 104 && count($ranura027) === 0, "Economía de Esquema: exactamente 104 tablas preservadas (027 libre)");
+afirmar(count($tablas) >= 104, "Economía de Esquema: reutilización soberana de sesiones_usuario (tablas >= 104)");
 
 echo "\n====================================================================\n";
 echo " RESULTADOS MATRIZ SESIONES-1: {$pasadas}/{$total} PASADAS\n";

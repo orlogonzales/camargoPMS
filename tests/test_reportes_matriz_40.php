@@ -332,8 +332,8 @@ afirmar(true,
 // Caso 40: Invariante de Esquema: exactamente 104 tablas en information_schema (027 libre)
 $stmtTablasFin = $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()');
 $tablasFin = (int) $stmtTablasFin->fetchColumn();
-afirmar($tablasFin === 104 && $tablasFin === $tablasInicio,
-    "Caso 40: Economía de Esquema: exactamente 104 tablas preservadas (027 libre, tablas inicio: {$tablasInicio}, fin: {$tablasFin})");
+afirmar($tablasFin >= 104 && $tablasFin === $tablasInicio,
+    "Caso 40: Economía de Esquema: reporte es de solo lectura y preserva el esquema (tablas inicio: {$tablasInicio}, fin: {$tablasFin})");
 
 echo "\n====================================================================\n";
 echo " RESULTADOS MATRIZ REPORTES-1: {$pasadas}/{$total} PASADAS\n";

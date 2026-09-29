@@ -362,6 +362,92 @@ class UsuarioServicio
     }
 
     /**
+     * Restablece administrativamente la contraseña de un usuario mediante comando seguro CLI o recuperación autorizada.
+     *
+     * Reglas vinculantes:
+     * - No requiere conocer la contraseña previa (diferente de cambiarContrasena).
+     * - Valida estrictamente la política oficial de contraseñas de Camargo PMS (longitud 12-1024 caracteres).
+     * - Genera hash mediante password_hash(..., PASSWORD_DEFAULT).
+     * - Exige que el usuario exista y se encuentre en estado ACTIVO.
+     * - Revoca todas las sesiones previas activas del usuario (REVOCACION_ADMINISTRATIVA).
+     * - Registra auditoría inmutable D-061 con el actor del sistema (CAMARGO_PMS) y motivo explícito.
+     * - NUNCA expone ni almacena contraseñas o hashes en texto plano ni en trazas de auditoría.
+     *
+     * @param int $usuarioId Identificador del usuario a restablecer
+     * @param string $nuevaContrasena Nueva contraseña en texto plano para validar y hashear
+     * @param string $motivo Motivo normativo del restablecimiento
+     * @return bool
+     * @throws EntidadNoEncontradaExcepcion
+     * @throws ValidacionExcepcion
+     * @throws Throwable
+     */
+    public function restablecerContrasenaAdministrativa(
+        int $usuarioId,
+        string $nuevaContrasena,
+        string $motivo = 'RECUPERACION_ADMINISTRATIVA_CLI'
+    ): bool {
+        if ($usuarioId <= 0) {
+            throw new ValidacionExcepcion('Se requiere un identificador de usuario válido.');
+        }
+
+        $this->validarPoliticaContrasena($nuevaContrasena);
+
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare('SELECT id, nombre_usuario, contrasena_hash, estado FROM usuarios WHERE id = :id FOR UPDATE');
+            $stmt->bindValue(':id', $usuarioId, PDO::PARAM_INT);
+            $stmt->execute();
+            $fila = $stmt->fetch();
+
+            if (!$fila) {
+                throw new EntidadNoEncontradaExcepcion('Usuario', $usuarioId);
+            }
+
+            if ((string) $fila['estado'] !== 'ACTIVO') {
+                throw new ValidacionExcepcion(
+                    "No se puede restablecer la contraseña de un usuario en estado '{$fila['estado']}'. El usuario debe estar ACTIVO."
+                );
+            }
+
+            // Generar nuevo hash con algoritmo oficial vigente (PASSWORD_DEFAULT)
+            $nuevoHash = password_hash($nuevaContrasena, PASSWORD_DEFAULT);
+            if ($nuevoHash === false) {
+                throw new ValidacionExcepcion('Error interno al generar el hash de seguridad de la contraseña.');
+            }
+
+            $this->usuarioRepo->actualizarHashContrasena($usuarioId, $nuevoHash);
+
+            // Revocar de inmediato todas las sesiones activas por seguridad
+            $this->sesionServicio->revocarTodasDeUsuario($usuarioId, 'REVOCACION_ADMINISTRATIVA');
+
+            // Registrar auditoría atómicamente D-061 (NUNCA registrar contraseñas ni hashes)
+            $actorSistema = $this->auditoriaServicio->obtenerActorSistema();
+            $this->auditoriaServicio->registrar(
+                AccionAuditoria::CAMBIAR_CLAVE,
+                'usuarios',
+                'usuario',
+                (string) $usuarioId,
+                "Restablecimiento administrativo de contraseña para usuario '{$fila['nombre_usuario']}' (ID {$usuarioId}) - Motivo: {$motivo}",
+                null,
+                ['motivo' => $motivo],
+                null,
+                $actorSistema,
+                $usuarioId,
+                null,
+                $this->pdo
+            );
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Normaliza un nombre de usuario: recorta espacios y convierte a minúsculas en UTF-8.
      *
      * @param string $username

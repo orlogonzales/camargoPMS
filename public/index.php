@@ -1089,6 +1089,38 @@ $enrutador->post('/api/seguridad/sesiones/purgar-expiradas', [\CamargoPMS\Contro
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.revocar'),
 ]);
 
+// Rutas de Bitácora Operacional y Libro de Guardia (BITÁCORA-1 / D-089)
+$enrutador->get('/operaciones/bitacora', [\CamargoPMS\Controladores\BitacoraControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.ver'),
+]);
+$enrutador->get('/api/operaciones/bitacora', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiListar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.ver'),
+]);
+$enrutador->get('/api/operaciones/bitacora/metricas', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiMetricas'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.ver'),
+]);
+$enrutador->post('/api/operaciones/bitacora', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiCrear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.crear'),
+]);
+$enrutador->get('/api/operaciones/bitacora/{id}', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiObtenerDetalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.ver'),
+]);
+$enrutador->post('/api/operaciones/bitacora/{id}/seguimiento', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiAgregarSeguimiento'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.seguir'),
+]);
+$enrutador->post('/api/operaciones/bitacora/{id}/estado', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiCambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.resolver'),
+]);
+$enrutador->post('/api/operaciones/bitacora/{id}/resolver', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiResolver'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.resolver'),
+]);
+$enrutador->post('/api/operaciones/bitacora/{id}/reabrir', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiReabrir'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.resolver'),
+]);
+$enrutador->post('/api/operaciones/bitacora/{id}/anular', [\CamargoPMS\Controladores\BitacoraControlador::class, 'apiAnular'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.anular'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 // Despacho de la petición HTTP

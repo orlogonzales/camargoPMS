@@ -1337,6 +1337,28 @@ Gobierna la observabilidad, ciclo de vida, semántica de presencia y revocación
 12. **Economía de Esquema:** Reutilización íntegra de la tabla `sesiones_usuario` (Migración 005) sin modificaciones DDL (104 tablas preservadas).
 13. **Ranura 027 Libre:** `SESIONES-1` no consume archivo en `SQL/migraciones/027_*`.
 
+### D-089 — Libro de Guardia y Bitácora Operacional
+
+Gobierna la gestión de novedades de guardia, relevos de turno, consignas e incidencias en Camargo PMS (`BITÁCORA-1`):
+
+1. **Axioma Ontológico Hexagonal:**
+   $$\text{BITÁCORA} \neq \text{AUDITORÍA TÉCNICA (D-061)} \neq \text{TURNO CAJA} \neq \text{MANTENIMIENTO} \neq \text{HOUSEKEEPING}$$
+   La bitácora captura el relato humano y operativo entre colaboradores, recepcionistas y supervisores de guardia. No duplica auditoría forense de sistema ni órdenes técnicas de mantenimiento.
+2. **Inmutabilidad del Relato Original:**
+   El contenido del campo `contenido` en `bitacora_entradas` es inmutable desde su creación. No existe edición directa destructiva de textos ni relatos originales.
+3. **Trazabilidad Append-Only:**
+   Toda aclaración, corrección o comentario posterior se registra cronológicamente en la tabla dependiente `bitacora_seguimientos` mediante los tipos de evento `COMENTARIO`, `ENMIENDA`, `CAMBIO_ESTADO`, `RESOLUCION`, `REAPERTURA` y `ANULACION`.
+4. **Axioma ANULAR $\neq$ DELETE:**
+   Se prohíbe terminantemente el borrado físico (`DELETE`) en el libro de guardia. La anulación es una acción supervisada que exige motivo obligatorio ($\ge 5$ caracteres), registra al supervisor anulador (`anulada_por_usuario_id`) y fecha/hora (`anulada_en`), y fija el estado normativo en `ANULADA` con un evento histórico `ANULACION`.
+5. **Ciclo de Vida y Transiciones:**
+   Estados soportados: `REGISTRADA`, `PENDIENTE`, `EN_PROCESO`, `RESUELTA`, `ANULADA`. Las consignas e incidencias inician en `PENDIENTE`. La resolución formal exige descargo o nota de solución obligatoria. Se permite la reapertura fundamentada de novedades resueltas.
+6. **Evolución Controlada de Esquema:**
+   Se consume formalmente la migración `027_bitacora_guardia.sql` creando dos tablas (`bitacora_entradas` y `bitacora_seguimientos`). La base de datos pasa de 104 a exactamente 106 tablas. La ranura `028_*` permanece libre. `SQL/camargo_pms.sql` se mantiene sincronizado para *clean install*.
+7. **Seguridad RBAC Específica:**
+   Permisos atómicos: `bitacora.ver`, `bitacora.crear`, `bitacora.seguir`, `bitacora.resolver`, `bitacora.anular`. Opción de menú Alina registrada bajo la sección operativa `reservas` con clave `operaciones_bitacora`.
+8. **Recuperación Soberana de Acceso Administrativo (CLI):**
+   El restablecimiento de contraseñas de usuarios humanos sin credenciales activas se ejecuta exclusivamente vía CLI (`bin/restablecer-contrasena-usuario.php`) mediante `UsuarioServicio::restablecerContrasenaAdministrativa()`. Se prohíbe manipular hashes SQL directamente o registrar contraseñas fuera de la política de seguridad ($\ge 12$ caracteres UTF-8, `PASSWORD_DEFAULT`). Toda recuperación invalida de inmediato las sesiones previas activas con `REVOCACION_ADMINISTRATIVA` y audita la acción bajo D-061 con actor de sistema (`CAMARGO_PMS`) sin registrar contraseñas ni hashes en ningún registro o traza.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

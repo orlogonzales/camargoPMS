@@ -4,6 +4,45 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase BITÁCORA-1 — Libro de Guardia y Bitácora Operacional (D-089)
+
+- **Axioma Ontológico Hexagonal:**
+  - Consagración del principio vinculante: $\text{BITÁCORA} \neq \text{AUDITORÍA TÉCNICA (D-061)} \neq \text{TURNO CAJA} \neq \text{MANTENIMIENTO} \neq \text{HOUSEKEEPING}$.
+  - El libro de guardia captura el relato operativo humano, consignas entre relevos, avisos generales y novedades circunstanciales de los turnos.
+- **Inmutabilidad del Relato y Enmiendas Append-Only:**
+  - El texto original de una novedad registrada en `bitacora_entradas` es inmutable desde su inserción.
+  - Toda aclaración, ampliación o corrección de hechos se registra estrictamente de forma cronológica append-only en `bitacora_seguimientos` con tipos `COMENTARIO` y `ENMIENDA`.
+- **Axioma ANULAR $\neq$ DELETE:**
+  - Queda prohibido el borrado físico (`DELETE`) de registros en el libro de guardia.
+  - La anulación supervisada exige motivo justificado ($\ge 5$ caracteres), registra el supervisor y fecha, cambia el estado a `ANULADA` y emite un seguimiento normativo tipo `ANULACION`, conservando intacta la trazabilidad histórica.
+- **Ciclo de Vida de Consignas e Incidencias:**
+  - Estados soportados: `REGISTRADA`, `PENDIENTE`, `EN_PROCESO`, `RESUELTA`, `ANULADA`.
+  - Resolución formal con descargo obligatorio mediante `resolverEntrada()`.
+  - Reapertura controlada de novedades resueltas con motivo explícito mediante `reabrirEntrada()`.
+- **Evolución Controlada de Esquema:**
+  - Consumo formal de la migración `027_bitacora_guardia.sql` creando dos tablas: `bitacora_entradas` y `bitacora_seguimientos`.
+  - Total de tablas en el esquema oficial de Camargo PMS pasa exactamente de 104 a 106 tablas.
+  - Ranura `028_*` libre para futuras microfases.
+  - Consolidado `SQL/camargo_pms.sql` completamente sincronizado para instalaciones limpias (*clean install*).
+- **Aislamiento RBAC y Navegación Alina:**
+  - Permisos atómicos en módulo `operaciones`: `bitacora.ver`, `bitacora.crear`, `bitacora.seguir`, `bitacora.resolver`, `bitacora.anular`.
+  - Opción de menú registrada en Alina: `operaciones_bitacora` (Libro de Guardia en `/operaciones/bitacora` bajo la sección `reservas`).
+  - Intermediarios responden con HTTP 401 opaco ante peticiones no autenticadas y HTTP 403 ante carencia de permisos o fallo de token CSRF.
+- **Consola Operativa Alina y Endpoints JSON:**
+  - Vista `/operaciones/bitacora` con 4 KPIs (Novedades Hoy, Pendientes/En Proceso, Urgencias Activas, Consignas e Incidencias), filtros reactivos por sede, tipo, prioridad, turno, estado, fecha y texto.
+  - Modales dedicados para creación, seguimiento append-only, cambio de estado, resolución, reapertura y anulación supervisada.
+  - Endpoints REST protegidos: `GET /api/operaciones/bitacora`, `GET /api/operaciones/bitacora/{id}`, `GET /api/operaciones/bitacora/metricas`, `POST /api/operaciones/bitacora`, `POST /api/operaciones/bitacora/{id}/seguimiento`, `POST /api/operaciones/bitacora/{id}/estado`, `POST /api/operaciones/bitacora/{id}/resolver`, `POST /api/operaciones/bitacora/{id}/reabrir`, `POST /api/operaciones/bitacora/{id}/anular`.
+- **Certificación Automatizada Exhaustiva (80/80 PASS):**
+  - Matriz de dominio y axiomas: `tests/test_bitacora_matriz_40.php` (40/40 PASS).
+  - Seguridad, RBAC, CSRF, inyección y Auditoría D-061: `tests/test_bitacora_seguridad.php` (20/20 PASS).
+  - Concurrencia, aislamiento y append-only: `tests/test_bitacora_concurrencia.php` (10/10 PASS).
+  - End-to-End HTTP/API: `tests/test_e2e_bitacora.php` (10/10 PASS).
+  - Regresión integral de la suite completa: 48 suites ejecutadas, 48/48 PASS (100%), 1018 aserciones verificadas.
+- **Herramienta Soberana de Recuperación de Acceso Administrativo (CLI):**
+  - Incorporación del script formal `bin/restablecer-contrasena-usuario.php` exclusivo para entorno CLI (`PHP_SAPI === 'cli'`), con guarda estricta HTTP 403.
+  - Implementación del método de dominio `UsuarioServicio::restablecerContrasenaAdministrativa()` con política obligatoria $\ge 12$ caracteres UTF-8, algoritmo estándar `PASSWORD_DEFAULT` (bcrypt), revocación inmediata de todas las sesiones previas activas (`REVOCACION_ADMINISTRATIVA`), y emisión de auditoría D-061 sin almacenar contraseñas ni hashes en claro.
+  - Suite de verificación permanente `tests/test_recuperacion_contrasena_cli.php` (12/12 PASS).
+
 ### Microfase SESIONES-1 — Monitoreo, Presencia y Revocación Administrativa de Sesiones (D-088)
 
 - **Axioma Ontológico Hexagonal:**
