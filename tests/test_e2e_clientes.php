@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Suite de Pruebas End-to-End (E2E) Reales contra Apache en HTTPS — Camargo PMS (CLIENTES-1)
- * Casos E2E-CLI-01 a E2E-CLI-16 (16/16).
+ * Suite de Pruebas End-to-End (E2E) Reales contra Apache en HTTPS — Camargo PMS (CLIENTES-1 / CLIENTES-1A)
+ * Casos E2E-CLI-01 a E2E-CLI-18 (18/18).
  *
  * Principios vinculantes:
  * - PERSONA ≠ CLIENTE pero CLIENTE -> PERSONA.
@@ -13,6 +13,7 @@ declare(strict_types=1);
  * - RBAC vinculado a clientes.ver, clientes.crear, clientes.editar, clientes.bloquear.
  * - Ciclo completo: Alta persona existente, duplicado 409, alta nueva persona atómica,
  *   Ficha 360° completa, edición comercial, bloqueo con/sin motivo y reactivación.
+ * - Integración permanente en menú dinámico Alina bajo categoría reservas (CLIENTES-1A).
  * - Limpieza autocontenida estricta en bloque finally.
  */
 
@@ -30,7 +31,7 @@ $pdo->exec("SET SESSION innodb_lock_wait_timeout = 5");
 ob_end_clean();
 
 echo "====================================================================\n";
-echo " VALIDACIÓN HTTP E2E REAL CONTRA APACHE (CLIENTES-1)\n";
+echo " VALIDACIÓN HTTP E2E REAL CONTRA APACHE (CLIENTES-1 / CLIENTES-1A)\n";
 echo " Endpoint: https://app.camargo-pms.test/\n";
 echo " Principio Rector: PERSONA ≠ CLIENTE pero CLIENTE -> PERSONA\n";
 echo "====================================================================\n\n";
@@ -130,6 +131,7 @@ $fixtures = [
     'personas' => [],
     'usuarios' => [],
     'actores' => [],
+    'roles' => [],
     'auditoria' => [],
 ];
 
@@ -226,6 +228,7 @@ try {
     // Rol vacío sin permisos
     $pdo->prepare("INSERT INTO roles (codigo, nombre, descripcion, es_superadministrador, estado, creado_en) VALUES (?, 'Rol Vacio E2E', 'Sin permisos', 0, 'ACTIVO', NOW())")->execute(['ROL_VACIO_' . $sufijo]);
     $rolVacioId = (int) $pdo->lastInsertId();
+    $fixtures['roles'][] = $rolVacioId;
     $pdo->exec("INSERT INTO usuarios_roles (usuario_id, rol_id, asignado_en) VALUES ({$sinPermisoUsuarioId}, {$rolVacioId}, NOW())");
 
     $rGetLoginSin = curlRequest("{$baseUrl}/login", 'GET');
@@ -247,10 +250,6 @@ try {
     ]);
     $rechazado403 = ($rClientesSin['code'] === 403);
     checkE2E('E2E-CLI-04', 'Usuario sin permiso clientes.ver recibe HTTP 403 Forbidden', $rechazado403, "Code: {$rClientesSin['code']}");
-
-    // Limpiamos rol vacío
-    $pdo->exec("DELETE FROM usuarios_roles WHERE rol_id = {$rolVacioId}");
-    $pdo->exec("DELETE FROM roles WHERE id = {$rolVacioId}");
 
     // -------------------------------------------------------------------------
     // E2E-CLI-05: API GET /api/clientes retorna HTTP 200 y JSON paginado
@@ -500,6 +499,29 @@ try {
                $jsonReact['datos']['motivo_bloqueo'] === null;
     checkE2E('E2E-CLI-16', 'API POST /api/clientes/{id}/desbloquear reactiva cliente y limpia motivo (HTTP 200)', $reactOk, "Code: {$rReactivar['code']}");
 
+    // -------------------------------------------------------------------------
+    // E2E-CLI-17: Menú dinámico Alina renderiza opción Clientes para usuario autorizado
+    // -------------------------------------------------------------------------
+    $rMenuAuth = curlRequest("{$baseUrl}/clientes", 'GET', [
+        "Cookie: {$cookieSession}",
+    ]);
+    $menuAuthOk = ($rMenuAuth['code'] === 200) &&
+                  str_contains($rMenuAuth['body'], 'href="/clientes"') &&
+                  str_contains($rMenuAuth['body'], 'fa-solid fa-users') &&
+                  str_contains($rMenuAuth['body'], 'Clientes') &&
+                  str_contains($rMenuAuth['body'], 'id="reservas"');
+    checkE2E('E2E-CLI-17', 'Menú dinámico Alina renderiza opción Clientes con icono fa-solid fa-users bajo reservas', $menuAuthOk, "Code: {$rMenuAuth['code']}");
+
+    // -------------------------------------------------------------------------
+    // E2E-CLI-18: Menú dinámico Alina excluye opción Clientes para usuario sin permiso clientes.ver
+    // -------------------------------------------------------------------------
+    $rMenuSin = curlRequest("{$baseUrl}/", 'GET', [
+        "Cookie: {$cookieSessionSin}",
+    ]);
+    $menuSinExcluye = ($rMenuSin['code'] === 200) &&
+                      !str_contains($rMenuSin['body'], 'href="/clientes"');
+    checkE2E('E2E-CLI-18', 'Menú dinámico Alina excluye /clientes para usuario sin permiso clientes.ver (MENÚ ≠ AUTORIZACIÓN)', $menuSinExcluye, "Code: {$rMenuSin['code']}");
+
 } catch (Throwable $e) {
     echo "\nEXCEPCIÓN NO CONTROLADA EN E2E: " . $e->getMessage() . "\n";
     echo $e->getTraceAsString() . "\n";
@@ -521,6 +543,12 @@ try {
         $idsPerStr = implode(',', array_map('intval', $fixtures['personas']));
         $pdo->exec("DELETE a FROM auditoria a INNER JOIN clientes c ON a.entidad_id = c.id WHERE a.entidad = 'clientes' AND c.persona_id IN ({$idsPerStr})");
         $pdo->exec("DELETE FROM clientes WHERE persona_id IN ({$idsPerStr})");
+    }
+
+    if (!empty($fixtures['roles'])) {
+        $idsRolStr = implode(',', array_map('intval', $fixtures['roles']));
+        $pdo->exec("DELETE FROM usuarios_roles WHERE rol_id IN ({$idsRolStr})");
+        $pdo->exec("DELETE FROM roles WHERE id IN ({$idsRolStr})");
     }
 
     if (!empty($fixtures['usuarios'])) {
@@ -554,7 +582,7 @@ try {
 // RESUMEN FINAL
 // ============================================================================
 echo "\n====================================================================\n";
-echo " RESUMEN E2E CLIENTES-1: {$pass}/16 CASOS PASADOS (" . round(($pass / 16) * 100, 1) . "%)\n";
+echo " RESUMEN E2E CLIENTES-1: {$pass}/18 CASOS PASADOS (" . round(($pass / 18) * 100, 1) . "%)\n";
 echo "====================================================================\n";
 
 if ($fail > 0) {

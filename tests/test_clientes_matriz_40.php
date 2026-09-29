@@ -24,6 +24,7 @@ use CamargoPMS\Excepciones\ValidacionClienteExcepcion;
 use CamargoPMS\Modelos\Cliente;
 use CamargoPMS\Modelos\ClienteCategoria;
 use CamargoPMS\Modelos\Persona;
+use CamargoPMS\Modelos\Usuario;
 use CamargoPMS\Nucleo\BaseDatos;
 use CamargoPMS\Nucleo\Configuracion;
 use CamargoPMS\Repositorios\ActorAuditoriaRepositorio;
@@ -33,6 +34,7 @@ use CamargoPMS\Repositorios\ClienteRepositorio;
 use CamargoPMS\Repositorios\PersonaRepositorio;
 use CamargoPMS\Servicios\AuditoriaServicio;
 use CamargoPMS\Servicios\ClienteServicio;
+use CamargoPMS\Servicios\MenuServicio;
 use CamargoPMS\Servicios\PersonaServicio;
 
 Configuracion::cargar(dirname(__DIR__));
@@ -445,8 +447,49 @@ try {
     }
     evaluar("DOM-CLI-39", "Consulta de ID inexistente arroja ClienteNoEncontradoExcepcion (404)", $noEncontradoCapturado);
 
-    // Caso 40: Autocontenido estricto verificado antes de limpieza
-    evaluar("DOM-CLI-40", "Autocontenido de fixtures preparado para rollback y purga completa", true);
+    // Caso 40: Integración permanente en menú dinámico Alina y RBAC (CLIENTES-1A)
+    $stmtOpcion = $pdo->prepare("
+        SELECT om.id, om.clave, om.nombre, om.ruta, om.icono, p.clave AS categoria_padre, perm.codigo AS permiso_codigo
+        FROM opciones_menu om
+        LEFT JOIN opciones_menu p ON om.padre_id = p.id
+        LEFT JOIN permisos perm ON om.permiso_id = perm.id
+        WHERE om.clave = 'clientes_catalogo'
+    ");
+    $stmtOpcion->execute();
+    $opcionMenu = $stmtOpcion->fetch(PDO::FETCH_ASSOC);
+
+    $menuServicio = new MenuServicio($pdo);
+    // Usuario 1 es Superadministrador del sistema
+    $uAdmin = new Usuario(1, 1, 'admin_super', 'hash');
+    $menuAdmin = $menuServicio->obtenerMenuParaUsuario($uAdmin, '/clientes');
+    $menuAdminTieneClientes = false;
+    foreach ($menuAdmin['reservas']['grupos'] ?? [] as $g) {
+        if ($g['clave'] === 'clientes_catalogo' && $g['activo'] === true) {
+            $menuAdminTieneClientes = true;
+            break;
+        }
+    }
+
+    // Usuario ficticio sin ningún permiso RBAC
+    $uSin = new Usuario(99999999, 99999999, 'sin_permiso', 'hash');
+    $menuSin = $menuServicio->obtenerMenuParaUsuario($uSin, '/clientes');
+    $menuSinExcluyeClientes = true;
+    foreach ($menuSin['reservas']['grupos'] ?? [] as $g) {
+        if ($g['clave'] === 'clientes_catalogo') {
+            $menuSinExcluyeClientes = false;
+            break;
+        }
+    }
+
+    $menuIntegracionOk = ($opcionMenu !== false) &&
+        ($opcionMenu['ruta'] === '/clientes') &&
+        ($opcionMenu['categoria_padre'] === 'reservas') &&
+        ($opcionMenu['permiso_codigo'] === 'clientes.ver') &&
+        ($opcionMenu['icono'] === 'fa-solid fa-users') &&
+        $menuAdminTieneClientes &&
+        $menuSinExcluyeClientes;
+
+    evaluar("DOM-CLI-40", "Opción Clientes integrada en menú dinámico bajo reservas, RBAC clientes.ver y activo", $menuIntegracionOk);
 
 } finally {
     echo "\n--- LIMPIEZA DE FIXTURES TEMPORALES ---\n";

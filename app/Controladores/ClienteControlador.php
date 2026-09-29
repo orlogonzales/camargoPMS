@@ -187,6 +187,13 @@ class ClienteControlador
 
         $html = $this->vista->renderizar('clientes/index', [
             'titulo' => 'Clientes Comerciales — Camargo PMS',
+            'categoriaActiva' => 'reservas',
+            'subcategoriaActiva' => 'clientes_catalogo',
+            'migasPan' => [
+                ['etiqueta' => 'Panel', 'url' => url_ruta('/'), 'activo' => false],
+                ['etiqueta' => 'Operaciones', 'url' => url_ruta('/reservas'), 'activo' => false],
+                ['etiqueta' => 'Clientes', 'url' => url_ruta('/clientes'), 'activo' => true],
+            ],
             'usuario' => $usuario,
             'categorias' => $categorias,
             'canales' => $canales,
@@ -395,6 +402,14 @@ class ClienteControlador
 
         $html = $this->vista->renderizar('clientes/detalle', [
             'titulo' => "Ficha 360°: {$ficha360['cliente']['codigo']} — {$ficha360['persona']['nombres']} {$ficha360['persona']['apellido_paterno']}",
+            'categoriaActiva' => 'reservas',
+            'subcategoriaActiva' => 'clientes_catalogo',
+            'migasPan' => [
+                ['etiqueta' => 'Panel', 'url' => url_ruta('/'), 'activo' => false],
+                ['etiqueta' => 'Operaciones', 'url' => url_ruta('/reservas'), 'activo' => false],
+                ['etiqueta' => 'Clientes', 'url' => url_ruta('/clientes'), 'activo' => false],
+                ['etiqueta' => "Ficha 360° ({$ficha360['cliente']['codigo']})", 'url' => url_ruta("/clientes/{$clienteId}"), 'activo' => true],
+            ],
             'usuario' => $usuario,
             'ficha' => $ficha360,
             'categorias' => $categorias,

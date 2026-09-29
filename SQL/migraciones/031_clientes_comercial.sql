@@ -100,24 +100,26 @@ ON DUPLICATE KEY UPDATE `permiso_id` = VALUES(`permiso_id`);
 -- ----------------------------------------------------------------------------
 -- 4. Opción de Menú en Navegación Administrativa (bajo Reservas / Operaciones)
 -- ----------------------------------------------------------------------------
-SET @padre_reservas_id = (SELECT `id` FROM `opciones_menu` WHERE `clave` = 'reservas' LIMIT 1);
-SET @permiso_ver_clientes_id = (SELECT `id` FROM `permisos` WHERE `codigo` = 'clientes.ver' LIMIT 1);
-
 INSERT INTO `opciones_menu` (`padre_id`, `clave`, `nombre`, `icono`, `ruta`, `orden`, `estado`, `permiso_id`, `es_sistema`)
 SELECT
-    COALESCE(@padre_reservas_id, 42),
+    p.`id`,
     'clientes_catalogo',
     'Clientes',
     'fa-solid fa-users',
     '/clientes',
     4,
     'ACTIVO',
-    @permiso_ver_clientes_id,
+    perm.`id`,
     1
+FROM `opciones_menu` p
+CROSS JOIN `permisos` perm
+WHERE p.`clave` = 'reservas' AND p.`padre_id` IS NULL
+  AND perm.`codigo` = 'clientes.ver'
 ON DUPLICATE KEY UPDATE
     `nombre` = VALUES(`nombre`),
     `icono` = VALUES(`icono`),
     `ruta` = VALUES(`ruta`),
+    `orden` = VALUES(`orden`),
     `permiso_id` = VALUES(`permiso_id`);
 
 SET FOREIGN_KEY_CHECKS = 1;
