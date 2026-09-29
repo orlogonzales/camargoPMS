@@ -4,6 +4,44 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase DEVENGO-ALOJAMIENTO-1 — Devengo Diario de Alojamiento, Libro Diario y Auditoría Nocturna (D-090)
+
+- **Axioma Ontológico Quíntuple:**
+  - Consagración del principio vinculante: $\text{RESERVA} \neq \text{ESTADÍA} \neq \text{DEVENGO} \neq \text{CARGO} \neq \text{PAGO}$.
+  - El devengo diario reconoce de forma soberana el hecho económico del servicio de alojamiento prestado noche a noche para cada fecha hotelera en el intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$.
+  - La fecha de salida prevista no devenga noche de alojamiento.
+- **Jerarquía Tarifaria y Absorción Determinista de Redondeo:**
+  - Prioridad 1: Tarifa pactada explícita por noche en snapshot de reserva.
+  - Prioridad 2: Tarifa base uniforme cuando la multiplicación exacta coincide con el total.
+  - Prioridad 3 (Fallback Contractual Determinista): En caso de residuo fraccionario de céntimos ($100.00 / 3$), las noches regulares devengan la base truncada ($33.33$) y la primera noche (`noche_indice = 1`) absorbe el céntimo residual ($33.34$) con método `AJUSTE_RESIDUAL`, garantizando cuadre estricto al céntimo.
+  - Aritmética 100% `BCMath` con escala 2 y cero tipos de punto flotante (`FLOAT`/`DOUBLE`) prohibidos en el esquema.
+- **Auditoría Nocturna (Night Audit) y Cierre de Fecha Hotelera:**
+  - Entidad `CierreHotelero` con unicidad estricta `(propiedad_id, fecha_hotelera)` y estados `EN_PROCESO`, `CERRADO`, `FALLIDO`.
+  - Congelamiento inmutable de inventario vendible: unidades totales, OOO (fuera de orden por mantenimiento bloqueante), vendibles netas y habitaciones vendidas/cortesía.
+  - Cálculo soberano no estimado de métricas hoteleras: $\text{ADR} = \text{Ingreso Neto} / \text{Vendidas}$ y $\text{RevPAR} = \text{Ingreso Neto} / \text{Vendibles Netas}$.
+  - Protección ante re-ejecución sobre fechas ya cerradas y bloqueo pesimista `SELECT ... FOR UPDATE`.
+- **Inmutabilidad y Reversiones Supervisadas (Append-Only):**
+  - Prohibición categórica de borrado físico (`DELETE`). Reversión supervisada obligatoria con motivo formal ($\ge 5$ caracteres), cambiando a `REVERTIDO` e incrementando la secuencia en re-devengos posteriores (`secuencia = 2`, `secuencia = 3`, etc.).
+  - Inmutabilidad histórica de devengos pasados frente a checkout posterior, cancelaciones o acortamiento de estadía.
+- **Evolución Controlada de Esquema:**
+  - Migración `SQL/migraciones/028_devengo_alojamiento.sql` creando `cierres_hoteleros` y `devengos_alojamiento`.
+  - El catálogo de base de datos evoluciona exactamente de 106 a 108 tablas. Ranura `029_*` estrictamente libre.
+  - Sincronización completa con `SQL/camargo_pms.sql` (0 diferencias).
+- **Aislamiento RBAC y Navegación Alina:**
+  - 5 permisos atómicos: `night_audit.ver`, `night_audit.ejecutar`, `devengo.ver`, `devengo.ejecutar`, `devengo.revertir`.
+  - Opción de menú en Alina: `operaciones_night_audit` (`/operaciones/night-audit`).
+  - Consola web operativa Alina con 4 tarjetas KPI, selector de sede, formulario de ejecución y tabla histórica de cierres.
+  - Endpoints REST con validación CSRF y protección de sesión.
+- **Integración con Reportes (MDR):**
+  - Actualización de `ReporteServicio` y `ReporteRepositorio` para consumir métricas auditadas desde `cierres_hoteleros` y `devengos_alojamiento`.
+  - Preservación del estado `DIFERIDO_A_DEVENGO_ALOJAMIENTO_1` para fechas históricas pre-cutover sin devengos.
+- **Certificación Automatizada Exhaustiva (85/85 PASS):**
+  - Matriz de dominio y axiomas: `tests/test_devengo_matriz_40.php` (40/40 PASS).
+  - Aritmética de precisión, redondeo y métricas: `tests/test_devengo_calculo_20.php` (20/20 PASS).
+  - Concurrencia, bloqueo pesimista y resiliencia: `tests/test_devengo_concurrencia.php` (15/15 PASS).
+  - End-to-End HTTP/API: `tests/test_e2e_devengo.php` (10/10 PASS).
+  - Regresión global de la suite: 52 suites ejecutadas, 52/52 PASS (100%), 1103 aserciones verificadas (0 fallos).
+
 ### Microfase BITÁCORA-1 — Libro de Guardia y Bitácora Operacional (D-089)
 
 - **Axioma Ontológico Hexagonal:**

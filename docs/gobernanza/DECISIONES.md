@@ -1359,6 +1359,54 @@ Gobierna la gestión de novedades de guardia, relevos de turno, consignas e inci
 8. **Recuperación Soberana de Acceso Administrativo (CLI):**
    El restablecimiento de contraseñas de usuarios humanos sin credenciales activas se ejecuta exclusivamente vía CLI (`bin/restablecer-contrasena-usuario.php`) mediante `UsuarioServicio::restablecerContrasenaAdministrativa()`. Se prohíbe manipular hashes SQL directamente o registrar contraseñas fuera de la política de seguridad ($\ge 12$ caracteres UTF-8, `PASSWORD_DEFAULT`). Toda recuperación invalida de inmediato las sesiones previas activas con `REVOCACION_ADMINISTRATIVA` y audita la acción bajo D-061 con actor de sistema (`CAMARGO_PMS`) sin registrar contraseñas ni hashes en ningún registro o traza.
 
+### D-090 — Devengo Diario de Alojamiento, Libro Diario, Auditoría Nocturna y Métricas Soberanas ADR/RevPAR
+
+Gobierna el reconocimiento económico formal del alojamiento noche a noche, el proceso operacional de cierre de fecha hotelera (Night Audit) y el cálculo soberano no estimado de las métricas hoteleras fundamentales (`DEVENGO-ALOJAMIENTO-1`):
+
+1. **Axioma Ontológico Quíntuple:**
+   $$\text{RESERVA} \neq \text{ESTADÍA} \neq \text{DEVENGO} \neq \text{CARGO} \neq \text{PAGO}$$
+   - **Reserva:** Compromiso contractual prospectivo de alojamiento.
+   - **Estadía:** Ocupación física de la unidad sujeta al intervalo semiabierto $[\text{fecha\_entrada}, \text{fecha\_salida})$.
+   - **Devengo:** Hecho económico formal del servicio de alojamiento prestado para una fecha hotelera específica.
+   - **Cargo:** Asignación contable del importe a la cuenta corriente del huésped o titular.
+   - **Pago:** Extinción de la obligación monetaria mediante medios de tesorería (efectivo, bancos, tarjetas).
+2. **Semántica Temporal Semiabierta:**
+   - La noche hotelera corresponde a la fecha de inicio del ciclo. Una estancia del 10 al 13 de octubre genera devengos para las fechas hoteleras `2026-10-10`, `2026-10-11` y `2026-10-12` (3 noches).
+   - La fecha de salida prevista (`2026-10-13`) no devenga noche de alojamiento.
+   - Toda fecha hotelera fuera del intervalo $[\text{fecha\_entrada}, \text{fecha\_salida})$ es rechazada categóricamente.
+3. **Jerarquía Determinista de Tarifas y Absorción de Redondeo:**
+   - **Prioridad 1:** Tarifa explícita pactada por noche si existe desglose o snapshot nocturno específico.
+   - **Prioridad 2:** Tarifa base de la línea contratada en `reserva_unidades` cuando la multiplicación exacta coincide con el total.
+   - **Prioridad 3 (Fallback Contractual Determinista):** Si el total contratado entre el número de noches produce residuo fraccionario en céntimos (e.g. $100.00 / 3 = 33.3333\dots$), se truncan los importes a 2 decimales para las noches regulares y el residuo exacto se absorbe en la primera noche (`noche_indice = 1`) con método `AJUSTE_RESIDUAL`.
+   - Se prohíben flotantes (`FLOAT`, `DOUBLE`, `REAL`); todos los cálculos monetarios se ejecutan mediante `BCMath` con escala 2 y moneda funcional `PEN`.
+4. **Auditoría Nocturna (Night Audit) y Cierre de Fecha Hotelera:**
+   - El cierre hotelero tiene identidad fuerte: `UNIQUE(propiedad_id, fecha_hotelera)`.
+   - Congela de manera inmutable el snapshot de inventario físico y vendible: `unidades_totales`, `unidades_ooo`, `unidades_vendibles`, `habitaciones_vendidas` y `habitaciones_cortesia`.
+   - Calcula y congela de forma soberana el ADR (Average Daily Rate) y RevPAR (Revenue Per Available Room).
+   - Tránsito de estados: `EN_PROCESO` $\to$ `CERRADO` o `FALLIDO`. Se prohíbe re-ejecutar un cierre sobre una fecha ya cerrada.
+5. **Semántica Soberana de ADR, Ocupación y RevPAR:**
+   - **Distinción Conceptual Tripartita:**
+     - **A. Habitaciones Ocupadas (Físicas/Operacionales):** Suma total de unidades físicas que pernoctaron en la propiedad para la fecha hotelera, incluyendo tanto estadías comerciales como estadías de cortesía o sin cargo ($U_{\text{ocupadas}} = U_{\text{vendidas}} + U_{\text{cortesía}}$).
+     - **B. Habitaciones Vendidas / Comerciales:** Unidades físicas asignadas a estadías con contraprestación económica de alojamiento ($U_{\text{vendidas}}$ con $\text{neto} > 0.00$).
+     - **C. Habitaciones Computables para ADR:** Denominador de tarifa media diaria, fijado por convención canónica a las habitaciones vendidas con ingreso neto positivo ($U_{\text{computables\_adr}} = U_{\text{vendidas}}$). Se excluyen expresamente del divisor las habitaciones de cortesía o con tarifa neta cero ($0.00$ PEN) para salvaguardar la pureza del indicador y evitar la subestimación o dilución artificial del precio medio pactado.
+   - $\text{ADR} = \dfrac{\text{Ingreso Alojamiento Neto}}{\text{Habitaciones Computables ADR}} = \dfrac{\text{Ingreso Alojamiento Neto}}{\text{Habitaciones Vendidas}}$.
+   - $\text{RevPAR} = \dfrac{\text{Ingreso Alojamiento Neto}}{\text{Unidades Vendibles Netas}}$ (donde $\text{Vendibles} = \text{Totales} - \text{OOO}$; no se penaliza el RevPAR por habitaciones retiradas de venta por mantenimiento bloqueante deduplicadas e intersectadas con inventario activo).
+   - Si no existen ventas o vendibles, las métricas devuelven `0.00` con prevención estricta de división por cero.
+   - El Manager Daily Report (MDR) de `ReporteServicio` consume directamente los datos del cierre auditado cuando la fecha está cerrada (`DISPONIBLE`), proyecta en tiempo real desde el libro diario si existen devengos activos pero la fecha no ha cerrado, o declara `DIFERIDO_A_DEVENGO_ALOJAMIENTO_1` para fechas históricas pre-cutover sin devengos.
+6. **Inmutabilidad y Reversiones Supervisadas (Append-Only):**
+   - Se prohíbe el borrado físico (`DELETE`) de registros en el libro diario de devengos.
+   - Las correcciones operacionales se efectúan mediante reversión supervisada: se exige motivo justificado ($\ge 5$ caracteres), se marca el estado en `REVERTIDO`, se registra el supervisor y fecha, y todo re-devengo genera una nueva secuencia incremental (`secuencia = 2`, `secuencia = 3`, etc.) vinculada mediante `reverso_de_id`.
+   - Los devengos devengados en el pasado son inmutables frente a checkout anticipado, no-show o cancelaciones posteriores de la estadía.
+7. **Evolución Controlada de Esquema:**
+   - Consumo formal de la migración `028_devengo_alojamiento.sql` creando dos tablas: `cierres_hoteleros` y `devengos_alojamiento`.
+   - Total de tablas en el esquema oficial de Camargo PMS pasa exactamente de 106 a 108 tablas.
+   - La ranura `029_*` permanece estrictamente libre.
+   - Consolidado `SQL/camargo_pms.sql` completamente sincronizado (0 diferencias).
+8. **Seguridad RBAC y Navegación Alina:**
+   - Permisos atómicos en módulo `operaciones`: `night_audit.ver`, `night_audit.ejecutar`, `devengo.ver`, `devengo.ejecutar`, `devengo.revertir`.
+   - Opción de menú en Alina: `operaciones_night_audit` (Auditoría Nocturna en `/operaciones/night-audit` bajo la sección `reservas`).
+   - Intermediarios responden con HTTP 401 opaco ante peticiones no autenticadas y HTTP 403 ante carencia de permisos o token CSRF inválido.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

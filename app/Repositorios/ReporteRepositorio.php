@@ -488,4 +488,51 @@ class ReporteRepositorio
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Obtiene el cierre hotelero de auditoría nocturna para la fecha y propiedad.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function obtenerCierreHoteleroFecha(string $fecha, ?int $propiedadId = null): ?array
+    {
+        $sql = 'SELECT * FROM cierres_hoteleros WHERE fecha_hotelera = :fecha';
+        $params = ['fecha' => $fecha];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+        $sql .= ' ORDER BY id DESC LIMIT 1';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    /**
+     * Obtiene métricas agregadas de devengo de alojamiento para una fecha y propiedad.
+     *
+     * @return array<string, mixed>
+     */
+    public function obtenerMetricasDevengoFecha(string $fecha, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT COUNT(DISTINCT unidad_id) AS habitaciones_vendidas,
+                       COALESCE(SUM(importe_neto), 0.00) AS ingreso_alojamiento_neto,
+                       COUNT(DISTINCT estadia_id) AS estadias_devengadas
+                FROM devengos_alojamiento
+                WHERE fecha_hotelera = :fecha AND estado = "DEVENGADO"';
+        $params = ['fecha' => $fecha];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: [
+            'habitaciones_vendidas' => 0,
+            'ingreso_alojamiento_neto' => '0.00',
+            'estadias_devengadas' => 0,
+        ];
+    }
 }

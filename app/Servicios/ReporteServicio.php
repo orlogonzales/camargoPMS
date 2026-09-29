@@ -63,8 +63,10 @@ class ReporteServicio
         $unidadesTotal = count($unidades);
 
         // OOO estricto: requiere_bloqueo = 1 y fecha dentro del intervalo
+        $unidadesInventarioIds = array_column($unidades, 'id');
         $unidadesOooIds = array_values(array_unique(array_column($ordenesBloqueo, 'unidad_id')));
-        $unidadesOoo = count($unidadesOooIds);
+        $unidadesOooValidas = array_intersect($unidadesOooIds, $unidadesInventarioIds);
+        $unidadesOoo = count($unidadesOooValidas);
 
         // Unidades vendibles comerciales netas
         $unidadesVendibles = max(0, $unidadesTotal - $unidadesOoo);
@@ -112,6 +114,43 @@ class ReporteServicio
             }
         }
 
+        // Métricas soberanas de Devengo Diario, ADR y RevPAR (D-090)
+        $cierreHotelero = $this->reporteRepo->obtenerCierreHoteleroFecha($fecha, $propiedadId);
+        $metricasDevengo = $this->reporteRepo->obtenerMetricasDevengoFecha($fecha, $propiedadId);
+
+        $tieneCierre = $cierreHotelero !== null && $cierreHotelero['estado'] === 'CERRADO';
+        $tieneDevengos = ((int) $metricasDevengo['habitaciones_vendidas']) > 0 || bccomp((string) $metricasDevengo['ingreso_alojamiento_neto'], '0.00', 2) > 0;
+
+        if ($tieneCierre) {
+            $adrRevparEstado = 'DISPONIBLE';
+            $adrRevparNota = 'Métricas soberanas auditadas por Cierre Nocturno (Night Audit).';
+            $adr = (string) $cierreHotelero['adr'];
+            $revpar = (string) $cierreHotelero['revpar'];
+            $ingresoAlojamientoNeto = (string) $cierreHotelero['ingreso_alojamiento_neto'];
+            $habitacionesVendidas = (int) $cierreHotelero['habitaciones_vendidas'];
+            $nightAuditEstado = (string) $cierreHotelero['estado'];
+        } elseif ($tieneDevengos) {
+            $adrRevparEstado = 'DISPONIBLE';
+            $adrRevparNota = 'Métricas calculadas en tiempo real a partir del libro diario de devengos.';
+            $ingresoAlojamientoNeto = (string) $metricasDevengo['ingreso_alojamiento_neto'];
+            $habitacionesVendidas = (int) $metricasDevengo['habitaciones_vendidas'];
+            $adr = $habitacionesVendidas > 0
+                ? bcdiv($ingresoAlojamientoNeto, (string) $habitacionesVendidas, 2)
+                : '0.00';
+            $revpar = $unidadesVendibles > 0
+                ? bcdiv($ingresoAlojamientoNeto, (string) $unidadesVendibles, 2)
+                : '0.00';
+            $nightAuditEstado = $cierreHotelero ? (string) $cierreHotelero['estado'] : 'PENDIENTE';
+        } else {
+            $adrRevparEstado = 'DIFERIDO_A_DEVENGO_ALOJAMIENTO_1';
+            $adrRevparNota = 'Sin fuente soberana de devengo para esta fecha hotelera (fecha no cerrada o previa a cutover).';
+            $adr = '0.00';
+            $revpar = '0.00';
+            $ingresoAlojamientoNeto = '0.00';
+            $habitacionesVendidas = 0;
+            $nightAuditEstado = 'NO_EJECUTADO';
+        }
+
         $operacionHotelera = [
             'unidades_totales' => $unidadesTotal,
             'unidades_ooo' => $unidadesOoo,
@@ -126,10 +165,16 @@ class ReporteServicio
             'stayovers' => $stayovers,
             'huespedes_en_casa' => $huespedesEnCasa,
             'higiene' => $resumenHigiene,
-            // Aviso de gobernanza D-087: ADR y RevPAR diferidos
-            'adr_revpar_estado' => 'DIFERIDO_A_DEVENGO_ALOJAMIENTO_1',
-            'adr_revpar_nota' => 'ADR y RevPAR históricos no son reconstructibles con fidelidad debido a que los cargos de alojamiento se registran acumulados por estancia completa y no por devengo nocturno.',
+            // Métricas soberanas D-090
+            'adr_revpar_estado' => $adrRevparEstado,
+            'adr_revpar_nota' => $adrRevparNota,
+            'adr' => $adr,
+            'revpar' => $revpar,
+            'ingreso_alojamiento_neto' => $ingresoAlojamientoNeto,
+            'habitaciones_vendidas' => $habitacionesVendidas,
+            'night_audit_estado' => $nightAuditEstado,
         ];
+
 
         // 2. Actividad Comercial
         $actividadComercial = [

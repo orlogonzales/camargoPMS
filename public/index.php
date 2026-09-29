@@ -1121,7 +1121,30 @@ $enrutador->post('/api/operaciones/bitacora/{id}/anular', [\CamargoPMS\Controlad
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('bitacora.anular'),
 ]);
 
+// ============================================================================
+// Rutas de Auditoría Nocturna y Devengos de Alojamiento (DEVENGO-ALOJAMIENTO-1 / D-090)
+// ============================================================================
+$enrutador->get('/operaciones/night-audit', [\CamargoPMS\Controladores\NightAuditControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('night_audit.ver'),
+]);
+$enrutador->post('/api/operaciones/night-audit/ejecutar', [\CamargoPMS\Controladores\NightAuditControlador::class, 'ejecutar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('night_audit.ejecutar'),
+]);
+$enrutador->get('/api/operaciones/night-audit/cierre', [\CamargoPMS\Controladores\NightAuditControlador::class, 'consultarCierre'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('night_audit.ver'),
+]);
+$enrutador->get('/api/operaciones/night-audit/historial', [\CamargoPMS\Controladores\NightAuditControlador::class, 'historial'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('night_audit.ver'),
+]);
+$enrutador->get('/api/operaciones/devengos/estadia/{id}', [\CamargoPMS\Controladores\NightAuditControlador::class, 'devengosEstadia'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('devengo.ver'),
+]);
+$enrutador->post('/api/operaciones/devengos/revertir', [\CamargoPMS\Controladores\NightAuditControlador::class, 'revertirDevengo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('devengo.revertir'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
+
 
 // Despacho de la petición HTTP
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';

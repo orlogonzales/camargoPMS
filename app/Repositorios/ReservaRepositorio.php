@@ -213,6 +213,33 @@ class ReservaRepositorio
     }
 
     /**
+     * Busca una unidad de reserva individual por su identificador primario.
+     */
+    public function buscarUnidadPorId(int $reservaUnidadId): ?ReservaUnidad
+    {
+        $sql = 'SELECT ru.*,
+                       u.codigo AS unidad_codigo,
+                       u.nombre AS unidad_nombre,
+                       u.propiedad_id,
+                       p.nombre AS propiedad_nombre,
+                       tu.nombre AS tipo_unidad_nombre
+                FROM reserva_unidades ru
+                INNER JOIN unidades u ON ru.unidad_id = u.id
+                INNER JOIN propiedades p ON u.propiedad_id = p.id
+                LEFT JOIN tipos_unidad tu ON u.tipo_unidad_id = tu.id
+                WHERE ru.id = :id
+                LIMIT 1';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':id', $reservaUnidadId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila ? ReservaUnidad::desdeArreglo($fila) : null;
+    }
+
+
+    /**
      * Actualiza el estado de una reserva y sus campos de auditoría / transición.
      *
      * @param array<string, mixed> $datosTransicion
