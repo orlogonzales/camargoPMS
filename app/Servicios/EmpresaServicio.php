@@ -206,7 +206,7 @@ class EmpresaServicio
                 descripcion: "Creación de empresa operadora [{$codigo}] — {$empresa->obtenerRazonSocial()}",
                 valoresAnteriores: null,
                 valoresNuevos: $empresa->aArreglo(),
-                usuarioId: $actorId,
+                actor: $actorId,
                 pdoTransaccional: $this->pdo
             );
 
@@ -366,7 +366,7 @@ class EmpresaServicio
                 descripcion: "Actualización de empresa operadora [{$codigo}] ({$accionTipo})",
                 valoresAnteriores: $actual->aArreglo(),
                 valoresNuevos: $empresaActualizada->aArreglo(),
-                usuarioId: $actorId,
+                actor: $actorId,
                 pdoTransaccional: $this->pdo
             );
 
@@ -421,7 +421,7 @@ class EmpresaServicio
             descripcion: "Cambio de estado de empresa [{$empresa->obtenerCodigo()}] a {$nuevoEstado}",
             valoresAnteriores: ['estado' => $empresa->obtenerEstado()],
             valoresNuevos: ['estado' => $nuevoEstado, 'motivo' => $motivo],
-            usuarioId: $actorId
+            actor: $actorId
         );
 
         return $this->empresaRepo->buscarPorId($id);
@@ -465,7 +465,7 @@ class EmpresaServicio
                 descripcion: "Sincronización de " . count($nuevosIds) . " propiedades a empresa [{$empresa->obtenerCodigo()}]",
                 valoresAnteriores: null,
                 valoresNuevos: ['propiedad_ids' => $nuevosIds],
-                usuarioId: $actorId,
+                actor: $actorId,
                 pdoTransaccional: $this->pdo
             );
 
@@ -504,7 +504,7 @@ class EmpresaServicio
                 descripcion: "Eliminación de empresa [{$empresa->obtenerCodigo()}]",
                 valoresAnteriores: $empresa->aArreglo(),
                 valoresNuevos: null,
-                usuarioId: $actorId,
+                actor: $actorId,
                 pdoTransaccional: $this->pdo
             );
 

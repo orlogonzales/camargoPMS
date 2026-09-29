@@ -17,24 +17,27 @@ class PersonaRepositorio
     private ?PaisRepositorio $paisRepo;
     private ?DocumentoPersonaRepositorio $documentoRepo;
     private ?ContactoPersonaRepositorio $contactoRepo;
+    private ?GeografiaRepositorio $geografiaRepo;
 
     public function __construct(
         ?PDO $pdo = null,
         ?PaisRepositorio $paisRepo = null,
         ?DocumentoPersonaRepositorio $documentoRepo = null,
-        ?ContactoPersonaRepositorio $contactoRepo = null
+        ?ContactoPersonaRepositorio $contactoRepo = null,
+        ?GeografiaRepositorio $geografiaRepo = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->paisRepo = $paisRepo ?? new PaisRepositorio($this->pdo);
         $this->documentoRepo = $documentoRepo ?? new DocumentoPersonaRepositorio($this->pdo);
         $this->contactoRepo = $contactoRepo ?? new ContactoPersonaRepositorio($this->pdo);
+        $this->geografiaRepo = $geografiaRepo ?? new GeografiaRepositorio($this->pdo);
     }
 
     /**
      * Busca una persona por su identificador primario.
      *
      * @param int $id
-     * @param bool $cargarRelaciones Carga documentos, contactos y país asociado.
+     * @param bool $cargarRelaciones Carga documentos, contactos, geografía y país asociado.
      * @return Persona|null
      */
     public function buscarPorId(int $id, bool $cargarRelaciones = true): ?Persona
@@ -123,7 +126,7 @@ class PersonaRepositorio
     }
 
     /**
-     * Inserta una persona natural en la base de datos.
+     * Inserta una persona natural en la base de datos con atributos completos de identidad y geografía.
      *
      * @param Persona $persona
      * @return int ID de la persona generada.
@@ -131,20 +134,29 @@ class PersonaRepositorio
     public function insertar(Persona $persona): int
     {
         $sql = "INSERT INTO personas (
-                    nombres, apellido_paterno, apellido_materno, 
-                    fecha_nacimiento, pais_nacionalidad_id, direccion, estado
+                    nombres, apellido_paterno, apellido_materno, genero,
+                    fecha_nacimiento, pais_nacionalidad_id, pais_residencia_id,
+                    distrito_id, region_residencia_extranjera, ciudad_residencia_extranjera,
+                    direccion, estado
                 ) VALUES (
-                    :nombres, :apellido_paterno, :apellido_materno, 
-                    :fecha_nacimiento, :pais_nacionalidad_id, :direccion, :estado
+                    :nombres, :apellido_paterno, :apellido_materno, :genero,
+                    :fecha_nacimiento, :pais_nacionalidad_id, :pais_residencia_id,
+                    :distrito_id, :region_residencia_extranjera, :ciudad_residencia_extranjera,
+                    :direccion, :estado
                 )";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':nombres', $persona->obtenerNombres(), PDO::PARAM_STR);
-        $stmt->bindValue(':apellido_paterno', $persona->obtenerApellidoPaterno(), $persona->obtenerApellidoPaterno() ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        $stmt->bindValue(':apellido_materno', $persona->obtenerApellidoMaterno(), $persona->obtenerApellidoMaterno() ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        $stmt->bindValue(':fecha_nacimiento', $persona->obtenerFechaNacimiento(), $persona->obtenerFechaNacimiento() ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        $stmt->bindValue(':pais_nacionalidad_id', $persona->obtenerPaisNacionalidadId(), $persona->obtenerPaisNacionalidadId() ? PDO::PARAM_INT : PDO::PARAM_NULL);
-        $stmt->bindValue(':direccion', $persona->obtenerDireccion(), $persona->obtenerDireccion() ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':apellido_paterno', $persona->obtenerApellidoPaterno(), $persona->obtenerApellidoPaterno() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':apellido_materno', $persona->obtenerApellidoMaterno(), $persona->obtenerApellidoMaterno() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':genero', $persona->obtenerGenero(), $persona->obtenerGenero() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':fecha_nacimiento', $persona->obtenerFechaNacimiento(), $persona->obtenerFechaNacimiento() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':pais_nacionalidad_id', $persona->obtenerPaisNacionalidadId(), $persona->obtenerPaisNacionalidadId() !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':pais_residencia_id', $persona->obtenerPaisResidenciaId(), $persona->obtenerPaisResidenciaId() !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':distrito_id', $persona->obtenerDistritoId(), $persona->obtenerDistritoId() !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':region_residencia_extranjera', $persona->obtenerRegionResidenciaExtranjera(), $persona->obtenerRegionResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':ciudad_residencia_extranjera', $persona->obtenerCiudadResidenciaExtranjera(), $persona->obtenerCiudadResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':direccion', $persona->obtenerDireccion(), $persona->obtenerDireccion() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':estado', $persona->obtenerEstado(), PDO::PARAM_STR);
         $stmt->execute();
 
@@ -167,8 +179,13 @@ class PersonaRepositorio
                     nombres = :nombres,
                     apellido_paterno = :apellido_paterno,
                     apellido_materno = :apellido_materno,
+                    genero = :genero,
                     fecha_nacimiento = :fecha_nacimiento,
                     pais_nacionalidad_id = :pais_nacionalidad_id,
+                    pais_residencia_id = :pais_residencia_id,
+                    distrito_id = :distrito_id,
+                    region_residencia_extranjera = :region_residencia_extranjera,
+                    ciudad_residencia_extranjera = :ciudad_residencia_extranjera,
                     direccion = :direccion,
                     estado = :estado
                 WHERE id = :id";
@@ -176,11 +193,16 @@ class PersonaRepositorio
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':id', $persona->obtenerId(), PDO::PARAM_INT);
         $stmt->bindValue(':nombres', $persona->obtenerNombres(), PDO::PARAM_STR);
-        $stmt->bindValue(':apellido_paterno', $persona->obtenerApellidoPaterno(), $persona->obtenerApellidoPaterno() ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        $stmt->bindValue(':apellido_materno', $persona->obtenerApellidoMaterno(), $persona->obtenerApellidoMaterno() ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        $stmt->bindValue(':fecha_nacimiento', $persona->obtenerFechaNacimiento(), $persona->obtenerFechaNacimiento() ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        $stmt->bindValue(':pais_nacionalidad_id', $persona->obtenerPaisNacionalidadId(), $persona->obtenerPaisNacionalidadId() ? PDO::PARAM_INT : PDO::PARAM_NULL);
-        $stmt->bindValue(':direccion', $persona->obtenerDireccion(), $persona->obtenerDireccion() ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':apellido_paterno', $persona->obtenerApellidoPaterno(), $persona->obtenerApellidoPaterno() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':apellido_materno', $persona->obtenerApellidoMaterno(), $persona->obtenerApellidoMaterno() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':genero', $persona->obtenerGenero(), $persona->obtenerGenero() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':fecha_nacimiento', $persona->obtenerFechaNacimiento(), $persona->obtenerFechaNacimiento() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':pais_nacionalidad_id', $persona->obtenerPaisNacionalidadId(), $persona->obtenerPaisNacionalidadId() !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':pais_residencia_id', $persona->obtenerPaisResidenciaId(), $persona->obtenerPaisResidenciaId() !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':distrito_id', $persona->obtenerDistritoId(), $persona->obtenerDistritoId() !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':region_residencia_extranjera', $persona->obtenerRegionResidenciaExtranjera(), $persona->obtenerRegionResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':ciudad_residencia_extranjera', $persona->obtenerCiudadResidenciaExtranjera(), $persona->obtenerCiudadResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':direccion', $persona->obtenerDireccion(), $persona->obtenerDireccion() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':estado', $persona->obtenerEstado(), PDO::PARAM_STR);
 
         return $stmt->execute();
@@ -202,7 +224,7 @@ class PersonaRepositorio
     }
 
     /**
-     * Hidrata las colecciones de documentos, contactos y país de nacionalidad.
+     * Hidrata las colecciones de documentos, contactos, geografía y país de nacionalidad/residencia.
      *
      * @param Persona $persona
      * @return void
@@ -217,6 +239,25 @@ class PersonaRepositorio
         if ($persona->obtenerPaisNacionalidadId() !== null && $this->paisRepo !== null) {
             $pais = $this->paisRepo->buscarPorId($persona->obtenerPaisNacionalidadId());
             $persona->asignarPaisNacionalidad($pais);
+        }
+
+        if ($persona->obtenerPaisResidenciaId() !== null && $this->paisRepo !== null) {
+            $paisRes = $this->paisRepo->buscarPorId($persona->obtenerPaisResidenciaId());
+            $persona->asignarPaisResidencia($paisRes);
+        }
+
+        if ($persona->obtenerDistritoId() !== null && $this->geografiaRepo !== null) {
+            $jerarquia = $this->geografiaRepo->buscarJerarquiaPorDistritoId($persona->obtenerDistritoId());
+            if ($jerarquia !== null) {
+                $persona->asignarJerarquiaTerritorial(
+                    $jerarquia['departamento_nombre'] ?? null,
+                    $jerarquia['provincia_nombre'] ?? null,
+                    $jerarquia['distrito_nombre'] ?? null,
+                    $jerarquia['distrito_codigo_ubigeo'] ?? null,
+                    isset($jerarquia['departamento_id']) ? (int) $jerarquia['departamento_id'] : null,
+                    isset($jerarquia['provincia_id']) ? (int) $jerarquia['provincia_id'] : null
+                );
+            }
         }
 
         if ($this->documentoRepo !== null) {

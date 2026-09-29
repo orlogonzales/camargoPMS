@@ -17,11 +17,13 @@ use CamargoPMS\Repositorios\ActorAuditoriaRepositorio;
 use CamargoPMS\Repositorios\CargoRepositorio;
 use CamargoPMS\Repositorios\ColaboradorRepositorio;
 use CamargoPMS\Repositorios\PersonaRepositorio;
+use CamargoPMS\Repositorios\GeografiaRepositorio;
 use CamargoPMS\Servicios\AuditoriaServicio;
 use CamargoPMS\Servicios\AutorizacionServicio;
 use CamargoPMS\Servicios\ColaboradorServicio;
 use CamargoPMS\Servicios\CsrfServicio;
 use CamargoPMS\Servicios\EmpresaServicio;
+use CamargoPMS\Servicios\GeografiaServicio;
 use CamargoPMS\Servicios\PersonaServicio;
 use CamargoPMS\Servicios\SesionServicio;
 use PDO;
@@ -43,6 +45,7 @@ class PersonalControlador
     private ColaboradorServicio $colaboradorServicio;
     private PersonaServicio $personaServicio;
     private EmpresaServicio $empresaServicio;
+    private GeografiaServicio $geografiaServicio;
     private SesionServicio $sesionServicio;
     private AutorizacionServicio $autorizacionServicio;
     private CsrfServicio $csrfServicio;
@@ -56,6 +59,7 @@ class PersonalControlador
         ?ColaboradorServicio $colaboradorServicio = null,
         ?PersonaServicio $personaServicio = null,
         ?EmpresaServicio $empresaServicio = null,
+        ?GeografiaServicio $geografiaServicio = null,
         ?SesionServicio $sesionServicio = null,
         ?AutorizacionServicio $autorizacionServicio = null,
         ?CsrfServicio $csrfServicio = null
@@ -66,6 +70,7 @@ class PersonalControlador
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
         $this->cargoRepo = $cargoRepo ?? new CargoRepositorio($this->pdo);
         $this->empresaServicio = $empresaServicio ?? new EmpresaServicio($this->pdo);
+        $this->geografiaServicio = $geografiaServicio ?? new GeografiaServicio(new GeografiaRepositorio($this->pdo));
         $this->colaboradorServicio = $colaboradorServicio ?? new ColaboradorServicio(
             $this->pdo,
             $this->colaboradorRepo,
@@ -76,7 +81,15 @@ class PersonalControlador
             new AuditoriaServicio($this->pdo),
             $this->empresaServicio
         );
-        $this->personaServicio = $personaServicio ?? new PersonaServicio($this->pdo, $this->personaRepo);
+        $this->personaServicio = $personaServicio ?? new PersonaServicio(
+            $this->pdo,
+            $this->personaRepo,
+            null,
+            null,
+            null,
+            null,
+            $this->geografiaServicio
+        );
         $this->sesionServicio = $sesionServicio ?? new SesionServicio($this->pdo);
         $this->autorizacionServicio = $autorizacionServicio ?? new AutorizacionServicio($this->pdo);
         $this->csrfServicio = $csrfServicio ?? new CsrfServicio();
@@ -156,8 +169,10 @@ class PersonalControlador
         $stmtTipos = $this->pdo->query('SELECT id, codigo, nombre FROM tipos_documento WHERE activo = 1 ORDER BY id ASC');
         $tiposDocumento = $stmtTipos->fetchAll(PDO::FETCH_ASSOC);
 
-        // Paises
-        $stmtPais = $this->pdo->query('SELECT id, codigo_iso2 AS codigo_iso, nombre FROM paises WHERE activo = 1 ORDER BY nombre ASC');
+        // Paises y Geografía base
+        $paisDefault = $this->geografiaServicio->obtenerPaisDefault();
+        $departamentos = $this->geografiaServicio->listarDepartamentos((int) $paisDefault['id']);
+        $stmtPais = $this->pdo->query('SELECT id, codigo_iso2, codigo_iso3, nombre, nacionalidad FROM paises WHERE activo = 1 ORDER BY nombre ASC');
         $paises = $stmtPais->fetchAll(PDO::FETCH_ASSOC);
 
         // Métricas y lista inicial
@@ -186,6 +201,8 @@ class PersonalControlador
             'empresaPrincipal' => $empresaPrincipal,
             'tiposDocumento' => $tiposDocumento,
             'paises' => $paises,
+            'paisDefault' => $paisDefault,
+            'departamentos' => $departamentos,
             'resumen' => [
                 'total' => $totalColaboradores,
                 'activos' => $totalActivos,
@@ -294,10 +311,19 @@ class PersonalControlador
 
             // Búsqueda por texto libre
             if ($q !== null && strlen($q) >= 2) {
-                $sql = "SELECT p.id, p.nombres, p.apellido_paterno, p.apellido_materno, td.codigo AS tipo_documento, pd.numero_documento, c.id AS colaborador_id, c.codigo AS colaborador_codigo, c.estado AS colaborador_estado
+                $sql = "SELECT p.id, p.nombres, p.apellido_paterno, p.apellido_materno,
+                               CONCAT(p.nombres, ' ', p.apellido_paterno, IF(p.apellido_materno IS NOT NULL AND p.apellido_materno <> '', CONCAT(' ', p.apellido_materno), '')) AS nombre_completo,
+                               p.genero, p.fecha_nacimiento, p.pais_nacionalidad_id, p.pais_residencia_id,
+                               p.distrito_id, p.region_residencia_extranjera, p.ciudad_residencia_extranjera, p.direccion,
+                               td.codigo AS tipo_documento, pd.tipo_documento_id, pd.numero_documento,
+                               pc_tel.valor AS telefono, pc_tel.es_whatsapp,
+                               pc_em.valor AS email,
+                               c.id AS colaborador_id, c.codigo AS colaborador_codigo, c.estado AS colaborador_estado
                         FROM personas p
                         LEFT JOIN personas_documentos pd ON pd.persona_id = p.id AND pd.es_principal = 1
                         LEFT JOIN tipos_documento td ON td.id = pd.tipo_documento_id
+                        LEFT JOIN personas_contactos pc_tel ON pc_tel.persona_id = p.id AND pc_tel.tipo_contacto = 'TELEFONO' AND pc_tel.es_principal = 1
+                        LEFT JOIN personas_contactos pc_em ON pc_em.persona_id = p.id AND pc_em.tipo_contacto = 'EMAIL' AND pc_em.es_principal = 1
                         LEFT JOIN colaboradores c ON c.persona_id = p.id
                         WHERE p.nombres LIKE :q1 OR p.apellido_paterno LIKE :q2 OR p.apellido_materno LIKE :q3 OR pd.numero_documento LIKE :q4
                         LIMIT 10";
@@ -311,13 +337,29 @@ class PersonalControlador
                 ]);
                 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+                foreach ($resultados as &$resItem) {
+                    if (!empty($resItem['distrito_id'])) {
+                        $jerarquia = $this->geografiaServicio->obtenerJerarquiaPorDistritoId((int) $resItem['distrito_id']);
+                        if ($jerarquia) {
+                            $resItem['departamento_id'] = $jerarquia['departamento_id'];
+                            $resItem['provincia_id'] = $jerarquia['provincia_id'];
+                            $resItem['departamento'] = $jerarquia['departamento_nombre'];
+                            $resItem['provincia'] = $jerarquia['provincia_nombre'];
+                            $resItem['distrito'] = $jerarquia['distrito_nombre'];
+                            $resItem['ubigeo'] = $jerarquia['distrito_codigo_ubigeo'];
+                        }
+                    }
+                }
+                unset($resItem);
+
                 return Respuesta::json([
                     'exito' => true,
                     'resultados' => $resultados,
+                    'datos' => $resultados,
                 ]);
             }
 
-            return Respuesta::json(['exito' => true, 'resultados' => []]);
+            return Respuesta::json(['exito' => true, 'resultados' => [], 'datos' => []]);
         } catch (Throwable $e) {
             return Respuesta::json(['exito' => false, 'mensaje' => $e->getMessage()], 500);
         }
@@ -350,7 +392,7 @@ class PersonalControlador
             // Flujo 1: Si no viene persona_id, registrar la persona natural en el maestro central
             if ($personaId <= 0) {
                 $nombres = trim((string) ($entrada['nombres'] ?? ''));
-                $apellidoPaterno = trim((string) ($entrada['apellido_paterno'] ?? ''));
+                $apellidoPaterno = trim((string) ($entrada['apellido_paterno'] ?? ($entrada['apellidos'] ?? '')));
                 $apellidoMaterno = trim((string) ($entrada['apellido_materno'] ?? ''));
 
                 if ($nombres === '' || $apellidoPaterno === '') {
@@ -370,19 +412,41 @@ class PersonalControlador
                     ], 422);
                 }
 
+                $paisDef = $this->geografiaServicio->obtenerPaisDefault();
+                $paisResidenciaId = isset($entrada['pais_residencia_id']) && is_numeric($entrada['pais_residencia_id'])
+                    ? (int) $entrada['pais_residencia_id']
+                    : (int) $paisDef['id'];
+
                 $datosPersona = [
                     'nombres' => $nombres,
                     'apellido_paterno' => $apellidoPaterno,
-                    'apellido_materno' => $apellidoMaterno,
-                    'pais_nacionalidad_id' => isset($entrada['pais_nacionalidad_id']) ? (int) $entrada['pais_nacionalidad_id'] : 1,
-                    'direccion' => $entrada['direccion'] ?? null,
-                    'fecha_nacimiento' => $entrada['fecha_nacimiento'] ?? null,
+                    'apellido_materno' => $apellidoMaterno !== '' ? $apellidoMaterno : null,
+                    'genero' => !empty($entrada['genero']) ? strtoupper(trim((string) $entrada['genero'])) : null,
+                    'fecha_nacimiento' => !empty($entrada['fecha_nacimiento']) ? trim((string) $entrada['fecha_nacimiento']) : null,
+                    'pais_nacionalidad_id' => isset($entrada['pais_nacionalidad_id']) && is_numeric($entrada['pais_nacionalidad_id'])
+                        ? (int) $entrada['pais_nacionalidad_id']
+                        : (int) $paisDef['id'],
+                    'pais_residencia_id' => $paisResidenciaId,
+                    'distrito_id' => isset($entrada['distrito_id']) && is_numeric($entrada['distrito_id']) ? (int) $entrada['distrito_id'] : null,
+                    'departamento_id' => isset($entrada['departamento_id']) && is_numeric($entrada['departamento_id']) ? (int) $entrada['departamento_id'] : null,
+                    'provincia_id' => isset($entrada['provincia_id']) && is_numeric($entrada['provincia_id']) ? (int) $entrada['provincia_id'] : null,
+                    'region_residencia_extranjera' => isset($entrada['region_residencia_extranjera']) && trim((string) $entrada['region_residencia_extranjera']) !== ''
+                        ? trim((string) $entrada['region_residencia_extranjera'])
+                        : null,
+                    'ciudad_residencia_extranjera' => isset($entrada['ciudad_residencia_extranjera']) && trim((string) $entrada['ciudad_residencia_extranjera']) !== ''
+                        ? trim((string) $entrada['ciudad_residencia_extranjera'])
+                        : null,
+                    'direccion' => isset($entrada['direccion']) && trim((string) $entrada['direccion']) !== ''
+                        ? trim((string) $entrada['direccion'])
+                        : null,
                 ];
 
                 $datosDoc = [
                     'tipo_documento_id' => $tipoDocId,
                     'numero_documento' => $numDoc,
-                    'pais_emisor_id' => isset($entrada['pais_emisor_id']) ? (int) $entrada['pais_emisor_id'] : 1,
+                    'pais_emisor_id' => isset($entrada['pais_emisor_id']) && is_numeric($entrada['pais_emisor_id'])
+                        ? (int) $entrada['pais_emisor_id']
+                        : (int) $paisDef['id'],
                 ];
 
                 $contactos = [];
@@ -467,51 +531,79 @@ class PersonalControlador
 
             $personaId = $colab->obtenerPersonaId();
 
-            // Actualizar datos de persona si fueron enviados
-            if (isset($entrada['nombres']) || isset($entrada['apellido_paterno']) || isset($entrada['telefono']) || isset($entrada['email'])) {
-                $camposPersona = [];
-                $paramsPersona = [':id' => $personaId];
+            // Preparar campos para actualizar en Persona
+            $camposActualizar = [];
+            if (isset($entrada['nombres'])) {
+                $camposActualizar['nombres'] = trim((string) $entrada['nombres']);
+            }
+            if (isset($entrada['apellido_paterno'])) {
+                $camposActualizar['apellido_paterno'] = trim((string) $entrada['apellido_paterno']);
+            } elseif (isset($entrada['apellidos'])) {
+                $camposActualizar['apellido_paterno'] = trim((string) $entrada['apellidos']);
+            }
+            if (isset($entrada['apellido_materno'])) {
+                $camposActualizar['apellido_materno'] = trim((string) $entrada['apellido_materno']);
+            }
+            if (array_key_exists('genero', $entrada)) {
+                $camposActualizar['genero'] = !empty($entrada['genero']) ? strtoupper(trim((string) $entrada['genero'])) : null;
+            }
+            if (array_key_exists('fecha_nacimiento', $entrada)) {
+                $camposActualizar['fecha_nacimiento'] = !empty($entrada['fecha_nacimiento']) ? trim((string) $entrada['fecha_nacimiento']) : null;
+            }
+            if (array_key_exists('pais_nacionalidad_id', $entrada)) {
+                $camposActualizar['pais_nacionalidad_id'] = is_numeric($entrada['pais_nacionalidad_id']) ? (int) $entrada['pais_nacionalidad_id'] : null;
+            }
+            if (array_key_exists('pais_residencia_id', $entrada)) {
+                $camposActualizar['pais_residencia_id'] = is_numeric($entrada['pais_residencia_id']) ? (int) $entrada['pais_residencia_id'] : null;
+            }
+            if (array_key_exists('distrito_id', $entrada)) {
+                $camposActualizar['distrito_id'] = is_numeric($entrada['distrito_id']) ? (int) $entrada['distrito_id'] : null;
+            }
+            if (array_key_exists('departamento_id', $entrada)) {
+                $camposActualizar['departamento_id'] = is_numeric($entrada['departamento_id']) ? (int) $entrada['departamento_id'] : null;
+            }
+            if (array_key_exists('provincia_id', $entrada)) {
+                $camposActualizar['provincia_id'] = is_numeric($entrada['provincia_id']) ? (int) $entrada['provincia_id'] : null;
+            }
+            if (array_key_exists('region_residencia_extranjera', $entrada)) {
+                $camposActualizar['region_residencia_extranjera'] = trim((string) $entrada['region_residencia_extranjera']) ?: null;
+            }
+            if (array_key_exists('ciudad_residencia_extranjera', $entrada)) {
+                $camposActualizar['ciudad_residencia_extranjera'] = trim((string) $entrada['ciudad_residencia_extranjera']) ?: null;
+            }
+            if (array_key_exists('direccion', $entrada)) {
+                $camposActualizar['direccion'] = trim((string) $entrada['direccion']) ?: null;
+            }
 
-                if (!empty($entrada['nombres'])) {
-                    $camposPersona[] = 'nombres = :nombres';
-                    $paramsPersona[':nombres'] = trim((string) $entrada['nombres']);
-                }
-                if (!empty($entrada['apellido_paterno'])) {
-                    $camposPersona[] = 'apellido_paterno = :ap_paterno';
-                    $paramsPersona[':ap_paterno'] = trim((string) $entrada['apellido_paterno']);
-                }
-                if (isset($entrada['apellido_materno'])) {
-                    $camposPersona[] = 'apellido_materno = :ap_materno';
-                    $paramsPersona[':ap_materno'] = trim((string) $entrada['apellido_materno']);
-                }
+            if (!empty($camposActualizar)) {
+                $this->personaServicio->actualizarPersona($personaId, $camposActualizar);
+            }
 
-                if (!empty($camposPersona)) {
-                    $sqlP = "UPDATE personas SET " . implode(', ', $camposPersona) . ", actualizado_en = NOW() WHERE id = :id";
-                    $stmtP = $this->pdo->prepare($sqlP);
-                    $stmtP->execute($paramsPersona);
-                }
+            // Contacto telefónico
+            if (isset($entrada['telefono'])) {
+                $tel = trim((string) $entrada['telefono']);
+                $esWsp = !empty($entrada['es_whatsapp']);
+                $stmtCheckTel = $this->pdo->prepare("SELECT id FROM personas_contactos WHERE persona_id = ? AND tipo_contacto = 'TELEFONO' LIMIT 1");
+                $stmtCheckTel->execute([$personaId]);
+                $telId = $stmtCheckTel->fetchColumn();
 
-                // Actualizar o insertar contacto telefónico si aplica
-                if (!empty($entrada['telefono'])) {
-                    $tel = trim((string) $entrada['telefono']);
-                    $stmtCheckTel = $this->pdo->prepare("SELECT id FROM personas_contactos WHERE persona_id = ? AND tipo_contacto = 'TELEFONO' LIMIT 1");
-                    $stmtCheckTel->execute([$personaId]);
-                    $telId = $stmtCheckTel->fetchColumn();
-
+                if ($tel !== '') {
                     if ($telId) {
-                        $this->pdo->prepare("UPDATE personas_contactos SET valor = ?, actualizado_en = NOW() WHERE id = ?")->execute([$tel, $telId]);
+                        $this->pdo->prepare("UPDATE personas_contactos SET valor = ?, es_whatsapp = ?, actualizado_en = NOW() WHERE id = ?")->execute([$tel, $esWsp ? 1 : 0, $telId]);
                     } else {
-                        $this->pdo->prepare("INSERT INTO personas_contactos (persona_id, tipo_contacto, valor, es_principal, estado, creado_en) VALUES (?, 'TELEFONO', ?, 1, 'ACTIVO', NOW())")->execute([$personaId, $tel]);
+                        $this->pdo->prepare("INSERT INTO personas_contactos (persona_id, tipo_contacto, valor, es_whatsapp, es_principal, estado, creado_en) VALUES (?, 'TELEFONO', ?, ?, 1, 'ACTIVO', NOW())")->execute([$personaId, $tel, $esWsp ? 1 : 0]);
                     }
                 }
+            }
 
-                // Actualizar o insertar contacto email si aplica
-                if (!empty($entrada['email'])) {
-                    $em = trim((string) $entrada['email']);
-                    $stmtCheckEm = $this->pdo->prepare("SELECT id FROM personas_contactos WHERE persona_id = ? AND tipo_contacto = 'EMAIL' LIMIT 1");
-                    $stmtCheckEm->execute([$personaId]);
-                    $emId = $stmtCheckEm->fetchColumn();
+            // Contacto email
+            if (isset($entrada['email'])) {
+                $em = trim((string) $entrada['email']);
+                $stmtCheckEm = $this->pdo->prepare("SELECT id FROM personas_contactos WHERE persona_id = ? AND tipo_contacto = 'EMAIL' LIMIT 1");
+                $stmtCheckEm->execute([$personaId]);
+                $emId = $stmtCheckEm->fetchColumn();
 
+                if ($em !== '') {
                     if ($emId) {
                         $this->pdo->prepare("UPDATE personas_contactos SET valor = ?, actualizado_en = NOW() WHERE id = ?")->execute([$em, $emId]);
                     } else {
@@ -540,6 +632,8 @@ class PersonalControlador
                 'mensaje' => "Colaborador [{$colab->obtenerCodigo()}] actualizado correctamente.",
                 'datos' => $this->colaboradorServicio->obtenerFichaCompleta($id),
             ]);
+        } catch (ValidacionExcepcion $e) {
+            return Respuesta::json(['exito' => false, 'mensaje' => $e->getMessage(), 'errores' => $e->obtenerErrores()], 422);
         } catch (Throwable $e) {
             return Respuesta::json(['exito' => false, 'mensaje' => $e->getMessage()], 500);
         }

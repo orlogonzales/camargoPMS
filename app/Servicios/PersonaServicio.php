@@ -38,6 +38,7 @@ class PersonaServicio
     private ContactoPersonaRepositorio $contactoRepo;
     private PaisRepositorio $paisRepo;
     private TipoDocumentoRepositorio $tipoDocumentoRepo;
+    private GeografiaServicio $geografiaServicio;
 
     public function __construct(
         ?PDO $pdo = null,
@@ -45,7 +46,8 @@ class PersonaServicio
         ?DocumentoPersonaRepositorio $documentoRepo = null,
         ?ContactoPersonaRepositorio $contactoRepo = null,
         ?PaisRepositorio $paisRepo = null,
-        ?TipoDocumentoRepositorio $tipoDocumentoRepo = null
+        ?TipoDocumentoRepositorio $tipoDocumentoRepo = null,
+        ?GeografiaServicio $geografiaServicio = null
     ) {
         $this->pdo = $pdo ?? BaseDatos::conexion();
         $this->personaRepo = $personaRepo ?? new PersonaRepositorio($this->pdo);
@@ -53,6 +55,7 @@ class PersonaServicio
         $this->contactoRepo = $contactoRepo ?? new ContactoPersonaRepositorio($this->pdo);
         $this->paisRepo = $paisRepo ?? new PaisRepositorio($this->pdo);
         $this->tipoDocumentoRepo = $tipoDocumentoRepo ?? new TipoDocumentoRepositorio($this->pdo);
+        $this->geografiaServicio = $geografiaServicio ?? new GeografiaServicio(new \CamargoPMS\Repositorios\GeografiaRepositorio($this->pdo));
     }
 
     /**
@@ -397,7 +400,6 @@ class PersonaServicio
                 }
             }
         }
-
         $paisId = null;
         if (isset($datos['pais_nacionalidad_id']) && $datos['pais_nacionalidad_id'] !== null && $datos['pais_nacionalidad_id'] !== '') {
             $paisId = (int) $datos['pais_nacionalidad_id'];
@@ -405,6 +407,48 @@ class PersonaServicio
             if (!$pais || !$pais->esActivo()) {
                 $errores['pais_nacionalidad_id'] = 'El país de nacionalidad especificado no es válido o está inactivo.';
             }
+        }
+
+        $genero = null;
+        if (isset($datos['genero']) && trim((string) $datos['genero']) !== '') {
+            $genNorm = strtoupper(trim((string) $datos['genero']));
+            if (!in_array($genNorm, Persona::GENEROS_VALIDOS, true)) {
+                $errores['genero'] = 'El género especificado no es válido (' . implode(', ', Persona::GENEROS_VALIDOS) . ').';
+            } else {
+                $genero = $genNorm;
+            }
+        }
+
+        $paisResidenciaId = isset($datos['pais_residencia_id']) && is_numeric($datos['pais_residencia_id'])
+            ? (int) $datos['pais_residencia_id']
+            : null;
+        $distritoId = isset($datos['distrito_id']) && is_numeric($datos['distrito_id'])
+            ? (int) $datos['distrito_id']
+            : null;
+        $regionExtranjera = isset($datos['region_residencia_extranjera']) && trim((string) $datos['region_residencia_extranjera']) !== ''
+            ? trim((string) $datos['region_residencia_extranjera'])
+            : null;
+        $ciudadExtranjera = isset($datos['ciudad_residencia_extranjera']) && trim((string) $datos['ciudad_residencia_extranjera']) !== ''
+            ? trim((string) $datos['ciudad_residencia_extranjera'])
+            : null;
+        $provinciaId = isset($datos['provincia_id']) && is_numeric($datos['provincia_id'])
+            ? (int) $datos['provincia_id']
+            : null;
+        $departamentoId = isset($datos['departamento_id']) && is_numeric($datos['departamento_id'])
+            ? (int) $datos['departamento_id']
+            : null;
+
+        try {
+            $this->geografiaServicio->validarUbicacion(
+                $paisResidenciaId,
+                $distritoId,
+                $regionExtranjera,
+                $ciudadExtranjera,
+                $provinciaId,
+                $departamentoId
+            );
+        } catch (ValidacionExcepcion $eGeo) {
+            $errores = array_merge($errores, $eGeo->obtenerErrores() ?: ['ubicacion' => $eGeo->getMessage()]);
         }
 
         if (!empty($errores)) {
@@ -416,8 +460,13 @@ class PersonaServicio
             $nombres,
             $paterno,
             $materno,
+            $genero,
             $fechaNac,
             $paisId,
+            $paisResidenciaId,
+            $distritoId,
+            $regionExtranjera,
+            $ciudadExtranjera,
             isset($datos['direccion']) && trim((string) $datos['direccion']) !== '' ? trim((string) $datos['direccion']) : null,
             (string) ($datos['estado'] ?? 'ACTIVO')
         );
@@ -571,5 +620,10 @@ class PersonaServicio
             'es_principal' => (bool) ($datos['es_principal'] ?? false),
             'estado' => strtoupper(trim((string) ($datos['estado'] ?? 'ACTIVO'))),
         ];
+    }
+
+    public function obtenerGeografiaServicio(): GeografiaServicio
+    {
+        return $this->geografiaServicio;
     }
 }

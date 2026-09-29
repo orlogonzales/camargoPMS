@@ -920,18 +920,45 @@ class ColaboradorServicio
             'actualizado_en' => $ficha['actualizado_en'],
         ];
 
-        $ficha['persona'] = [
-            'id' => (int) $ficha['persona_id'],
-            'nombres' => $ficha['nombres'],
-            'apellido_paterno' => $ficha['apellido_paterno'],
-            'apellido_materno' => $ficha['apellido_materno'],
-            'nombre_completo' => $ficha['nombre_completo'],
-            'numero_documento' => $ficha['numero_documento'],
-            'tipo_documento' => $ficha['tipo_documento'],
-            'telefono' => $ficha['telefono'],
-            'email' => $ficha['email'],
-            'direccion' => $ficha['direccion'] ?? null,
-        ];
+        $personaObj = $this->personaRepo->buscarPorId((int) $ficha['persona_id'], true);
+        if ($personaObj !== null) {
+            $datosP = $personaObj->aArreglo();
+            $datosP['numero_documento'] = $ficha['numero_documento'] ?? null;
+            $datosP['tipo_documento'] = $ficha['tipo_documento'] ?? null;
+            $docPrinc = $personaObj->obtenerDocumentoPrincipal();
+            if ($docPrinc !== null) {
+                $datosP['tipo_documento_id'] = $docPrinc->obtenerTipoDocumentoId();
+                $datosP['numero_documento'] = $docPrinc->obtenerNumeroDocumento();
+                $datosP['pais_emisor_id'] = $docPrinc->obtenerPaisEmisorId();
+            }
+            $telPrinc = $personaObj->obtenerContactoPrincipal('TELEFONO');
+            $datosP['telefono'] = $telPrinc ? $telPrinc->obtenerValor() : ($ficha['telefono'] ?? null);
+            $datosP['es_whatsapp'] = $telPrinc ? $telPrinc->esWhatsapp() : false;
+            $emPrinc = $personaObj->obtenerContactoPrincipal('EMAIL');
+            $datosP['email'] = $emPrinc ? $emPrinc->obtenerValor() : ($ficha['email'] ?? null);
+
+            $ficha['persona'] = $datosP;
+        } else {
+            $ficha['persona'] = [
+                'id' => (int) $ficha['persona_id'],
+                'nombres' => $ficha['nombres'],
+                'apellido_paterno' => $ficha['apellido_paterno'],
+                'apellido_materno' => $ficha['apellido_materno'],
+                'nombre_completo' => $ficha['nombre_completo'],
+                'genero' => $ficha['genero'] ?? null,
+                'fecha_nacimiento' => $ficha['fecha_nacimiento'] ?? null,
+                'pais_nacionalidad_id' => isset($ficha['pais_nacionalidad_id']) ? (int) $ficha['pais_nacionalidad_id'] : null,
+                'pais_residencia_id' => isset($ficha['pais_residencia_id']) ? (int) $ficha['pais_residencia_id'] : null,
+                'distrito_id' => isset($ficha['distrito_id']) ? (int) $ficha['distrito_id'] : null,
+                'region_residencia_extranjera' => $ficha['region_residencia_extranjera'] ?? null,
+                'ciudad_residencia_extranjera' => $ficha['ciudad_residencia_extranjera'] ?? null,
+                'numero_documento' => $ficha['numero_documento'],
+                'tipo_documento' => $ficha['tipo_documento'],
+                'telefono' => $ficha['telefono'],
+                'email' => $ficha['email'],
+                'direccion' => $ficha['direccion'] ?? null,
+            ];
+        }
 
         // Resolver la empresa empleadora principal del PMS
         $ficha['empresa'] = null;

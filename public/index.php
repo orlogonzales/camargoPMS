@@ -268,6 +268,20 @@ $enrutador->post('/api/personal/{id}/reingresar', [\CamargoPMS\Controladores\Per
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('personal.gestionar'),
 ]);
 
+// Rutas de Catálogos Geográficos y Territoriales (PERSONAL-1A-C1)
+$enrutador->get('/api/geografia/pais-default', [\CamargoPMS\Controladores\GeografiaControlador::class, 'apiPaisDefault'], [
+    new \CamargoPMS\Intermediarios\AutenticacionIntermediario(),
+]);
+$enrutador->get('/api/geografia/departamentos', [\CamargoPMS\Controladores\GeografiaControlador::class, 'apiDepartamentos'], [
+    new \CamargoPMS\Intermediarios\AutenticacionIntermediario(),
+]);
+$enrutador->get('/api/geografia/provincias', [\CamargoPMS\Controladores\GeografiaControlador::class, 'apiProvincias'], [
+    new \CamargoPMS\Intermediarios\AutenticacionIntermediario(),
+]);
+$enrutador->get('/api/geografia/distritos', [\CamargoPMS\Controladores\GeografiaControlador::class, 'apiDistritos'], [
+    new \CamargoPMS\Intermediarios\AutenticacionIntermediario(),
+]);
+
 // Rutas de Maestro Central de Propiedades (PROPIEDADES-1)
 $enrutador->get('/propiedades', [\CamargoPMS\Controladores\PropiedadControlador::class, 'index'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('propiedades.ver'),

@@ -10,6 +10,8 @@ declare(strict_types=1);
  * @var array<int, array<string, mixed>> $cargos
  * @var array<int, array<string, mixed>> $tiposDocumento
  * @var array<int, array<string, mixed>> $paises
+ * @var array<string, mixed> $paisDefault
+ * @var array<int, array<string, mixed>> $departamentos
  * @var \CamargoPMS\Modelos\Empresa|null $empresaPrincipal
  * @var array{total: int, activos: int, inactivos: int, con_usuario: int} $resumen
  * @var array{puede_gestionar: bool} $permisos
@@ -18,6 +20,8 @@ declare(strict_types=1);
  */
 ?>
 <input type="hidden" id="csrf-token-global" value="<?= e($csrf_token) ?>">
+<input type="hidden" id="default-pais-id" value="<?= (int) $paisDefault['id'] ?>">
+<input type="hidden" id="default-pais-iso" value="<?= e($paisDefault['codigo_iso2']) ?>">
 
 <!-- Banner de Gobernanza y Axioma de Dominio -->
 <div class="alert alert-info border-0 shadow-sm b-r-12 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -372,43 +376,146 @@ declare(strict_types=1);
 
                     <input type="hidden" id="alta-persona-id" name="persona_id" value="">
 
-                    <!-- Paso 2: Datos de Identidad Humana -->
+                    <!-- Paso 2: Datos de Identidad Humana (PERSONA) -->
                     <h6 class="f-w-700 f-s-13 text-secondary mb-3">
-                        <i class="fa-regular fa-id-card me-1"></i> Datos de la Persona Física
+                        <i class="fa-regular fa-id-card me-1"></i> Datos de Identidad Humana (PERSONA)
                     </h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Nombres <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="alta-nombres" name="nombres" required maxlength="100">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="alta-apellidos" name="apellidos" required maxlength="100">
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">Apellido Paterno <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="alta-apellido-paterno" name="apellido_paterno" required maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">Apellido Materno</label>
+                            <input type="text" class="form-control" id="alta-apellido-materno" name="apellido_materno" maxlength="100">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label f-s-13 f-w-600">Género</label>
+                            <select class="form-select" id="alta-genero" name="genero">
+                                <option value="">Seleccione...</option>
+                                <option value="MASCULINO">Masculino</option>
+                                <option value="FEMENINO">Femenino</option>
+                                <option value="OTRO">Otro</option>
+                                <option value="NO_ESPECIFICADO">No especificado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label f-s-13 f-w-600">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="alta-fecha-nacimiento" name="fecha_nacimiento" max="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label f-s-13 f-w-600">País Nacionalidad</label>
+                            <select class="form-select" id="alta-pais-nacionalidad-id" name="pais_nacionalidad_id">
+                                <?php foreach ($paises as $p): ?>
+                                    <option value="<?= (int) $p['id'] ?>" <?= ($p['id'] == $paisDefault['id']) ? 'selected' : '' ?>>
+                                        <?= e($p['nombre']) ?> (<?= e($p['nacionalidad'] ?? '') ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label f-s-13 f-w-600">País Emisor Doc.</label>
+                            <select class="form-select" id="alta-pais-emisor-id" name="pais_emisor_id">
+                                <?php foreach ($paises as $p): ?>
+                                    <option value="<?= (int) $p['id'] ?>" <?= ($p['id'] == $paisDefault['id']) ? 'selected' : '' ?>>
+                                        <?= e($p['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Tipo de Documento</label>
                             <select class="form-select" id="alta-tipo-doc" name="tipo_documento_id">
-                                <option value="">Seleccione tipo...</option>
                                 <?php foreach ($tiposDocumento as $td): ?>
                                     <option value="<?= (int) $td['id'] ?>"><?= e($td['codigo']) ?> — <?= e($td['nombre']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Número Documento</label>
-                            <input type="text" class="form-control" id="alta-num-doc" name="numero_documento" maxlength="30">
+                            <label class="form-label f-s-13 f-w-600">Número Documento <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="alta-num-doc" name="numero_documento" maxlength="30" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Teléfono / Celular</label>
-                            <input type="text" class="form-control" id="alta-telefono" name="telefono" maxlength="30">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="alta-telefono" name="telefono" maxlength="30" placeholder="Ej. 987654321">
+                                <div class="input-group-text">
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="checkbox" id="alta-es-whatsapp" name="es_whatsapp" value="1" title="¿Tiene WhatsApp?">
+                                        <label class="form-check-label f-s-11" for="alta-es-whatsapp"><i class="fa-brands fa-whatsapp text-success"></i></label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="alta-email" name="email" maxlength="150">
+                            <input type="email" class="form-control" id="alta-email" name="email" maxlength="150" placeholder="nombre@correo.com">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Dirección Residencial</label>
-                            <input type="text" class="form-control" id="alta-direccion" name="direccion" maxlength="255">
+                            <input type="text" class="form-control" id="alta-direccion" name="direccion" maxlength="255" placeholder="Av. Principal 123">
+                        </div>
+                    </div>
+
+                    <!-- Paso 3: Residencia y Ubicación Geográfica Normalizada -->
+                    <h6 class="f-w-700 f-s-13 text-secondary mb-3">
+                        <i class="fa-solid fa-map-location-dot me-1"></i> Residencia y Ubicación Geográfica
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">País de Residencia <span class="text-danger">*</span></label>
+                            <select class="form-select select-pais-residencia" id="alta-pais-residencia-id" name="pais_residencia_id" data-target-peru="#alta-seccion-peru" data-target-extranjero="#alta-seccion-extranjero">
+                                <?php foreach ($paises as $p): ?>
+                                    <option value="<?= (int) $p['id'] ?>" data-iso="<?= e($p['codigo_iso2']) ?>" <?= ($p['id'] == $paisDefault['id']) ? 'selected' : '' ?>>
+                                        <?= e($p['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Sección Perú (INEI Dpto -> Prov -> Dist) -->
+                        <div class="col-md-8" id="alta-seccion-peru">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label f-s-13 f-w-600">Departamento</label>
+                                    <select class="form-select select-departamento" id="alta-departamento-id" name="departamento_id" data-target-prov="#alta-provincia-id" data-target-dist="#alta-distrito-id">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($departamentos as $dep): ?>
+                                            <option value="<?= (int) $dep['id'] ?>"><?= e($dep['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label f-s-13 f-w-600">Provincia</label>
+                                    <select class="form-select select-provincia" id="alta-provincia-id" name="provincia_id" data-target-dist="#alta-distrito-id" disabled>
+                                        <option value="">Seleccione dpto...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label f-s-13 f-w-600">Distrito / Ciudad</label>
+                                    <select class="form-select select-distrito" id="alta-distrito-id" name="distrito_id" disabled>
+                                        <option value="">Seleccione prov...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Extranjero -->
+                        <div class="col-md-8 d-none" id="alta-seccion-extranjero">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label f-s-13 f-w-600">Estado / Región Extranjera</label>
+                                    <input type="text" class="form-control" id="alta-region-extranjera" name="region_residencia_extranjera" maxlength="100" placeholder="Ej. California, Antioquia, CABA...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label f-s-13 f-w-600">Ciudad Extranjera</label>
+                                    <input type="text" class="form-control" id="alta-ciudad-extranjera" name="ciudad_residencia_extranjera" maxlength="100" placeholder="Ej. Los Ángeles, Medellín, Buenos Aires...">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -499,6 +606,22 @@ declare(strict_types=1);
                                     <tr>
                                         <td class="text-secondary">Documento:</td>
                                         <td class="f-w-600" id="ficha-documento">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-secondary">Género:</td>
+                                        <td class="f-w-600" id="ficha-genero">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-secondary">Fecha Nacimiento:</td>
+                                        <td class="f-w-600" id="ficha-fecha-nacimiento">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-secondary">Nacionalidad:</td>
+                                        <td class="f-w-600" id="ficha-nacionalidad">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-secondary">Ubicación / Residencia:</td>
+                                        <td class="f-w-600" id="ficha-ubicacion">-</td>
                                     </tr>
                                     <tr>
                                         <td class="text-secondary">Teléfono:</td>
@@ -744,7 +867,7 @@ declare(strict_types=1);
 
 <!-- 6. MODAL: EDITAR PERSONA -->
 <div class="modal fade" id="modal-editar-persona" tabindex="-1" aria-labelledby="modalEditarPersonaTitulo" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-light">
                 <h5 class="modal-title f-w-700" id="modalEditarPersonaTitulo">
@@ -756,18 +879,57 @@ declare(strict_types=1);
                 <input type="hidden" id="edit-colaborador-id" name="colaborador_id">
                 <input type="hidden" id="edit-persona-id" name="persona_id">
                 <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
+                    <h6 class="f-w-700 f-s-13 text-secondary mb-3">
+                        <i class="fa-regular fa-id-card me-1"></i> Identidad y Filiación (PERSONA)
+                    </h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Nombres <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="edit-nombres" name="nombres" required maxlength="100">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit-apellidos" name="apellidos" required maxlength="100">
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">Apellido Paterno <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit-apellido-paterno" name="apellido_paterno" required maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">Apellido Materno</label>
+                            <input type="text" class="form-control" id="edit-apellido-materno" name="apellido_materno" maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">Género</label>
+                            <select class="form-select" id="edit-genero" name="genero">
+                                <option value="">Seleccione...</option>
+                                <option value="MASCULINO">Masculino</option>
+                                <option value="FEMENINO">Femenino</option>
+                                <option value="OTRO">Otro</option>
+                                <option value="NO_ESPECIFICADO">No especificado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="edit-fecha-nacimiento" name="fecha_nacimiento" max="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">País de Nacionalidad</label>
+                            <select class="form-select" id="edit-pais-nacionalidad-id" name="pais_nacionalidad_id">
+                                <?php foreach ($paises as $p): ?>
+                                    <option value="<?= (int) $p['id'] ?>">
+                                        <?= e($p['nombre']) ?> (<?= e($p['nacionalidad'] ?? '') ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Teléfono / Celular</label>
-                            <input type="text" class="form-control" id="edit-telefono" name="telefono" maxlength="30">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="edit-telefono" name="telefono" maxlength="30">
+                                <div class="input-group-text">
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="checkbox" id="edit-es-whatsapp" name="es_whatsapp" value="1" title="¿Tiene WhatsApp?">
+                                        <label class="form-check-label f-s-11" for="edit-es-whatsapp"><i class="fa-brands fa-whatsapp text-success"></i></label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Correo Electrónico</label>
@@ -776,6 +938,63 @@ declare(strict_types=1);
                         <div class="col-12">
                             <label class="form-label f-s-13 f-w-600">Dirección Residencial</label>
                             <input type="text" class="form-control" id="edit-direccion" name="direccion" maxlength="255">
+                        </div>
+                    </div>
+
+                    <h6 class="f-w-700 f-s-13 text-secondary mb-3">
+                        <i class="fa-solid fa-map-location-dot me-1"></i> Residencia y Ubicación Geográfica
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label f-s-13 f-w-600">País de Residencia</label>
+                            <select class="form-select select-pais-residencia" id="edit-pais-residencia-id" name="pais_residencia_id" data-target-peru="#edit-seccion-peru" data-target-extranjero="#edit-seccion-extranjero">
+                                <?php foreach ($paises as $p): ?>
+                                    <option value="<?= (int) $p['id'] ?>" data-iso="<?= e($p['codigo_iso2']) ?>">
+                                        <?= e($p['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Sección Perú -->
+                        <div class="col-md-8" id="edit-seccion-peru">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label f-s-13 f-w-600">Departamento</label>
+                                    <select class="form-select select-departamento" id="edit-departamento-id" name="departamento_id" data-target-prov="#edit-provincia-id" data-target-dist="#edit-distrito-id">
+                                        <option value="">Seleccione...</option>
+                                        <?php foreach ($departamentos as $dep): ?>
+                                            <option value="<?= (int) $dep['id'] ?>"><?= e($dep['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label f-s-13 f-w-600">Provincia</label>
+                                    <select class="form-select select-provincia" id="edit-provincia-id" name="provincia_id" data-target-dist="#edit-distrito-id">
+                                        <option value="">Seleccione dpto...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label f-s-13 f-w-600">Distrito / Ciudad</label>
+                                    <select class="form-select select-distrito" id="edit-distrito-id" name="distrito_id">
+                                        <option value="">Seleccione prov...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Extranjero -->
+                        <div class="col-md-8 d-none" id="edit-seccion-extranjero">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label f-s-13 f-w-600">Estado / Región Extranjera</label>
+                                    <input type="text" class="form-control" id="edit-region-extranjera" name="region_residencia_extranjera" maxlength="100">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label f-s-13 f-w-600">Ciudad Extranjera</label>
+                                    <input type="text" class="form-control" id="edit-ciudad-extranjera" name="ciudad_residencia_extranjera" maxlength="100">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -796,6 +1015,8 @@ declare(strict_types=1);
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const csrfToken = document.getElementById('csrf-token-global').value;
+    const defaultPaisId = parseInt(document.getElementById('default-pais-id').value, 10);
+    const defaultPaisIso = document.getElementById('default-pais-iso').value;
 
     // Modales Bootstrap
     const modalAlta = new bootstrap.Modal(document.getElementById('modal-alta-colaborador'));
@@ -805,15 +1026,138 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalReingreso = new bootstrap.Modal(document.getElementById('modal-reingreso-laboral'));
     const modalEditarPersona = new bootstrap.Modal(document.getElementById('modal-editar-persona'));
 
+    // Funciones auxiliares de Cascada Geográfica
+    async function cargarProvincias(departamentoId, selectProv, selectedProvId = null) {
+        selectProv.disabled = true;
+        selectProv.innerHTML = '<option value="">Cargando provincias...</option>';
+
+        if (!departamentoId) {
+            selectProv.innerHTML = '<option value="">Seleccione dpto...</option>';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/geografia/departamentos/${departamentoId}/provincias`);
+            const json = await res.json();
+            if (json.exito && json.datos) {
+                let options = '<option value="">Seleccione provincia...</option>';
+                json.datos.forEach(p => {
+                    const sel = (selectedProvId && parseInt(selectedProvId, 10) === parseInt(p.id, 10)) ? 'selected' : '';
+                    options += `<option value="${p.id}" ${sel}>${p.nombre}</option>`;
+                });
+                selectProv.innerHTML = options;
+                selectProv.disabled = false;
+            } else {
+                selectProv.innerHTML = '<option value="">Sin provincias</option>';
+            }
+        } catch (e) {
+            selectProv.innerHTML = '<option value="">Error al cargar</option>';
+        }
+    }
+
+    async function cargarDistritos(provinciaId, selectDist, selectedDistId = null) {
+        selectDist.disabled = true;
+        selectDist.innerHTML = '<option value="">Cargando distritos...</option>';
+
+        if (!provinciaId) {
+            selectDist.innerHTML = '<option value="">Seleccione prov...</option>';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/geografia/provincias/${provinciaId}/distritos`);
+            const json = await res.json();
+            if (json.exito && json.datos) {
+                let options = '<option value="">Seleccione distrito...</option>';
+                json.datos.forEach(d => {
+                    const sel = (selectedDistId && parseInt(selectedDistId, 10) === parseInt(d.id, 10)) ? 'selected' : '';
+                    options += `<option value="${d.id}" ${sel}>${d.nombre} (${d.codigo_ubigeo})</option>`;
+                });
+                selectDist.innerHTML = options;
+                selectDist.disabled = false;
+            } else {
+                selectDist.innerHTML = '<option value="">Sin distritos</option>';
+            }
+        } catch (e) {
+            selectDist.innerHTML = '<option value="">Error al cargar</option>';
+        }
+    }
+
+    function configurarCascadaGeografica(prefijo) {
+        const selectPais = document.getElementById(`${prefijo}-pais-residencia-id`);
+        const seccionPeru = document.getElementById(`${prefijo}-seccion-peru`);
+        const seccionExtranjero = document.getElementById(`${prefijo}-seccion-extranjero`);
+        const selectDep = document.getElementById(`${prefijo}-departamento-id`);
+        const selectProv = document.getElementById(`${prefijo}-provincia-id`);
+        const selectDist = document.getElementById(`${prefijo}-distrito-id`);
+
+        if (selectPais) {
+            selectPais.addEventListener('change', function () {
+                const opt = selectPais.options[selectPais.selectedIndex];
+                const iso = opt ? (opt.dataset.iso || '') : '';
+                const paisId = parseInt(selectPais.value, 10);
+                const esPeru = (iso === 'PE' || paisId === defaultPaisId);
+
+                if (esPeru) {
+                    seccionPeru.classList.remove('d-none');
+                    seccionExtranjero.classList.add('d-none');
+                    const regExt = document.getElementById(`${prefijo}-region-extranjera`);
+                    const ciuExt = document.getElementById(`${prefijo}-ciudad-extranjera`);
+                    if (regExt) regExt.value = '';
+                    if (ciuExt) ciuExt.value = '';
+                } else {
+                    seccionPeru.classList.add('d-none');
+                    seccionExtranjero.classList.remove('d-none');
+                    if (selectDep) selectDep.value = '';
+                    if (selectProv) {
+                        selectProv.innerHTML = '<option value="">Seleccione dpto...</option>';
+                        selectProv.disabled = true;
+                    }
+                    if (selectDist) {
+                        selectDist.innerHTML = '<option value="">Seleccione prov...</option>';
+                        selectDist.disabled = true;
+                    }
+                }
+            });
+        }
+
+        if (selectDep) {
+            selectDep.addEventListener('change', function () {
+                const depId = this.value;
+                if (selectDist) {
+                    selectDist.innerHTML = '<option value="">Seleccione prov...</option>';
+                    selectDist.disabled = true;
+                }
+                cargarProvincias(depId, selectProv);
+            });
+        }
+
+        if (selectProv) {
+            selectProv.addEventListener('change', function () {
+                const provId = this.value;
+                cargarDistritos(provId, selectDist);
+            });
+        }
+    }
+
+    configurarCascadaGeografica('alta');
+    configurarCascadaGeografica('edit');
+
     // Botones globales
     const btnNuevoColaborador = document.getElementById('btn-nuevo-colaborador');
     if (btnNuevoColaborador) {
         btnNuevoColaborador.addEventListener('click', () => {
-            document.getElementById('form-alta-colaborador').reset();
+            const form = document.getElementById('form-alta-colaborador');
+            form.reset();
             document.getElementById('alta-persona-id').value = '';
             document.getElementById('alta-persona-resultado').classList.add('d-none');
             document.getElementById('alta-nombres').readOnly = false;
-            document.getElementById('alta-apellidos').readOnly = false;
+            document.getElementById('alta-apellido-paterno').readOnly = false;
+            document.getElementById('alta-apellido-materno').readOnly = false;
+            document.getElementById('alta-pais-nacionalidad-id').value = defaultPaisId;
+            document.getElementById('alta-pais-emisor-id').value = defaultPaisId;
+            document.getElementById('alta-pais-residencia-id').value = defaultPaisId;
+            document.getElementById('alta-pais-residencia-id').dispatchEvent(new Event('change'));
             modalAlta.show();
         });
     }
@@ -846,14 +1190,47 @@ document.addEventListener('DOMContentLoaded', function () {
                     const p = json.datos[0];
                     document.getElementById('alta-persona-id').value = p.id;
                     document.getElementById('alta-nombres').value = p.nombres || '';
-                    document.getElementById('alta-apellidos').value = p.apellidos || '';
+                    document.getElementById('alta-apellido-paterno').value = p.apellido_paterno || '';
+                    document.getElementById('alta-apellido-materno').value = p.apellido_materno || '';
                     document.getElementById('alta-nombres').readOnly = true;
-                    document.getElementById('alta-apellidos').readOnly = true;
+                    document.getElementById('alta-apellido-paterno').readOnly = true;
+                    document.getElementById('alta-apellido-materno').readOnly = true;
+
+                    if (p.genero) document.getElementById('alta-genero').value = p.genero;
+                    if (p.fecha_nacimiento) document.getElementById('alta-fecha-nacimiento').value = p.fecha_nacimiento;
+                    if (p.pais_nacionalidad_id) document.getElementById('alta-pais-nacionalidad-id').value = p.pais_nacionalidad_id;
+                    if (p.tipo_documento_id) document.getElementById('alta-tipo-doc').value = p.tipo_documento_id;
+
                     document.getElementById('alta-num-doc').value = p.numero_documento || doc;
                     document.getElementById('alta-telefono').value = p.telefono || '';
+                    document.getElementById('alta-es-whatsapp').checked = (p.es_whatsapp == 1 || p.es_whatsapp === true);
                     document.getElementById('alta-email').value = p.email || '';
+                    document.getElementById('alta-direccion').value = p.direccion || '';
 
-                    txt.textContent = `Persona encontrada: ${p.nombres} ${p.apellidos} (ID: ${p.id}). Se vinculará como colaborador sin duplicidad humana.`;
+                    // Residencia
+                    if (p.pais_residencia_id) {
+                        document.getElementById('alta-pais-residencia-id').value = p.pais_residencia_id;
+                    } else {
+                        document.getElementById('alta-pais-residencia-id').value = defaultPaisId;
+                    }
+                    document.getElementById('alta-pais-residencia-id').dispatchEvent(new Event('change'));
+
+                    if (p.departamento_id) {
+                        document.getElementById('alta-departamento-id').value = p.departamento_id;
+                        await cargarProvincias(p.departamento_id, document.getElementById('alta-provincia-id'), p.provincia_id);
+                        if (p.provincia_id) {
+                            await cargarDistritos(p.provincia_id, document.getElementById('alta-distrito-id'), p.distrito_id);
+                        }
+                    }
+
+                    if (p.region_residencia_extranjera) {
+                        document.getElementById('alta-region-extranjera').value = p.region_residencia_extranjera;
+                    }
+                    if (p.ciudad_residencia_extranjera) {
+                        document.getElementById('alta-ciudad-extranjera').value = p.ciudad_residencia_extranjera;
+                    }
+
+                    txt.textContent = `Persona encontrada: ${p.nombre_completo || p.nombres} (ID: ${p.id}). Se vinculará como colaborador sin duplicidad humana.`;
                     resultadoDiv.classList.remove('d-none');
                     Swal.fire({
                         toast: true,
@@ -866,7 +1243,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     document.getElementById('alta-persona-id').value = '';
                     document.getElementById('alta-nombres').readOnly = false;
-                    document.getElementById('alta-apellidos').readOnly = false;
+                    document.getElementById('alta-apellido-paterno').readOnly = false;
+                    document.getElementById('alta-apellido-materno').readOnly = false;
                     document.getElementById('alta-num-doc').value = doc;
                     txt.textContent = 'Persona no encontrada en el sistema. Se creará una nueva persona física al guardar.';
                     resultadoDiv.classList.remove('d-none');
@@ -883,12 +1261,20 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('alta-buscar-doc').value = '';
             document.getElementById('alta-persona-id').value = '';
             document.getElementById('alta-nombres').value = '';
-            document.getElementById('alta-apellidos').value = '';
+            document.getElementById('alta-apellido-paterno').value = '';
+            document.getElementById('alta-apellido-materno').value = '';
             document.getElementById('alta-nombres').readOnly = false;
-            document.getElementById('alta-apellidos').readOnly = false;
+            document.getElementById('alta-apellido-paterno').readOnly = false;
+            document.getElementById('alta-apellido-materno').readOnly = false;
+            document.getElementById('alta-genero').value = '';
+            document.getElementById('alta-fecha-nacimiento').value = '';
             document.getElementById('alta-num-doc').value = '';
             document.getElementById('alta-telefono').value = '';
+            document.getElementById('alta-es-whatsapp').checked = false;
             document.getElementById('alta-email').value = '';
+            document.getElementById('alta-direccion').value = '';
+            document.getElementById('alta-pais-residencia-id').value = defaultPaisId;
+            document.getElementById('alta-pais-residencia-id').dispatchEvent(new Event('change'));
             document.getElementById('alta-persona-resultado').classList.add('d-none');
         });
     }
@@ -900,11 +1286,12 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
 
             const nombres = document.getElementById('alta-nombres').value.trim();
-            const apellidos = document.getElementById('alta-apellidos').value.trim();
+            const apellidoPaterno = document.getElementById('alta-apellido-paterno').value.trim();
+            const apellidoMaterno = document.getElementById('alta-apellido-materno').value.trim();
             const cargoId = document.getElementById('alta-cargo-id').value;
             const fechaInicio = document.getElementById('alta-fecha-inicio').value;
 
-            if (!nombres || !apellidos || !cargoId || !fechaInicio) {
+            if (!nombres || !apellidoPaterno || !cargoId || !fechaInicio) {
                 Swal.fire('Atención', 'Complete todos los campos obligatorios (*).', 'warning');
                 return;
             }
@@ -912,12 +1299,24 @@ document.addEventListener('DOMContentLoaded', function () {
             const payload = {
                 persona_id: document.getElementById('alta-persona-id').value || null,
                 nombres: nombres,
-                apellidos: apellidos,
+                apellido_paterno: apellidoPaterno,
+                apellido_materno: apellidoMaterno || null,
+                genero: document.getElementById('alta-genero').value || null,
+                fecha_nacimiento: document.getElementById('alta-fecha-nacimiento').value || null,
+                pais_nacionalidad_id: document.getElementById('alta-pais-nacionalidad-id').value || null,
+                pais_emisor_id: document.getElementById('alta-pais-emisor-id').value || null,
                 tipo_documento_id: document.getElementById('alta-tipo-doc').value || null,
                 numero_documento: document.getElementById('alta-num-doc').value.trim() || null,
                 telefono: document.getElementById('alta-telefono').value.trim() || null,
+                es_whatsapp: document.getElementById('alta-es-whatsapp').checked ? 1 : 0,
                 email: document.getElementById('alta-email').value.trim() || null,
                 direccion: document.getElementById('alta-direccion').value.trim() || null,
+                pais_residencia_id: document.getElementById('alta-pais-residencia-id').value || null,
+                departamento_id: document.getElementById('alta-departamento-id').value || null,
+                provincia_id: document.getElementById('alta-provincia-id').value || null,
+                distrito_id: document.getElementById('alta-distrito-id').value || null,
+                region_residencia_extranjera: document.getElementById('alta-region-extranjera').value.trim() || null,
+                ciudad_residencia_extranjera: document.getElementById('alta-ciudad-extranjera').value.trim() || null,
                 cargo_id: parseInt(cargoId, 10),
                 fecha_inicio: fechaInicio,
                 observaciones: document.getElementById('alta-observaciones').value.trim() || null
@@ -946,7 +1345,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     modalAlta.hide();
                     Swal.fire('Éxito', json.mensaje, 'success').then(() => location.reload());
                 } else {
-                    Swal.fire('Error', json.mensaje || 'No se pudo registrar el colaborador.', 'error');
+                    let errMsg = json.mensaje || 'No se pudo registrar el colaborador.';
+                    if (json.errores) {
+                        errMsg += '<br><small class="text-danger">' + Object.values(json.errores).join('<br>') + '</small>';
+                    }
+                    Swal.fire('Error', errMsg, 'error');
                 }
             } catch (err) {
                 Swal.fire('Error', 'Falla de red al procesar el alta.', 'error');
@@ -985,7 +1388,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const episodios = d.episodios || [];
 
                 // Header
-                const nombreCompleto = `${p.nombres || ''} ${p.apellidos || ''}`.trim();
+                const nombreCompleto = p.nombre_completo || `${p.nombres || ''} ${p.apellido_paterno || ''}`.trim();
                 document.getElementById('ficha-nombre-completo').textContent = nombreCompleto || 'Colaborador';
                 document.getElementById('ficha-codigo').textContent = col.codigo || 'S/C';
 
@@ -998,7 +1401,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Persona
                 document.getElementById('ficha-persona-id').textContent = p.id || '-';
                 document.getElementById('ficha-documento').textContent = p.numero_documento ? `${p.tipo_documento || 'DOC'}: ${p.numero_documento}` : 'Sin documento';
-                document.getElementById('ficha-telefono').textContent = p.telefono || 'Sin teléfono';
+                document.getElementById('ficha-genero').textContent = p.genero || 'No especificado';
+                document.getElementById('ficha-fecha-nacimiento').textContent = p.fecha_nacimiento || 'No registrada';
+                document.getElementById('ficha-nacionalidad').textContent = p.nacionalidad || (p.pais_nacionalidad ? p.pais_nacionalidad.nombre : 'Peruana');
+
+                // Ubicación consolidada
+                let ubicacionTxt = 'Sin ubicación registrada';
+                if (p.distrito) {
+                    ubicacionTxt = `${p.distrito}, ${p.provincia}, ${p.departamento} (UBIGEO: ${p.ubigeo || '-'})`;
+                } else if (p.ciudad_residencia_extranjera) {
+                    ubicacionTxt = `${p.ciudad_residencia_extranjera}${p.region_residencia_extranjera ? ', ' + p.region_residencia_extranjera : ''}`;
+                }
+                document.getElementById('ficha-ubicacion').textContent = ubicacionTxt;
+
+                document.getElementById('ficha-telefono').innerHTML = p.telefono
+                    ? (p.es_whatsapp ? `<i class="fa-brands fa-whatsapp text-success me-1"></i> ${p.telefono}` : p.telefono)
+                    : 'Sin teléfono';
                 document.getElementById('ficha-email').textContent = p.email || 'Sin correo';
                 document.getElementById('ficha-direccion').textContent = p.direccion || 'Sin dirección';
 
@@ -1230,16 +1648,61 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 7. Editar Persona
+    // 7. Editar Persona (Carga la ficha completa para pre-llenar los datos soberanos)
     document.querySelectorAll('.btn-editar-persona').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.getElementById('edit-colaborador-id').value = this.dataset.id;
-            document.getElementById('edit-persona-id').value = this.dataset.personaId;
-            document.getElementById('edit-nombres').value = this.dataset.nombres || '';
-            document.getElementById('edit-apellidos').value = this.dataset.apellidos || '';
-            document.getElementById('edit-telefono').value = this.dataset.telefono || '';
-            document.getElementById('edit-email').value = this.dataset.email || '';
-            modalEditarPersona.show();
+        btn.addEventListener('click', async function () {
+            const colabId = this.dataset.id;
+            try {
+                const res = await fetch(`/api/personal/${colabId}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const json = await res.json();
+
+                if (!json.exito || !json.datos || !json.datos.persona) {
+                    Swal.fire('Error', 'No se pudieron recuperar los datos de la persona.', 'error');
+                    return;
+                }
+
+                const p = json.datos.persona;
+                document.getElementById('edit-colaborador-id').value = colabId;
+                document.getElementById('edit-persona-id').value = p.id;
+                document.getElementById('edit-nombres').value = p.nombres || '';
+                document.getElementById('edit-apellido-paterno').value = p.apellido_paterno || '';
+                document.getElementById('edit-apellido-materno').value = p.apellido_materno || '';
+                document.getElementById('edit-genero').value = p.genero || '';
+                document.getElementById('edit-fecha-nacimiento').value = p.fecha_nacimiento || '';
+                if (p.pais_nacionalidad_id) {
+                    document.getElementById('edit-pais-nacionalidad-id').value = p.pais_nacionalidad_id;
+                }
+                document.getElementById('edit-telefono').value = p.telefono || '';
+                document.getElementById('edit-es-whatsapp').checked = (p.es_whatsapp == 1 || p.es_whatsapp === true);
+                document.getElementById('edit-email').value = p.email || '';
+                document.getElementById('edit-direccion').value = p.direccion || '';
+
+                // Residencia
+                const editPaisSelect = document.getElementById('edit-pais-residencia-id');
+                editPaisSelect.value = p.pais_residencia_id || defaultPaisId;
+                editPaisSelect.dispatchEvent(new Event('change'));
+
+                if (p.departamento_id) {
+                    document.getElementById('edit-departamento-id').value = p.departamento_id;
+                    await cargarProvincias(p.departamento_id, document.getElementById('edit-provincia-id'), p.provincia_id);
+                    if (p.provincia_id) {
+                        await cargarDistritos(p.provincia_id, document.getElementById('edit-distrito-id'), p.distrito_id);
+                    }
+                }
+
+                if (p.region_residencia_extranjera) {
+                    document.getElementById('edit-region-extranjera').value = p.region_residencia_extranjera;
+                }
+                if (p.ciudad_residencia_extranjera) {
+                    document.getElementById('edit-ciudad-extranjera').value = p.ciudad_residencia_extranjera;
+                }
+
+                modalEditarPersona.show();
+            } catch (err) {
+                Swal.fire('Error', 'Falla de red al preparar el formulario de edición.', 'error');
+            }
         });
     });
 
@@ -1249,12 +1712,32 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const id = document.getElementById('edit-colaborador-id').value;
             const nombres = document.getElementById('edit-nombres').value.trim();
-            const apellidos = document.getElementById('edit-apellidos').value.trim();
+            const apellidoPaterno = document.getElementById('edit-apellido-paterno').value.trim();
+            const apellidoMaterno = document.getElementById('edit-apellido-materno').value.trim();
 
-            if (!nombres || !apellidos) {
-                Swal.fire('Atención', 'Nombres y apellidos son requeridos.', 'warning');
+            if (!nombres || !apellidoPaterno) {
+                Swal.fire('Atención', 'Nombres y apellido paterno son requeridos.', 'warning');
                 return;
             }
+
+            const payload = {
+                nombres: nombres,
+                apellido_paterno: apellidoPaterno,
+                apellido_materno: apellidoMaterno || null,
+                genero: document.getElementById('edit-genero').value || null,
+                fecha_nacimiento: document.getElementById('edit-fecha-nacimiento').value || null,
+                pais_nacionalidad_id: document.getElementById('edit-pais-nacionalidad-id').value || null,
+                telefono: document.getElementById('edit-telefono').value.trim() || null,
+                es_whatsapp: document.getElementById('edit-es-whatsapp').checked ? 1 : 0,
+                email: document.getElementById('edit-email').value.trim() || null,
+                direccion: document.getElementById('edit-direccion').value.trim() || null,
+                pais_residencia_id: document.getElementById('edit-pais-residencia-id').value || null,
+                departamento_id: document.getElementById('edit-departamento-id').value || null,
+                provincia_id: document.getElementById('edit-provincia-id').value || null,
+                distrito_id: document.getElementById('edit-distrito-id').value || null,
+                region_residencia_extranjera: document.getElementById('edit-region-extranjera').value.trim() || null,
+                ciudad_residencia_extranjera: document.getElementById('edit-ciudad-extranjera').value.trim() || null
+            };
 
             try {
                 const res = await fetch(`/api/personal/${id}`, {
@@ -1264,20 +1747,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         'X-CSRF-Token': csrfToken,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        nombres: nombres,
-                        apellidos: apellidos,
-                        telefono: document.getElementById('edit-telefono').value.trim() || null,
-                        email: document.getElementById('edit-email').value.trim() || null,
-                        direccion: document.getElementById('edit-direccion').value.trim() || null
-                    })
+                    body: JSON.stringify(payload)
                 });
                 const json = await res.json();
                 if (json.exito) {
                     modalEditarPersona.hide();
                     Swal.fire('Guardado', json.mensaje, 'success').then(() => location.reload());
                 } else {
-                    Swal.fire('Error', json.mensaje, 'error');
+                    let errMsg = json.mensaje || 'Error al actualizar.';
+                    if (json.errores) {
+                        errMsg += '<br><small class="text-danger">' + Object.values(json.errores).join('<br>') + '</small>';
+                    }
+                    Swal.fire('Error', errMsg, 'error');
                 }
             } catch (err) {
                 Swal.fire('Error', 'Falla de red al actualizar datos.', 'error');
