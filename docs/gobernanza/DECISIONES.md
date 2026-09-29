@@ -1519,6 +1519,20 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Se utiliza la API nativa de Bootstrap 5 (`bootstrap.Tooltip.getOrCreateInstance`), respetando el patrón canónico de Alina (`tooltips_popovers.js`), con prevención de instancias duplicadas, tolerancia ante ausencia de elementos y cero acoplamiento a librerías externas o llamadas a jQuery.
    - Se preserva el atributo accesible `aria-label` y el rol semántico `role="tab"` en los hipervínculos para garantizar accesibilidad.
 
+### D-094 — Theme Customizer con Persistencia Local (localStorage) y Perfil de Usuario Soberano (UI-ALINA-1B)
+
+1. **Theme Customizer y Flotante Lateral Alina:**
+   - La persistencia del Personalizador de Plantilla Alina es exclusivamente **local por navegador mediante `localStorage`** (`theme_color`, `theme_layout`, `sidebar_variant`, `theme_font_size`). Se prohíbe introducir tablas en BD o alterar la base instalada para preferencias cosméticas de visualización del operador; la ranura de migración `034_*` permanece estrictamente libre.
+   - El flotante lateral derecho (`.theme-customizer-container`) se restaura tomando como referencia `index.html` de Alina con exactamente dos funciones aprobadas: **Configuración de plantilla** (que abre el offcanvas interactivo) y **Soporte técnico** (`href="#"` provisional). Se erradican totalmente enlaces externos promocionales (*Buy Now*, *ThemeForest* y documentación de terceros).
+   - El panel offcanvas se traduce 100% al español (Colores de tema, Disposición de diseño, Variante de barra lateral y Escala de texto) y presenta un único botón **"Restablecer" centrado** (`btn-danger w-100`) en el pie, el cual restablece las opciones a los valores canónicos del PMS (`theme-gradient-1`, `ltr`, `vertical`, `medium-text`) y actualiza la interfaz de inmediato sin recarga forzada.
+   - Se incorpora un bloque defensivo anti-FOUC en `head.php` para prevenir parpadeos visuales al renderizar la página.
+
+2. **Perfil de Usuario (`/perfil`) y Separación Ontológica `PERSONA ≠ USUARIO`:**
+   - Se habilita el acceso a la ficha de perfil mediante la opción **"Mi Perfil"** en el dropdown de usuario autenticado en `app/Vistas/componentes/cabecera.php`, resolviendo la ruta protegida `GET /perfil` en `PerfilControlador::index()`.
+   - Se respeta con estricto rigor el principio `PERSONA ≠ USUARIO`: la vista presenta separadamente los datos civiles y de filiación del sujeto humano (obtenidos del maestro `personas`, `personas_documentos` y `personas_contactos`) y las credenciales/parámetros de acceso del operador (`usuarios`, `usuarios_roles`). No se duplica información de Persona dentro de Usuario.
+   - Se reproduce la estructura visual de `admin-dashboard/alina/template/profile.html` (`.profile-container`, `.profile-pic`, `.avatar-preview`, `#imgPreview`, `.avatar-edit`, `#imageUpload`) con previsualización dinámica interactiva en Vanilla JS (FileReader API, cero jQuery).
+   - Se preservan las fronteras arquitectónicas: no se duplican operaciones de autenticación ni revocación masiva de sesiones dentro del perfil; se enlaza de forma segura a la consola existente de sesiones (`/seguridad/sesiones`).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

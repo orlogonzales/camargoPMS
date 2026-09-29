@@ -45,6 +45,11 @@ use CamargoPMS\Nucleo\Vista;
         </main>
     </div>
 
+    <!-- Personalizador de tema y flotante lateral Alina -->
+    <div id="theme-customizer-box">
+        <?= Vista::componente('personalizador') ?>
+    </div>
+
     <!-- Botón volver arriba -->
     <div class="go-top">
         <span class="progress-value">

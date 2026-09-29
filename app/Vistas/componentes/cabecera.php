@@ -58,6 +58,13 @@ declare(strict_types=1);
                                 <div class="f-s-12 text-secondary">Usuario autenticado</div>
                             </li>
                             <li>
+                                <a href="<?= url_ruta('/perfil') ?>" class="dropdown-item d-flex align-items-center gap-2 rounded py-2 text-dark">
+                                    <i class="fa-solid fa-user f-s-16 text-primary"></i>
+                                    <span>Mi Perfil</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
                                 <form action="<?= url_ruta('/logout') ?>" method="POST" class="m-0 p-0">
                                     <?= csrf_campo() ?>
                                     <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger rounded py-2">

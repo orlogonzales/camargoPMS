@@ -28,8 +28,8 @@ Queda terminantemente prohibido el uso de `border-style: dotted` o `border-style
 | Acordeones | `admin-dashboard/alina/template/accordions.html` | Bloques colapsables con chevron |
 | Badges y Chips | `admin-dashboard/alina/template/badges.html` | Referencia oficial de Variants of badge y Variants of chip (D-071) |
 | Tablas | `admin-dashboard/alina/template/table.html` | Tablas Bordered + Striped + Hoverable |
-| Perfil de usuario | `admin-dashboard/alina/template/profile.html` | Ficha de usuario y avatar (`PERSONA ≠ USUARIO`) |
-| Theme Customizer | `admin-dashboard/alina/template/blank.html` | Flotante lateral con Configuración y Soporte `#` |
+| Perfil de usuario | `admin-dashboard/alina/template/profile.html` | Ficha de usuario y avatar (`GET /perfil`, `PERSONA ≠ USUARIO`) |
+| Theme Customizer | `admin-dashboard/alina/template/blank.html` | Flotante lateral con Configuración y Soporte `#` (persistencia local en navegador con `localStorage`) |
 | Error HTTP 400 | `admin-dashboard/alina/template/error_400.html` | Bad Request |
 | Error HTTP 403 | `admin-dashboard/alina/template/error_403.html` | Forbidden / Acceso denegado |
 | Error HTTP 404 | `admin-dashboard/alina/template/error_404.html` | Not Found / Recurso no encontrado |

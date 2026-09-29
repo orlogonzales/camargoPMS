@@ -158,8 +158,8 @@ Conforme a la regla superior (**Alina es el sistema de diseño de Camargo PMS**)
 | **Placeholders** | `placeholder.html` | Efectos esqueléticos de carga `.placeholder-glow` para cargas asíncronas. |
 | **Progress** | `progress.html` | Barras de progreso `.progress` con barras redondeadas semánticas. |
 | **Basic Tabs** | `tab.html` | Pestañas de navegación interna `.nav.nav-tabs` y `.nav.nav-pills`. |
-| **Profile** | `profile.html` | Pantalla de perfil de usuario (`PERSONA ≠ USUARIO`) con gestión de avatar y datos soberanos. |
-| **Theme Customizer** | `blank.html` | Selector flotante lateral (Configuración de plantilla + Soporte `#`, Reset centrado, sin Buy Now). |
+| **Profile** | `profile.html` | Pantalla de perfil de usuario (`GET /perfil`, `PERSONA ≠ USUARIO`) con ficha Alina, previsualización de fotografía y aislamiento entre persona civil y cuenta de acceso. |
+| **Theme Customizer** | `blank.html` | Flotante lateral derecho (Configuración de plantilla + Soporte `#`, Reset centrado, sin Buy Now, persistencia soberana en navegador mediante `localStorage`). |
 | **PristineJS UX Gate** | N/A | Validación reactiva cliente obligatoria (`PristineJS ≠ seguridad`) combinada con validación backend ineludible. |
 | **Tablas Bordered + Striped + Hover** | `table.html` | Tablas de datos normalizadas: `table table-bordered table-striped table-hover align-middle mb-0`. |
 

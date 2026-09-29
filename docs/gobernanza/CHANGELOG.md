@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1B — Perfil de Usuario + Theme Customizer + Flotante Lateral (D-094)
+
+- **Theme Customizer y Flotante Lateral Alina (`app/Vistas/componentes/personalizador.php`):**
+  - Restauración del flotante lateral derecho (`.theme-customizer-container`) conforme a `index.html` de Alina con exactamente dos funciones autorizadas: *Configuración de plantilla* (abre el panel offcanvas con Font Awesome `fa-solid fa-gear`) y *Soporte técnico* (`href="#"` con `fa-solid fa-headset`). Erradicación total de *Buy Now*, *ThemeForest* y publicidad comercial.
+  - Traducción al español del panel offcanvas (`#offcanvasPersonalizador`): Colores de tema, Disposición de diseño (LTR, RTL, Caja), Variante de barra lateral (Vertical, Horizontal, Oscura) y Escala de texto (Pequeño, Mediano, Grande).
+  - Incorporación de botón *Restablecer* centrado (`#btn-restablecer-personalizador`, `btn-danger w-100`) que reinicia instantáneamente las preferencias a los valores oficiales de Camargo PMS (`theme-gradient-1`, `ltr`, `vertical`, `medium-text`) sin requerir recarga forzada.
+  - Integración modular y defensiva en `public/assets/js/camargo-layout.js` (`inicializarPersonalizador()`) en Vanilla JS nativo (0 jQuery, 0 Tabler Icons).
+  - Persistencia exclusiva en `localStorage` del navegador; cero alteraciones en base de datos, 118 tablas relacionales preservadas y ranura de migración `034_*` estrictamente libre.
+  - Inyección de bloque anti-FOUC en `app/Vistas/componentes/head.php` para prevenir parpadeos durante el renderizado.
+- **Perfil de Usuario Soberano (`/perfil`) y Separación `PERSONA ≠ USUARIO`:**
+  - Incorporación del acceso *Mi Perfil* (`url_ruta('/perfil')`, `fa-solid fa-user`) en el dropdown de cabecera (`app/Vistas/componentes/cabecera.php`).
+  - Creación del controlador `app/Controladores/PerfilControlador.php` despachando la ruta protegida por sesión `GET /perfil`.
+  - Vista `app/Vistas/perfil/index.php` fiel a `admin-dashboard/alina/template/profile.html` (`.profile-container`, `.profile-pic`, `.avatar-preview`, `#imgPreview`, `.avatar-edit`, `#imageUpload`) con previsualización interactiva de fotografía en Vanilla JS (FileReader API).
+  - Respeto riguroso de la ontología de identidad: datos de Persona humana (nombres, apellidos, documentos, contactos, dirección, nacimiento) separados de los datos de cuenta de Usuario (login, estado, roles RBAC, último acceso y cambio de clave). No se duplicó información ni se alteró el maestro de autenticación/sesiones.
+- **Verificación y Cobertura:**
+  - Nueva suite automatizada `tests/test_ui_alina_1b_perfil_customizer.php` con 46 checks exhaustivos (100% PASS).
+  - Regresión global ampliada: 64/64 suites evaluadas, 64/64 PASSED (100%), 1,448 checks verificados (+46 checks), 0 fallos.
+  - Catálogo Alina original (`admin-dashboard/`) 100% inalterado y prístino.
+  - Se declara STOP PARCIAL para la persistencia en disco/BD de la fotografía a la espera de autorización DDL para la ranura 034.
+
 ### Microfase UI-ALINA-1A-C2 — Paridad SQL Consolidado y Activación de Tooltips Alina en Runtime (D-093-C2)
 
 - **Paridad Semántica Completa del Dump Consolidado (`SQL/camargo_pms.sql`):**

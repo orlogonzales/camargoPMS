@@ -42,3 +42,21 @@ declare(strict_types=1);
 <!-- Ajustes y estilos propios de Camargo PMS -->
 <link rel="stylesheet" type="text/css" href="<?= url_asset('css/camargo.css') ?>">
 
+<!-- Prevención defensiva de parpadeo visual (FOUC) basada en preferencias locales -->
+<script>
+    (function () {
+        try {
+            var color = localStorage.getItem('theme_color') || 'theme-gradient-1';
+            var layout = localStorage.getItem('theme_layout') || 'ltr';
+            var fontSize = localStorage.getItem('theme_font_size') || 'medium-text';
+            if (layout === 'rtl') {
+                document.documentElement.setAttribute('dir', 'rtl');
+            }
+            document.documentElement.setAttribute('data-theme-color', color);
+            document.documentElement.setAttribute('data-theme-font', fontSize);
+        } catch (e) {
+            // LocalStorage inaccesible o restringido
+        }
+    })();
+</script>
+

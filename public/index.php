@@ -67,6 +67,11 @@ $enrutador->get('/', [\CamargoPMS\Controladores\PanelControlador::class, 'inicio
     \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
 ]);
 
+// Ruta de Perfil de Usuario (UI-ALINA-1B)
+$enrutador->get('/perfil', [\CamargoPMS\Controladores\PerfilControlador::class, 'index'], [
+    \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
+]);
+
 // Rutas de Gestión de Usuarios (USUARIOS-1)
 $enrutador->get('/usuarios', [\CamargoPMS\Controladores\UsuarioControlador::class, 'index'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('usuarios.ver'),

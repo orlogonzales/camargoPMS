@@ -345,6 +345,178 @@
     }
 
     /**
+     * Inicializa el Personalizador de Plantilla Alina (Theme Customizer) y su flotante lateral.
+     * Persistencia soberana en localStorage (sin tocar la base de datos).
+     * Cero jQuery, cero dependencias comerciales.
+     * @returns {void}
+     */
+    function inicializarPersonalizador() {
+        const customizerContainer = document.querySelector('.theme-customizer-container');
+        const settingsBtn = document.querySelector('.customizer-settings-btn');
+        const offcanvasEl = document.getElementById('offcanvasPersonalizador');
+
+        if (!offcanvasEl) return;
+
+        // 1. Constantes y valores oficiales por defecto de Camargo PMS
+        const COLORES_TEMA = [
+            'theme-gradient-1',
+            'theme-gradient-2',
+            'theme-gradient-3',
+            'theme-gradient-4',
+            'theme-gradient-5',
+            'theme-gradient-6'
+        ];
+        const COLOR_DEFECTO = 'theme-gradient-1';
+        const LAYOUT_DEFECTO = 'ltr';
+        const SIDEBAR_DEFECTO = 'vertical';
+        const FUENTE_DEFECTO = 'medium-text';
+
+        // 2. Funciones auxiliares de aplicación inmediata sin recarga
+        function aplicarColorTema(color) {
+            document.body.classList.remove(...COLORES_TEMA);
+            document.body.classList.add(color);
+            document.querySelectorAll('.theme-color-list li').forEach(li => {
+                li.classList.toggle('active', li.getAttribute('data-theme') === color);
+            });
+        }
+
+        function aplicarDisposicion(layout) {
+            document.body.classList.remove('layout-ltr', 'layout-rtl', 'box-layout');
+            document.body.removeAttribute('dir');
+
+            if (layout === 'rtl') {
+                document.body.classList.add('layout-rtl');
+                document.body.setAttribute('dir', 'rtl');
+            } else if (layout === 'box') {
+                document.body.classList.add('box-layout');
+            } else {
+                document.body.classList.add('layout-ltr');
+            }
+
+            document.querySelectorAll('.theme-layout-list li').forEach(li => {
+                li.classList.toggle('active', li.getAttribute('data-layout') === layout);
+            });
+        }
+
+        function aplicarVarianteSidebar(variant) {
+            const wrapper = document.querySelector('.app-wrapper');
+            if (wrapper) {
+                wrapper.classList.remove('sidebar-vertical', 'sidebar-horizontal', 'sidebar-dark');
+                wrapper.classList.add('sidebar-' + variant);
+            }
+            document.querySelectorAll('.theme-sidebar-variant-list li').forEach(li => {
+                li.classList.toggle('active', li.getAttribute('data-sidebar') === variant);
+            });
+        }
+
+        function aplicarEscalaTexto(fontSize) {
+            document.body.setAttribute('text', fontSize);
+            document.querySelectorAll('.theme-sizing-list li').forEach(li => {
+                li.classList.toggle('active', li.getAttribute('data-size') === fontSize);
+            });
+        }
+
+        // 3. Cargar preferencias almacenadas en localStorage o predeterminadas
+        let colorGuardado = COLOR_DEFECTO;
+        let layoutGuardado = LAYOUT_DEFECTO;
+        let sidebarGuardado = SIDEBAR_DEFECTO;
+        let fuenteGuardada = FUENTE_DEFECTO;
+
+        try {
+            colorGuardado = localStorage.getItem('theme_color') || COLOR_DEFECTO;
+            layoutGuardado = localStorage.getItem('theme_layout') || LAYOUT_DEFECTO;
+            sidebarGuardado = localStorage.getItem('sidebar_variant') || SIDEBAR_DEFECTO;
+            fuenteGuardada = localStorage.getItem('theme_font_size') || FUENTE_DEFECTO;
+        } catch (e) {
+            // Manejo defensivo si localStorage está restringido
+        }
+
+        aplicarColorTema(colorGuardado);
+        aplicarDisposicion(layoutGuardado);
+        aplicarVarianteSidebar(sidebarGuardado);
+        aplicarEscalaTexto(fuenteGuardada);
+
+        // 4. Interacción con los selectores de color
+        document.querySelectorAll('.theme-color-list li').forEach(li => {
+            li.addEventListener('click', () => {
+                const color = li.getAttribute('data-theme');
+                if (!color) return;
+                aplicarColorTema(color);
+                try {
+                    localStorage.setItem('theme_color', color);
+                } catch (e) {}
+            });
+        });
+
+        // 5. Interacción con disposición de diseño
+        document.querySelectorAll('.theme-layout-list li').forEach(li => {
+            li.addEventListener('click', () => {
+                const layout = li.getAttribute('data-layout');
+                if (!layout) return;
+                aplicarDisposicion(layout);
+                try {
+                    localStorage.setItem('theme_layout', layout);
+                } catch (e) {}
+            });
+        });
+
+        // 6. Interacción con variante de barra lateral
+        document.querySelectorAll('.theme-sidebar-variant-list li').forEach(li => {
+            li.addEventListener('click', () => {
+                const variant = li.getAttribute('data-sidebar');
+                if (!variant) return;
+                aplicarVarianteSidebar(variant);
+                try {
+                    localStorage.setItem('sidebar_variant', variant);
+                } catch (e) {}
+            });
+        });
+
+        // 7. Interacción con escala de texto
+        document.querySelectorAll('.theme-sizing-list li').forEach(li => {
+            li.addEventListener('click', () => {
+                const size = li.getAttribute('data-size');
+                if (!size) return;
+                aplicarEscalaTexto(size);
+                try {
+                    localStorage.setItem('theme_font_size', size);
+                } catch (e) {}
+            });
+        });
+
+        // 8. Animación del flotante lateral con Offcanvas Bootstrap 5
+        if (customizerContainer && settingsBtn) {
+            offcanvasEl.addEventListener('shown.bs.offcanvas', () => {
+                settingsBtn.classList.add('active');
+                customizerContainer.classList.add('canvas-active');
+            });
+
+            offcanvasEl.addEventListener('hidden.bs.offcanvas', () => {
+                settingsBtn.classList.remove('active');
+                customizerContainer.classList.remove('canvas-active');
+            });
+        }
+
+        // 9. Botón Restablecer centrado
+        const btnRestablecer = document.getElementById('btn-restablecer-personalizador');
+        if (btnRestablecer) {
+            btnRestablecer.addEventListener('click', () => {
+                try {
+                    localStorage.removeItem('theme_color');
+                    localStorage.removeItem('theme_layout');
+                    localStorage.removeItem('sidebar_variant');
+                    localStorage.removeItem('theme_font_size');
+                } catch (e) {}
+
+                aplicarColorTema(COLOR_DEFECTO);
+                aplicarDisposicion(LAYOUT_DEFECTO);
+                aplicarVarianteSidebar(SIDEBAR_DEFECTO);
+                aplicarEscalaTexto(FUENTE_DEFECTO);
+            });
+        }
+    }
+
+    /**
      * Inicializador maestro tras la carga del DOM.
      * @returns {void}
      */
@@ -352,6 +524,7 @@
         inicializarCargador();
         inicializarNavegacion();
         inicializarTooltips();
+        inicializarPersonalizador();
         inicializarSidebarResponsive();
         inicializarSimpleBar();
         inicializarVolverArriba();
