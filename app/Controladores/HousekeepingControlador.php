@@ -61,8 +61,8 @@ class HousekeepingControlador
         if ($housekeepingServicio !== null) {
             $this->housekeepingServicio = $housekeepingServicio;
         } else {
-            $inventarioServicio = class_exists(InventarioServicio::class) ? new InventarioServicio($this->pdo, null, $this->auditoriaServicio) : null;
-            $mantenimientoServicio = class_exists(MantenimientoServicio::class) ? new MantenimientoServicio($this->pdo, null, null, null, null, $this->auditoriaServicio) : null;
+            $inventarioServicio = class_exists(InventarioServicio::class) ? new InventarioServicio($this->pdo) : null;
+            $mantenimientoServicio = class_exists(MantenimientoServicio::class) ? new MantenimientoServicio($this->pdo) : null;
             $this->housekeepingServicio = new HousekeepingServicio(
                 $this->housekeepingRepo,
                 $this->auditoriaServicio,
@@ -91,6 +91,7 @@ class HousekeepingControlador
         $propiedades = $stmtProp->fetchAll(PDO::FETCH_ASSOC);
 
         $contenido = $this->vista->renderizar('housekeeping/index', [
+            'titulo' => 'Housekeeping, Pisos y Control de Lencería — Camargo PMS',
             'usuario' => $usuario,
             'permisos' => $this->autorizacionServicio->obtenerPermisosEfectivos((int) $usuario->obtenerId()),
             'csrf_token' => $this->csrfServicio->generarToken(),
@@ -518,7 +519,8 @@ class HousekeepingControlador
 
     private function obtenerUsuarioAutenticado(): ?Usuario
     {
-        return $this->sesionServicio->obtenerUsuarioAutenticado();
+        SesionServicio::iniciarSesionPhp();
+        return $this->sesionServicio->validarSesionActual();
     }
 
     private function resolverActorId(): int

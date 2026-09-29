@@ -65,7 +65,8 @@ class GastoControlador
 
     private function obtenerUsuarioAutenticado(): ?Usuario
     {
-        return $this->sesionServicio->obtenerUsuarioAutenticado();
+        SesionServicio::iniciarSesionPhp();
+        return $this->sesionServicio->validarSesionActual();
     }
 
     private function obtenerActorIdActual(): int
@@ -118,6 +119,7 @@ class GastoControlador
         $cuentasBancarias = $stmtB->fetchAll(PDO::FETCH_ASSOC);
 
         $contenido = $this->vista->renderizar('gastos/index', [
+            'titulo' => 'Gastos Operativos, Egresos y Tesorería — Camargo PMS',
             'usuario' => $usuario,
             'categorias' => $categorias,
             'propiedades' => $propiedades,
