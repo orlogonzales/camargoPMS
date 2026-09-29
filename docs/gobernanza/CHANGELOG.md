@@ -4,6 +4,30 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase RECLAMACIONES-1A — Throttling Progresivo No Impeditivo en Canal Público (D-092)
+
+- **Defensa Progresiva No Impeditiva (`ANTIABUSO ≠ DENEGACIÓN DEL DERECHO A RECLAMAR`):**
+  - Incorporación del servicio soberano `ProteccionFormularioPublicoServicio` (`app/Servicios/ProteccionFormularioPublicoServicio.php`).
+  - Escala de micro-retardo gradual sin bloqueo permanente:
+    - Intento 1 (Cortesía normal): 0 ms de retardo (nivel 0).
+    - Intento 2: 250 ms.
+    - Intento 3: 500 ms.
+    - Intento 4: 1,000 ms (1.0 s).
+    - Intento 5 o más: 2,000 ms (techo máximo acotado para evitar agotamiento de workers PHP/Apache).
+  - Cero respuestas HTTP 429: ningún usuario legítimo es bloqueado ni privado del derecho legal a presentar una reclamación.
+- **Aislamiento de Sesión vs IP Compartida (`IP ≠ IDENTIDAD`):**
+  - El mecanismo se apoya estrictamente en el contexto de sesión PHP (`$_SESSION['_proteccion_formulario_reclamaciones']`) con ventana rodante móvil de 60 segundos.
+  - Las redes compartidas (NAT, Wi-Fi del establecimiento, cibercafés, oficinas y redes móviles) no son castigadas colectivamente por la actividad de otros usuarios.
+  - Decaimiento y recuperación natural: al transcurrir la ventana rodante, el nivel de penalización se reduce y vuelve a nivel 0.
+- **Privacidad y Cero Telemetría en Expediente:**
+  - Garantía estricta de que no se almacena IP, User-Agent ni fingerprint en `reclamaciones`, `reclamacion_actuaciones` ni en los snapshots legales T0 (`snapshot_consumidor_json`, `snapshot_proveedor_json`).
+- **Prevención de Doble Clic:**
+  - Deshabilitación reactiva del botón de envío (`Interponer Reclamación`) en el formulario cliente mediante JavaScript ante el primer envío válido.
+- **Certificación y Cobertura Automatizada:**
+  - Suite unitaria y de dominio dedicada `tests/test_reclamaciones_throttling.php` (15/15 PASS, con inyección determinista de reloj y retardador sin dependencias de esperas lentas).
+  - Caso E2E HTTP real añadido en `tests/test_e2e_reclamaciones.php` (E2E-REC-07B, 24/24 PASS).
+  - Regresión global del sistema: 62 suites evaluadas, 62/62 PASSED (100%), 1,368 checks verificados, 0 fallos.
+
 ### Microfase RECLAMACIONES-1 — Libro de Reclamaciones Peruano Integral (D-092)
 
 - **Marco Regulatorio y Cómputo Vinculante:**

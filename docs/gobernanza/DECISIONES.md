@@ -1407,6 +1407,34 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Opción de menú en Alina: `operaciones_night_audit` (Auditoría Nocturna en `/operaciones/night-audit` bajo la sección `reservas`).
    - Intermediarios responden con HTTP 401 opaco ante peticiones no autenticadas y HTTP 403 ante carencia de permisos o token CSRF inválido.
 
+### D-092 — Libro de Reclamaciones Peruano Integral y Previsión Headless/WordPress
+
+1. **Marco Regulatorio y Cómputo Vinculante:**
+   - Cumplimiento estricto de la Ley N° 29571 (Código de Protección y Defensa del Consumidor), D.S. N° 011-2011-PCM, Ley N° 31435 (plazo legal máximo de 15 días hábiles improrrogables) y Ley N° 32495 (plataformas de comercio electrónico y servicios digitales obligadas a mantener Libro de Reclamaciones Virtual).
+   - Mecanismo de suspensión temporal según D.S. N° 101-2022-PCM: hasta 5 días hábiles cuando la empresa formula ofrecimiento de solución formal y espera aceptación o rechazo expreso del consumidor; reanudación automática del saldo de días hábiles ante rechazo o expiración.
+   - Cómputo a partir del primer día hábil siguiente, excluyendo fines de semana y feriados nacionales activos para el sector privado (`aplica_sector_privado = 1`).
+2. **Axioma de Fuente Única de Verdad y Previsión Headless/WordPress:**
+   - **Camargo PMS = motor soberano único del Libro de Reclamaciones.**
+   - **API Headless = canal técnico de integración.**
+   - **Plugin WordPress = interfaz pública remota (shortcode `[camargo_libro_reclamaciones]` o bloque Gutenberg).**
+   - El futuro plugin WordPress que se instale en la web de cualquier hotel, hospedaje, alojamiento turístico o empresa usuaria de Camargo PMS **NO duplicará** tablas en MySQL de WordPress, no duplicará reglas de cómputo, no emitirá correlativos paralelos ni mantendrá estados regulatorios desincronizados.
+   - Toda solicitud interpuesta desde WordPress convergerá obligatoriamente en la misma capa de dominio: `ReclamacionServicio::interponerReclamacion()`.
+3. **Identificación Inequívoca del Establecimiento y Actores Técnicos:**
+   - La futura API headless identificará el establecimiento comercial mediante identificadores públicos estables (como el `codigo` único de `Propiedad`), nunca mediante IDs autoincrementales internos expuestos ni slugs efímeros de WordPress.
+   - Las peticiones procedentes de la API utilizarán credenciales técnicas rotables con actor técnico `tipo = 'INTEGRACION'`. Queda prohibido crear usuarios humanos ficticios (`wordpress`, `api`, `plugin`).
+4. **Axiomas de Dominio y Calidad Jurídica:**
+   - $\text{PERSONA} \neq \text{CLIENTE} \neq \text{RECLAMANTE}$: El consumidor se asienta en el catálogo civil de `Persona` mediante su capa soberana (`PersonaServicio`), sin convertirse indebidamente en cliente comercial.
+   - **Snapshot T0:** Al registrarse el reclamo se congelan snapshots JSON inmutables del consumidor y del proveedor. Modificaciones posteriores en maestros no mutan la evidencia histórica probatoria.
+   - **Inmutabilidad y Cero DELETE:** Queda erradicado el borrado físico (`DELETE`). Toda gestión, nota, ofrecimiento, respuesta o anulación supervisada se registra de forma cronológica append-only en `reclamacion_actuaciones`.
+   - **Asiento Previo al PDF:** El expediente se confirma transaccionalmente en base de datos antes de la compilación gráfica en Dompdf 3.x; contingencias documentales no invalidan el reclamo y permiten regeneración a demanda.
+5. **Antiabuso Progresivo No Impeditivo:**
+   - $\text{ANTIABUSO} \neq \text{DENEGACIÓN DEL DERECHO A RECLAMAR}$: El sistema bajo ninguna circunstancia responde con HTTP 429 ni bloquea permanentemente a un usuario que desea ejercer su derecho legal a reclamar.
+   - $\text{IP} \neq \text{IDENTIDAD}$: Las redes compartidas (NAT, Wi-Fi del establecimiento, cibercafés, oficinas y redes móviles) no son castigadas por la actividad de otros usuarios. La progresión se apoya en el contexto volátil de sesión (`$_SESSION['_proteccion_formulario_reclamaciones']`) con ventana rodante móvil de 60 segundos y micro-retardos graduales (0ms $\to$ 250ms $\to$ 500ms $\to$ 1,000ms $\to$ máx 2,000ms).
+   - Privacidad estricta: Cero almacenamiento de IPs, User-Agents o fingerprints en el expediente regulatorio o sus snapshots.
+6. **Delimitación frente a Airbnb y Plataformas de Terceros:**
+   - El shortcode WordPress está concebido para desplegarse en los sitios web propios administrados en WordPress de los establecimientos conectados a Camargo PMS.
+   - No se promete ni asume inserción dentro de la interfaz de Airbnb u otras plataformas externas de terceros fuera de control. Toda eventual integración con plataformas externas se evaluará exclusivamente conforme a las APIs oficiales que dichas plataformas permitan en su fase respectiva.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

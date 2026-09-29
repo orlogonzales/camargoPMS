@@ -11,6 +11,7 @@ use CamargoPMS\Nucleo\Vista;
 use CamargoPMS\Repositorios\PropiedadRepositorio;
 use CamargoPMS\Repositorios\TipoDocumentoRepositorio;
 use CamargoPMS\Servicios\CsrfServicio;
+use CamargoPMS\Servicios\ProteccionFormularioPublicoServicio;
 use CamargoPMS\Servicios\ReclamacionServicio;
 use CamargoPMS\Servicios\SesionServicio;
 use PDO;
@@ -27,6 +28,7 @@ class ReclamacionPublicaControlador
     private PropiedadRepositorio $propiedadRepo;
     private TipoDocumentoRepositorio $tipoDocRepo;
     private CsrfServicio $csrfServicio;
+    private ProteccionFormularioPublicoServicio $proteccionServicio;
 
     public function __construct(
         ?Vista $vista = null,
@@ -34,7 +36,8 @@ class ReclamacionPublicaControlador
         ?ReclamacionServicio $reclamacionServicio = null,
         ?PropiedadRepositorio $propiedadRepo = null,
         ?TipoDocumentoRepositorio $tipoDocRepo = null,
-        ?CsrfServicio $csrfServicio = null
+        ?CsrfServicio $csrfServicio = null,
+        ?ProteccionFormularioPublicoServicio $proteccionServicio = null
     ) {
         $this->vista = $vista ?? new Vista();
         $this->pdo = $pdo ?? BaseDatos::conexion();
@@ -42,6 +45,7 @@ class ReclamacionPublicaControlador
         $this->propiedadRepo = $propiedadRepo ?? new PropiedadRepositorio($this->pdo);
         $this->tipoDocRepo = $tipoDocRepo ?? new TipoDocumentoRepositorio($this->pdo);
         $this->csrfServicio = $csrfServicio ?? new CsrfServicio();
+        $this->proteccionServicio = $proteccionServicio ?? new ProteccionFormularioPublicoServicio();
     }
 
     /**
@@ -90,6 +94,10 @@ class ReclamacionPublicaControlador
             }
             return new Respuesta("Token de seguridad CSRF inválido. Por favor vuelva a intentar.", 403);
         }
+
+        // 3. Capa Anti-Abuso: Throttling progresivo no impeditivo (RECLAMACIONES-1A)
+        // Aplica micro-retardos graduales (0ms -> 250ms -> 500ms -> 1000ms -> 2000ms) sin denegar nunca el derecho a reclamar
+        $this->proteccionServicio->aplicarThrottling();
 
         try {
             $reclamacion = $this->reclamacionServicio->interponerReclamacion($datos, null, 'VIRTUAL');

@@ -116,6 +116,6 @@
         </div>
     </footer>
 
-    <script src="<?= url_ruta('/assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="<?= url_asset('vendor/bootstrap/bootstrap.bundle.min.js') ?>"></script>
 </body>
 </html>

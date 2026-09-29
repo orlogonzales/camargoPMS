@@ -260,6 +260,39 @@ try {
     checkE2E('E2E-REC-07', 'Descarga pública de PDF oficial devuelve binario PDF (HTTP 200, %PDF-)', $esPdfValido, "Code: {$rPdfPub['code']}, Bytes: " . strlen($rPdfPub['body']));
 
     // -------------------------------------------------------------------------
+    // E2E-REC-07B: Throttling Progresivo No Impeditivo en segunda solicitud consecutiva (RECLAMACIONES-1A)
+    // -------------------------------------------------------------------------
+    $tInicioThrottling = microtime(true);
+    $rPub2 = curlRequest("{$baseUrl}/libro-reclamaciones", 'GET', $pubHeaders);
+    $csrfPub2 = extraerCsrfDeHtml($rPub2['body']);
+    $dniTestPublico2 = '46' . str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+    $datosPost2 = array_merge($datosPostValido, [
+        'csrf_token' => $csrfPub2,
+        'consumidor_numero_documento' => $dniTestPublico2,
+        'consumidor_email' => 'mario2.test' . strtolower($sufijo) . '@correo.pe',
+        'detalle_reclamacion' => 'Segunda interposición legítima para verificar throttling progresivo no impeditivo.',
+    ]);
+    $rPostValido2 = curlRequest("{$baseUrl}/libro-reclamaciones", 'POST', array_merge($pubHeaders, ['Content-Type: application/x-www-form-urlencoded']), http_build_query($datosPost2));
+    $duracionSegunda = microtime(true) - $tInicioThrottling;
+
+    $okThrottlingE2E = ($rPostValido2['code'] === 302 && str_contains((string) $rPostValido2['location'], '/libro-reclamaciones/confirmacion'));
+    checkE2E('E2E-REC-07B', 'Throttling progresivo no impeditivo: segunda solicitud en sesión se procesa sin bloqueo (HTTP 302, cero HTTP 429)', $okThrottlingE2E, "Code: {$rPostValido2['code']}, Duración: " . round($duracionSegunda, 3) . "s");
+
+    if (preg_match('/codigo=([^&]+)/', (string) $rPostValido2['location'], $mCod2)) {
+        $codigo2 = urldecode($mCod2[1]);
+        $stmtFind2 = $pdo->prepare("SELECT id, documento_emitido_id, consumidor_persona_id FROM reclamaciones WHERE codigo_interno = ?");
+        $stmtFind2->execute([$codigo2]);
+        $fila2 = $stmtFind2->fetch(PDO::FETCH_ASSOC);
+        if ($fila2) {
+            $fixtures['reclamaciones'][] = (int) $fila2['id'];
+            $fixtures['personas'][] = (int) $fila2['consumidor_persona_id'];
+            if (!empty($fila2['documento_emitido_id'])) {
+                $fixtures['documentos'][] = (int) $fila2['documento_emitido_id'];
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Configuración de Usuarios: Sin Permiso y Superadministrador
     // -------------------------------------------------------------------------
     // 1. Usuario Sin Permiso

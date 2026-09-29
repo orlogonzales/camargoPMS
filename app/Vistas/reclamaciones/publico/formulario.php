@@ -347,7 +347,7 @@
         </div>
     </footer>
 
-    <script src="<?= url_ruta('/assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="<?= url_asset('vendor/bootstrap/bootstrap.bundle.min.js') ?>"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var chkMenor = document.getElementById('es_menor_edad');
@@ -363,6 +363,17 @@
                         bloqueApoderado.classList.add('d-none');
                         document.getElementById('apoderado_numero_documento').removeAttribute('required');
                         document.getElementById('apoderado_nombres').removeAttribute('required');
+                    }
+                });
+            }
+
+            var form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    var btn = document.getElementById('btn-enviar-reclamacion');
+                    if (btn && form.checkValidity()) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Procesando...';
                     }
                 });
             }
