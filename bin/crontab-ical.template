@@ -1,0 +1,21 @@
+# ==============================================================================
+# Camargo PMS — Plantilla de Configuración Crontab (Linux / Producción)
+# Fase: AIRBNB-ICAL-1D2
+# ==============================================================================
+# IMPORTANTE:
+# 1. Reemplazar las rutas {{RUTA_PHP}} y {{RUTA_PROYECTO}} con las rutas absolutas reales.
+# 2. Ejecutar con el usuario propietario de la aplicación (ej: www-data, camargo), NUNCA como root.
+# 3. La frecuencia de 5 minutos despierta el script, pero --solo-debidas evalúa la
+#    frecuencia individual de cada conexión (30m, 60m, 120m).
+#
+# Opciones de instalación:
+#
+# OPCIÓN A (Recomendada): Usar el wrapper bin/cron-ical.sh con gestión de flock y logs:
+# */5 * * * * {{RUTA_PROYECTO}}/bin/cron-ical.sh >/dev/null 2>&1
+#
+# OPCIÓN B: Invocación directa con flock inline:
+# */5 * * * * /usr/bin/flock -n /tmp/camargo_ical_scheduler.lock {{RUTA_PHP}} {{RUTA_PROYECTO}}/bin/sincronizar-ical.php --solo-debidas --quiet >> {{RUTA_PROYECTO}}/storage/logs/ical_scheduler.log 2>&1
+#
+# Ejemplo concreto con rutas estándar de servidor web:
+# */5 * * * * /usr/bin/flock -n /tmp/camargo_ical_scheduler.lock /usr/bin/php /var/www/app.camargo-pms/bin/sincronizar-ical.php --solo-debidas --quiet >> /var/www/app.camargo-pms/storage/logs/ical_scheduler.log 2>&1
+# ==============================================================================

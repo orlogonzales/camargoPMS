@@ -130,6 +130,12 @@ El servidor filtra las áreas y opciones visibles según permisos RBAC y el esta
    - **Saneamiento Defensivo de Telemetría (Stale Runs):** Para prevenir que fallos abruptos dejen registros en estado inconsistente en la base de datos, `SincronizacionIcalLogRepositorio::limpiarLogsHuerfanos()` identifica ejecuciones con `finalizado_en IS NULL` e `iniciado_en < NOW() - INTERVAL 120 SECOND` y las normaliza a `ERROR`. Asimismo, `haySincronizacionEnCurso()` ignora registros con antigüedad superior a 120 segundos como salvaguarda fail-safe.
    - **Política de Reintentos:** Cero reintentos de red inmediatos ante fallos o bloqueos; la infraestructura delega la reanudación al siguiente ciclo programado por el scheduler, protegiendo las cuotas y estabilidad de las plataformas externas (Airbnb/Booking).
 
+7. **Seguridad Operativa del Scheduler Desasistido (AIRBNB-ICAL-1D2):**
+   - **Superficie de Ataque Reducida (CLI Exclusivo):** La automatización periódica no expone endpoints HTTP públicos ni privados para disparar sincronizaciones (cero "web crons" vulnerables a denegación de servicio o bypass de autenticación). El disparador se confina estrictamente a la consola local del sistema operativo (`PHP_SAPI === 'cli'`).
+   - **Inmunidad en Tabla de Procesos:** Ningún secreto sensible (claves simétricas AES, hashes de token, tokens planos ni URLs privadas de importación) se transmite como argumento de línea de comandos. Los listados de procesos del sistema operativo (`ps aux`, `tasklist`, `Get-Process`) permanecen 100% limpios de información confidencial.
+   - **Control de Concurrencia de Dos Niveles:** Prevención de acumulación de procesos del scheduler del SO mediante `flock` / `IgnoreNew` a nivel global del disparador, desacoplado y sin sustituir el `GET_LOCK` soberano a nivel de conexión en MySQL.
+   - **Principio de Menor Privilegio:** Los wrappers y plantillas establecen que la ejecución debe asignarse al usuario sin privilegios del servidor web (`www-data`, `camargo`), nunca como `root` o `SYSTEM`.
+
 ## Revisión obligatoria
 
 Cambios de autenticación, permisos, pagos, webhooks, subida de archivos, contratos, caja o datos personales requieren pruebas negativas y revisión específica de amenazas antes del micro-baseline.

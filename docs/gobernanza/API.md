@@ -175,6 +175,14 @@ Comando técnico de línea de órdenes para sincronización manual, de pruebas o
   - `1`: Error fatal de bootstrap, base de datos, argumentos o configuración.
   - `2`: Ejecución por lote completada con fallos técnicos en una o más conexiones (aislamiento de fallos).
 
+### 7. Automatización Desasistida y Wrappers de Operación (AIRBNB-ICAL-1D2)
+
+La ejecución periódica en background se apoya en los programadores nativos del sistema operativo (Cron en Linux / Task Scheduler en Windows), despertando cada 5 minutos e invocando `bin/sincronizar-ical.php --solo-debidas --quiet`:
+- **División de Autoridades:** Cron/Task Scheduler actúa exclusivamente como disparador; `--solo-debidas` como autoridad temporal evaluando periodicidades vencidas; y `GET_LOCK` en MySQL como autoridad de concurrencia atómica por conexión.
+- **Prevención de Solapamiento Global:** Para evitar acumulación de procesos si un ciclo se retrasa por latencia de red en OTAs, se implementa control de instancia única: `flock -n` en Linux ([`bin/cron-ical.sh`](file:///d:/laragon/www/app.camargo-pms/bin/cron-ical.sh)) y política nativa `IgnoreNew` con Mutex en Windows ([`bin/task-scheduler-ical.ps1`](file:///d:/laragon/www/app.camargo-pms/bin/task-scheduler-ical.ps1)). Este control no interfiere con el `GET_LOCK` por conexión ni impide sincronizaciones manuales desde la UI Alina.
+- **Sin Exposición de Secretos:** Los comandos y scripts no reciben contraseñas, tokens de exportación ni URLs privadas por argumentos de proceso (`ps aux` / `tasklist` limpios).
+- **Manual Operativo Completo:** Véase [`docs/gobernanza/SCHEDULER_ICAL.md`](file:///d:/laragon/www/app.camargo-pms/docs/gobernanza/SCHEDULER_ICAL.md) para los procedimientos de instalación, plantillas de cron/XML, diagnóstico y desactivación.
+
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.

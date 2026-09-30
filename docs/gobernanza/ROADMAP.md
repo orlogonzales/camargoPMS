@@ -516,8 +516,15 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
   - CLI runner `bin/sincronizar-ical.php` evolucionado con `--solo-debidas`, `--quiet`, aislamiento de fallos parciales, omisión elegante ante bloqueos concurrentes y códigos de salida formales (0, 1, 2).
   - Cero DDL (122 tablas preservadas, ranura 036 estrictamente libre, cero daemon/Supervisor/Redis).
   - Suite de pruebas: `tests/test_airbnb_ical_scheduler.php` (46/46 PASS).
-  - Estado: Implementada y Validada (74/74 suites globales PASS, 1,993 checks, 0 fallos).
-- **AIRBNB-ICAL-1D2 (Siguiente):** Automatización Periódica Desasistida (programador de tareas/cron, telemetría y monitoreo).
+  - Estado: homologada y publicada (micro-baseline oficial `6f4b12b1f60ec2530597e039326b73b8dcb9f3da`, 74/74 suites globales PASS, 1,993 checks, 0 fallos).
+- **AIRBNB-ICAL-1D2:** Despliegue y Operación Automática Portable del Scheduler iCalendar:
+  - Arquitectura canónica de ejecución episódica desasistida: Programador del SO (cada 5 min) → Control de Instancia Única (`flock` / `IgnoreNew`) → PHP CLI (`bin/sincronizar-ical.php --solo-debidas --quiet`) → `SincronizacionIcalServicio` → `GET_LOCK` por conexión en MySQL → Motor iCalendar soberano.
+  - Cero daemons PHP, cero workers residentes, cero Supervisor, cero Redis, cero colas, cero web crons ni polling de navegador.
+  - Prevención de solapamiento del propio scheduler mediante `flock -n` en Linux ([`bin/cron-ical.sh`](file:///d:/laragon/www/app.camargo-pms/bin/cron-ical.sh), [`bin/crontab-ical.template`](file:///d:/laragon/www/app.camargo-pms/bin/crontab-ical.template)) y política nativa `IgnoreNew` con Mutex en Windows ([`bin/task-scheduler-ical.ps1`](file:///d:/laragon/www/app.camargo-pms/bin/task-scheduler-ical.ps1), [`bin/task-scheduler-ical.xml`](file:///d:/laragon/www/app.camargo-pms/bin/task-scheduler-ical.xml)), sin sustituir el `GET_LOCK` soberano por conexión.
+  - Portabilidad y desacople de entorno: producción documentada explícitamente como NO VERIFICADO mediante plantillas parametrizadas con rutas absolutas; desarrollo local verificado sin tareas persistentes activas residuales.
+  - Guía de operación completa en [`docs/gobernanza/SCHEDULER_ICAL.md`](file:///d:/laragon/www/app.camargo-pms/docs/gobernanza/SCHEDULER_ICAL.md) con instalación, telemetría, diagnóstico y desactivación.
+  - Cero DDL (122 tablas relacionales preservadas, ranura 036 estrictamente libre, `admin-dashboard/` 100% inalterado).
+  - Estado: Implementada y Validada.
 
 ## Dominio operativo
 

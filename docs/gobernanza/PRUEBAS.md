@@ -319,14 +319,16 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **HOUSEKEEPING-1**  | `test_e2e_housekeeping.php` (E2E-HK-01..14) | — | 14 (`E2E-HK`) | 14/14 PASS |
 | **AIRBNB-ICAL-1B**  | `test_airbnb_ical.php` (Secciones 1..12) | 155 | — | 155/155 PASS |
 | **AIRBNB-ICAL-1C**  | `test_airbnb_ical_ui.php` (Secciones 1..12) | 94 | — | 94/94 PASS |
-| **AIRBNB-ICAL-1D1** | `test_airbnb_ical_scheduler.php` (Secciones 1..10) | 46 | — | 46/46 PASS |
-| **TOTALES CANÓNICOS**| **74 suites ejecutadas** | **—** | **—** | **1,993 checks PASS (100%)** |
+| **AIRBNB-ICAL-1D**   | `test_airbnb_ical_scheduler.php` (Secciones 1..15) | 71 | — | 71/71 PASS |
+| **TOTALES CANÓNICOS**| **74 suites ejecutadas** | **—** | **—** | **2,018 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (AIRBNB-ICAL-1D1):**
-    - Suite `test_airbnb_ical_scheduler.php`: 46 comprobaciones automáticas cubriendo contrato único de exclusión soberana en servicio (`GET_LOCK` con timeout 0 y `RELEASE_LOCK` en `finally`), rechazo de colisiones con `ConexionIcalEnSincronizacionExcepcion`, independencia de locks entre conexiones distintas, recuperación automática de locks tras crash/desconexión de cliente MySQL, detección y saneamiento de stale runs (>120s) con `limpiarLogsHuerfanos()`, traducción a HTTP 409 Conflict en controlador UI Alina, selección de debidas `listarDebidasParaSondeo()`, contrato CLI (`--solo-debidas`, `--quiet`, códigos de salida 0, 1, 2) y aislamiento de fallos en lote.
+  - **Consolidado de Regresión Transversal Activa (AIRBNB-ICAL-1D2):**
+    - Suite `test_airbnb_ical_scheduler.php`: 71 comprobaciones automáticas cubriendo:
+      - Hardening 1D1: Contrato único de exclusión soberana en servicio (`GET_LOCK` con timeout 0 y `RELEASE_LOCK` en `finally`), rechazo de colisiones con `ConexionIcalEnSincronizacionExcepcion`, independencia de locks entre conexiones distintas, recuperación automática de locks tras crash/desconexión de cliente MySQL, detección y saneamiento de stale runs (>120s) con `limpiarLogsHuerfanos()`, traducción a HTTP 409 Conflict en controlador UI Alina, selección de debidas `listarDebidasParaSondeo()`, contrato CLI (`--solo-debidas`, `--quiet`, códigos de salida 0, 1, 2) y aislamiento de fallos en lote.
+      - Despliegue Portable 1D2: Contrato Linux con wrapper `bin/cron-ical.sh` (prevención de solapamiento con `flock -n`, manejo de rutas con espacios, tolerancia de argumentos), plantilla `bin/crontab-ical.template` (despertar cada 5 minutos), contrato Windows con wrapper PowerShell `bin/task-scheduler-ical.ps1` (prevención con `System.Threading.Mutex`) y plantilla XML `bin/task-scheduler-ical.xml` (`IgnoreNew`, repetición `PT5M`), ejecución E2E desasistida sin sesión HTTP ni cookies, test negativo de cero fugas de secretos en artefactos del scheduler, manual operativo `docs/gobernanza/SCHEDULER_ICAL.md`, ausencia absoluta de daemons o workers en segundo plano y ausencia de endpoints HTTP para cron.
     - Suite `test_airbnb_ical_ui.php`: 94 comprobaciones automáticas cubriendo RBAC granular (`canales.ver`, `canales.gestionar`, `canales.sincronizar`), protección CSRF, validación de esquemas y URLs, test negativo de filtración de secretos en listados y cabeceras (`Cache-Control: no-store`, `Pragma: no-cache`), semántica de edición con preservación de URL cifrada (Regla 15), rotación atómica de tokens (Regla 18), revocación lógica sin DELETE físico, modales de historial y conflictos, auditoría inmutable desinfectada y fidelidad Alina.
     - Suite `test_airbnb_ical.php`: 155 comprobaciones automáticas cubriendo paridad DDL de 4 tablas, criptografía AES-256-GCM, Anti-SSRF completo (IPv4/IPv6/CGNAT/metadata), adaptador Sabre 5.0, unión multi-OTA determinista, anti-echo y privacidad.
     - Suite `test_apisperu_integracion.php`: 92 comprobaciones (Personal, Proveedores, Gastos, Reclamaciones).
     - Suites UI Alina y Componentes (`UI-ALINA-1A` a `UI-ALINA-1F` + `FIX-PERFIL-1`): 234 checks.
     - Suites de dominio operativo, concurrencia y E2E: 1,366 checks.
-    - **Total Consolidado de Regresión Activa: 74/74 suites PASS — 1,993/1,993 checks PASS — 0 fallos (100%)**.
+    - **Total Consolidado de Regresión Activa: 74/74 suites PASS — 2,018/2,018 checks PASS — 0 fallos (100%)**.

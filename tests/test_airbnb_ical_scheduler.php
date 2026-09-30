@@ -417,12 +417,100 @@ $ultimaMigracion = $pdo->query("SELECT migracion FROM migraciones ORDER BY id DE
 assertCheck($ultimaMigracion === '035_canales_ical.sql', "Última migración registrada es 035_canales_ical.sql");
 
 $migracion036Existe = file_exists(RUTA_RAIZ . '/SQL/migraciones/036_*.sql') || glob(RUTA_RAIZ . '/SQL/migraciones/036*.sql');
-assertCheck(!$migracion036Existe, "Ranura 036 permanece estrictamente LIBRE (Cero DDL en AIRBNB-ICAL-1D1)");
+assertCheck(!$migracion036Existe, "Ranura 036 permanece estrictamente LIBRE (Cero DDL en AIRBNB-ICAL-1D)");
 
 $adminDashboardModificado = false;
 $outputGit = [];
 exec('git status --porcelain admin-dashboard/', $outputGit);
 assertCheck(empty($outputGit), "admin-dashboard/ permanece 100% inmutable y limpio");
+
+// =========================================================================
+// 11. CONTRATO OPERATIVO LINUX (bin/cron-ical.sh y bin/crontab-ical.template)
+// =========================================================================
+echo "\n--- 11. Contrato Operativo Linux (AIRBNB-ICAL-1D2) ---\n";
+
+$cronScript = RUTA_RAIZ . '/bin/cron-ical.sh';
+assertCheck(file_exists($cronScript), "Script bin/cron-ical.sh existe en el repositorio");
+
+$cronContent = (string) file_get_contents($cronScript);
+assertCheck(str_contains($cronContent, 'flock -n 200'), "bin/cron-ical.sh implementa prevención de solapamiento con flock -n");
+assertCheck(str_contains($cronContent, '--solo-debidas'), "bin/cron-ical.sh invoca la opción --solo-debidas");
+assertCheck(str_contains($cronContent, '--quiet'), "bin/cron-ical.sh invoca la opción --quiet");
+assertCheck(str_contains($cronContent, '"${PHP_BIN}"') && str_contains($cronContent, '"${RUNNER_SCRIPT}"'), "bin/cron-ical.sh maneja rutas entrecomilladas tolerantes a espacios");
+
+$crontabTemplate = RUTA_RAIZ . '/bin/crontab-ical.template';
+assertCheck(file_exists($crontabTemplate), "Plantilla bin/crontab-ical.template existe");
+$templateContent = (string) file_get_contents($crontabTemplate);
+assertCheck(str_contains($templateContent, '*/5 * * * *'), "bin/crontab-ical.template documenta intervalo de 5 minutos");
+
+// =========================================================================
+// 12. CONTRATO OPERATIVO WINDOWS (bin/task-scheduler-ical.ps1 y .xml)
+// =========================================================================
+echo "\n--- 12. Contrato Operativo Windows (AIRBNB-ICAL-1D2) ---\n";
+
+$psScript = RUTA_RAIZ . '/bin/task-scheduler-ical.ps1';
+assertCheck(file_exists($psScript), "Script bin/task-scheduler-ical.ps1 existe en el repositorio");
+
+$psContent = (string) file_get_contents($psScript);
+assertCheck(str_contains($psContent, 'System.Threading.Mutex'), "bin/task-scheduler-ical.ps1 implementa prevención de solapamiento con Mutex");
+assertCheck(str_contains($psContent, '--solo-debidas'), "bin/task-scheduler-ical.ps1 invoca la opción --solo-debidas");
+assertCheck(str_contains($psContent, '--quiet'), "bin/task-scheduler-ical.ps1 invoca la opción --quiet");
+
+$xmlTemplate = RUTA_RAIZ . '/bin/task-scheduler-ical.xml';
+assertCheck(file_exists($xmlTemplate), "Plantilla bin/task-scheduler-ical.xml existe");
+$xml = simplexml_load_file($xmlTemplate);
+assertCheck($xml !== false, "bin/task-scheduler-ical.xml es un XML válido y bien formado");
+assertCheck((string) $xml->Settings->MultipleInstancesPolicy === 'IgnoreNew', "Plantilla XML aplica política nativa MultipleInstancesPolicy = IgnoreNew");
+assertCheck((string) $xml->Triggers->TimeTrigger->Repetition->Interval === 'PT5M', "Plantilla XML programa repetición cada 5 minutos (PT5M)");
+
+// =========================================================================
+// 13. EJECUCIÓN E2E SIN SESIÓN HTTP NI CSRF
+// =========================================================================
+echo "\n--- 13. Ejecución E2E sin Sesión HTTP ni CSRF ---\n";
+
+$outCliE2E = [];
+$codeCliE2E = 0;
+exec('php ' . escapeshellarg(RUTA_RAIZ . '/bin/sincronizar-ical.php') . ' --solo-debidas --quiet', $outCliE2E, $codeCliE2E);
+assertCheck($codeCliE2E === 0, "Ejecución CLI programada retorna exit code 0 sin requerir sesión");
+assertCheck(empty($outCliE2E), "Ejecución CLI en modo --quiet no emite salida por stdout");
+$cliRawOutput = implode("\n", $outCliE2E);
+assertCheck(!str_contains(strtolower($cliRawOutput), 'set-cookie') && !str_contains(strtolower($cliRawOutput), 'phpsessid'), "Ejecución no genera ni depende de cookies de sesión");
+
+// =========================================================================
+// 14. TEST NEGATIVO DE SECRETOS EN ARTEFACTOS Y GUÍAS DE OPERACIÓN
+// =========================================================================
+echo "\n--- 14. Test Negativo de Secretos en Artefactos Operativos ---\n";
+
+$archivosOperativos = [$cronScript, $crontabTemplate, $psScript, $xmlTemplate];
+$fugasDetectadas = 0;
+foreach ($archivosOperativos as $arch) {
+    $contenido = (string) file_get_contents($arch);
+    if (preg_match('/(ICAL_ENCRYPTION_KEY|password|token_exportacion)\s*[:=]\s*[\'"][^\'"]{10,}/i', $contenido)) {
+        $fugasDetectadas++;
+    }
+}
+assertCheck($fugasDetectadas === 0, "Test Negativo: Cero secretos o claves reales en scripts operativos de scheduler");
+
+// =========================================================================
+// 15. MANUAL OPERATIVO Y AUSENCIA DE DAEMONS
+// =========================================================================
+echo "\n--- 15. Manual Operativo y Arquitectura sin Daemons ---\n";
+
+$manualDoc = RUTA_RAIZ . '/docs/gobernanza/SCHEDULER_ICAL.md';
+assertCheck(file_exists($manualDoc), "Manual operativo docs/gobernanza/SCHEDULER_ICAL.md existe");
+
+$manualContent = (string) file_get_contents($manualDoc);
+assertCheck(str_contains($manualContent, 'flock') && str_contains($manualContent, 'IgnoreNew'), "Manual documenta flock en Linux e IgnoreNew en Windows");
+assertCheck(str_contains($manualContent, 'NO VERIFICADO'), "Manual declara formalmente producción como NO VERIFICADO");
+assertCheck(str_contains($manualContent, 'Disparador') && str_contains($manualContent, 'Autoridad Temporal'), "Manual documenta jerarquía vinculante de autoridades");
+
+// Comprobamos que el script runner no contiene bucles infinitos (while (true) o similar para daemons)
+$runnerContent = (string) file_get_contents(RUTA_RAIZ . '/bin/sincronizar-ical.php');
+assertCheck(!str_contains($runnerContent, 'while (true)') && !str_contains($runnerContent, 'while(true)'), "bin/sincronizar-ical.php es episódico (cero bucles infinitos/daemons)");
+
+// Comprobamos que index.php o controladores no tienen endpoints HTTP utilizados como cron
+$enrutadorContent = (string) file_get_contents(RUTA_RAIZ . '/public/index.php');
+assertCheck(!str_contains($enrutadorContent, '/cron') && !str_contains($enrutadorContent, '/scheduler'), "Enrutador public/index.php no expone falsos endpoints HTTP para cron");
 
 // Cleanup defensivo de conexiones de prueba e inventario asociado
 $pdo->prepare("DELETE FROM inventario_diario_unidades WHERE origen_tipo = 'EVENTO_ICAL_EXTERNO' AND origen_id IN (SELECT id FROM eventos_ical_externos WHERE conexion_ical_id IN (:a, :b, :c))")->execute(['a' => $idA, 'b' => $idB, 'c' => $idC]);
@@ -431,13 +519,13 @@ $pdo->prepare("DELETE FROM sincronizaciones_ical_log WHERE conexion_ical_id IN (
 $pdo->prepare("DELETE FROM conexiones_ical WHERE id IN (:a, :b, :c)")->execute(['a' => $idA, 'b' => $idB, 'c' => $idC]);
 
 echo "\n====================================================================\n";
-echo " RESUMEN AIRBNB-ICAL-1D1: $checksPassed / $totalChecks pruebas superadas\n";
+echo " RESUMEN AIRBNB-ICAL-1D: $checksPassed / $totalChecks pruebas superadas\n";
 echo "====================================================================\n";
 
 if ($checksPassed === $totalChecks) {
-    echo "\n>>> AIRBNB-ICAL-1D1: CONTRATO DE SCHEDULER Y CONCURRENCIA VALIDADO AL 100% (TODO PASS) <<<\n";
+    echo "\n>>> AIRBNB-ICAL-1D (1D1 + 1D2): SCHEDULER, OPERACION Y CONCURRENCIA VALIDADO AL 100% (TODO PASS) <<<\n";
     exit(0);
 } else {
-    echo "\n>>> FALLOS DETECTADOS EN AIRBNB-ICAL-1D1 <<<\n";
+    echo "\n>>> FALLOS DETECTADOS EN AIRBNB-ICAL-1D <<<\n";
     exit(1);
 }

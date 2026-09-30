@@ -4,6 +4,29 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase AIRBNB-ICAL-1D2 — Despliegue y Operación Automática Portable del Scheduler iCalendar
+
+- **Infraestructura de Automatización Desasistida Portable:**
+  - Arquitectura canónica de ejecución episódica mediante programador del SO: Cron / Task Scheduler (cada 5 min) → Control de Instancia Única (`flock` / `IgnoreNew`) → PHP CLI (`bin/sincronizar-ical.php --solo-debidas --quiet`) → `SincronizacionIcalServicio` → `GET_LOCK` por conexión en MySQL → Motor iCalendar soberano.
+  - Cero daemons PHP, cero workers en segundo plano residentes, cero dependencias de Supervisor, Redis, colas o web crons por HTTP.
+- **Prevención de Solapamiento del Scheduler sin Alterar Concurrencia de Conexión:**
+  - Implementación de control de instancia única para evitar acumulaciones si un ciclo se retrasa por latencia externa de red:
+    - En Linux: script wrapper [`bin/cron-ical.sh`](file:///d:/laragon/www/app.camargo-pms/bin/cron-ical.sh) con descriptor y bloqueo `flock -n /tmp/camargo_ical_scheduler.lock`.
+    - En Windows: script PowerShell [`bin/task-scheduler-ical.ps1`](file:///d:/laragon/www/app.camargo-pms/bin/task-scheduler-ical.ps1) con `System.Threading.Mutex` global y plantilla XML [`bin/task-scheduler-ical.xml`](file:///d:/laragon/www/app.camargo-pms/bin/task-scheduler-ical.xml) con política nativa `<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>`.
+  - El control global no sustituye ni interfiere con el `GET_LOCK("camargo_ical_sync_{id}")` por conexión; la UI Alina mantiene capacidad de sincronización manual concurrente independiente.
+- **Portabilidad y Plantillas Parametrizadas:**
+  - Entorno de producción catalogado formalmente como **NO VERIFICADO**, entregando plantillas parametrizadas con rutas absolutas entrecomilladas (tolerantes a espacios) y variables de entorno estándar.
+  - Plantilla de crontab para Linux en [`bin/crontab-ical.template`](file:///d:/laragon/www/app.camargo-pms/bin/crontab-ical.template).
+  - Verificación en entorno de desarrollo local (Windows/Laragon) sin dejar tareas programadas persistentes residuales.
+- **Manual Operativo y de Gobernanza:**
+  - Creación de [`docs/gobernanza/SCHEDULER_ICAL.md`](file:///d:/laragon/www/app.camargo-pms/docs/gobernanza/SCHEDULER_ICAL.md) con guía paso a paso de instalación, verificación de logs en `storage/logs/ical_scheduler.log`, diagnóstico de errores, desactivación y principios de seguridad.
+  - Documentación de jerarquía de autoridades: Disparador (SO), Autoridad Temporal (`--solo-debidas`), Autoridad de Concurrencia (`GET_LOCK`) y Autoridad de Estado (MySQL / Dominio).
+- **Seguridad Operativa y Cero DDL:**
+  - Inmunidad en tablas de procesos del SO (`ps aux`, `tasklist`): cero contraseñas, URLs privadas o tokens de exportación pasados como argumentos CLI.
+  - Cero DDL: 122 tablas relacionales preservadas, ranura de migración 036 estrictamente **LIBRE**, catálogo `admin-dashboard/` 100% intacto.
+
+## Baseline oficial 6f4b12b (AIRBNB-ICAL-1D1)
+
 ### Microfase AIRBNB-ICAL-1D1 — Hardening del Motor, Contrato Único de Exclusión de Sincronización y CLI Seguro
 
 - **Contrato Único de Exclusión Soberana en Sincronización:**

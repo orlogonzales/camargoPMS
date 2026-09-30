@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Camargo PMS — Plantilla XML para Programador de Tareas de Windows (Task Scheduler)
+  Fase: AIRBNB-ICAL-1D2
+
+  Instalación mediante comando:
+    schtasks /Create /TN "CamargoPMS_IcalScheduler" /XML "ruta\absoluta\task-scheduler-ical.xml"
+
+  IMPORTANTE: Reemplazar {{RUTA_PHP}} y {{RUTA_PROYECTO}} con las rutas absolutas del servidor antes de importar.
+-->
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>Sincronización Periódica Automática de Canales iCalendar de Camargo PMS (AIRBNB-ICAL-1D2). Despierta cada 5 minutos e invoca --solo-debidas.</Description>
+    <URI>\CamargoPMS\IcalScheduler</URI>
+  </RegistrationInfo>
+  <Triggers>
+    <TimeTrigger>
+      <Repetition>
+        <Interval>PT5M</Interval>
+        <StopAtDurationEnd>false</StopAtDurationEnd>
+      </Repetition>
+      <StartBoundary>2026-01-01T00:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+    </TimeTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT15M</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>{{RUTA_PHP}}</Command>
+      <Arguments>"{{RUTA_PROYECTO}}\bin\sincronizar-ical.php" --solo-debidas --quiet</Arguments>
+      <WorkingDirectory>{{RUTA_PROYECTO}}</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

@@ -21,6 +21,7 @@ Esta carpeta es la fuente única de verdad documental del proyecto. Describe dec
 - `ROADMAP.md`: secuencia de fases y condiciones de avance.
 - `MODULOS.md`: alcance y dependencias funcionales.
 - `CHANGELOG.md`: cambios relevantes por fase.
+- `SCHEDULER_ICAL.md`: operación y despliegue del programador de sincronización iCalendar.
 
 ## Uso
 
