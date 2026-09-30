@@ -743,9 +743,12 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4 col-12">
                             <label class="form-label f-s-12 text-uppercase f-w-600 text-secondary">RUC / N° Documento</label>
-                            <div class="icon-control position-relative">
-                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                                <input type="text" class="form-control ps-5" id="proveedor-documento" name="numero_documento" placeholder="RUC de 11 dígitos u otro">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card text-secondary"></i></span>
+                                <input type="text" class="form-control" id="proveedor-documento" name="numero_documento" placeholder="RUC (11 dígitos) o DNI (8 dígitos)">
+                                <button class="btn btn-outline-primary" type="button" id="btn-consultar-doc-proveedor" title="Consultar RUC / DNI en APIsPERU">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="col-md-6 col-12">

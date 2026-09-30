@@ -244,7 +244,7 @@ declare(strict_types=1);
 
                         <div class="col-md-3">
                             <label class="form-label required">Tipo Doc.</label>
-                            <select class="form-select basic-select2" name="consumidor_tipo_documento" required>
+                            <select class="form-select basic-select2" id="consumidor-tipo-documento" name="consumidor_tipo_documento" required>
                                 <?php foreach ($tiposDoc as $td): ?>
                                     <option value="<?= htmlspecialchars($td->obtenerCodigo()) ?>"><?= htmlspecialchars($td->obtenerCodigo()) ?></option>
                                 <?php endforeach; ?>
@@ -252,16 +252,19 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4">
                             <label class="form-label required">N° Documento</label>
-                            <div class="icon-control position-relative">
-                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control ps-5" name="consumidor_numero_documento" required>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card text-secondary"></i></span>
+                                <input type="text" class="form-control" id="consumidor-numero-documento" name="consumidor_numero_documento" required>
+                                <button class="btn btn-outline-primary" type="button" id="btn-consultar-doc-reclamante" title="Consultar DNI / RUC en APIsPERU">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="col-md-5">
                             <label class="form-label required">Teléfono / Celular</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="tel" class="form-control ps-5" name="consumidor_telefono" required>
+                                <input type="tel" class="form-control ps-5" id="consumidor-telefono" name="consumidor_telefono" required>
                             </div>
                         </div>
 
@@ -269,14 +272,14 @@ declare(strict_types=1);
                             <label class="form-label required">Nombres</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control ps-5" name="consumidor_nombres" required>
+                                <input type="text" class="form-control ps-5" id="consumidor-nombres" name="consumidor_nombres" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Apellidos</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-user-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control ps-5" name="consumidor_apellidos" required>
+                                <input type="text" class="form-control ps-5" id="consumidor-apellidos" name="consumidor_apellidos" required>
                             </div>
                         </div>
 
@@ -284,14 +287,14 @@ declare(strict_types=1);
                             <label class="form-label required">Correo Electrónico</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="email" class="form-control ps-5" name="consumidor_email" required>
+                                <input type="email" class="form-control ps-5" id="consumidor-email" name="consumidor_email" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Domicilio</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control ps-5" name="consumidor_direccion" required>
+                                <input type="text" class="form-control ps-5" id="consumidor-direccion" name="consumidor_direccion" required>
                             </div>
                         </div>
 
@@ -348,6 +351,7 @@ declare(strict_types=1);
 </div>
 <?php endif; ?>
 
+<script src="<?= url_asset('vendor/sweetalert/sweetalert.js') ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var csrfToken = document.getElementById('csrf-token-global').value;
@@ -489,6 +493,99 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('filtro-anio').value = '';
         cargarExpedientes(1);
     });
+
+    // Consulta asistida de documento de consumidor (Reclamaciones internas) - APISPERU-1C
+    var btnConsultarDocReclamante = document.getElementById('btn-consultar-doc-reclamante');
+    if (btnConsultarDocReclamante) {
+        btnConsultarDocReclamante.addEventListener('click', async function () {
+            var selTipo = document.getElementById('consumidor-tipo-documento');
+            var tipoDoc = (selTipo ? selTipo.value : '').toUpperCase();
+            var numDoc = (document.getElementById('consumidor-numero-documento')?.value || '').trim();
+
+            if (!numDoc) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Atención', 'Ingrese el número de documento a consultar.', 'warning');
+                } else {
+                    alert('Ingrese el número de documento a consultar.');
+                }
+                return;
+            }
+
+            if (tipoDoc !== 'DNI' && tipoDoc !== 'RUC') {
+                var msg = 'La consulta automática externa está habilitada para DNI y RUC. Para Carné de Extranjería, Pasaporte u otros documentos, complete los datos manualmente.';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'info', title: 'Entrada Manual', text: msg });
+                } else {
+                    alert(msg);
+                }
+                return;
+            }
+
+            if (tipoDoc === 'DNI' && !/^\d{8}$/.test(numDoc)) {
+                var msgDni = 'El DNI debe tener 8 dígitos numéricos.';
+                if (typeof Swal !== 'undefined') Swal.fire('Formato Inválido', msgDni, 'warning');
+                else alert(msgDni);
+                return;
+            }
+            if (tipoDoc === 'RUC' && !/^\d{11}$/.test(numDoc)) {
+                var msgRuc = 'El RUC debe tener 11 dígitos numéricos.';
+                if (typeof Swal !== 'undefined') Swal.fire('Formato Inválido', msgRuc, 'warning');
+                else alert(msgRuc);
+                return;
+            }
+
+            var origHtml = btnConsultarDocReclamante.innerHTML;
+            btnConsultarDocReclamante.disabled = true;
+            btnConsultarDocReclamante.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            try {
+                var res = await CamargoForms.consultarDocumento(tipoDoc, numDoc);
+                if (res.success && res.encontrado && res.datos) {
+                    var d = res.datos;
+                    var elNombres = document.getElementById('consumidor-nombres');
+                    var elApellidos = document.getElementById('consumidor-apellidos');
+                    var elDireccion = document.getElementById('consumidor-direccion');
+
+                    // Autocompletado no destructivo (solo si están vacíos)
+                    if (tipoDoc === 'DNI') {
+                        if (elNombres && !elNombres.value && d.nombres) elNombres.value = d.nombres;
+                        if (elApellidos && !elApellidos.value) {
+                            var apellidos = [d.apellido_paterno, d.apellido_materno].filter(Boolean).join(' ');
+                            if (apellidos) elApellidos.value = apellidos;
+                        }
+                    } else if (tipoDoc === 'RUC') {
+                        if (elNombres && !elNombres.value) elNombres.value = d.razon_social || d.nombre_comercial || '';
+                    }
+
+                    if (elDireccion && !elDireccion.value && d.direccion) {
+                        elDireccion.value = d.direccion;
+                    }
+
+                    var origenMsg = res.origen === 'LOCAL' ? 'Base de datos local' : (tipoDoc === 'RUC' ? 'APIsPERU (SUNAT)' : 'APIsPERU (Reniec)');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: `Datos recuperados (${origenMsg})`,
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                } else {
+                    var msgNo = res.mensaje || 'No se obtuvieron datos para el documento indicado.';
+                    if (typeof Swal !== 'undefined') Swal.fire('No Encontrado', msgNo, 'info');
+                    else alert(msgNo);
+                }
+            } catch (err) {
+                if (typeof Swal !== 'undefined') Swal.fire('Error', 'Falla al consultar el documento.', 'error');
+                else alert('Falla al consultar el documento.');
+            } finally {
+                btnConsultarDocReclamante.disabled = false;
+                btnConsultarDocReclamante.innerHTML = origHtml;
+            }
+        });
+    }
 
     // Form asistido submit
     var formAsistido = document.getElementById('form-asistido');

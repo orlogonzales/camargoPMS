@@ -243,9 +243,12 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600" for="input-acreedor-doc">RUC / DNI Acreedor</label>
-                            <div class="icon-control position-relative">
-                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control form-control-sm ps-5" id="input-acreedor-doc" name="acreedor_documento" placeholder="Ej. 20100035121">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card text-secondary"></i></span>
+                                <input type="text" class="form-control form-control-sm" id="input-acreedor-doc" name="acreedor_documento" placeholder="Ej. 20100035121">
+                                <button class="btn btn-outline-primary" type="button" id="btn-consultar-acreedor-doc" title="Consultar RUC / DNI en APIsPERU">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -625,6 +628,70 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     inSubtotal.addEventListener('input', recalcularTotal);
     inImpuestos.addEventListener('input', recalcularTotal);
+
+    // Consulta asistida RUC / DNI Acreedor (cero persistencia lateral) - APISPERU-1C
+    const btnConsultarAcreedorDoc = document.getElementById('btn-consultar-acreedor-doc');
+    if (btnConsultarAcreedorDoc) {
+        btnConsultarAcreedorDoc.addEventListener('click', async function () {
+            const doc = (document.getElementById('input-acreedor-doc')?.value || '').trim();
+            if (!doc) {
+                Swal.fire('Atención', 'Ingrese el RUC o DNI del acreedor para consultar.', 'warning');
+                return;
+            }
+
+            let tipoDoc = '';
+            if (/^\d{11}$/.test(doc)) {
+                tipoDoc = 'RUC';
+            } else if (/^\d{8}$/.test(doc)) {
+                tipoDoc = 'DNI';
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Entrada Manual',
+                    text: 'La consulta automática admite DNI (8 dígitos) o RUC (11 dígitos). Para otros formatos, complete el nombre manualmente.'
+                });
+                return;
+            }
+
+            const origHtml = btnConsultarAcreedorDoc.innerHTML;
+            btnConsultarAcreedorDoc.disabled = true;
+            btnConsultarAcreedorDoc.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            try {
+                const res = await CamargoForms.consultarDocumento(tipoDoc, doc);
+                if (res.success && res.encontrado && res.datos) {
+                    const d = res.datos;
+                    const elNombre = document.getElementById('input-acreedor-nombre');
+
+                    // Autocompletado no destructivo (solo si está vacío)
+                    if (elNombre && !elNombre.value) {
+                        if (tipoDoc === 'RUC') {
+                            elNombre.value = d.razon_social || d.nombre_comercial || '';
+                        } else if (tipoDoc === 'DNI') {
+                            elNombre.value = [d.nombres, d.apellido_paterno, d.apellido_materno].filter(Boolean).join(' ');
+                        }
+                    }
+
+                    const origenDesc = res.origen === 'LOCAL' ? 'Base de datos local' : (tipoDoc === 'RUC' ? 'APIsPERU (SUNAT)' : 'APIsPERU (Reniec)');
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: `Acreedor verificado (${origenDesc})`,
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                } else {
+                    Swal.fire('No Encontrado', res.mensaje || 'No se obtuvieron datos para el documento ingresado.', 'info');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Falla al consultar el documento del acreedor.', 'error');
+            } finally {
+                btnConsultarAcreedorDoc.disabled = false;
+                btnConsultarAcreedorDoc.innerHTML = origHtml;
+            }
+        });
+    }
 
     // Abrir Modal Nuevo Gasto
     document.getElementById('btn-nuevo-gasto').addEventListener('click', function () {

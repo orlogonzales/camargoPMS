@@ -380,20 +380,61 @@ $ultimaMig = (string) $pdo->query('SELECT migracion FROM migraciones ORDER BY id
 assertCheck($ultimaMig === '034_agregar_foto_personas.sql', "Última migración aplicada en BD continúa siendo 034_agregar_foto_personas.sql");
 
 $mig035 = glob(dirname(__DIR__) . '/SQL/migraciones/*035*');
-assertCheck(empty($mig035), "Ranura de migración 035 estrictamente LIBRE (cero DDL en APISPERU-1B)");
+assertCheck(empty($mig035), "Ranura de migración 035 estrictamente LIBRE (cero DDL en APISPERU-1B/1C)");
 
 // 5.3 admin-dashboard/ intacto
 $gitAlina = shell_exec('git status --porcelain admin-dashboard/');
 assertCheck(empty(trim((string) $gitAlina)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");
 
+// =========================================================================
+// 6. EXTENSIÓN CONTROLADA A MÓDULOS INTERNOS (APISPERU-1C)
+// =========================================================================
+echo "\n--- 6. Extensión Controlada a Módulos Internos (APISPERU-1C) ---\n";
+
+// 6.1 Personal / Colaboradores (app/Vistas/personal/index.php)
+$vistaPersonal = file_get_contents(dirname(__DIR__) . '/app/Vistas/personal/index.php');
+assertCheck(str_contains($vistaPersonal, 'id="btn-consultar-dni-personal"'), "Vista Personal contiene botón #btn-consultar-dni-personal");
+assertCheck(str_contains($vistaPersonal, "consultarDocumento('DNI'"), "Vista Personal invoca CamargoForms.consultarDocumento para DNI");
+assertCheck(str_contains($vistaPersonal, "PASAPORTE"), "Vista Personal preserva validación/manejo de Pasaporte como manual");
+assertCheck(str_contains($vistaPersonal, "alta-nombres"), "Vista Personal referencia campos canónicos de nombres");
+
+// 6.2 Servicios / Proveedores (app/Vistas/servicios/index.php & public/assets/js/gestion-servicios.js)
+$vistaServicios = file_get_contents(dirname(__DIR__) . '/app/Vistas/servicios/index.php');
+assertCheck(str_contains($vistaServicios, 'id="btn-consultar-doc-proveedor"'), "Vista Servicios contiene botón #btn-consultar-doc-proveedor");
+assertCheck(str_contains($vistaServicios, 'id="proveedor-documento"'), "Vista Servicios contiene input #proveedor-documento");
+
+$jsServicios = file_get_contents(dirname(__DIR__) . '/public/assets/js/gestion-servicios.js');
+assertCheck(str_contains($jsServicios, 'btn-consultar-doc-proveedor'), "gestion-servicios.js cablea el botón #btn-consultar-doc-proveedor");
+assertCheck(str_contains($jsServicios, "consultarDocumento(tipoDoc, numDoc)"), "gestion-servicios.js reutiliza CamargoForms.consultarDocumento universal");
+assertCheck(str_contains($jsServicios, "proveedor-razon-social"), "gestion-servicios.js autocompleta sin sobreescritura destructiva");
+
+// 6.3 Gastos (app/Vistas/gastos/index.php) - CERO persistencia lateral
+$vistaGastos = file_get_contents(dirname(__DIR__) . '/app/Vistas/gastos/index.php');
+assertCheck(str_contains($vistaGastos, 'id="btn-consultar-acreedor-doc"'), "Vista Gastos contiene botón #btn-consultar-acreedor-doc");
+assertCheck(str_contains($vistaGastos, 'id="input-acreedor-doc"'), "Vista Gastos contiene input #input-acreedor-doc");
+assertCheck(str_contains($vistaGastos, "consultarDocumento(tipoDoc, doc)"), "Vista Gastos invoca CamargoForms.consultarDocumento");
+assertCheck(str_contains($vistaGastos, "input-acreedor-nombre"), "Vista Gastos autocompleta nombre de acreedor sin persistencia lateral");
+
+// 6.4 Reclamaciones Internas (app/Vistas/reclamaciones/index.php)
+$vistaReclamaciones = file_get_contents(dirname(__DIR__) . '/app/Vistas/reclamaciones/index.php');
+assertCheck(str_contains($vistaReclamaciones, 'id="btn-consultar-doc-reclamante"'), "Vista Reclamaciones contiene botón #btn-consultar-doc-reclamante");
+assertCheck(str_contains($vistaReclamaciones, 'id="consumidor-tipo-documento"'), "Vista Reclamaciones contiene select #consumidor-tipo-documento");
+assertCheck(str_contains($vistaReclamaciones, 'id="consumidor-numero-documento"'), "Vista Reclamaciones contiene input #consumidor-numero-documento");
+assertCheck(str_contains($vistaReclamaciones, "consultarDocumento(tipoDoc, numDoc)"), "Vista Reclamaciones invoca CamargoForms.consultarDocumento");
+
+// 6.5 Prueba negativa Libro de Reclamaciones Público (app/Vistas/reclamaciones/publico/formulario.php)
+$vistaPublicaReclamaciones = file_get_contents(dirname(__DIR__) . '/app/Vistas/reclamaciones/publico/formulario.php');
+assertCheck(!str_contains($vistaPublicaReclamaciones, 'consultarDocumento'), "PRUEBA NEGATIVA: Formulario público de reclamaciones NO contiene consultarDocumento");
+assertCheck(!str_contains($vistaPublicaReclamaciones, 'apisperu') && !str_contains($vistaPublicaReclamaciones, 'ApisPeru'), "PRUEBA NEGATIVA: Formulario público de reclamaciones 100% libre de APIsPERU");
+
 echo "\n====================================================================\n";
-echo " RESUMEN APISPERU-1B: $passedAssertions / $totalAssertions pruebas superadas\n";
+echo " RESUMEN APISPERU-1B/1C: $passedAssertions / $totalAssertions pruebas superadas\n";
 echo "====================================================================\n\n";
 
 if ($passedAssertions === $totalAssertions) {
-    echo ">>> APISPERU-1B: VALIDACIÓN EXITOSA (100% PASS) <<<\n";
+    echo ">>> APISPERU-1C: VALIDACIÓN EXITOSA (100% PASS) <<<\n";
     exit(0);
 } else {
-    echo ">>> APISPERU-1B: DETECTADAS FALLAS EN LA VALIDACIÓN <<<\n";
+    echo ">>> APISPERU-1C: DETECTADAS FALLAS EN LA VALIDACIÓN <<<\n";
     exit(1);
 }

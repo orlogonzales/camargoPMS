@@ -4,6 +4,36 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase APISPERU-1C — Extensión Controlada del Motor DNI/RUC a Módulos Internos (D-102)
+
+- **Extensión Controlada y Reutilización de Infraestructura Soberana:**
+  - Cero duplicación de infraestructura: Se reutiliza íntegramente el motor homologado en 1B (`ApisPeruAdaptador`, `ConsultaDocumentoServicio`, `DocumentoConsultaControlador`, `GET /api/documentos/consultar`, `CamargoForms.consultarDocumento()`). Cero segundos adaptadores, clientes cURL o endpoints paralelos.
+  - **Módulo Personal / Colaboradores (`app/Vistas/personal/index.php`):**
+    - Integración de botón de consulta asistida `#btn-consultar-dni-personal` en modal de alta.
+    - Flujo Local-First dual: verificación de persona en base de datos local y fallback asistido mediante APIsPERU (Reniec) para DNI de 8 dígitos.
+    - Autocompletado no destructivo de nombres, apellido paterno y apellido materno exclusivamente en campos vacíos.
+    - CE y Pasaporte delimitados estrictamente a entrada manual con alerta informativa.
+  - **Módulo Servicios / Proveedores (`app/Vistas/servicios/index.php` y `public/assets/js/gestion-servicios.js`):**
+    - Integración de botón `#btn-consultar-doc-proveedor` en modal de proveedores.
+    - Manejo polimórfico de documentos: RUC (11 dígitos, SUNAT) y DNI (8 dígitos, Reniec).
+    - Para proveedores personas naturales con DNI, ajusta select a `PERSONA_NATURAL` y autocompleta nombres y dirección sin sobreescribir. Para RUC, autocompleta razón social, nombre comercial, dirección y teléfono si están vacíos.
+    - Cero persistencia lateral automática: la consulta únicamente asiste el llenado del formulario en el cliente.
+  - **Módulo Gastos (`app/Vistas/gastos/index.php`):**
+    - Integración de botón `#btn-consultar-acreedor-doc` junto al campo de documento del acreedor.
+    - Autocompletado no destructivo de `#input-acreedor-nombre` con razón social (RUC) o nombre completo (DNI).
+    - Aislamiento canónico de dominio contable: GASTO ≠ COMPRA ≠ CUENTA_POR_PAGAR ≠ PAGO ≠ MOVIMIENTO. Cero persistencia lateral, cero creación automática de empresas o proveedores en base de datos.
+  - **Módulo Reclamaciones Internas (`app/Vistas/reclamaciones/index.php`):**
+    - Integración de botón `#btn-consultar-doc-reclamante` junto al número de documento en modal asistido.
+    - Soporte asistido para DNI y RUC rellenando nombres, apellidos y domicilio sin sobreescritura.
+    - Preservación íntegra de snapshots T0 y requisitos regulatorios del libro de reclamaciones.
+  - **Exclusión y Protección Regulatoria:**
+    - Libro de Reclamaciones público (`app/Vistas/reclamaciones/publico/formulario.php`) verificado 100% manual: 0 llamadas externas, 0 consumo de APIsPERU.
+- **Calidad, Regresión y Gobernanza:**
+  - Suite `tests/test_apisperu_integracion.php` extendida a 92 comprobaciones (92/92 PASS), incluyendo pruebas directas de Personal, Proveedores, Gastos, Reclamaciones internas y prueba negativa del libro público.
+  - Regresión transversal: 71 suites de pruebas, 1,692 checks, 0 fallos.
+  - Cero DDL: 118 tablas relacionales preservadas; última migración `034_agregar_foto_personas.sql`; ranura `035` estrictamente libre.
+  - Catálogo Alina `admin-dashboard/` 100% inalterado.
+
 ### Microfase APISPERU-1B — Motor Seguro Local-First DNI/RUC e Integración Piloto (D-101)
 
 - **Arquitectura de Integración Externa y Adaptador Técnico:**

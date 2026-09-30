@@ -1003,6 +1003,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Consulta asistida de RUC / DNI en Proveedores - APISPERU-1C
+    const btnConsultarDocProveedor = document.getElementById('btn-consultar-doc-proveedor');
+    if (btnConsultarDocProveedor) {
+        btnConsultarDocProveedor.addEventListener('click', async () => {
+            const numDoc = (document.getElementById('proveedor-documento')?.value || '').trim();
+            if (!numDoc) {
+                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Ingrese el número de documento a consultar.' });
+                return;
+            }
+
+            let tipoDoc = '';
+            if (/^\d{11}$/.test(numDoc)) {
+                tipoDoc = 'RUC';
+            } else if (/^\d{8}$/.test(numDoc)) {
+                tipoDoc = 'DNI';
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Entrada Manual',
+                    text: 'La consulta automática admite DNI (8 dígitos) o RUC (11 dígitos). Para Carné de Extranjería, Pasaporte u otros documentos, complete los datos manualmente.'
+                });
+                return;
+            }
+
+            const origHtml = btnConsultarDocProveedor.innerHTML;
+            btnConsultarDocProveedor.disabled = true;
+            btnConsultarDocProveedor.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            try {
+                const res = await CamargoForms.consultarDocumento(tipoDoc, numDoc);
+                if (res.success && res.encontrado && res.datos) {
+                    const d = res.datos;
+                    const elRazon = document.getElementById('proveedor-razon-social');
+                    const elComercial = document.getElementById('proveedor-nombre-comercial');
+                    const elDireccion = document.getElementById('proveedor-direccion');
+                    const elTelefono = document.getElementById('proveedor-telefono');
+                    const elTipo = document.getElementById('proveedor-tipo');
+
+                    // Autocompletado no destructivo (solo si están vacíos)
+                    if (tipoDoc === 'RUC') {
+                        if (elRazon && !elRazon.value && d.razon_social) elRazon.value = d.razon_social;
+                        if (elComercial && !elComercial.value && d.nombre_comercial) elComercial.value = d.nombre_comercial;
+                        if (elDireccion && !elDireccion.value && d.direccion) elDireccion.value = d.direccion;
+                        if (elTelefono && !elTelefono.value && Array.isArray(d.telefonos) && d.telefonos.length > 0) {
+                            elTelefono.value = d.telefonos[0];
+                        }
+                    } else if (tipoDoc === 'DNI') {
+                        const nombreCompleto = [d.nombres, d.apellido_paterno, d.apellido_materno].filter(Boolean).join(' ');
+                        if (elRazon && !elRazon.value && nombreCompleto) elRazon.value = nombreCompleto;
+                        if (elDireccion && !elDireccion.value && d.direccion) elDireccion.value = d.direccion;
+                        if (elTipo && elTipo.value === 'EMPRESA') {
+                            elTipo.value = 'PERSONA_NATURAL';
+                            if (typeof $ !== 'undefined' && $(elTipo).data('select2')) {
+                                $(elTipo).trigger('change');
+                            }
+                        }
+                    }
+
+                    const origenMsg = res.origen === 'LOCAL' ? 'Base de datos local' : (tipoDoc === 'RUC' ? 'APIsPERU (SUNAT)' : 'APIsPERU (Reniec)');
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: `Proveedor verificado (${origenMsg})`,
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Encontrado',
+                        text: res.mensaje || 'No se obtuvieron datos para el documento especificado.'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Falla al consultar el documento del proveedor.'
+                });
+            } finally {
+                btnConsultarDocProveedor.disabled = false;
+                btnConsultarDocProveedor.innerHTML = origHtml;
+            }
+        });
+    }
+
     if (formProveedor) {
         const pristineProveedor = new Pristine(formProveedor);
         formProveedor.addEventListener('submit', async (e) => {

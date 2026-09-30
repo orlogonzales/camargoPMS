@@ -452,9 +452,12 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600" for="alta-num-doc">Número Documento <span class="text-danger">*</span></label>
-                            <div class="icon-control position-relative">
-                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control ps-5" id="alta-num-doc" name="numero_documento" maxlength="30" required>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card text-secondary"></i></span>
+                                <input type="text" class="form-control" id="alta-num-doc" name="numero_documento" maxlength="30" required>
+                                <button class="btn btn-outline-primary" type="button" id="btn-consultar-dni-personal" title="Consultar DNI en APIsPERU">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -1326,11 +1329,101 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('alta-apellido-paterno').readOnly = false;
                     document.getElementById('alta-apellido-materno').readOnly = false;
                     document.getElementById('alta-num-doc').value = doc;
+
+                    // Si es un DNI de 8 dígitos, consultar APIsPERU (Reniec) mediante motor 1B
+                    if (/^\d{8}$/.test(doc)) {
+                        txt.textContent = 'Buscando en APIsPERU (Reniec)...';
+                        resultadoDiv.classList.remove('d-none');
+
+                        const resApis = await CamargoForms.consultarDocumento('DNI', doc);
+                        if (resApis.success && resApis.encontrado && resApis.datos) {
+                            const d = resApis.datos;
+                            const elNombres = document.getElementById('alta-nombres');
+                            const elPaterno = document.getElementById('alta-apellido-paterno');
+                            const elMaterno = document.getElementById('alta-apellido-materno');
+
+                            // Autocompletado no destructivo (solo si están vacíos)
+                            if (!elNombres.value && d.nombres) elNombres.value = d.nombres;
+                            if (!elPaterno.value && d.apellido_paterno) elPaterno.value = d.apellido_paterno;
+                            if (!elMaterno.value && d.apellido_materno) elMaterno.value = d.apellido_materno;
+
+                            txt.textContent = 'Persona encontrada en APIsPERU (Reniec). Se autocompletaron nombres y apellidos. Complete los datos laborales.';
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'info',
+                                title: 'Datos Reniec autocompletados',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                            return;
+                        }
+                    }
+
                     txt.textContent = 'Persona no encontrada en el sistema. Se creará una nueva persona física al guardar.';
                     resultadoDiv.classList.remove('d-none');
                 }
             } catch (err) {
                 Swal.fire('Error', 'Falla de conexión al consultar el registro de personas.', 'error');
+            }
+        });
+    }
+
+    // Consulta asistida de DNI directa en formulario de Personal - APISPERU-1C
+    const btnConsultarDniPersonal = document.getElementById('btn-consultar-dni-personal');
+    if (btnConsultarDniPersonal) {
+        btnConsultarDniPersonal.addEventListener('click', async function () {
+            const num = document.getElementById('alta-num-doc').value.trim();
+            if (!num) {
+                Swal.fire('Atención', 'Ingrese el número de DNI para consultar.', 'warning');
+                return;
+            }
+            const selTipoDoc = document.getElementById('alta-tipo-doc');
+            const textoTipo = selTipoDoc ? selTipoDoc.options[selTipoDoc.selectedIndex]?.text.toUpperCase() || '' : '';
+            if (textoTipo.includes('CE') || textoTipo.includes('PASAPORTE') || textoTipo.includes('EXTRANJER')) {
+                Swal.fire('Entrada Manual', 'Para Carné de Extranjería o Pasaporte, el registro de datos es manual.', 'info');
+                return;
+            }
+
+            if (!/^\d{8}$/.test(num)) {
+                Swal.fire('Información', 'La consulta automática externa requiere un DNI de 8 dígitos numéricos.', 'info');
+                return;
+            }
+
+            const origHtml = btnConsultarDniPersonal.innerHTML;
+            btnConsultarDniPersonal.disabled = true;
+            btnConsultarDniPersonal.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            try {
+                const res = await CamargoForms.consultarDocumento('DNI', num);
+                if (res.success && res.encontrado && res.datos) {
+                    const d = res.datos;
+                    const elNombres = document.getElementById('alta-nombres');
+                    const elPaterno = document.getElementById('alta-apellido-paterno');
+                    const elMaterno = document.getElementById('alta-apellido-materno');
+
+                    // Autocompletado no destructivo
+                    if (!elNombres.value && d.nombres) elNombres.value = d.nombres;
+                    if (!elPaterno.value && d.apellido_paterno) elPaterno.value = d.apellido_paterno;
+                    if (!elMaterno.value && d.apellido_materno) elMaterno.value = d.apellido_materno;
+
+                    const origenMsg = res.origen === 'LOCAL' ? 'Base de datos local' : 'APIsPERU (Reniec)';
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: `DNI verificado (${origenMsg})`,
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                } else {
+                    Swal.fire('No Encontrado', res.mensaje || 'No se obtuvieron datos para el DNI indicado.', 'info');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Falla al consultar el documento.', 'error');
+            } finally {
+                btnConsultarDniPersonal.disabled = false;
+                btnConsultarDniPersonal.innerHTML = origHtml;
             }
         });
     }

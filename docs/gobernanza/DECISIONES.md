@@ -1718,6 +1718,26 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Catálogo `admin-dashboard/` 100% intacto y de solo lectura.
    - Suite de regresión consolidada: 71 suites automatizadas, 1,673 checks, 0 fallos.
 
+### D-102 — Extensión Controlada del Motor DNI/RUC a Módulos Internos (APISPERU-1C)
+
+1. **Reutilización Estricta de Infraestructura Soberana (D-102.1):**
+   - No se crean segundos adaptadores, clientes cURL, endpoints ni funciones asíncronas paralelas. Toda consulta de DNI/RUC consume de forma unificada el motor homologado en 1B (`ApisPeruAdaptador`, `ConsultaDocumentoServicio`, `DocumentoConsultaControlador`, `GET /api/documentos/consultar`, `CamargoForms.consultarDocumento()`).
+   - Los secretos permanecen aislados en el entorno backend; el token nunca viaja al frontend ni se expone al cliente.
+
+2. **Cableado Específico por Módulo de Negocio (D-102.2):**
+   - **Personal / Colaboradores:** Integración con flujo dual en modal de alta. Si la persona existe en BD local, se asocia directamente; si no existe y es DNI de 8 dígitos, APIsPERU autocompleta nombres y apellidos en campos vacíos. CE y Pasaporte se conservan como entrada 100% manual.
+   - **Servicios / Proveedores:** Botón asistido en modal de proveedores. Soporta RUC (11 dígitos, SUNAT) y DNI (8 dígitos, Reniec). Si se consulta un DNI para un proveedor, ajusta el tipo a `PERSONA_NATURAL` y autocompleta nombres y dirección sin sobreescribir. Para RUC, autocompleta razón social, nombre comercial, dirección y teléfono si están vacíos. Cero creación automática de registros en BD.
+   - **Gastos:** Botón asistido en campo de acreedor. Autocompleta `#input-acreedor-nombre` exclusivamente si está vacío. Aislamiento contable estricto: GASTO ≠ COMPRA ≠ CUENTA_POR_PAGAR ≠ PAGO ≠ MOVIMIENTO. Queda prohibida la persistencia lateral o creación automática de empresas/proveedores al momento de consultar.
+   - **Reclamaciones Internas:** Botón asistido en modal de reclamación asistida para DNI y RUC, autocompletando nombres, apellidos y domicilio sin sobreescribir. Se preservan intactos los snapshots T0 regulatorios generados en la persistencia del expediente.
+
+3. **Exclusión y Protección Regulatoria (D-102.3):**
+   - El Libro de Reclamaciones público (`app/Vistas/reclamaciones/publico/formulario.php`) se mantiene 100% manual y libre de consultas externas o dependencias de APIsPERU.
+
+4. **Invariantes de Gobernanza:**
+   - Cero DDL: 118 tablas relacionales intactas; última migración `034_agregar_foto_personas.sql`; ranura `035` estrictamente LIBRE.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Regresión transversal: 71 suites automatizadas, 1,692 checks, 0 fallos.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
