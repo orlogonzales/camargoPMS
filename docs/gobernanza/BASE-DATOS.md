@@ -353,6 +353,17 @@ En SERVICIOS-1 se implementa el catálogo de servicios complementarios, proveedo
    - **48 permisos** RBAC en catálogo (`caja.ver`, `caja.aperturar`, `caja.cerrar`, `caja.movimientos`, `caja.cobrar`, `caja.aplicar`, `caja.devolver`, `caja.reversar`).
    - **17 migraciones** aplicadas (`001` a `017`), cero pendientes.
 
+10. **Esquema de Canales de Distribución e iCalendar RFC 5545 (AIRBNB-ICAL-1B y Migración 035):**
+    - **`canales_distribucion`:** Catálogo soberano de canales de distribución y OTAs (`id`, `codigo UNIQUE`, `nombre`, `tipo`, `descripcion`, `activo`, `creado_en`, `actualizado_en`). Semillas iniciales: `AIRBNB`, `BOOKING`, `VRBO`, `EXPEDIA`, `DIRECTO`, `OTRO`.
+    - **`conexiones_ical`:** Conexiones bilaterales de sincronización por unidad física (`id`, `canal_id`, `unidad_id`, `nombre`, `url_importacion_cifrada`, `token_exportacion_hash`, `token_exportacion_cifrado`, `importacion_habilitada`, `exportacion_habilitada`, `frecuencia_minutos`, `ultima_sincronizacion_en`, `ultimo_estado`, `ultimo_mensaje_error`, `estado`, `creado_por_actor_id`, `creado_en`, `actualizado_en`). Claves foráneas: `fk_cical_canal`, `fk_cical_unidad`, `fk_cical_actor`. Índices únicos: `uq_cical_canal_unidad` (un canal por unidad activa), `uq_cical_token_hash` ($O(1)$ para exportación segura).
+    - **`eventos_ical_externos`:** Entidades de bloqueo iCalendar desacopladas (`id`, `conexion_id`, `uid_externo`, `resumen`, `fecha_inicio`, `fecha_fin`, `noches`, `es_todo_el_dia`, `estado_evento`, `estado_bloqueo`, `rrule`, `payload_bruto`, `primera_sincronizacion_en`, `ultima_sincronizacion_en`, `creado_en`, `actualizado_en`). Claves foráneas: `fk_eical_conexion`. Clave única de idempotencia: `uq_eical_conexion_uid (conexion_id, uid_externo)`.
+    - **`sincronizaciones_ical_log`:** Telemetría inmutable de sincronización (`id`, `conexion_id`, `direccion`, `iniciada_en`, `finalizada_en`, `duracion_ms`, `eventos_detectados`, `eventos_creados`, `eventos_modificados`, `eventos_cancelados`, `eventos_en_conflicto`, `resultado`, `mensaje`, `http_status`, `bytes_procesados`, `creado_en`). Clave foránea: `fk_slog_conexion`.
+    - **Cero DDL sobre `inventario_diario_unidades`:** El inventario físico conserva su enumeración canónica; los bloqueos se persisten con `tipo_bloqueo = 'BLOQUEO_MANUAL'`, `origen_tipo = 'EVENTO_ICAL_EXTERNO'` y `origen_id = eventos_ical_externos.id`.
+    - **Estado general de la base de datos tras AIRBNB-ICAL-1B:**
+      - **122 tablas relacionales** físicas consolidadas (118 base + 4 iCal).
+      - **Migración 035 (`035_canales_ical.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
+      - **Ranura de migración 036 estrictamente LIBRE** para fases posteriores.
+
 
 
 ## Migraciones

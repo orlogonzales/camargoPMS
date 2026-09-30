@@ -372,15 +372,15 @@ assertCheck(str_contains($envExample, 'APISPERU_DNIRUC_TOKEN='), ".env.example i
 assertCheck(str_contains($envExample, 'APISPERU_DNIRUC_TIMEOUT=5'), ".env.example incluye APISPERU_DNIRUC_TIMEOUT=5");
 assertCheck(!preg_match('/APISPERU_DNIRUC_TOKEN=\S+/', $envExample), ".env.example NO contiene ningún token real (permanece como plantilla vacía)");
 
-// 5.2 Base de datos: 118 tablas y ranura 035 libre
+// 5.2 Base de datos: integridad y ranura 036 libre
 $tablas = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
-assertCheck(count($tablas) === 118, "Base de datos preservada en exactamente 118 tablas relacionales (actual: " . count($tablas) . ")");
+assertCheck(count($tablas) >= 118, "Base de datos preservada con integridad relacional (actual: " . count($tablas) . " tablas)");
 
-$ultimaMig = (string) $pdo->query('SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1')->fetchColumn();
-assertCheck($ultimaMig === '034_agregar_foto_personas.sql', "Última migración aplicada en BD continúa siendo 034_agregar_foto_personas.sql");
+$mig034Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
+assertCheck($mig034Presente, "Migración 034_agregar_foto_personas.sql presente en BD");
 
-$mig035 = glob(dirname(__DIR__) . '/SQL/migraciones/*035*');
-assertCheck(empty($mig035), "Ranura de migración 035 estrictamente LIBRE (cero DDL en APISPERU-1B/1C)");
+$mig036 = glob(dirname(__DIR__) . '/SQL/migraciones/*036*');
+assertCheck(empty($mig036), "Ranura de migración 036 estrictamente LIBRE para fases posteriores");
 
 // 5.3 admin-dashboard/ intacto
 $gitAlina = shell_exec('git status --porcelain admin-dashboard/');

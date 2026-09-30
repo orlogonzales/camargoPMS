@@ -1357,6 +1357,9 @@ $enrutador->post('/configuracion/feriados/{id}/alternar', [\CamargoPMS\Controlad
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
 ]);
 
+// Integración iCalendar (RFC 5545) — Endpoint público de exportación por conexión (AIRBNB-ICAL-1B)
+$enrutador->get('/ical/exportar/{token}', [\CamargoPMS\Controladores\IcalExportarControlador::class, 'exportar']);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 

@@ -484,6 +484,23 @@ Implementación del subsistema de pisos, gobernanza operativa de limpieza, check
 
 Estado: candidata pre-commit (60/60 pruebas específicas PASS, 1,009/1,009 regresión activa PASS).
 
+## AIRBNB-ICAL-1 — Canales de Distribución y Sincronización iCalendar RFC 5545
+
+Implementación de la infraestructura soberana de sincronización bilateral multicanal con OTAs bajo D-103:
+- **AIRBNB-ICAL-1A:** Análisis arquitectónico, contratos RFC 5545, inventario de canales y diseño desacoplado (Cerrada y Homologada).
+- **AIRBNB-ICAL-1B:** Infraestructura soberana multicanal iCalendar:
+  - Adopción oficial del parser RFC 5545 `sabre/vobject: ^5.0` (BSD-3-Clause, PHP 8.3 puro, sin dependencias pesadas).
+  - Cero DDL sobre `inventario_diario_unidades`: los bloqueos se persisten con `tipo_bloqueo = 'BLOQUEO_MANUAL'`, `origen_tipo = 'EVENTO_ICAL_EXTERNO'` y `origen_id = eventos_ical_externos.id`.
+  - Persistencia relacional (Migración 035): 4 tablas (`canales_distribucion`, `conexiones_ical`, `eventos_ical_externos`, `sincronizaciones_ical_log`). Total base de datos asciende a 122 tablas; ranura 036 estrictamente libre.
+  - Criptografía autenticada AES-256-GCM para URLs privadas (`ICAL_ENCRYPTION_KEY` vía `.env`) y modelo híbrido de tokens de exportación (hash SHA-256 para indexación $O(1)$ + ciphertext AES-256-GCM para panel).
+  - Defensa en profundidad Anti-SSRF: bloqueo exhaustivo IPv4/IPv6/CGNAT/metadata, DNS pinning mediante `CURLOPT_RESOLVE`, redirecciones manuales verificadas (máx 3), límite de 2 MB y timeout de 10s.
+  - Motor de sincronización con unión determinista multi-OTA, detección de conflictos locales y salvaguarda defensiva ante feeds vacíos (`FEED_VACIO_SOSPECHOSO`).
+  - Exportación segura Anti-Echo y anonimización de privacidad en `GET /ical/exportar/{token}`.
+  - Invocación desacoplada y CLI runner `bin/sincronizar-ical.php`.
+  - Suite de pruebas: `test_airbnb_ical.php` (155/155 PASS).
+  - Estado: Implementada y Validada (72/72 suites globales PASS, 1,847 checks, 0 fallos).
+- **AIRBNB-ICAL-1C (Siguiente):** Interfaz Alina para administración de canales, conexiones, copiado de URLs y telemetría de sincronización.
+
 ## Dominio operativo
 
 1. propiedades, niveles y unidades;

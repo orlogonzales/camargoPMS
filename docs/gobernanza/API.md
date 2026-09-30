@@ -69,6 +69,32 @@ Esta arquitectura permite reemplazar el proveedor tecnológico en el futuro (ej.
 3. **Reutilización de RUC:** La consulta RUC es reutilizable en todo el sistema para entidades fiscales y comerciales (proveedores de servicios, clientes corporativos, empresas asociadas y contratistas).
 4. **Seguridad y tokens:** El token técnico de APIsPERU se gestiona exclusivamente como secreto de entorno rotativo, fuera de Git y del frontend del navegador. Las consultas se orquestan mediante backend para proteger las credenciales técnicas.
 
+## Integración y Exportación iCalendar RFC 5545 (AIRBNB-ICAL-1B)
+
+Para la distribución multicanal hacia OTAs (Airbnb, Booking, VRBO), Camargo PMS implementa servicios de sincronización bilateral basados en el estándar RFC 5545.
+
+### Endpoint Público de Exportación
+
+- **Ruta:** `GET /ical/exportar/{token}`
+- **Controlador:** `\CamargoPMS\Controladores\IcalExportarControlador::exportar(string $token)`
+- **Cabeceras de Respuesta:**
+  - `Content-Type: text/calendar; charset=utf-8`
+  - `Content-Disposition: attachment; filename="camargo_unidad_{unidad_id}.ics"`
+- **Seguridad:**
+  - El token en la URL es contrastado mediante su hash SHA-256 (`token_exportacion_hash`) en la tabla `conexiones_ical`.
+  - Si el token no existe, está revocado, o la conexión tiene `exportacion_habilitada = 0` o `estado = 'REVOCADO'`, el endpoint responde inmediatamente **HTTP 404 Not Found**.
+- **Filtro Anti-Echo:**
+  - Al generar el calendario exportado para una conexión $C$, el servicio `ExportacionIcalServicio` excluye los bloqueos originados por la propia conexión $C$, evitando bucles de re-importación. Propaga los bloqueos de otros canales conectados y las reservas/bloqueos del PMS.
+- **Protección de Privacidad:**
+  - No se exportan datos personales de huéspedes, notas de reserva, ni UIDs de otros canales externos. Los eventos se anonimizan con `SUMMARY: No disponible` y se omite la propiedad `DESCRIPTION`.
+
+### Interfaces de Sincronización e Invocación Desacoplada
+
+- **Servicio Soberano:** `\CamargoPMS\Servicios\SincronizacionIcalServicio::sincronizarConexion(int $conexionId): array`
+- **CLI Runner:** `bin/sincronizar-ical.php`
+  - Uso: `php bin/sincronizar-ical.php [--conexion=ID]`
+  - Descarga mediante cliente HTTP seguro con defensa en profundidad Anti-SSRF (`ClienteHttpIcalSeguro`), parseo con `sabre/vobject` vía `IcalAdaptador`, e inserción/actualización idempotente en `eventos_ical_externos` e `inventario_diario_unidades`.
+
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.

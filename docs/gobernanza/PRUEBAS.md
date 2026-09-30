@@ -317,22 +317,14 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **HOUSEKEEPING-1**  | `test_housekeeping_matriz_40.php` (T01..40) | 40 | — | 40/40 PASS |
 | **HOUSEKEEPING-1**  | `test_housekeeping_concurrencia.php` (HK-C01..C06) | 6 | — | 6/6 PASS |
 | **HOUSEKEEPING-1**  | `test_e2e_housekeeping.php` (E2E-HK-01..14) | — | 14 (`E2E-HK`) | 14/14 PASS |
-| **TOTALES CANÓNICOS**| **57 suites ejecutadas** | **1285** | **266** | **1551 casos PASS (100%)** |
+| **AIRBNB-ICAL-1B**  | `test_airbnb_ical.php` (Secciones 1..12) | 155 | — | 155/155 PASS |
+| **TOTALES CANÓNICOS**| **72 suites ejecutadas** | **—** | **—** | **1,847 checks PASS (100%)** |
 
-  - **Matriz de Regresión de Ciclo Activo (Verificación Multi-Fase):**
-    - UI-2 (25) + UI-2A (20) + UI-3 (25) + UI-3A (70) = 140 casos
-    - Disponibilidad Matriz (40) + E2E Disponibilidad (12) = 52 casos
-    - Reservas Matriz (50) + Concurrencia Reservas (6) + E2E Reservas (15) + RES-1A (12) = 83 casos
-    - Estadías Matriz (40) + Concurrencia Estadías (6) + E2E Estadías (15) = 61 casos
-    - Servicios Matriz (40) + Concurrencia Servicios (6) + E2E Servicios (15) = 61 casos
-    - Financiero-2 Matriz (40) + Concurrencia Financiero-2 (6) + E2E Financiero-2 (15) = 61 casos
-    - Arrendamientos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - Mantenimiento-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - Inventario-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - Documentos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - Compras-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - Suministros-1 Matriz (40) + Concurrencia (6) + E2E (14) + Gate Financiero (11) = 71 casos
-    - Recibos-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - Housekeeping-1 Matriz (40) + Concurrencia (6) + E2E (14) = 60 casos
-    - **Total Consolidado de Regresión Activa: 1,009/1,009 PASS (100%)**.
+  - **Consolidado de Regresión Transversal Activa (AIRBNB-ICAL-1B):**
+    - Suite `test_airbnb_ical.php`: 155 comprobaciones automáticas cubriendo paridad DDL de 4 tablas, criptografía AES-256-GCM, Anti-SSRF completo (IPv4/IPv6/CGNAT/metadata), adaptador Sabre 5.0, unión multi-OTA determinista, anti-echo y privacidad.
+    - Suite `test_apisperu_integracion.php`: 92 comprobaciones (Personal, Proveedores, Gastos, Reclamaciones).
+    - Suites UI Alina y Componentes (`UI-ALINA-1A` a `UI-ALINA-1F` + `FIX-PERFIL-1`): 234 checks.
+    - Suites de dominio operativo, concurrencia y E2E: 1,366 checks.
+    - **Total Consolidado de Regresión Activa: 72/72 suites PASS — 1,847/1,847 checks PASS — 0 fallos (100%)**.
+
 

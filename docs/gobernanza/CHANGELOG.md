@@ -4,6 +4,41 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase AIRBNB-ICAL-1B — Infraestructura Soberana Multicanal iCalendar (D-103)
+
+- **Separación Ontológica y Principios de Dominio:**
+  - $\text{EVENTO ICAL EXTERNO} \neq \text{RESERVA PMS} \neq \text{ESTADÍA} \neq \text{CONTRATO} \neq \text{PERSONA/CLIENTE}$.
+  - $\text{CANAL} \neq \text{CONEXIÓN} \neq \text{EVENTO} \neq \text{SINCRONIZACIÓN}$.
+  - Cero creación de entidades comerciales o financieras a partir de eventos iCalendar.
+- **Persistencia Relacional y Migración 035 (`035_canales_ical.sql`):**
+  - Creación de 4 tablas relacionales: `canales_distribucion`, `conexiones_ical`, `eventos_ical_externos`, `sincronizaciones_ical_log`.
+  - Cero DDL sobre `inventario_diario_unidades`: los bloqueos se persisten con `tipo_bloqueo = 'BLOQUEO_MANUAL'`, `origen_tipo = 'EVENTO_ICAL_EXTERNO'` y `origen_id = eventos_ical_externos.id`.
+  - Paridad 100% en `SQL/camargo_pms.sql`. Total de tablas relacionales asciende a 122. Ranura 036 estrictamente LIBRE.
+- **Parser Oficial RFC 5545 (`sabre/vobject: ^5.0`):**
+  - Incorporación de `sabre/vobject: 5.0.0` (BSD-3-Clause, PHP 8.3 compatible, sin DAV) vía Composer.
+  - Implementación de `app/Adaptadores/IcalAdaptador.php`: parseo seguro, manejo de line-folding, escaping, `DATE-TIME` con UTC, cálculo exacto de noches hoteleras en intervalo semiabierto $[inicio, fin)$ sin off-by-one, y expansión acotada de recurrencias (`RRULE`).
+- **Criptografía Autenticada AES-256-GCM y Tokens Híbridos:**
+  - Implementación de `app/Servicios/IcalCriptografiaServicio.php` con clave `ICAL_ENCRYPTION_KEY` vía `.env`.
+  - Cifrado autenticado con IV aleatorio y tag de 16 bytes para URLs privadas de importación. Fail-closed ante clave faltante.
+  - Modelo híbrido de tokens de exportación: hash SHA-256 para indexación $O(1)$ sin secretos planos en volcados + ciphertext AES-256-GCM para visualización en panel admin.
+- **Defensa en Profundidad Anti-SSRF:**
+  - Implementación de `app/Servicios/ClienteHttpIcalSeguro.php`: validación previa de host, resolución DNS manual, filtrado exhaustivo de rangos IPv4/IPv6 privados, loopback, CGNAT, link-local y cloud metadata (`169.254.169.254`).
+  - Pinning de IP mediante `CURLOPT_RESOLVE` para neutralizar ataques de DNS Rebinding. Redirecciones manuales verificadas (máx 3), límite de 2 MB y timeout de 10s.
+- **Motor Soberano de Sincronización e Idempotencia:**
+  - Implementación de `app/Servicios/SincronizacionIcalServicio.php`: reconciliación determinista mediante la unión de bloqueos de múltiples OTAs (Airbnb + Booking), transición atómica de noches compartidas ante cancelaciones, detección y no sobreescritura de reservas locales (`EN_CONFLICTO`), y salvaguarda ante feeds vacíos (`FEED_VACIO_SOSPECHOSO`).
+- **Exportación Segura con Filtro Anti-Echo y Privacidad:**
+  - Implementación de `app/Servicios/ExportacionIcalServicio.php` y `app/Controladores/IcalExportarControlador.php` en ruta `GET /ical/exportar/{token}`.
+  - Filtro Anti-Echo que suprime los eventos de la conexión destino $C$ y propaga los bloqueos de otras OTAs y reservas PMS.
+  - Anonimización total: `SUMMARY: No disponible`, 0 `DESCRIPTION`, cero filtrado de datos personales o identificadores comerciales.
+- **Invocación Desacoplada y CLI:**
+  - Script administrativo de sincronización: `bin/sincronizar-ical.php`. Cero bloqueo en el hilo HTTP web.
+- **Calidad, Pruebas y Regresión:**
+  - Nueva suite automatizada `tests/test_airbnb_ical.php` con 155 comprobaciones exhaustivas (155/155 PASS).
+  - Regresión transversal: 72 suites automatizadas, 1,847 comprobaciones, 0 fallos (100% PASS).
+  - Catálogo `admin-dashboard/` 100% inalterado y de solo lectura.
+
+## Baseline oficial 2686ae9 (APISPERU-1B / APISPERU-1C)
+
 ### Microfase APISPERU-1C — Extensión Controlada del Motor DNI/RUC a Módulos Internos (D-102)
 
 - **Extensión Controlada y Reutilización de Infraestructura Soberana:**

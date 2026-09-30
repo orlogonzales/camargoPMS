@@ -88,6 +88,35 @@ El servidor filtra las áreas y opciones visibles según permisos RBAC y el esta
 5. **Protección CSRF y Verificación de Permisos:** Todas las rutas administrativas bajo `/usuarios` exigen autorización RBAC atómica (`usuarios.ver`, `usuarios.crear`, `usuarios.editar`, `usuarios.bloquear`, `usuarios.clave`, `usuarios.sesiones`) y token CSRF válido en toda mutación por `POST`, `PATCH`, `DELETE`.
 6. **Desinfección de Secretos en Auditoría:** Cada mutación de usuario (`CREAR`, `CAMBIAR_ESTADO`, `CAMBIAR_CLAVE`) se audita transversalmente con `AuditoriaServicio`, garantizando cero fugas de contraseñas o hashes gracias a `SanitizadorAuditoria`.
 
+## Seguridad en Integraciones iCalendar RFC 5545 (AIRBNB-ICAL-1B)
+
+1. **Criptografía Autenticada AES-256-GCM Fail-Closed:**
+   - Las URLs privadas de importación (que frecuentemente contienen tokens secretos de canales externos) se cifran mediante `AES-256-GCM` con vector de inicialización (IV) de 12 bytes aleatorio por registro y etiqueta de autenticación (tag) de 16 bytes.
+   - La clave se administra mediante `ICAL_ENCRYPTION_KEY` vía `.env` (32 bytes binarios codificados en base64 o hex).
+   - Principio Fail-Closed: si la clave no está configurada o es inválida, el servicio arroja `ConfiguracionExcepcion` e impide cualquier persistencia en texto plano o descifrado inseguro.
+
+2. **Modelo Híbrido de Tokens de Exportación:**
+   - La tabla `conexiones_ical` almacena `token_exportacion_hash` (SHA-256) para búsquedas $O(1)$ sin exponer el token plano en volcados de base de datos.
+   - Almacena adicionalmente `token_exportacion_cifrado` (AES-256-GCM) para permitir al personal administrativo autorizado visualizar o copiar la URL completa en el panel.
+   - Rotación y revocación atómica: rotar un token invalida de forma inmediata el hash anterior (HTTP 404). Conexiones en estado `REVOCADO` o con `exportacion_habilitada = 0` deniegan el feed de inmediato.
+
+3. **Defensa en Profundidad Anti-SSRF (Server-Side Request Forgery):**
+   - El descargador `ClienteHttpIcalSeguro` valida exhaustivamente las URLs antes de cursar tráfico HTTP.
+   - Resolución DNS manual previa y validación contra listas completas de rangos no enrutables:
+     - IPv4 privadas (RFC 1918): `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`.
+     - Loopback: `127.0.0.0/8`, `::1`.
+     - Carrier-Grade NAT (CGNAT): `100.64.0.0/10`.
+     - Link-Local y Cloud Metadata: `169.254.0.0/16` (en especial `169.254.169.254` para AWS/GCP/Azure/DigitalOcean metadata).
+     - IPv6 especiales: Unique Local (`fc00::/7`), Link-Local (`fe80::/10`), Multicast (`ff00::/8`).
+     - Mapeos IPv4-mapped IPv6 (`::ffff:127.0.0.1`, `::ffff:169.254.169.254`).
+   - Pinning de IP mediante `CURLOPT_RESOLVE`: la IP validada en DNS se fija directamente en cURL para evitar ataques de tiempo de comprobación a tiempo de uso (TOCTOU) y DNS Rebinding.
+   - Redirecciones HTTP manuales verificadas: máximo 3 saltos; cada destino es validado nuevamente en esquema, host y resolución IP antes de seguir.
+   - Protección contra Denegación de Servicio (DoS): límite estricto de descarga de 2 MB (`CURLOPT_BUFFERSIZE` / buffer cap) y timeout de conexión de 10 segundos.
+
+4. **Filtro Anti-Echo y Privacidad de Datos:**
+   - El servicio de exportación suprime los eventos externos provenientes del mismo canal receptor, impidiendo la re-importación infinita de bloqueos propios.
+   - Los calendarios exportados jamás filtran nombres de huéspedes, teléfonos, documentos de identidad, tarifas, códigos de reserva o UIDs de canales externos. Todo evento exportado se emite bajo el resumen neutral `SUMMARY: No disponible` y sin propiedad `DESCRIPTION`.
+
 ## Revisión obligatoria
 
 Cambios de autenticación, permisos, pagos, webhooks, subida de archivos, contratos, caja o datos personales requieren pruebas negativas y revisión específica de amenazas antes del micro-baseline.

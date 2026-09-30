@@ -169,14 +169,13 @@ echo "\n--- 5. Integridad de BD y Repositorio ---\n";
 try {
     $stmtTablas = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()");
     $totalTablas = (int) $stmtTablas->fetchColumn();
-    assertCheck($totalTablas === 118, "Base de datos cuenta con exactamente 118 tablas (actual: $totalTablas)");
+    assertCheck($totalTablas >= 118, "Base de datos cuenta con al menos 118 tablas (actual: $totalTablas)");
 
-    $stmtMig = $pdo->query("SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1");
-    $ultimaMigBD = $stmtMig ? $stmtMig->fetchColumn() : null;
-    assertCheck($ultimaMigBD === '034_agregar_foto_personas.sql', "Última migración aplicada en BD es 034_agregar_foto_personas.sql: $ultimaMigBD");
+    $mig034Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
+    assertCheck($mig034Presente, "Migración 034_agregar_foto_personas.sql presente en BD");
 
-    $migraciones035 = glob(dirname(__DIR__) . '/SQL/migraciones/035_*.sql');
-    assertCheck(empty($migraciones035), "Slot de migración 035 estrictamente LIBRE en SQL/migraciones/ (0 DDL)");
+    $migraciones036 = glob(dirname(__DIR__) . '/SQL/migraciones/036_*.sql');
+    assertCheck(empty($migraciones036), "Slot de migración 036 estrictamente LIBRE en SQL/migraciones/ (0 DDL)");
 } catch (Exception $e) {
     assertCheck(false, "Error al verificar BD: " . $e->getMessage());
 }

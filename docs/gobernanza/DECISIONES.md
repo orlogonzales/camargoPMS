@@ -1738,6 +1738,62 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
    - Regresión transversal: 71 suites automatizadas, 1,692 checks, 0 fallos.
 
+### D-103 — Infraestructura Soberana Multicanal iCalendar (AIRBNB-ICAL-1B)
+
+1. **Axiomas Ontológicos y Separación Estricta de Dominios (D-103.1):**
+   - $\text{EVENTO ICAL EXTERNO} \neq \text{RESERVA PMS} \neq \text{ESTADÍA} \neq \text{CONTRATO} \neq \text{PERSONA/CLIENTE}$.
+   - $\text{CANAL} \neq \text{CONEXIÓN} \neq \text{EVENTO} \neq \text{SINCRONIZACIÓN}$.
+   - Un `VEVENT` importado desde un feed iCalendar externo representa exclusivamente un **bloqueo físico de fechas**, nunca una reserva comercial soberana de Camargo PMS.
+   - Queda terminantemente prohibido crear automáticamente entidades de negocio (`personas`, `clientes`, `reservas`, `estadias`, `cuentas_folios`, `contratos`) a partir de eventos iCalendar.
+
+2. **Cero DDL sobre Inventario Diario y Origen Polimórfico (D-103.2):**
+   - Se preserva 100% inalterada la columna `tipo_bloqueo` en `inventario_diario_unidades` (se descarta cualquier `ALTER ENUM`).
+   - Los bloqueos físicos por iCal se persisten con:
+     - `tipo_bloqueo = 'BLOQUEO_MANUAL'`
+     - `origen_tipo = 'EVENTO_ICAL_EXTERNO'`
+     - `origen_id = eventos_ical_externos.id`
+   - La tabla `eventos_ical_externos` actúa como entidad soberana desacoplada que registra el ciclo de vida del evento externo (`ACTIVO`, `MODIFICADO`, `CANCELADO`, `DESAPARECIDO`, `IGNORADO`) y su estado físico de bloqueo (`APLICADO`, `APLICADO_CON_SOLAPAMIENTO`, `EN_CONFLICTO`, `IGNORADO`, `LIBERADO`).
+
+3. **Reconciliación Multi-OTA mediante Unión Determinista (D-103.3):**
+   - La disponibilidad física ante múltiples canales externos (ej. Airbnb y Booking sobre la misma unidad) se define como la **UNIÓN** de todos sus bloqueos activos.
+   - En noches con solapamiento entre múltiples OTAs, el inventario diario retiene una única fila física de bloqueo asociada al evento de mayor precedencia/antigüedad (`APLICADO`), mientras el segundo evento se marca como `APLICADO_CON_SOLAPAMIENTO`.
+   - Reconciliación determinista: la cancelación de una OTA transiciona la propiedad física de las noches compartidas a la OTA restante (`APLICADO`), liberando exclusivamente las noches que ya no estén cubiertas por ningún canal activo.
+   - Preservación de conflictos locales: colisiones con reservas soberanas del PMS nunca eliminan ni sobreescriben la reserva local; el evento externo se marca como `EN_CONFLICTO`.
+   - Salvaguarda defensiva ante feeds vacíos (`FEED_VACIO_SOSPECHOSO`): si un feed devuelve 0 eventos pero tenía eventos activos previos, se suspende la liberación masiva y se emite advertencia de telemetría para evitar aperturas catastróficas por fallos transitorios del proveedor.
+
+4. **Parser Oficial RFC 5545 y Desacople de Dependencias (D-103.4):**
+   - Se homologa la dependencia oficial `sabre/vobject: ^5.0` (licencia BSD-3-Clause, compatible con PHP 8.3 puro, sin arrastrar `sabre/dav`).
+   - Queda encapsulada estrictamente en `app/Adaptadores/IcalAdaptador.php`.
+   - El adaptador implementa cómputo seguro de noches hoteleras con semántica semiabierta $[inicio, fin)$, evitando off-by-one en propiedades `DATE-TIME` con UTC y expansiones acotadas de `RRULE` (horizonte pasado de 7 días y futuro de 365 días configurable).
+
+5. **Criptografía Fail-Closed y Seguridad Cero-Fugas (D-103.5):**
+   - URLs privadas de importación se cifran mediante autenticación criptográfica AES-256-GCM (`app/Servicios/IcalCriptografiaServicio.php`) utilizando la clave `ICAL_ENCRYPTION_KEY` provista vía `.env` (32 bytes binarios en base64/hex). Si la clave no está configurada, falla cerrado con `ConfiguracionExcepcion`.
+   - Modelo híbrido de tokens de exportación:
+     - `token_hash` (SHA-256): búsqueda indexada $O(1)$ sin comprometer el token plano en caso de volcados.
+     - `token_cifrado` (AES-256-GCM): descifrado seguro para visualización/copiado en el panel administrativo.
+   - Rotación y revocación inmediata de tokens: al rotar un token, el anterior queda automáticamente revocado y su endpoint responde HTTP 404.
+
+6. **Defensa en Profundidad Anti-SSRF (D-103.6):**
+   - El cliente de descarga `app/Servicios/ClienteHttpIcalSeguro.php` implementa validación estricta de esquemas (`https://`, `http://` en testing local).
+   - Resolución DNS manual previa y validación contra listas exhaustivas de IPs denegadas: IPv4 privadas (RFC 1918), loopback (`127.0.0.0/8`), CGNAT (`100.64.0.0/10`), link-local (`169.254.0.0/16`), Cloud Metadata (`169.254.169.254`), IPv6 loopback (`::1`), link-local (`fe80::/10`), ULA (`fc00::/7`), multicast, y mapeos IPv4-mapped IPv6 (`::ffff:127.0.0.1`, `::ffff:169.254.169.254`).
+   - Pinning de IP mediante `CURLOPT_RESOLVE` para neutralizar ataques de DNS Rebinding.
+   - Manejo manual de redirecciones HTTP (máximo 3 saltos), re-verificando el host y la IP resuelta de cada destino antes de continuar.
+   - Límite estricto de tamaño de payload (2 MB) y timeout de 10 segundos.
+
+7. **Exportación Anti-Echo y Privacidad Estricta (D-103.7):**
+   - Endpoint público protegido: `GET /ical/exportar/{token}` (`app/Controladores/IcalExportarControlador.php`).
+   - Filtro Anti-Echo: al exportar el calendario para una conexión $C$, se suprimen los eventos externos originados por dicha conexión para evitar ciclos viciosos de re-importación, pero se propagan los bloqueos de otras OTAs y las reservas/bloqueos propios del PMS.
+   - Privacidad absoluta: se anonimizan resúmenes (`SUMMARY: No disponible`), se omite `DESCRIPTION` y no se filtran datos personales de huéspedes, identificadores de contratos ni UIDs de otros canales externos. Identidad RFC 5545 emitida bajo namespace `pms-{hash}@camargo-pms.local`.
+
+8. **Asincronía y No Bloqueo HTTP:**
+   - La sincronización se ejecuta de forma desacoplada vía servicio y CLI (`bin/sincronizar-ical.php`). Cero bloqueos síncronos en el hilo HTTP web principal.
+
+9. **Invariantes de Gobernanza:**
+   - Migración `035_canales_ical.sql` formalmente consumida y aplicada; total de tablas relacionales asciende a 122; ranura `036` estrictamente LIBRE.
+   - Paridad 100% en `SQL/camargo_pms.sql`.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Regresión transversal: 72 suites automatizadas, 1,847 checks, 0 fallos.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

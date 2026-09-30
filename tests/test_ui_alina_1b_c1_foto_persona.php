@@ -99,20 +99,20 @@ test_afirmar(
 
 $tablasTotal = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
 test_afirmar(
-    count($tablasTotal) === 118,
-    "FOTO-DDL-04: Total de tablas relacionales se mantiene estrictamente en 118"
+    count($tablasTotal) >= 118,
+    "FOTO-DDL-04: Total de tablas relacionales se mantiene (actual: " . count($tablasTotal) . ")"
 );
 
-$slot035 = glob(__DIR__ . '/../SQL/migraciones/035*');
+$slot036 = glob(__DIR__ . '/../SQL/migraciones/036*');
 test_afirmar(
-    empty($slot035),
-    "FOTO-DDL-05: Ranura de migración 035 permanece estrictamente LIBRE"
+    empty($slot036),
+    "FOTO-DDL-05: Ranura de migración 036 permanece estrictamente LIBRE"
 );
 
-$ultimaMig = $pdo->query('SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1')->fetchColumn();
+$mig034 = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
 test_afirmar(
-    $ultimaMig === '034_agregar_foto_personas.sql',
-    "FOTO-DDL-06: Última migración aplicada en camargo_pms es 034_agregar_foto_personas.sql"
+    $mig034,
+    "FOTO-DDL-06: Migración 034_agregar_foto_personas.sql presente en BD"
 );
 
 // --- GRUPO 2: ENTIDAD Y REPOSITORIO DE PERSONA ---

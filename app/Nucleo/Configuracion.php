@@ -58,6 +58,13 @@ final class Configuracion
             'APISPERU_DNIRUC_TOKEN' => (string) ($_ENV['APISPERU_DNIRUC_TOKEN'] ?? getenv('APISPERU_DNIRUC_TOKEN') ?: ''),
             'APISPERU_DNIRUC_BASE_URL' => (string) ($_ENV['APISPERU_DNIRUC_BASE_URL'] ?? getenv('APISPERU_DNIRUC_BASE_URL') ?: 'https://dniruc.apisperu.com/api/v1'),
             'APISPERU_DNIRUC_TIMEOUT' => (int) ($_ENV['APISPERU_DNIRUC_TIMEOUT'] ?? getenv('APISPERU_DNIRUC_TIMEOUT') ?: 5),
+
+            // Integración iCalendar (RFC 5545) y Canales de Distribución
+            'ICAL_ENCRYPTION_KEY' => (string) ($_ENV['ICAL_ENCRYPTION_KEY'] ?? getenv('ICAL_ENCRYPTION_KEY') ?: ''),
+            'ICAL_HTTP_TIMEOUT' => (int) ($_ENV['ICAL_HTTP_TIMEOUT'] ?? getenv('ICAL_HTTP_TIMEOUT') ?: 10),
+            'ICAL_HTTP_MAX_BYTES' => (int) ($_ENV['ICAL_HTTP_MAX_BYTES'] ?? getenv('ICAL_HTTP_MAX_BYTES') ?: 2097152),
+            'ICAL_EXPANSION_PAST_DAYS' => (int) ($_ENV['ICAL_EXPANSION_PAST_DAYS'] ?? getenv('ICAL_EXPANSION_PAST_DAYS') ?: 7),
+            'ICAL_EXPANSION_FUTURE_DAYS' => (int) ($_ENV['ICAL_EXPANSION_FUTURE_DAYS'] ?? getenv('ICAL_EXPANSION_FUTURE_DAYS') ?: 365),
         ];
 
         // Establece la zona horaria técnica base
