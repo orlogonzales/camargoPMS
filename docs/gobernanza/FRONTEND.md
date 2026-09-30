@@ -88,14 +88,53 @@ El orden de CSS y scripts debe ser determinista y sin duplicados. Las rutas de a
 
 Regla vinculante: **0 jQuery en código propio**. Todo desarrollo de frontend propio se escribe en JavaScript moderno nativo (Vanilla JS ES6+). No modificar vendor ni cargar `script.js` o `theme_customizer.js` original como núcleo definitivo.
 
+## Formularios y Controles Canónicos Alina (UI-ALINA-1C / D-096)
+
+La construcción e interacción de formularios en Camargo PMS adopta de forma homogénea los patrones oficiales de Alina (`admin-dashboard/alina/template/form_elements.html`, `select2.html`, `file_upload.html`):
+
+1. **Vertical Form With Icon (`.app-form.app-icon-form`):**
+   - Contenedor de campo `.icon-control.position-relative`.
+   - Icono Font Awesome 6 Free posicionado absolutamente: `position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary`.
+   - En áreas de texto (`textarea`), se utiliza `.icon-control.icon-textarea` con icono anclado a `top-0 start-0 mt-3 ms-3` para mantener alineación vertical armónica con la primera línea de texto.
+   - Entradas de texto con padding izquierdo canónico: `.form-control.ps-5`.
+   - Separador visual sutil entre el icono y el texto mediante un pseudo-elemento vertical (`left: 40px`, altura 20px, `1px solid var(--app-border-color)`), eliminando cualquier borde punteado o discontinuo.
+2. **Select2 Alina (`.form-select.basic-select2`):**
+   - Altura estándar Alina: 42px (`calc(2.5rem + 2px)`).
+   - Esquinas redondeadas suaves (border-radius 20px).
+   - Chevron Font Awesome 6 (`\f078`).
+   - Prohibición estricta de combinar `.form-select-sm` con `.basic-select2` (evita distorsión de altura y violaciones del contrato de fidelidad Alina).
+   - Integración nativa con eventos `change.select2` para desencadenar validaciones PristineJS en tiempo real.
+3. **Date Picker y Range Picker Alina:**
+   - Integración transversal vía Flatpickr v4.6.13 local coordinada por `public/assets/js/camargo-pickers.js`.
+   - Sincronización atómica e invisible entre el selector de rango y los inputs canónicos independientes `fecha_entrada` y `fecha_salida` (preservando el contrato semiabierto backend $[ \text{entrada}, \text{salida} )$ de D-066).
+4. **Basic Switch Alina (`.form-check.form-switch.app-switch`):**
+   - Conmutadores binarios limpios para transiciones de estado y banderas booleanas.
+   - Puntos de contacto ampliados (1.75em x 1em) con cursor tipo puntero.
+   - Prohibición absoluta de bordes punteados o discontinuos (`border-style: dotted/dashed = 0`).
+5. **Basic File Upload (`.form-control[type="file"]`):**
+   - Control de subida de archivos Alina con selector estilizado, retroalimentación visual, botón de selección integrado y esquinas redondeadas Alina.
+6. **Estados de Carga en Botones de Envío:**
+   - Estandarizados en `public/assets/js/camargo-forms.js` mediante `CamargoForms.establecerCargando(boton, texto)` y `CamargoForms.restaurarCargando(boton)`.
+   - Desactivación de botones para prevenir doble submit accidental, conservación del contenido HTML original en atributo `data-texto-original`, inyección de spinner animado Font Awesome 6 (`fa-solid fa-spinner fa-spin me-2`) y texto descriptivo de la acción en curso.
+   - Restauración automática en caso de error, éxito o cierre del modal contenedor (`hidden.bs.modal`).
+7. **Validación Reactiva Client-Side con PristineJS (v1.1.0):**
+   - Alojado localmente en `public/assets/vendor/pristine/pristine.min.js` y cargado globalmente en `app/Vistas/componentes/scripts.php`.
+   - Orquestado transversalmente por `public/assets/js/camargo-forms.js` con soporte de localización oficial en español (`es`).
+   - Configuración visual integrada con Alina: mensajes de error en `.pristine-error.invalid-feedback.d-block` y clases de estado `.is-invalid` / `.has-danger`.
+   - Reseteo automático de instancias de validación y limpieza de mensajes residuales al cerrar modales (`hidden.bs.modal`).
+   - Principio vinculante: **PRISTINEJS ES MEJORA DE EXPERIENCIA (UX), NO CONTROL DE SEGURIDAD**. La validación cliente complementa pero nunca reemplaza la validación soberana del backend.
+8. **Matriz de Identificación de Campos DNI/RUC para APIsPERU:**
+   - Preparación técnica e inventario de 9 campos de documento en 6 módulos (`personal`, `clientes`, `empresas`, `gastos`, `reclamaciones`, `servicios`).
+   - Cero llamadas prematuras a servicios externos o consumo de tokens en esta microfase.
+
 ## Formularios y accesibilidad
 
-- Etiquetas asociadas, navegación por teclado y foco visible.
-- Errores vinculados al campo y resumen comprensible.
-- PristineJS complementa, no reemplaza, la validación servidor.
+- Etiquetas asociadas mediante atributos `for` e `id`, navegación fluida por teclado y foco visible respetando la paleta Alina.
+- Errores de validación vinculados semánticamente al campo y presentados de forma comprensible en español.
+- PristineJS complementa, no reemplaza, la validación en el servidor.
 - Selectores de fecha integrados con PristineJS y alertas accesibles.
-- Confirmaciones destructivas explican el objeto y consecuencia.
-- Mantener semántica, ARIA y contraste al adaptar componentes Alina.
+- Confirmaciones destructivas explican con claridad el objeto y las consecuencias de la acción.
+- Mantener semántica, ARIA y contraste cromático al adaptar componentes de Alina.
 
 ## Badges y Chips (UI-2A / D-071)
 

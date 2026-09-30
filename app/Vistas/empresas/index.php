@@ -210,20 +210,23 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-empresa" enctype="multipart/form-data" novalidate>
+            <form id="form-empresa" class="app-form app-icon-form" enctype="multipart/form-data" novalidate>
                 <input type="hidden" id="empresa-id" name="id" value="">
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <!-- Código y RUC -->
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Código Técnico <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control text-uppercase" id="empresa-codigo" name="codigo"
-                                   placeholder="Ej. CAMARGO-HOSTELERIA" required maxlength="50">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-codigo">Código Técnico <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5 text-uppercase" id="empresa-codigo" name="codigo"
+                                       placeholder="Ej. CAMARGO-HOSTELERIA" required maxlength="50">
+                            </div>
                             <div class="form-text f-s-11">Identificador estable único del emisor.</div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Tipo de Documento <span class="text-danger">*</span></label>
-                            <select class="form-select" id="empresa-tipo-documento" name="tipo_documento_id" required>
+                            <label class="form-label f-s-13 f-w-600" for="empresa-tipo-documento">Tipo de Documento <span class="text-danger">*</span></label>
+                            <select class="form-select basic-select2" id="empresa-tipo-documento" name="tipo_documento_id" required>
                                 <?php foreach ($tiposDocumento as $td): ?>
                                     <option value="<?= (int) $td['id'] ?>" <?= $td['codigo'] === 'RUC' ? 'selected' : '' ?>>
                                         <?= e($td['codigo']) ?> — <?= e($td['nombre']) ?>
@@ -232,61 +235,94 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">RUC / Número Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="empresa-num-documento" name="numero_documento"
-                                   placeholder="Ej. 20600000005" required maxlength="30">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-num-documento">RUC / Número Documento <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-num-documento" name="numero_documento"
+                                       placeholder="Ej. 20600000005" required maxlength="30">
+                            </div>
                             <div class="form-text f-s-11">Validación estructural Modulo 11 para Perú.</div>
                         </div>
 
                         <!-- Razón Social y Nombre Comercial -->
                         <div class="col-md-7">
-                            <label class="form-label f-s-13 f-w-600">Razón Social Legal <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="empresa-razon-social" name="razon_social"
-                                   placeholder="Nombre formal en registros públicos" required maxlength="255">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-razon-social">Razón Social Legal <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-building position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-razon-social" name="razon_social"
+                                       placeholder="Nombre formal en registros públicos" required maxlength="255">
+                            </div>
                         </div>
                         <div class="col-md-5">
-                            <label class="form-label f-s-13 f-w-600">Nombre Comercial / Marca</label>
-                            <input type="text" class="form-control" id="empresa-nombre-comercial" name="nombre_comercial"
-                                   placeholder="Nombre de fantasía o marca visible" maxlength="255">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-nombre-comercial">Nombre Comercial / Marca</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-shop position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-nombre-comercial" name="nombre_comercial"
+                                       placeholder="Nombre de fantasía o marca visible" maxlength="255">
+                            </div>
                         </div>
 
                         <!-- Domicilio Fiscal y Ubicación -->
                         <div class="col-md-8">
-                            <label class="form-label f-s-13 f-w-600">Domicilio Fiscal <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="empresa-direccion-fiscal" name="direccion_fiscal"
-                                   placeholder="Dirección legal completa según ficha RUC" required maxlength="255">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-direccion-fiscal">Domicilio Fiscal <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-direccion-fiscal" name="direccion_fiscal"
+                                       placeholder="Dirección legal completa según ficha RUC" required maxlength="255">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Código de Ubigeo (6 dígitos)</label>
-                            <input type="text" class="form-control" id="empresa-ubigeo" name="ubigeo"
-                                   placeholder="Ej. 150101" maxlength="6">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-ubigeo">Código de Ubigeo (6 dígitos)</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-map-pin position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-ubigeo" name="ubigeo"
+                                       placeholder="Ej. 150101" maxlength="6">
+                            </div>
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Departamento</label>
-                            <input type="text" class="form-control" id="empresa-departamento" name="departamento" placeholder="Ej. Lima">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-departamento">Departamento</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-map position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-departamento" name="departamento" placeholder="Ej. Lima">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Provincia</label>
-                            <input type="text" class="form-control" id="empresa-provincia" name="provincia" placeholder="Ej. Lima">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-provincia">Provincia</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-map position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-provincia" name="provincia" placeholder="Ej. Lima">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Distrito</label>
-                            <input type="text" class="form-control" id="empresa-distrito" name="distrito" placeholder="Ej. Miraflores">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-distrito">Distrito</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-map position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-distrito" name="distrito" placeholder="Ej. Miraflores">
+                            </div>
                         </div>
 
                         <!-- Contacto -->
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Teléfono Corporativo</label>
-                            <input type="text" class="form-control" id="empresa-telefono" name="telefono" placeholder="+51 987 654 321">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-telefono">Teléfono Corporativo</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-telefono" name="telefono" placeholder="+51 987 654 321">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="empresa-email" name="email" placeholder="contacto@empresa.pe">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-email">Correo Electrónico</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="email" class="form-control ps-5" id="empresa-email" name="email" placeholder="contacto@empresa.pe">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Sitio Web</label>
-                            <input type="url" class="form-control" id="empresa-sitio-web" name="sitio_web" placeholder="https://camargohosteleria.pe">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-sitio-web">Sitio Web</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-globe position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="url" class="form-control ps-5" id="empresa-sitio-web" name="sitio_web" placeholder="https://camargohosteleria.pe">
+                            </div>
                         </div>
 
                         <!-- Representante Legal -->
@@ -296,8 +332,8 @@ declare(strict_types=1);
                             </h6>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Representante Legal (Persona Natural)</label>
-                            <select class="form-select" id="empresa-representante-id" name="representante_persona_id">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-representante-id">Representante Legal (Persona Natural)</label>
+                            <select class="form-select basic-select2" id="empresa-representante-id" name="representante_persona_id">
                                 <option value="">-- Sin representante asignado --</option>
                                 <?php foreach ($personas as $per): ?>
                                     <option value="<?= (int) $per['id'] ?>">
@@ -308,14 +344,20 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label f-s-13 f-w-600">Cargo de Representación</label>
-                            <input type="text" class="form-control" id="empresa-representante-cargo" name="representante_cargo"
-                                   placeholder="Gerente General" value="Gerente General">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-representante-cargo">Cargo de Representación</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-briefcase position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-representante-cargo" name="representante_cargo"
+                                       placeholder="Gerente General" value="Gerente General">
+                            </div>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label f-s-13 f-w-600">Poder / Partida Registral</label>
-                            <input type="text" class="form-control" id="empresa-representante-partida" name="representante_poder_partida"
-                                   placeholder="Ej. Partida 12345678">
+                            <label class="form-label f-s-13 f-w-600" for="empresa-representante-partida">Poder / Partida Registral</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-file-lines position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="empresa-representante-partida" name="representante_poder_partida"
+                                       placeholder="Ej. Partida 12345678">
+                            </div>
                         </div>
 
                         <!-- Logotipo y Configuración -->
@@ -325,17 +367,16 @@ declare(strict_types=1);
                             </h6>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Archivo de Logotipo (PNG, JPG, WEBP, SVG máx 2MB)</label>
+                            <label class="form-label f-s-13 f-w-600" for="empresa-logo-file">Archivo de Logotipo (PNG, JPG, WEBP, SVG máx 2MB)</label>
                             <input type="file" class="form-control" id="empresa-logo-file" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
                             <div class="form-text f-s-11">Se utilizará en encabezados y documentos oficiales.</div>
                         </div>
                         <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check form-switch mt-3">
-                                <input class="form-check-input" type="checkbox" id="empresa-es-principal" name="es_principal" value="1">
-                                <label class="form-check-label f-s-13 f-w-600" for="empresa-es-principal">
+                            <div class="form-check form-switch app-switch mt-3 d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" id="empresa-es-principal" name="es_principal" value="1">
+                                <label class="form-check-label f-s-13 f-w-600 mb-0" for="empresa-es-principal">
                                     Establecer como Empresa Operadora Principal del Sistema
                                 </label>
-                                <div class="form-text f-s-11">Será la entidad predeterminada para emisión de documentos y contratos.</div>
                             </div>
                         </div>
                     </div>
@@ -361,7 +402,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-vincular-propiedades">
+            <form id="form-vincular-propiedades" class="app-form">
                 <input type="hidden" id="vincular-empresa-id" value="">
                 <div class="modal-body p-4">
                     <p class="text-secondary f-s-13 mb-3">

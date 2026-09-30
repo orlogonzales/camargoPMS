@@ -272,10 +272,13 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                 <h5 class="modal-title f-s-16 fw-bold"><i class="fa-solid fa-note-sticky text-info me-2"></i> Añadir Nota Interna</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-nota-interna">
+            <form id="form-nota-interna" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <label class="form-label required">Descripción / Observación</label>
-                    <textarea class="form-control" name="descripcion" rows="4" placeholder="Ingrese nota interna del expediente..." required></textarea>
+                    <div class="icon-control position-relative icon-textarea">
+                        <i class="fa-solid fa-note-sticky position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                        <textarea class="form-control ps-5" name="descripcion" rows="4" placeholder="Ingrese nota interna del expediente..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -294,19 +297,22 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                 <h5 class="modal-title f-s-16 fw-bold text-warning"><i class="fa-solid fa-handshake-angle me-2"></i> Formular Ofrecimiento de Solución</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-ofrecimiento">
+            <form id="form-ofrecimiento" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="alert alert-warning f-s-12 mb-3">
                         <i class="fa-solid fa-triangle-exclamation me-1"></i> Conforme al D.S. 101-2022-PCM, al formular esta propuesta el cómputo de 15 días hábiles se suspenderá por un plazo máximo de <strong>cinco (5) días hábiles</strong> a la espera de la respuesta del consumidor.
                     </div>
                     <div class="mb-3">
                         <label class="form-label required">Detalle de la Propuesta u Ofrecimiento de Solución</label>
-                        <textarea class="form-control" name="propuesta" rows="4" placeholder="Detalle la solución concreta propuesta al consumidor..." required></textarea>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-handshake-angle position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" name="propuesta" rows="4" placeholder="Detalle la solución concreta propuesta al consumidor..." required></textarea>
+                        </div>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label required">Medio de Notificación</label>
-                            <select class="form-select form-select-sm" name="medio_notificacion" required>
+                            <select class="form-select basic-select2" name="medio_notificacion" required>
                                 <option value="CORREO_ELECTRONICO" selected>Correo Electrónico</option>
                                 <option value="CARTA_NOTARIAL">Carta Notarial</option>
                                 <option value="FISICO_RECEPCION">Recepción Física</option>
@@ -314,7 +320,10 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Destinatario / Dirección / Correo</label>
-                            <input type="text" class="form-control form-control-sm" name="destinatario" value="<?= htmlspecialchars((string) ($snapConsumidor['email'] ?? '')) ?>" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="destinatario" value="<?= htmlspecialchars((string) ($snapConsumidor['email'] ?? '')) ?>" required>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -335,7 +344,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                 <h5 class="modal-title f-s-16 fw-bold"><i class="fa-solid fa-reply text-success me-2"></i> Respuesta a Ofrecimiento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-responder-ofrecimiento">
+            <form id="form-responder-ofrecimiento" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <label class="form-label required">Pronunciamiento del Consumidor</label>
                     <div class="d-flex gap-3 mb-3">
@@ -353,7 +362,10 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                         </div>
                     </div>
                     <label class="form-label">Sustento o Declaración del Consumidor</label>
-                    <textarea class="form-control" name="sustento" rows="3" placeholder="Observaciones o medio por el cual expresó aceptación/rechazo..."></textarea>
+                    <div class="icon-control position-relative icon-textarea">
+                        <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                        <textarea class="form-control ps-5" name="sustento" rows="3" placeholder="Observaciones o medio por el cual expresó aceptación/rechazo..."></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -372,16 +384,19 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                 <h5 class="modal-title f-s-16 fw-bold text-success"><i class="fa-solid fa-envelope-circle-check me-2"></i> Emitir Respuesta Formal al Reclamo / Queja</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-respuesta-formal">
+            <form id="form-respuesta-formal" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label required">Contenido Fundamentado de la Respuesta Oficial</label>
-                        <textarea class="form-control" name="contenido_respuesta" rows="6" placeholder="Redacte la respuesta legal motivada al consumidor..." required></textarea>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-scale-balanced position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" name="contenido_respuesta" rows="6" placeholder="Redacte la respuesta legal motivada al consumidor..." required></textarea>
+                        </div>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label required">Medio Probatorio de Notificación</label>
-                            <select class="form-select form-select-sm" name="medio_notificacion" required>
+                            <select class="form-select basic-select2" name="medio_notificacion" required>
                                 <option value="CORREO_ELECTRONICO" selected>Correo Electrónico</option>
                                 <option value="CARTA_NOTARIAL">Carta Notarial</option>
                                 <option value="FISICO_RECEPCION">Físico en Recepción</option>
@@ -389,7 +404,10 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Destinatario / Correo Notificado</label>
-                            <input type="text" class="form-control form-control-sm" name="destinatario" value="<?= htmlspecialchars((string) ($snapConsumidor['email'] ?? '')) ?>" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="destinatario" value="<?= htmlspecialchars((string) ($snapConsumidor['email'] ?? '')) ?>" required>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -410,13 +428,16 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                 <h5 class="modal-title f-s-16 fw-bold text-danger"><i class="fa-solid fa-ban me-2"></i> Anulación Supervisada de Expediente</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-anular">
+            <form id="form-anular" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="alert alert-danger f-s-12 mb-3">
                         <i class="fa-solid fa-triangle-exclamation me-1"></i> La anulación supervisada es irreversible y solo procede por duplicidad técnica o error material comprobado. Se asentará auditoría formal.
                     </div>
                     <label class="form-label required">Motivo Fundamentado de la Anulación (Mínimo 10 caracteres)</label>
-                    <textarea class="form-control" name="motivo" rows="4" placeholder="Explique la causa técnica o legal de la anulación..." required></textarea>
+                    <div class="icon-control position-relative icon-textarea">
+                        <i class="fa-solid fa-triangle-exclamation position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                        <textarea class="form-control ps-5" name="motivo" rows="4" placeholder="Explique la causa técnica o legal de la anulación..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>

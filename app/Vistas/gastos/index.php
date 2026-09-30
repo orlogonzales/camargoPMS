@@ -187,12 +187,12 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-nuevo-gasto">
+            <form id="form-nuevo-gasto" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-3">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Categoría de Gasto *</label>
-                            <select class="form-select form-select-sm" name="categoria_id" id="input-categoria" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-categoria">Categoría de Gasto *</label>
+                            <select class="form-select basic-select2" name="categoria_id" id="input-categoria" required>
                                 <option value="">Seleccione una categoría...</option>
                                 <?php foreach ($categorias as $cat): ?>
                                 <option value="<?= e((string) $cat->obtenerId()) ?>"><?= e($cat->obtenerNombre()) ?></option>
@@ -200,7 +200,7 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Ámbito de Imputación *</label>
+                            <label class="form-label f-s-13 f-w-600" for="input-ambito">Ámbito de Imputación *</label>
                             <select class="form-select form-select-sm" name="ambito" id="input-ambito" required>
                                 <option value="PROPIEDAD" selected>Propiedad / Predio Específico</option>
                                 <option value="CORPORATIVO">Corporativo / Sede Central</option>
@@ -208,8 +208,8 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-6" id="div-propiedad">
-                            <label class="form-label f-s-13 f-w-600">Propiedad</label>
-                            <select class="form-select form-select-sm" name="propiedad_id" id="input-propiedad">
+                            <label class="form-label f-s-13 f-w-600" for="input-propiedad">Propiedad</label>
+                            <select class="form-select basic-select2" name="propiedad_id" id="input-propiedad">
                                 <option value="">Seleccione propiedad...</option>
                                 <?php foreach ($propiedades as $p): ?>
                                 <option value="<?= e((string) $p['id']) ?>"><?= e($p['nombre']) ?></option>
@@ -217,7 +217,7 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-6" id="div-unidad" style="display: none;">
-                            <label class="form-label f-s-13 f-w-600">Unidad / Habitación</label>
+                            <label class="form-label f-s-13 f-w-600" for="input-unidad">Unidad / Habitación</label>
                             <select class="form-select form-select-sm" name="unidad_id" id="input-unidad">
                                 <option value="">Seleccione unidad...</option>
                                 <?php foreach ($unidades as $u): ?>
@@ -228,20 +228,29 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label f-s-13 f-w-600">Descripción del Concepto *</label>
-                            <input type="text" class="form-control form-control-sm" name="descripcion_concepto" placeholder="Ej. Facturación de luz mes de septiembre - Medidor N° 8872" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-descripcion-concepto">Descripción del Concepto *</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-align-left position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="input-descripcion-concepto" name="descripcion_concepto" placeholder="Ej. Facturación de luz mes de septiembre - Medidor N° 8872" required>
+                            </div>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label f-s-13 f-w-600">Nombre / Razón Social del Acreedor *</label>
-                            <input type="text" class="form-control form-control-sm" name="acreedor_nombre" placeholder="Ej. Luz del Sur S.A.A. / Cerrajería El Rápido" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-acreedor-nombre">Nombre / Razón Social del Acreedor *</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="input-acreedor-nombre" name="acreedor_nombre" placeholder="Ej. Luz del Sur S.A.A. / Cerrajería El Rápido" required>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">RUC / DNI Acreedor</label>
-                            <input type="text" class="form-control form-control-sm" name="acreedor_documento" placeholder="Ej. 20100035121">
+                            <label class="form-label f-s-13 f-w-600" for="input-acreedor-doc">RUC / DNI Acreedor</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="input-acreedor-doc" name="acreedor_documento" placeholder="Ej. 20100035121">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Tipo de Comprobante *</label>
-                            <select class="form-select form-select-sm" name="tipo_comprobante" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-tipo-comprobante">Tipo de Comprobante *</label>
+                            <select class="form-select basic-select2" id="input-tipo-comprobante" name="tipo_comprobante" required>
                                 <option value="FACTURA">Factura Electrónica</option>
                                 <option value="RECIBO_SERVICIO_PUBLICO">Recibo de Servicio Público</option>
                                 <option value="RECIBO_HONORARIOS">Recibo por Honorarios (RxH)</option>
@@ -252,32 +261,53 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Serie Comprobante</label>
-                            <input type="text" class="form-control form-control-sm" name="comprobante_serie" placeholder="Ej. F001">
+                            <label class="form-label f-s-13 f-w-600" for="input-comprobante-serie">Serie Comprobante</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-receipt position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="input-comprobante-serie" name="comprobante_serie" placeholder="Ej. F001">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Número Comprobante</label>
-                            <input type="text" class="form-control form-control-sm" name="comprobante_numero" placeholder="Ej. 00049281">
+                            <label class="form-label f-s-13 f-w-600" for="input-comprobante-numero">Número Comprobante</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-hashtag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control form-control-sm ps-5" id="input-comprobante-numero" name="comprobante_numero" placeholder="Ej. 00049281">
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Fecha de Emisión *</label>
-                            <input type="date" class="form-control form-control-sm" name="fecha_emision" value="<?= date('Y-m-d') ?>" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-fecha-emision">Fecha de Emisión *</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control form-control-sm ps-5" id="input-fecha-emision" name="fecha_emision" value="<?= date('Y-m-d') ?>" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Fecha de Vencimiento *</label>
-                            <input type="date" class="form-control form-control-sm" name="fecha_vencimiento" value="<?= date('Y-m-d') ?>" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-fecha-vencimiento">Fecha de Vencimiento *</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-check position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control form-control-sm ps-5" id="input-fecha-vencimiento" name="fecha_vencimiento" value="<?= date('Y-m-d') ?>" required>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Subtotal (S/)</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm text-end" name="subtotal" id="input-subtotal" value="0.00">
+                            <label class="form-label f-s-13 f-w-600" for="input-subtotal">Subtotal (S/)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">S/</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm text-end" name="subtotal" id="input-subtotal" value="0.00">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Impuestos / IGV (S/)</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm text-end" name="impuestos" id="input-impuestos" value="0.00">
+                            <label class="form-label f-s-13 f-w-600" for="input-impuestos">Impuestos / IGV (S/)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">S/</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm text-end" name="impuestos" id="input-impuestos" value="0.00">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Total (S/) *</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm text-end f-w-700 bg-light" name="total" id="input-total" value="0.00" required>
+                            <label class="form-label f-s-13 f-w-600" for="input-total">Total (S/) *</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-primary text-white">S/</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm text-end f-w-700 bg-light" name="total" id="input-total" value="0.00" required>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -329,7 +359,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-pago-gasto">
+            <form id="form-pago-gasto" class="app-form app-icon-form" novalidate>
                 <input type="hidden" name="gasto_id" id="pago-gasto-id">
                 <div class="modal-body p-3">
                     <div class="alert alert-info py-2 mb-3 f-s-13">
@@ -340,38 +370,53 @@ declare(strict_types=1);
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label f-s-13 f-w-600">Método de Pago *</label>
-                            <select class="form-select form-select-sm" name="metodo_pago_id" id="pago-metodo-id" required>
-                                <option value="">Seleccione método...</option>
-                                <?php foreach ($metodosPago as $m): ?>
-                                <option value="<?= e((string) $m['id']) ?>" data-destino="<?= e($m['tipo_destino']) ?>" data-codigo="<?= e($m['codigo']) ?>">
-                                    <?= e($m['nombre']) ?> (<?= e($m['tipo_destino']) ?>)
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-credit-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <select class="form-select ps-5" name="metodo_pago_id" id="pago-metodo-id" required>
+                                    <option value="">Seleccione método...</option>
+                                    <?php foreach ($metodosPago as $m): ?>
+                                    <option value="<?= e((string) $m['id']) ?>" data-destino="<?= e($m['tipo_destino']) ?>" data-codigo="<?= e($m['codigo']) ?>">
+                                        <?= e($m['nombre']) ?> (<?= e($m['tipo_destino']) ?>)
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-12" id="div-pago-caja" style="display: none;">
                             <label class="form-label f-s-13 f-w-600">Sesión de Caja Chica (Efectivo) *</label>
-                            <input type="number" class="form-control form-control-sm" name="sesion_caja_id" id="pago-sesion-caja-id" placeholder="ID de sesión abierta en recepción">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-cash-register position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" class="form-control ps-5" name="sesion_caja_id" id="pago-sesion-caja-id" placeholder="ID de sesión abierta en recepción">
+                            </div>
                             <small class="text-muted f-s-11">Requiere sesión de caja en estado ABIERTA con saldo suficiente.</small>
                         </div>
                         <div class="col-12" id="div-pago-banco" style="display: none;">
                             <label class="form-label f-s-13 f-w-600">Cuenta Bancaria de Origen *</label>
-                            <select class="form-select form-select-sm" name="cuenta_bancaria_id" id="pago-cuenta-bancaria-id">
-                                <option value="">Seleccione cuenta...</option>
-                                <?php foreach ($cuentasBancarias as $b): ?>
-                                <option value="<?= e((string) $b['id']) ?>">
-                                    <?= e($b['banco_nombre']) ?> - <?= e($b['numero_cuenta']) ?> (<?= e($b['moneda_codigo']) ?>)
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-building-columns position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <select class="form-select ps-5" name="cuenta_bancaria_id" id="pago-cuenta-bancaria-id">
+                                    <option value="">Seleccione cuenta...</option>
+                                    <?php foreach ($cuentasBancarias as $b): ?>
+                                    <option value="<?= e((string) $b['id']) ?>">
+                                        <?= e($b['banco_nombre']) ?> - <?= e($b['numero_cuenta']) ?> (<?= e($b['moneda_codigo']) ?>)
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label f-s-13 f-w-600">N° Operación / Voucher / Referencia</label>
-                            <input type="text" class="form-control form-control-sm" name="referencia_operacion" placeholder="Ej. OP-994821">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-receipt position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="referencia_operacion" placeholder="Ej. OP-994821">
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label f-s-13 f-w-600">Monto a Pagar (S/) *</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm text-end f-w-700" name="monto" id="pago-monto" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-money-bill-wave position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.01" class="form-control ps-5 text-end f-w-700" name="monto" id="pago-monto" required>
+                            </div>
                         </div>
                     </div>
                 </div>

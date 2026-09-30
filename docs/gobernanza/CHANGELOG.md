@@ -4,6 +4,32 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1C — Homologación Transversal de Formularios y Controles Alina (D-096)
+
+- **Estandarización de Formularios Canónicos Alina (`Vertical Form With Icon`):**
+  - Implementación transversal del patrón `.app-form.app-icon-form` con `.icon-control.position-relative`, iconos Font Awesome 6 posicionados absolutamente (`top-50 start-0 translate-middle-y ms-3 text-secondary`), padding canónico `.form-control.ps-5` y soporte para áreas de texto (`textarea`) mediante `.icon-control.icon-textarea` (`top-0 start-0 mt-3 ms-3`).
+  - Separador sutil vertical de 1px x 20px a 40px del borde izquierdo en `.icon-control::before`.
+  - Cero bordes punteados o discontinuos (`border-style: dotted/dashed = 0` en todo el CSS del proyecto).
+- **Selectores Select2 Alina y Reglas de Compatibilidad:**
+  - Adopción estricta de `.form-select.basic-select2` con altura Alina de 42px (`calc(2.5rem + 2px)`), píldora de 20px de curvatura y flecha chevron Font Awesome (`\f078`).
+  - Erradicación y prohibición de combinaciones conflictivas con `.form-select-sm` sobre `basic-select2`, garantizando el cumplimiento al 100% de la suite de fidelidad Alina (`test_ui3a_fidelidad_alina.php`).
+- **Controles Basic Switch y File Upload:**
+  - Estandarización de conmutadores `.form-check.form-switch.app-switch` y selectores de archivos `.form-control[type="file"]` con feedback visual, cursor interactivo y bordes continuos sólidos.
+- **Validación Client-Side Modular con PristineJS y Estados de Carga:**
+  - Integración local de PristineJS v1.1.0 (`public/assets/vendor/pristine/pristine.min.js`) y orquestador Vanilla JS `public/assets/js/camargo-forms.js`.
+  - Soporte completo de localización en español (`es`) para mensajes de validación reactivos en modales y páginas completas.
+  - Gestión transversal de estados de carga en botones mediante `CamargoForms.establecerCargando(boton, texto)` y `CamargoForms.restaurarCargando(boton)` (spinner Font Awesome `fa-solid fa-spinner fa-spin me-2`, atributo `data-texto-original`, deshabilitación para evitar envíos duplicados).
+  - Reseteo automático de instancias PristineJS y limpieza de clases de validación en el ciclo de vida de modales Bootstrap 5 (`hidden.bs.modal`).
+  - Principio rector: **PRISTINEJS ES MEJORA DE EXPERIENCIA (UX), NO CONTROL DE SEGURIDAD**.
+- **Preparación e Inventario Estructural para Futura Integración APIsPERU:**
+  - Identificación y categorización de matriz de 9 campos candidatos para consulta DNI/RUC en 6 módulos del sistema (`personal`, `clientes`, `empresas`, `gastos`, `reclamaciones`, `servicios`).
+  - Cero llamadas de red externas, cero tokens consumidos y cero dependencias remotas introducidas en esta microfase.
+- **Verificación y Cobertura:**
+  - Nueva suite automatizada `tests/test_ui_alina_1c_formularios.php` con 24 comprobaciones exhaustivas (24/24 PASS).
+  - Regresión global del repositorio: 66/66 suites evaluadas, 66/66 PASSED (100%), 1,511 checks verificados (+24 checks sobre 1B-C1), 0 fallos.
+  - Base de datos: exactamente 118 tablas relacionales; migración `034_*` última aplicada; ranura `035_*` estrictamente libre (0 DDL).
+  - Catálogo Alina original (`admin-dashboard/`) 100% inalterado y prístino.
+
 ### Microfase UI-ALINA-1B-C1 — Persistencia Segura de Fotografía de Persona (D-095)
 
 - **Persistencia y Desacoplamiento de Fotografía (`foto_ruta`):**

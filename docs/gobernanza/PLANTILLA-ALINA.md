@@ -40,7 +40,7 @@ Todo `admin-dashboard/` se conserva intacto. La aplicación utiliza copias selec
 
 ## Clasificación de Assets
 
-- **GLOBAL (D-071):** Fuentes Lexend Deca, Font Awesome 6 Free v6.3.0 (`all.css` y 8 fuentes web locales en `public/assets/`), Flatpickr v4.6.13 (`flatpickr.min.css` y `flatpickr.js`), controlador `camargo-pickers.js`, Bootstrap CSS/JS base, CSS propio `camargo.css`. Queda prohibido Tabler Icons en código propio.
+- **GLOBAL (D-071, D-096):** Fuentes Lexend Deca, Font Awesome 6 Free v6.3.0 (`all.css` y 8 fuentes web locales en `public/assets/`), Flatpickr v4.6.13 (`flatpickr.min.css` y `flatpickr.js`), controlador `camargo-pickers.js`, PristineJS v1.1.0 (`pristine.min.js`), controlador `camargo-forms.js`, Bootstrap CSS/JS base, CSS propio `camargo.css`. Queda prohibido Tabler Icons en código propio.
 - **LAYOUT:** Simplebar, `style.css`, `responsive.css`, `camargo-layout.js`, avatares y logos.
 - **AUTENTICACIÓN:** Estilos de formulario flotante y recursos visuales específicos de `sign_in.html` (previstos para fase de autenticación).
 - **DASHBOARD:** Librerías gráficas (ej. Apexcharts) o widgets específicos de `index.html` (previstos para fase de dashboard con datos reales).
@@ -131,3 +131,13 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
 4. **Depuración Automática de Categorías Vacías:** Categorías principales sin opciones secundarias activas y autorizadas no se renderizan, evitando secciones huérfanas en la barra superior.
 5. **Assets Selectivos por Módulo:** Se copió `sweetalert.js` desde `admin-dashboard/alina/assets/vendor/sweetalert/` hacia `public/assets/vendor/sweetalert/` sin tocar los originales de Alina.
 6. **Módulo de Gestión:** Se implementó `public/assets/js/gestion-menu.js` con Vanilla JS y Fetch API nativo para la administración reactiva de opciones sin dependencias de jQuery.
+
+## Materialización en UI-ALINA-1C
+
+1. **Homologación de Formularios Canónicos:** Adopción transversal de la estructura oficial Vertical Form With Icon (`.app-form.app-icon-form`) con `.icon-control.position-relative`, iconos Font Awesome 6 posicionados absolutamente (`top-50 start-0 translate-middle-y ms-3`), padding izquierdo `.form-control.ps-5` y soporte para textareas con `.icon-control.icon-textarea`.
+2. **Selectores Select2 Alina Canónicos:** Unificación de todos los controles `select.basic-select2` con altura Alina oficial de 42px, chevron Font Awesome y esquinas redondeadas suaves, prohibiendo taxativamente combinaciones con `.form-select-sm`.
+3. **Controles Basic Switch y File Upload:** Implementación de `.form-check.form-switch.app-switch` y `.form-control[type="file"]` con bordes estrictamente sólidos (0 líneas punteadas o discontinuas en todo el CSS).
+4. **Validación Reactiva Client-Side con PristineJS (D-096):** Integración nativa de `pristine.min.js` y `camargo-forms.js` en Vanilla JS (ES6+), con localización al español, feedback visual inmediato, gestión de estados de carga en botones con spinners Font Awesome (`CamargoForms.establecerCargando`) y reseteo en el ciclo de vida de modales Bootstrap (`hidden.bs.modal`).
+5. **Preparación Estructural para APIsPERU:** Identificación de matriz de 9 campos DNI/RUC en 6 módulos del PMS sin invocar prematuramente servicios externos.
+6. **Catálogo Alina Intacto:** Cero modificaciones en `admin-dashboard/`. 100% de assets consumidos desde copias locales controladas.
+

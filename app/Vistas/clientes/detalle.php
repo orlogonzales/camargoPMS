@@ -822,11 +822,11 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
 
                     <!-- 8. TAB: PREFERENCIAS Y NOTAS -->
                     <div class="tab-pane fade" id="tab-notas" role="tabpanel">
-                        <form id="form-actualizar-preferencias">
+                        <form id="form-actualizar-preferencias" class="app-form app-icon-form">
                             <div class="row g-3">
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-w-600 f-s-13">Canal de Captación Comercial</label>
-                                    <select class="form-select form-select-sm" name="canal_captacion" id="perfil-canal">
+                                    <label class="form-label f-w-600 f-s-13" for="perfil-canal">Canal de Captación Comercial</label>
+                                    <select class="form-select basic-select2" name="canal_captacion" id="perfil-canal">
                                         <option value="">Seleccione canal...</option>
                                         <?php foreach ($canales as $codCanal => $nomCanal): ?>
                                             <option value="<?= e($codCanal) ?>" <?= ($cliente['canal_captacion'] === $codCanal ? 'selected' : '') ?>>
@@ -836,8 +836,8 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                     </select>
                                 </div>
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-w-600 f-s-13">Categoría de Cliente</label>
-                                    <select class="form-select form-select-sm" name="categoria_id" id="perfil-categoria">
+                                    <label class="form-label f-w-600 f-s-13" for="perfil-categoria">Categoría de Cliente</label>
+                                    <select class="form-select basic-select2" name="categoria_id" id="perfil-categoria">
                                         <?php foreach ($categorias as $cat): ?>
                                             <option value="<?= (int) $cat->obtenerId() ?>" <?= ((int) $cliente['categoria_id'] === (int) $cat->obtenerId() ? 'selected' : '') ?>>
                                                 <?= e($cat->obtenerNombre()) ?> (<?= e($cat->obtenerCodigo()) ?>)
@@ -846,14 +846,20 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                     </select>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label f-w-600 f-s-13">Preferencias Declaradas del Cliente</label>
-                                    <textarea class="form-control" name="preferencias" id="perfil-preferencias" rows="3"
-                                              placeholder="Preferencias específicas de estancia, ubicación de habitación, amenities, etc."><?= e($cliente['preferencias'] ?? '') ?></textarea>
+                                    <label class="form-label f-w-600 f-s-13" for="perfil-preferencias">Preferencias Declaradas del Cliente</label>
+                                    <div class="icon-control position-relative icon-textarea">
+                                        <i class="fa-solid fa-star position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                        <textarea class="form-control ps-5" name="preferencias" id="perfil-preferencias" rows="3"
+                                                  placeholder="Preferencias específicas de estancia, ubicación de habitación, amenities, etc."><?= e($cliente['preferencias'] ?? '') ?></textarea>
+                                    </div>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label f-w-600 f-s-13">Observaciones Comerciales y Operativas</label>
-                                    <textarea class="form-control" name="observaciones" id="perfil-observaciones" rows="3"
-                                              placeholder="Notas internas de recepción, historial de incidentes o atenciones especiales..."><?= e($cliente['observaciones'] ?? '') ?></textarea>
+                                    <label class="form-label f-w-600 f-s-13" for="perfil-observaciones">Observaciones Comerciales y Operativas</label>
+                                    <div class="icon-control position-relative icon-textarea">
+                                        <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                        <textarea class="form-control ps-5" name="observaciones" id="perfil-observaciones" rows="3"
+                                                  placeholder="Notas internas de recepción, historial de incidentes o atenciones especiales..."><?= e($cliente['observaciones'] ?? '') ?></textarea>
+                                    </div>
                                 </div>
                                 <?php if ($permisos['puede_editar']): ?>
                                 <div class="col-12 text-end">
@@ -882,11 +888,11 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-modal-editar-perfil" novalidate>
+            <form id="form-modal-editar-perfil" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label f-s-12 f-w-600">Categoría Comercial <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" name="categoria_id" id="modal-edit-categoria" required>
+                        <label class="form-label f-s-12 f-w-600" for="modal-edit-categoria">Categoría Comercial <span class="text-danger">*</span></label>
+                        <select class="form-select basic-select2" name="categoria_id" id="modal-edit-categoria" required>
                             <?php foreach ($categorias as $cat): ?>
                                 <option value="<?= (int) $cat->obtenerId() ?>" <?= ((int) $cliente['categoria_id'] === (int) $cat->obtenerId() ? 'selected' : '') ?>>
                                     <?= e($cat->obtenerNombre()) ?> (<?= e($cat->obtenerCodigo()) ?>)
@@ -895,8 +901,8 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label f-s-12 f-w-600">Canal de Captación</label>
-                        <select class="form-select form-select-sm" name="canal_captacion" id="modal-edit-canal">
+                        <label class="form-label f-s-12 f-w-600" for="modal-edit-canal">Canal de Captación</label>
+                        <select class="form-select basic-select2" name="canal_captacion" id="modal-edit-canal">
                             <option value="">Seleccione canal...</option>
                             <?php foreach ($canales as $codCanal => $nomCanal): ?>
                                 <option value="<?= e($codCanal) ?>" <?= ($cliente['canal_captacion'] === $codCanal ? 'selected' : '') ?>>
@@ -906,12 +912,18 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label f-s-12 f-w-600">Preferencias</label>
-                        <textarea class="form-control form-control-sm" name="preferencias" id="modal-edit-preferencias" rows="2"><?= e($cliente['preferencias'] ?? '') ?></textarea>
+                        <label class="form-label f-s-12 f-w-600" for="modal-edit-preferencias">Preferencias</label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-star position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control form-control-sm ps-5" name="preferencias" id="modal-edit-preferencias" rows="2"><?= e($cliente['preferencias'] ?? '') ?></textarea>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label f-s-12 f-w-600">Observaciones</label>
-                        <textarea class="form-control form-control-sm" name="observaciones" id="modal-edit-observaciones" rows="2"><?= e($cliente['observaciones'] ?? '') ?></textarea>
+                        <label class="form-label f-s-12 f-w-600" for="modal-edit-observaciones">Observaciones</label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control form-control-sm ps-5" name="observaciones" id="modal-edit-observaciones" rows="2"><?= e($cliente['observaciones'] ?? '') ?></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2">
@@ -935,7 +947,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-bloquear-cliente-ficha" novalidate>
+            <form id="form-bloquear-cliente-ficha" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="alert alert-danger f-s-13 mb-3">
                         <i class="fa-solid fa-triangle-exclamation me-1"></i>
@@ -946,9 +958,12 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                         <p class="f-w-700 mb-0"><?= e($cliente['codigo']) ?> — <?= e($nombreCompleto) ?></p>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label f-s-12 f-w-600">Motivo del Bloqueo <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="ficha-bloquear-motivo" rows="3" required
-                                  placeholder="Detalle la justificación comercial o de seguridad para el bloqueo..."></textarea>
+                        <label class="form-label f-s-12 f-w-600" for="ficha-bloquear-motivo">Motivo del Bloqueo <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-shield-halved position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="ficha-bloquear-motivo" rows="3" required
+                                      placeholder="Detalle la justificación comercial o de seguridad para el bloqueo..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2">

@@ -1556,6 +1556,37 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Se descarta el nombre de archivo enviado por el cliente; el identificador físico se genera mediante entropía criptográfica (`random_bytes(16)`) con extensión derivada del MIME verificado. Límite máximo: 2 MB.
    - La subida y eliminación de foto en `/perfil/foto` exige sesión activa, token CSRF válido y deriva la Persona objetivo directamente del usuario autenticado en sesión, impidiendo la manipulación de personas ajenas.
 
+### D-096 — Homologación Transversal de Formularios y Controles Alina (UI-ALINA-1C)
+
+1. **Alineación Visual y Componentes Nativos de Formularios Alina:**
+   - Todo formulario administrativo se rige por el estándar visual de Alina: clase `.app-form.app-icon-form` con controles enriquecidos `.icon-control.position-relative`.
+   - Los campos con iconos albergan exclusivamente fuentes Font Awesome 6 (`fa-solid fa-*`) posicionados mediante `position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary`, con separador sutil continuo `.icon-control::after` e inputs con `ps-5`. Para áreas de texto (`textarea`), se utiliza la clase complementaria `.icon-control.icon-textarea` con icono y separador anclados en `top-0 start-0 mt-3 ms-3`.
+   - Se erradica categóricamente el uso de estilos con bordes punteados o discontinuos (`dotted`, `dashed`, `.dash-form-check`); todos los campos, divisores y contenedores mantienen bordes continuos/sólidos.
+
+2. **Selectores Alina (Select2) y Fechas (Flatpickr):**
+   - Los selectores enriquecidos utilizan la clase nativa `.form-select.basic-select2` integrada transversalmente vía `camargo-select.js`, con resolución automática de `dropdownParent` en modales Bootstrap 5 para prevenir recortes visuales o bloqueos de foco.
+   - Los campos de selección de fecha única adoptan Flatpickr (`[data-provider="datepicker"]`, `.basic-date`, `.campo-datepicker`) y los selectores de rango adoptan el modo rango de Flatpickr (`[data-provider="rangepicker"]`, `.picker-range`) mediante `camargo-pickers.js`.
+   - Se mantiene la prohibición absoluta de jQuery AJAX para peticiones de red o reglas de negocio; jQuery queda estrictamente confinado al empaquetador del plugin Select2.
+
+3. **Interruptores y Carga de Archivos:**
+   - Los interruptores booleanos se homologan como switches nativos Alina mediante `.form-check.form-switch.app-switch`, con bordes continuos y dimensiones estandarizadas.
+   - Los controles de carga de archivos adoptan la geometría nativa de Bootstrap 5 / Alina mediante `.form-control[type="file"]` con selector estilizado.
+
+4. **Validación Frontend UX Asistida (PristineJS v1.1.0):**
+   - Se incorpora PristineJS como dependencia local estática en `public/assets/vendor/pristine/pristine.min.js` y se gestiona mediante el módulo central `public/assets/js/camargo-forms.js`.
+   - Se provee localización completa al español (`Pristine.addMessages('es', ...)`), prevención de doble submit mediante estados de carga con spinner (`CamargoForms.establecerCargando`, `CamargoForms.restaurarCargando`) y re-escaneo reactivo ante apertura de modales Bootstrap (`shown.bs.modal`).
+   - Principio vinculante de soberanía: la validación en el cliente es un facilitador de experiencia de usuario (UX); toda regla de negocio, unicidad, integridad y autorización reside de forma innegociable en los Servicios y Repositorios backend.
+
+5. **Inventario Transversal de Formularios y Matriz Candidatos DNI/RUC:**
+   - Se certifica el catálogo transversal exhaustivo de 95 formularios en 34 archivos de plantilla.
+   - Se formaliza la matriz de 9 campos candidatos para la futura integración con APIsPERU (documentos de identidad y RUC en colaboradores, personas, clientes, empresas, acreedores de gastos, reclamantes y proveedores).
+   - Se prohíbe introducir llamadas HTTP externas o clientes prematuros hacia APIsPERU en esta fase; las variables de entorno de token permanecen protegidas y desacopladas en `.env`.
+
+6. **Integridad Estructural y Cero DDL:**
+   - La base de datos permanece estrictamente inmutable con 118 tablas; la última migración es `034_agregar_foto_personas.sql`.
+   - La ranura `035` de migraciones permanece estrictamente LIBRE (0 DDL).
+   - El catálogo de referencia original `admin-dashboard/` permanece 100% intacto y de solo lectura.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

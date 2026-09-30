@@ -508,3 +508,105 @@ input, textarea, select, button,
     box-shadow: inset 0 0 0 2px rgba(var(--primary), 1);
 }
 
+/* ==========================================================================
+   HOMOLOGACIÓN TRANSVERSAL DE FORMULARIOS ALINA (UI-ALINA-1C / D-096)
+   ========================================================================== */
+
+/* 1. Controles con Iconos Frontales (Vertical Form With Icon) */
+.icon-control {
+    position: relative;
+}
+
+.icon-control i {
+    z-index: 4;
+    font-size: 15px;
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.icon-control::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 40px;
+    width: 1px;
+    height: 18px;
+    background: rgba(var(--dark), 0.2);
+    transform: translateY(-50%);
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* Ajuste específico para textarea con icono */
+.icon-control.icon-textarea i {
+    top: 14px !important;
+    transform: none !important;
+}
+
+.icon-control.icon-textarea::after {
+    top: 23px !important;
+    transform: none !important;
+}
+
+/* 2. Interruptores Nativos Alina (Basic Switch) */
+.app-switch .form-check-input {
+    width: 38px;
+    height: 20px;
+    cursor: pointer;
+    border-radius: 20px;
+    border: 1px solid rgba(var(--dark), 0.25);
+}
+
+.app-switch .form-check-input:checked {
+    background-color: var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+}
+
+.app-switch .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary), 0.25);
+}
+
+/* 3. File Upload Alina */
+.form-control[type="file"] {
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    border: 1px solid rgba(var(--dark), 0.2);
+    border-radius: 8px;
+}
+
+.form-control[type="file"]::file-selector-button {
+    border: 0;
+    padding: 0.35rem 0.85rem;
+    margin: -0.35rem 0.75rem -0.35rem -0.75rem;
+    background-color: var(--bs-primary, #0d6efd);
+    color: #fff;
+    border-radius: 6px 0 0 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+    background-color: #0b5ed7;
+}
+
+/* 4. Integración PristineJS con Alina */
+.pristine-error {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    line-height: 1.25;
+}
+
+.has-danger .form-control,
+.has-danger .form-select,
+.has-danger .select2-selection {
+    border-color: var(--bs-danger, #dc3545) !important;
+}
+
+.has-success .form-control:focus,
+.has-success .form-select:focus {
+    border-color: var(--bs-success, #198754);
+}
+
+

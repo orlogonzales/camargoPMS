@@ -88,12 +88,12 @@ declare(strict_types=1);
                     <span class="badge bg-secondary f-s-11">Por Propiedad</span>
                 </div>
                 <div class="card-body p-3">
-                    <form id="form-night-audit" class="row g-3 align-items-end">
+                    <form id="form-night-audit" class="row g-3 align-items-end app-form app-icon-form" novalidate>
                         <input type="hidden" name="_token" value="<?= htmlspecialchars($csrf_token) ?>">
 
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label f-s-12 f-w-600 text-muted">Sede / Propiedad</label>
-                            <select class="form-select f-s-13" id="select-propiedad" name="propiedad_id" required>
+                            <select class="form-select basic-select2" id="select-propiedad" name="propiedad_id" required>
                                 <?php foreach ($propiedades as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" <?= (int) $p['id'] === $propiedad_id ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($p['nombre']) ?> (<?= htmlspecialchars($p['codigo']) ?>)
@@ -104,12 +104,18 @@ declare(strict_types=1);
 
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label f-s-12 f-w-600 text-muted">Fecha Hotelera a Cerrar</label>
-                            <input type="date" class="form-control f-s-13" id="input-fecha-hotelera" name="fecha_hotelera" value="<?= htmlspecialchars($fecha_sugerida) ?>" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5 f-s-13" id="input-fecha-hotelera" name="fecha_hotelera" value="<?= htmlspecialchars($fecha_sugerida) ?>" required>
+                            </div>
                         </div>
 
                         <div class="col-md-4 col-sm-8">
                             <label class="form-label f-s-12 f-w-600 text-muted">Observaciones de Guardia</label>
-                            <input type="text" class="form-control f-s-13" id="input-observaciones" name="observaciones" placeholder="Novedades o incidencias relevantes del turno nocturno...">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-pen-to-square position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5 f-s-13" id="input-observaciones" name="observaciones" placeholder="Novedades o incidencias relevantes del turno nocturno...">
+                            </div>
                         </div>
 
                         <div class="col-md-2 col-sm-4">

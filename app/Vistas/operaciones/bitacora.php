@@ -265,7 +265,7 @@ declare(strict_types=1);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <form id="form-crear-entrada">
+                <form id="form-crear-entrada" class="app-form app-icon-form" novalidate>
                     <div class="modal-body">
                         <div class="alert alert-info py-2 px-3 f-s-12 mb-3">
                             <i class="fa-solid fa-circle-info me-1"></i>
@@ -275,7 +275,7 @@ declare(strict_types=1);
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label f-s-13 f-w-600 required">Propiedad / Sede</label>
-                                <select class="form-select form-select-sm" name="propiedad_id" required>
+                                <select class="form-select basic-select2" name="propiedad_id" required>
                                     <option value="">Seleccione una sede...</option>
                                     <?php foreach ($propiedades as $p): ?>
                                         <option value="<?= e((string) $p['id']) ?>"><?= e((string) $p['nombre']) ?></option>
@@ -285,7 +285,7 @@ declare(strict_types=1);
 
                             <div class="col-md-3">
                                 <label class="form-label f-s-13 f-w-600 required">Tipo</label>
-                                <select class="form-select form-select-sm" name="tipo" id="input-crear-tipo" required>
+                                <select class="form-select basic-select2" name="tipo" id="input-crear-tipo" required>
                                     <?php foreach ($tipos as $t): ?>
                                         <option value="<?= e($t) ?>"><?= e($t) ?></option>
                                     <?php endforeach; ?>
@@ -294,7 +294,7 @@ declare(strict_types=1);
 
                             <div class="col-md-3">
                                 <label class="form-label f-s-13 f-w-600 required">Prioridad</label>
-                                <select class="form-select form-select-sm" name="prioridad" required>
+                                <select class="form-select basic-select2" name="prioridad" required>
                                     <option value="BAJA">BAJA</option>
                                     <option value="MEDIA" selected>MEDIA</option>
                                     <option value="ALTA">ALTA</option>
@@ -304,7 +304,7 @@ declare(strict_types=1);
 
                             <div class="col-md-4">
                                 <label class="form-label f-s-13 f-w-600 required">Turno</label>
-                                <select class="form-select form-select-sm" name="turno" required>
+                                <select class="form-select basic-select2" name="turno" required>
                                     <option value="GENERAL" selected>GENERAL</option>
                                     <option value="MANANA">MAÑANA</option>
                                     <option value="TARDE">TARDE</option>
@@ -314,12 +314,15 @@ declare(strict_types=1);
 
                             <div class="col-md-4">
                                 <label class="form-label f-s-13 f-w-600 required">Fecha Operativa</label>
-                                <input type="date" class="form-control form-control-sm" name="fecha_operativa" value="<?= date('Y-m-d') ?>" required>
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                    <input type="date" class="form-control ps-5" name="fecha_operativa" value="<?= date('Y-m-d') ?>" required>
+                                </div>
                             </div>
 
                             <div class="col-md-4">
                                 <label class="form-label f-s-13 f-w-600">Habitación / Unidad (Opcional)</label>
-                                <select class="form-select form-select-sm" name="unidad_id">
+                                <select class="form-select basic-select2" name="unidad_id">
                                     <option value="">Ninguna / Áreas comunes</option>
                                     <?php foreach ($unidades as $u): ?>
                                         <option value="<?= e((string) $u['id']) ?>"><?= e((string) $u['codigo']) ?> - <?= e((string) $u['nombre']) ?></option>
@@ -329,12 +332,18 @@ declare(strict_types=1);
 
                             <div class="col-12">
                                 <label class="form-label f-s-13 f-w-600 required">Título / Asunto Breve</label>
-                                <input type="text" class="form-control form-control-sm" name="titulo" maxlength="200" placeholder="Ej. Solicitud de toallas adicionales en Hab 204 o Fuga de agua detectada" required>
+                                <div class="icon-control position-relative">
+                                    <i class="fa-solid fa-heading position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                    <input type="text" class="form-control ps-5" name="titulo" maxlength="200" placeholder="Ej. Solicitud de toallas adicionales en Hab 204 o Fuga de agua detectada" required>
+                                </div>
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label f-s-13 f-w-600 required">Relato Operativo / Contenido Detallado</label>
-                                <textarea class="form-control" name="contenido" rows="4" placeholder="Describa con precisión los hechos ocurridos, consignas dadas o novedades observadas durante la guardia..." required></textarea>
+                                <div class="icon-control position-relative icon-textarea">
+                                    <i class="fa-solid fa-pen-to-square position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                    <textarea class="form-control ps-5" name="contenido" rows="4" placeholder="Describa con precisión los hechos ocurridos, consignas dadas o novedades observadas durante la guardia..." required></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -361,19 +370,22 @@ declare(strict_types=1);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <form id="form-agregar-seguimiento">
+                <form id="form-agregar-seguimiento" class="app-form app-icon-form" novalidate>
                     <input type="hidden" name="entrada_id" id="seg-entrada-id">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600 required">Tipo de Registro</label>
-                            <select class="form-select form-select-sm" name="tipo_evento" id="seg-tipo-evento" required>
+                            <select class="form-select basic-select2" name="tipo_evento" id="seg-tipo-evento" required>
                                 <option value="COMENTARIO" selected>Comentario de seguimiento</option>
                                 <option value="ENMIENDA">Enmienda aclaratoria (corrección sobre el hecho)</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600 required">Contenido de la Nota</label>
-                            <textarea class="form-control" name="contenido" id="seg-contenido" rows="4" placeholder="Escriba la actualización operativa o aclaración append-only..." required></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="contenido" id="seg-contenido" rows="4" placeholder="Escriba la actualización operativa o aclaración append-only..." required></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -399,12 +411,12 @@ declare(strict_types=1);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <form id="form-cambiar-estado">
+                <form id="form-cambiar-estado" class="app-form app-icon-form" novalidate>
                     <input type="hidden" name="entrada_id" id="est-entrada-id">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600 required">Nuevo Estado</label>
-                            <select class="form-select form-select-sm" name="nuevo_estado" id="est-nuevo-estado" required>
+                            <select class="form-select basic-select2" name="nuevo_estado" id="est-nuevo-estado" required>
                                 <option value="PENDIENTE">PENDIENTE</option>
                                 <option value="EN_PROCESO">EN PROCESO</option>
                                 <option value="REGISTRADA">REGISTRADA</option>
@@ -412,7 +424,10 @@ declare(strict_types=1);
                         </div>
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600">Nota u observación del cambio (Opcional)</label>
-                            <textarea class="form-control" name="nota" id="est-nota" rows="2" placeholder="Motivo o detalle del cambio de estado..."></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-arrows-rotate position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="nota" id="est-nota" rows="2" placeholder="Motivo o detalle del cambio de estado..."></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -438,7 +453,7 @@ declare(strict_types=1);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <form id="form-resolver-entrada">
+                <form id="form-resolver-entrada" class="app-form app-icon-form" novalidate>
                     <input type="hidden" name="entrada_id" id="res-entrada-id">
                     <div class="modal-body">
                         <p class="f-s-13 text-secondary mb-3">
@@ -446,7 +461,10 @@ declare(strict_types=1);
                         </p>
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600 required">Detalle de Solución / Descargo</label>
-                            <textarea class="form-control" name="nota_resolucion" id="res-nota" rows="3" placeholder="Detalle qué acciones se tomaron y cómo quedó subsanada la situación..." required></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-check-double position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="nota_resolucion" id="res-nota" rows="3" placeholder="Detalle qué acciones se tomaron y cómo quedó subsanada la situación..." required></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -472,12 +490,15 @@ declare(strict_types=1);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <form id="form-reabrir-entrada">
+                <form id="form-reabrir-entrada" class="app-form app-icon-form" novalidate>
                     <input type="hidden" name="entrada_id" id="reab-entrada-id">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600 required">Motivo de Reapertura</label>
-                            <textarea class="form-control" name="motivo_reapertura" id="reab-motivo" rows="3" placeholder="Explique por qué se reabre la novedad y qué acciones faltan..." required></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-arrow-rotate-left position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="motivo_reapertura" id="reab-motivo" rows="3" placeholder="Explique por qué se reabre la novedad y qué acciones faltan..." required></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -503,7 +524,7 @@ declare(strict_types=1);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <form id="form-anular-entrada">
+                <form id="form-anular-entrada" class="app-form app-icon-form" novalidate>
                     <input type="hidden" name="entrada_id" id="anul-entrada-id">
                     <div class="modal-body">
                         <div class="alert alert-danger py-2 px-3 f-s-12 mb-3">
@@ -512,7 +533,10 @@ declare(strict_types=1);
                         </div>
                         <div class="mb-3">
                             <label class="form-label f-s-13 f-w-600 required">Motivo Justificado de Anulación</label>
-                            <textarea class="form-control" name="motivo_anulacion" id="anul-motivo" rows="3" placeholder="Fundamente la anulación (mínimo 5 caracteres, ej. Registro duplicado accidentalmente por error de digitación)..." required></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-triangle-exclamation position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="motivo_anulacion" id="anul-motivo" rows="3" placeholder="Fundamente la anulación (mínimo 5 caracteres, ej. Registro duplicado accidentalmente por error de digitación)..." required></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

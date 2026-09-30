@@ -182,7 +182,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-alta-cliente" novalidate>
+            <form id="form-alta-cliente" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <!-- Selector de Modo de Alta -->
                     <div class="btn-group w-100 mb-3" role="group" aria-label="Modo de alta">
@@ -208,7 +208,7 @@ declare(strict_types=1);
                             </p>
                             <div class="row g-2 align-items-end mb-2">
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Número de Documento o Búsqueda</label>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-buscar-doc">Número de Documento o Búsqueda</label>
                                     <div class="input-group input-group-sm">
                                         <input type="text" class="form-control" id="alta-buscar-doc" placeholder="Ej. 12345678 o Nombre" autocomplete="off">
                                         <button class="btn btn-primary" type="button" id="btn-verificar-persona">
@@ -251,22 +251,31 @@ declare(strict_types=1);
 
                             <div class="row g-2 mb-2">
                                 <div class="col-md-4 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Nombres <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-sm" name="nombres" id="alta-nombres" placeholder="Nombres">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-nombres">Nombres <span class="text-danger">*</span></label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" name="nombres" id="alta-nombres" placeholder="Nombres">
+                                    </div>
                                 </div>
                                 <div class="col-md-4 col-6">
-                                    <label class="form-label f-s-12 f-w-600">Apellido Paterno <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-sm" name="apellido_paterno" id="alta-paterno" placeholder="Apellido paterno">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-paterno">Apellido Paterno <span class="text-danger">*</span></label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" name="apellido_paterno" id="alta-paterno" placeholder="Apellido paterno">
+                                    </div>
                                 </div>
                                 <div class="col-md-4 col-6">
-                                    <label class="form-label f-s-12 f-w-600">Apellido Materno</label>
-                                    <input type="text" class="form-control form-control-sm" name="apellido_materno" id="alta-materno" placeholder="Apellido materno">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-materno">Apellido Materno</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" name="apellido_materno" id="alta-materno" placeholder="Apellido materno">
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row g-2 mb-2">
                                 <div class="col-md-4 col-6">
-                                    <label class="form-label f-s-12 f-w-600">Género</label>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-genero">Género</label>
                                     <select class="form-select form-select-sm" name="genero" id="alta-genero">
                                         <option value="NO_ESPECIFICADO">No especificado</option>
                                         <option value="MASCULINO">Masculino</option>
@@ -275,12 +284,15 @@ declare(strict_types=1);
                                     </select>
                                 </div>
                                 <div class="col-md-4 col-6">
-                                    <label class="form-label f-s-12 f-w-600">Fecha de Nacimiento</label>
-                                    <input type="date" class="form-control form-control-sm" name="fecha_nacimiento" id="alta-nacimiento">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-nacimiento">Fecha de Nacimiento</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-cake-candles position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="date" class="form-control form-control-sm ps-5" name="fecha_nacimiento" id="alta-nacimiento">
+                                    </div>
                                 </div>
                                 <div class="col-md-4 col-12">
-                                    <label class="form-label f-s-12 f-w-600">País de Nacionalidad</label>
-                                    <select class="form-select form-select-sm" name="pais_nacionalidad_id" id="alta-nacionalidad">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-nacionalidad">País de Nacionalidad</label>
+                                    <select class="form-select basic-select2" name="pais_nacionalidad_id" id="alta-nacionalidad">
                                         <?php foreach ($paises as $p): ?>
                                             <option value="<?= (int) $p['id'] ?>" <?= ($p['codigo_iso2'] === 'PE' ? 'selected' : '') ?>>
                                                 <?= e($p['nombre']) ?> (<?= e($p['codigo_iso2']) ?>)
@@ -293,20 +305,23 @@ declare(strict_types=1);
                             <!-- Documento Principal -->
                             <div class="row g-2 mb-2">
                                 <div class="col-md-4 col-6">
-                                    <label class="form-label f-s-12 f-w-600">Tipo Documento</label>
-                                    <select class="form-select form-select-sm" name="tipo_documento_id" id="alta-tipo-doc">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-tipo-doc">Tipo Documento</label>
+                                    <select class="form-select basic-select2" name="tipo_documento_id" id="alta-tipo-doc">
                                         <?php foreach ($tiposDocumento as $td): ?>
                                             <option value="<?= (int) $td['id'] ?>"><?= e($td['codigo']) ?> — <?= e($td['nombre']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-5 col-6">
-                                    <label class="form-label f-s-12 f-w-600">Número Documento</label>
-                                    <input type="text" class="form-control form-control-sm" name="numero_documento" id="alta-num-doc" placeholder="Número">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-num-doc">Número Documento</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" name="numero_documento" id="alta-num-doc" placeholder="Número">
+                                    </div>
                                 </div>
                                 <div class="col-md-3 col-12">
-                                    <label class="form-label f-s-12 f-w-600">País Emisor</label>
-                                    <select class="form-select form-select-sm" name="pais_emisor_id" id="alta-pais-emisor">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-pais-emisor">País Emisor</label>
+                                    <select class="form-select basic-select2" name="pais_emisor_id" id="alta-pais-emisor">
                                         <?php foreach ($paises as $p): ?>
                                             <option value="<?= (int) $p['id'] ?>" <?= ($p['codigo_iso2'] === 'PE' ? 'selected' : '') ?>>
                                                 <?= e($p['codigo_iso2']) ?>
@@ -319,25 +334,31 @@ declare(strict_types=1);
                             <!-- Contactos -->
                             <div class="row g-2 mb-2">
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Teléfono / Celular</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="text" class="form-control" name="telefono" id="alta-telefono" placeholder="+51 987654321">
-                                        <div class="input-group-text bg-white">
-                                            <input class="form-check-input mt-0 me-1" type="checkbox" name="es_whatsapp" id="alta-es-whatsapp" value="1" checked>
-                                            <label class="form-check-label f-s-11" for="alta-es-whatsapp">WhatsApp</label>
-                                        </div>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-telefono">Teléfono / Celular</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" name="telefono" id="alta-telefono" placeholder="+51 987654321">
+                                    </div>
+                                    <div class="form-check form-switch app-switch mt-1 d-flex align-items-center gap-2">
+                                        <input class="form-check-input mt-0" type="checkbox" name="es_whatsapp" id="alta-es-whatsapp" value="1" checked>
+                                        <label class="form-check-label f-s-11 text-secondary" for="alta-es-whatsapp">
+                                            <i class="fa-brands fa-whatsapp text-success me-1"></i> WhatsApp
+                                        </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Correo Electrónico</label>
-                                    <input type="email" class="form-control form-control-sm" name="email" id="alta-email" placeholder="cliente@correo.com">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-email">Correo Electrónico</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="email" class="form-control form-control-sm ps-5" name="email" id="alta-email" placeholder="cliente@correo.com">
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Residencia Geográfica -->
                             <div class="row g-2 mb-2">
                                 <div class="col-md-4 col-12">
-                                    <label class="form-label f-s-12 f-w-600">País de Residencia</label>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-pais-residencia">País de Residencia</label>
                                     <select class="form-select form-select-sm" name="pais_residencia_id" id="alta-pais-residencia">
                                         <?php foreach ($paises as $p): ?>
                                             <option value="<?= (int) $p['id'] ?>" data-iso="<?= e($p['codigo_iso2']) ?>" <?= ($p['codigo_iso2'] === 'PE' ? 'selected' : '') ?>>
@@ -351,7 +372,7 @@ declare(strict_types=1);
                                 <div class="col-md-8 col-12" id="box-geografia-peru">
                                     <div class="row g-2">
                                         <div class="col-4">
-                                            <label class="form-label f-s-12 f-w-600">Departamento</label>
+                                            <label class="form-label f-s-12 f-w-600" for="alta-departamento">Departamento</label>
                                             <select class="form-select form-select-sm" id="alta-departamento">
                                                 <option value="">Seleccione...</option>
                                                 <?php foreach ($departamentos as $dep): ?>
@@ -360,13 +381,13 @@ declare(strict_types=1);
                                             </select>
                                         </div>
                                         <div class="col-4">
-                                            <label class="form-label f-s-12 f-w-600">Provincia</label>
+                                            <label class="form-label f-s-12 f-w-600" for="alta-provincia">Provincia</label>
                                             <select class="form-select form-select-sm" id="alta-provincia" disabled>
                                                 <option value="">Seleccione...</option>
                                             </select>
                                         </div>
                                         <div class="col-4">
-                                            <label class="form-label f-s-12 f-w-600">Distrito</label>
+                                            <label class="form-label f-s-12 f-w-600" for="alta-distrito">Distrito</label>
                                             <select class="form-select form-select-sm" name="distrito_id" id="alta-distrito" disabled>
                                                 <option value="">Seleccione...</option>
                                             </select>
@@ -378,12 +399,18 @@ declare(strict_types=1);
                                 <div class="col-md-8 col-12 d-none" id="box-geografia-extranjera">
                                     <div class="row g-2">
                                         <div class="col-6">
-                                            <label class="form-label f-s-12 f-w-600">Región / Estado</label>
-                                            <input type="text" class="form-control form-control-sm" name="region_residencia_extranjera" id="alta-region-ext" placeholder="Ej. Antioquia">
+                                            <label class="form-label f-s-12 f-w-600" for="alta-region-ext">Región / Estado</label>
+                                            <div class="icon-control position-relative">
+                                                <i class="fa-solid fa-earth-americas position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                                <input type="text" class="form-control form-control-sm ps-5" name="region_residencia_extranjera" id="alta-region-ext" placeholder="Ej. Antioquia">
+                                            </div>
                                         </div>
                                         <div class="col-6">
-                                            <label class="form-label f-s-12 f-w-600">Ciudad</label>
-                                            <input type="text" class="form-control form-control-sm" name="ciudad_residencia_extranjera" id="alta-ciudad-ext" placeholder="Ej. Medellín">
+                                            <label class="form-label f-s-12 f-w-600" for="alta-ciudad-ext">Ciudad</label>
+                                            <div class="icon-control position-relative">
+                                                <i class="fa-solid fa-city position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                                <input type="text" class="form-control form-control-sm ps-5" name="ciudad_residencia_extranjera" id="alta-ciudad-ext" placeholder="Ej. Medellín">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -391,8 +418,11 @@ declare(strict_types=1);
 
                             <div class="row g-2">
                                 <div class="col-12">
-                                    <label class="form-label f-s-12 f-w-600">Dirección Domiciliaria</label>
-                                    <input type="text" class="form-control form-control-sm" name="direccion" id="alta-direccion" placeholder="Av. Principal 123, Urb...">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-direccion">Dirección Domiciliaria</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" name="direccion" id="alta-direccion" placeholder="Av. Principal 123, Urb...">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -406,8 +436,8 @@ declare(strict_types=1);
                             </h6>
                             <div class="row g-2 mb-2">
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Categoría Comercial <span class="text-danger">*</span></label>
-                                    <select class="form-select form-select-sm" name="categoria_id" id="alta-categoria" required>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-categoria">Categoría Comercial <span class="text-danger">*</span></label>
+                                    <select class="form-select basic-select2" name="categoria_id" id="alta-categoria" required>
                                         <?php foreach ($categorias as $cat): ?>
                                             <option value="<?= (int) $cat->obtenerId() ?>" <?= $cat->esPredeterminada() ? 'selected' : '' ?>>
                                                 <?= e($cat->obtenerNombre()) ?> (<?= e($cat->obtenerCodigo()) ?>)
@@ -416,8 +446,8 @@ declare(strict_types=1);
                                     </select>
                                 </div>
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Canal de Captación</label>
-                                    <select class="form-select form-select-sm" name="canal_captacion" id="alta-canal">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-canal">Canal de Captación</label>
+                                    <select class="form-select basic-select2" name="canal_captacion" id="alta-canal">
                                         <option value="">Seleccione canal de origen...</option>
                                         <?php foreach ($canales as $codCanal => $nomCanal): ?>
                                             <option value="<?= e($codCanal) ?>"><?= e($nomCanal) ?></option>
@@ -428,14 +458,20 @@ declare(strict_types=1);
 
                             <div class="row g-2 mb-2">
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Preferencias del Cliente</label>
-                                    <textarea class="form-control form-control-sm" name="preferencias" id="alta-preferencias" rows="2"
-                                              placeholder="Preferencias declaradas (piso alto, almohadas extras, silencioso...)"></textarea>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-preferencias">Preferencias del Cliente</label>
+                                    <div class="icon-control position-relative icon-textarea">
+                                        <i class="fa-solid fa-star position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                        <textarea class="form-control form-control-sm ps-5" name="preferencias" id="alta-preferencias" rows="2"
+                                                  placeholder="Preferencias declaradas (piso alto, almohadas extras, silencioso...)"></textarea>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600">Observaciones Comerciales Internas</label>
-                                    <textarea class="form-control form-control-sm" name="observaciones" id="alta-observaciones" rows="2"
-                                              placeholder="Notas operativas y comerciales de recepción / atención..."></textarea>
+                                    <label class="form-label f-s-12 f-w-600" for="alta-observaciones">Observaciones Comerciales Internas</label>
+                                    <div class="icon-control position-relative icon-textarea">
+                                        <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                        <textarea class="form-control form-control-sm ps-5" name="observaciones" id="alta-observaciones" rows="2"
+                                                  placeholder="Notas operativas y comerciales de recepción / atención..."></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -453,7 +489,7 @@ declare(strict_types=1);
     </div>
 </div>
 
-<!-- 2. MODAL: BLOQUEO COMERCIAL -->
+<!-- MODAL BLOQUEAR CLIENTE -->
 <div class="modal fade" id="modal-bloquear-cliente" tabindex="-1" aria-labelledby="modalBloquearTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -463,7 +499,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-bloquear-cliente" novalidate>
+            <form id="form-bloquear-cliente" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="bloquear-cliente-id" value="">
                 <div class="modal-body p-4">
                     <div class="alert alert-danger f-s-13 mb-3">
@@ -475,9 +511,12 @@ declare(strict_types=1);
                         <p class="f-w-700 mb-0" id="bloquear-cliente-nombre">-</p>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label f-s-12 f-w-600">Motivo del Bloqueo <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="bloquear-motivo" rows="3" required
-                                  placeholder="Detalle la justificación comercial o de seguridad para el bloqueo..."></textarea>
+                        <label class="form-label f-s-12 f-w-600" for="bloquear-motivo">Motivo del Bloqueo <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-shield-halved position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="bloquear-motivo" rows="3" required
+                                      placeholder="Detalle la justificación comercial o de seguridad para el bloqueo..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2">

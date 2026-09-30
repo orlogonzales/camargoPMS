@@ -334,7 +334,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-alta-colaborador" novalidate>
+            <form id="form-alta-colaborador" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <!-- Paso 1: Búsqueda o Reutilización de Persona -->
                     <div class="card bg-light-subtle border mb-4">
@@ -347,9 +347,12 @@ declare(strict_types=1);
                             </p>
                             <div class="row g-2 align-items-end">
                                 <div class="col-md-5">
-                                    <label class="form-label f-s-12 f-w-600">Número de Documento</label>
-                                    <input type="text" class="form-control form-control-sm" id="alta-buscar-doc"
-                                           placeholder="Ej. 12345678" maxlength="30">
+                                    <label class="form-label f-s-12 f-w-600" for="alta-buscar-doc">Número de Documento</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control form-control-sm ps-5" id="alta-buscar-doc"
+                                               placeholder="Ej. 12345678" maxlength="30">
+                                    </div>
                                 </div>
                                 <div class="col-md-4">
                                     <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn-verificar-persona">
@@ -382,20 +385,29 @@ declare(strict_types=1);
                     </h6>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="alta-nombres" name="nombres" required maxlength="100">
+                            <label class="form-label f-s-13 f-w-600" for="alta-nombres">Nombres <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="alta-nombres" name="nombres" required maxlength="100">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Apellido Paterno <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="alta-apellido-paterno" name="apellido_paterno" required maxlength="100">
+                            <label class="form-label f-s-13 f-w-600" for="alta-apellido-paterno">Apellido Paterno <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="alta-apellido-paterno" name="apellido_paterno" required maxlength="100">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Apellido Materno</label>
-                            <input type="text" class="form-control" id="alta-apellido-materno" name="apellido_materno" maxlength="100">
+                            <label class="form-label f-s-13 f-w-600" for="alta-apellido-materno">Apellido Materno</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="alta-apellido-materno" name="apellido_materno" maxlength="100">
+                            </div>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label f-s-13 f-w-600">Género</label>
-                            <select class="form-select" id="alta-genero" name="genero">
+                            <label class="form-label f-s-13 f-w-600" for="alta-genero">Género</label>
+                            <select class="form-select basic-select2" id="alta-genero" name="genero">
                                 <option value="">Seleccione...</option>
                                 <option value="MASCULINO">Masculino</option>
                                 <option value="FEMENINO">Femenino</option>
@@ -404,12 +416,15 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label f-s-13 f-w-600">Fecha de Nacimiento</label>
-                            <input type="date" class="form-control" id="alta-fecha-nacimiento" name="fecha_nacimiento" max="<?= date('Y-m-d') ?>">
+                            <label class="form-label f-s-13 f-w-600" for="alta-fecha-nacimiento">Fecha de Nacimiento</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-cake-candles position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" id="alta-fecha-nacimiento" name="fecha_nacimiento" max="<?= date('Y-m-d') ?>">
+                            </div>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label f-s-13 f-w-600">País Nacionalidad</label>
-                            <select class="form-select" id="alta-pais-nacionalidad-id" name="pais_nacionalidad_id">
+                            <label class="form-label f-s-13 f-w-600" for="alta-pais-nacionalidad-id">País Nacionalidad</label>
+                            <select class="form-select basic-select2" id="alta-pais-nacionalidad-id" name="pais_nacionalidad_id">
                                 <?php foreach ($paises as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" <?= ($p['id'] == $paisDefault['id']) ? 'selected' : '' ?>>
                                         <?= e($p['nombre']) ?> (<?= e($p['nacionalidad'] ?? '') ?>)
@@ -418,8 +433,8 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label f-s-13 f-w-600">País Emisor Doc.</label>
-                            <select class="form-select" id="alta-pais-emisor-id" name="pais_emisor_id">
+                            <label class="form-label f-s-13 f-w-600" for="alta-pais-emisor-id">País Emisor Doc.</label>
+                            <select class="form-select basic-select2" id="alta-pais-emisor-id" name="pais_emisor_id">
                                 <?php foreach ($paises as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" <?= ($p['id'] == $paisDefault['id']) ? 'selected' : '' ?>>
                                         <?= e($p['nombre']) ?>
@@ -428,36 +443,46 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Tipo de Documento</label>
-                            <select class="form-select" id="alta-tipo-doc" name="tipo_documento_id">
+                            <label class="form-label f-s-13 f-w-600" for="alta-tipo-doc">Tipo de Documento</label>
+                            <select class="form-select basic-select2" id="alta-tipo-doc" name="tipo_documento_id">
                                 <?php foreach ($tiposDocumento as $td): ?>
                                     <option value="<?= (int) $td['id'] ?>"><?= e($td['codigo']) ?> — <?= e($td['nombre']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Número Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="alta-num-doc" name="numero_documento" maxlength="30" required>
+                            <label class="form-label f-s-13 f-w-600" for="alta-num-doc">Número Documento <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="alta-num-doc" name="numero_documento" maxlength="30" required>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Teléfono / Celular</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="alta-telefono" name="telefono" maxlength="30" placeholder="Ej. 987654321">
-                                <div class="input-group-text">
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="checkbox" id="alta-es-whatsapp" name="es_whatsapp" value="1" title="¿Tiene WhatsApp?">
-                                        <label class="form-check-label f-s-11" for="alta-es-whatsapp"><i class="fa-brands fa-whatsapp text-success"></i></label>
-                                    </div>
-                                </div>
+                            <label class="form-label f-s-13 f-w-600" for="alta-telefono">Teléfono / Celular</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="alta-telefono" name="telefono" maxlength="30" placeholder="Ej. 987654321">
+                            </div>
+                            <div class="form-check form-switch app-switch mt-1 d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" id="alta-es-whatsapp" name="es_whatsapp" value="1">
+                                <label class="form-check-label f-s-11 text-secondary" for="alta-es-whatsapp">
+                                    <i class="fa-brands fa-whatsapp text-success me-1"></i> WhatsApp
+                                </label>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="alta-email" name="email" maxlength="150" placeholder="nombre@correo.com">
+                            <label class="form-label f-s-13 f-w-600" for="alta-email">Correo Electrónico</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="email" class="form-control ps-5" id="alta-email" name="email" maxlength="150" placeholder="nombre@correo.com">
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Dirección Residencial</label>
-                            <input type="text" class="form-control" id="alta-direccion" name="direccion" maxlength="255" placeholder="Av. Principal 123">
+                            <label class="form-label f-s-13 f-w-600" for="alta-direccion">Dirección Residencial</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="alta-direccion" name="direccion" maxlength="255" placeholder="Av. Principal 123">
+                            </div>
                         </div>
                     </div>
 
@@ -467,7 +492,7 @@ declare(strict_types=1);
                     </h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">País de Residencia <span class="text-danger">*</span></label>
+                            <label class="form-label f-s-13 f-w-600" for="alta-pais-residencia-id">País de Residencia <span class="text-danger">*</span></label>
                             <select class="form-select select-pais-residencia" id="alta-pais-residencia-id" name="pais_residencia_id" data-target-peru="#alta-seccion-peru" data-target-extranjero="#alta-seccion-extranjero">
                                 <?php foreach ($paises as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" data-iso="<?= e($p['codigo_iso2']) ?>" <?= ($p['id'] == $paisDefault['id']) ? 'selected' : '' ?>>
@@ -481,7 +506,7 @@ declare(strict_types=1);
                         <div class="col-md-8" id="alta-seccion-peru">
                             <div class="row g-2">
                                 <div class="col-md-4">
-                                    <label class="form-label f-s-13 f-w-600">Departamento</label>
+                                    <label class="form-label f-s-13 f-w-600" for="alta-departamento-id">Departamento</label>
                                     <select class="form-select select-departamento" id="alta-departamento-id" name="departamento_id" data-target-prov="#alta-provincia-id" data-target-dist="#alta-distrito-id">
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($departamentos as $dep): ?>
@@ -490,13 +515,13 @@ declare(strict_types=1);
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label f-s-13 f-w-600">Provincia</label>
+                                    <label class="form-label f-s-13 f-w-600" for="alta-provincia-id">Provincia</label>
                                     <select class="form-select select-provincia" id="alta-provincia-id" name="provincia_id" data-target-dist="#alta-distrito-id" disabled>
                                         <option value="">Seleccione dpto...</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label f-s-13 f-w-600">Distrito / Ciudad</label>
+                                    <label class="form-label f-s-13 f-w-600" for="alta-distrito-id">Distrito / Ciudad</label>
                                     <select class="form-select select-distrito" id="alta-distrito-id" name="distrito_id" disabled>
                                         <option value="">Seleccione prov...</option>
                                     </select>
@@ -508,12 +533,18 @@ declare(strict_types=1);
                         <div class="col-md-8 d-none" id="alta-seccion-extranjero">
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <label class="form-label f-s-13 f-w-600">Estado / Región Extranjera</label>
-                                    <input type="text" class="form-control" id="alta-region-extranjera" name="region_residencia_extranjera" maxlength="100" placeholder="Ej. California, Antioquia, CABA...">
+                                    <label class="form-label f-s-13 f-w-600" for="alta-region-extranjera">Estado / Región Extranjera</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-earth-americas position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control ps-5" id="alta-region-extranjera" name="region_residencia_extranjera" maxlength="100" placeholder="Ej. California, Antioquia, CABA...">
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label f-s-13 f-w-600">Ciudad Extranjera</label>
-                                    <input type="text" class="form-control" id="alta-ciudad-extranjera" name="ciudad_residencia_extranjera" maxlength="100" placeholder="Ej. Los Ángeles, Medellín, Buenos Aires...">
+                                    <label class="form-label f-s-13 f-w-600" for="alta-ciudad-extranjera">Ciudad Extranjera</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-city position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control ps-5" id="alta-ciudad-extranjera" name="ciudad_residencia_extranjera" maxlength="100" placeholder="Ej. Los Ángeles, Medellín, Buenos Aires...">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -525,8 +556,8 @@ declare(strict_types=1);
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Cargo a Desempeñar <span class="text-danger">*</span></label>
-                            <select class="form-select" id="alta-cargo-id" name="cargo_id" required>
+                            <label class="form-label f-s-13 f-w-600" for="alta-cargo-id">Cargo a Desempeñar <span class="text-danger">*</span></label>
+                            <select class="form-select basic-select2" id="alta-cargo-id" name="cargo_id" required>
                                 <option value="">Seleccione cargo...</option>
                                 <?php foreach ($cargos as $cg): ?>
                                     <option value="<?= (int) $cg['id'] ?>"><?= e($cg['nombre']) ?> (<?= e($cg['departamento'] ?? 'Operaciones') ?>)</option>
@@ -535,12 +566,18 @@ declare(strict_types=1);
                             <div class="form-text f-s-11">El cargo define responsabilidades operativas. No otorga roles ni permisos en el sistema.</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Fecha de Ingreso / Inicio <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="alta-fecha-inicio" name="fecha_inicio" value="<?= date('Y-m-d') ?>" required>
+                            <label class="form-label f-s-13 f-w-600" for="alta-fecha-inicio">Fecha de Ingreso / Inicio <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-check position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" id="alta-fecha-inicio" name="fecha_inicio" value="<?= date('Y-m-d') ?>" required>
+                            </div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label f-s-13 f-w-600">Observaciones del Registro</label>
-                            <textarea class="form-control" id="alta-observaciones" name="observaciones" rows="2" placeholder="Notas sobre el alta o contratación..."></textarea>
+                            <label class="form-label f-s-13 f-w-600" for="alta-observaciones">Observaciones del Registro</label>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" id="alta-observaciones" name="observaciones" rows="2" placeholder="Notas sobre el alta o contratación..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -720,7 +757,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-cambio-cargo" novalidate>
+            <form id="form-cambio-cargo" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="cambio-cargo-colaborador-id" name="colaborador_id">
                 <div class="modal-body p-4">
                     <div class="alert alert-light border f-s-12 mb-3">
@@ -729,8 +766,8 @@ declare(strict_types=1);
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Nuevo Cargo a Asignar <span class="text-danger">*</span></label>
-                        <select class="form-select" id="cambio-cargo-nuevo-id" name="nuevo_cargo_id" required>
+                        <label class="form-label f-s-13 f-w-600" for="cambio-cargo-nuevo-id">Nuevo Cargo a Asignar <span class="text-danger">*</span></label>
+                        <select class="form-select basic-select2" id="cambio-cargo-nuevo-id" name="nuevo_cargo_id" required>
                             <option value="">Seleccione nuevo cargo...</option>
                             <?php foreach ($cargos as $cg): ?>
                                 <option value="<?= (int) $cg['id'] ?>"><?= e($cg['nombre']) ?> (<?= e($cg['departamento'] ?? 'Operaciones') ?>)</option>
@@ -739,16 +776,22 @@ declare(strict_types=1);
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Fecha Efectiva del Cambio <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="cambio-cargo-fecha" name="fecha_cambio" value="<?= date('Y-m-d') ?>" required>
+                        <label class="form-label f-s-13 f-w-600" for="cambio-cargo-fecha">Fecha Efectiva del Cambio <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="date" class="form-control ps-5" id="cambio-cargo-fecha" name="fecha_cambio" value="<?= date('Y-m-d') ?>" required>
+                        </div>
                         <div class="form-text f-s-11">
                             El cargo anterior se cerrará con fecha efectiva del día anterior ($D-1$), garantizando continuidad histórica sin solapamiento.
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Observaciones del Cambio</label>
-                        <textarea class="form-control" id="cambio-cargo-observaciones" name="observaciones" rows="2" placeholder="Motivo de ascenso, rotación o traslado..."></textarea>
+                        <label class="form-label f-s-13 f-w-600" for="cambio-cargo-observaciones">Observaciones del Cambio</label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="cambio-cargo-observaciones" name="observaciones" rows="2" placeholder="Motivo de ascenso, rotación o traslado..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -772,7 +815,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-cese-laboral" novalidate>
+            <form id="form-cese-laboral" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="cese-colaborador-id" name="colaborador_id">
                 <div class="modal-body p-4">
                     <div class="alert alert-warning border f-s-12 mb-3">
@@ -782,13 +825,16 @@ declare(strict_types=1);
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Fecha de Cese <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="cese-fecha" name="fecha_cese" value="<?= date('Y-m-d') ?>" required>
+                        <label class="form-label f-s-13 f-w-600" for="cese-fecha">Fecha de Cese <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-calendar-xmark position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="date" class="form-control ps-5" id="cese-fecha" name="fecha_cese" value="<?= date('Y-m-d') ?>" required>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Motivo del Cese <span class="text-danger">*</span></label>
-                        <select class="form-select" id="cese-motivo" name="motivo_cese" required>
+                        <label class="form-label f-s-13 f-w-600" for="cese-motivo">Motivo del Cese <span class="text-danger">*</span></label>
+                        <select class="form-select basic-select2" id="cese-motivo" name="motivo_cese" required>
                             <option value="">Seleccione motivo formal...</option>
                             <option value="RENUNCIA">Renuncia voluntaria</option>
                             <option value="FIN_CONTRATO">Fin de contrato</option>
@@ -800,8 +846,11 @@ declare(strict_types=1);
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Observaciones Detalladas</label>
-                        <textarea class="form-control" id="cese-observaciones" name="observaciones" rows="2" placeholder="Detalles de liquidación o término de relación laboral..."></textarea>
+                        <label class="form-label f-s-13 f-w-600" for="cese-observaciones">Observaciones Detalladas</label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="cese-observaciones" name="observaciones" rows="2" placeholder="Detalles de liquidación o término de relación laboral..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -825,7 +874,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-reingreso-laboral" novalidate>
+            <form id="form-reingreso-laboral" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="reingreso-colaborador-id" name="colaborador_id">
                 <div class="modal-body p-4">
                     <div class="alert alert-success-subtle border f-s-12 mb-3">
@@ -835,13 +884,16 @@ declare(strict_types=1);
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Fecha de Reingreso <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="reingreso-fecha" name="fecha_reingreso" value="<?= date('Y-m-d') ?>" required>
+                        <label class="form-label f-s-13 f-w-600" for="reingreso-fecha">Fecha de Reingreso <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-calendar-check position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="date" class="form-control ps-5" id="reingreso-fecha" name="fecha_reingreso" value="<?= date('Y-m-d') ?>" required>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Cargo para el Nuevo Episodio <span class="text-danger">*</span></label>
-                        <select class="form-select" id="reingreso-cargo-id" name="cargo_id" required>
+                        <label class="form-label f-s-13 f-w-600" for="reingreso-cargo-id">Cargo para el Nuevo Episodio <span class="text-danger">*</span></label>
+                        <select class="form-select basic-select2" id="reingreso-cargo-id" name="cargo_id" required>
                             <option value="">Seleccione cargo...</option>
                             <?php foreach ($cargos as $cg): ?>
                                 <option value="<?= (int) $cg['id'] ?>"><?= e($cg['nombre']) ?> (<?= e($cg['departamento'] ?? 'Operaciones') ?>)</option>
@@ -850,8 +902,11 @@ declare(strict_types=1);
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label f-s-13 f-w-600">Observaciones del Reingreso</label>
-                        <textarea class="form-control" id="reingreso-observaciones" name="observaciones" rows="2" placeholder="Condiciones del reingreso..."></textarea>
+                        <label class="form-label f-s-13 f-w-600" for="reingreso-observaciones">Observaciones del Reingreso</label>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-comment position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" id="reingreso-observaciones" name="observaciones" rows="2" placeholder="Condiciones del reingreso..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -875,7 +930,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-editar-persona" novalidate>
+            <form id="form-editar-persona" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="edit-colaborador-id" name="colaborador_id">
                 <input type="hidden" id="edit-persona-id" name="persona_id">
                 <div class="modal-body p-4">
@@ -884,20 +939,29 @@ declare(strict_types=1);
                     </h6>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit-nombres" name="nombres" required maxlength="100">
+                            <label class="form-label f-s-13 f-w-600" for="edit-nombres">Nombres <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="edit-nombres" name="nombres" required maxlength="100">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Apellido Paterno <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit-apellido-paterno" name="apellido_paterno" required maxlength="100">
+                            <label class="form-label f-s-13 f-w-600" for="edit-apellido-paterno">Apellido Paterno <span class="text-danger">*</span></label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="edit-apellido-paterno" name="apellido_paterno" required maxlength="100">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Apellido Materno</label>
-                            <input type="text" class="form-control" id="edit-apellido-materno" name="apellido_materno" maxlength="100">
+                            <label class="form-label f-s-13 f-w-600" for="edit-apellido-materno">Apellido Materno</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="edit-apellido-materno" name="apellido_materno" maxlength="100">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Género</label>
-                            <select class="form-select" id="edit-genero" name="genero">
+                            <label class="form-label f-s-13 f-w-600" for="edit-genero">Género</label>
+                            <select class="form-select basic-select2" id="edit-genero" name="genero">
                                 <option value="">Seleccione...</option>
                                 <option value="MASCULINO">Masculino</option>
                                 <option value="FEMENINO">Femenino</option>
@@ -906,12 +970,15 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">Fecha de Nacimiento</label>
-                            <input type="date" class="form-control" id="edit-fecha-nacimiento" name="fecha_nacimiento" max="<?= date('Y-m-d') ?>">
+                            <label class="form-label f-s-13 f-w-600" for="edit-fecha-nacimiento">Fecha de Nacimiento</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-cake-candles position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" id="edit-fecha-nacimiento" name="fecha_nacimiento" max="<?= date('Y-m-d') ?>">
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">País de Nacionalidad</label>
-                            <select class="form-select" id="edit-pais-nacionalidad-id" name="pais_nacionalidad_id">
+                            <label class="form-label f-s-13 f-w-600" for="edit-pais-nacionalidad-id">País de Nacionalidad</label>
+                            <select class="form-select basic-select2" id="edit-pais-nacionalidad-id" name="pais_nacionalidad_id">
                                 <?php foreach ($paises as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>">
                                         <?= e($p['nombre']) ?> (<?= e($p['nacionalidad'] ?? '') ?>)
@@ -920,24 +987,31 @@ declare(strict_types=1);
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Teléfono / Celular</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="edit-telefono" name="telefono" maxlength="30">
-                                <div class="input-group-text">
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="checkbox" id="edit-es-whatsapp" name="es_whatsapp" value="1" title="¿Tiene WhatsApp?">
-                                        <label class="form-check-label f-s-11" for="edit-es-whatsapp"><i class="fa-brands fa-whatsapp text-success"></i></label>
-                                    </div>
-                                </div>
+                            <label class="form-label f-s-13 f-w-600" for="edit-telefono">Teléfono / Celular</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="edit-telefono" name="telefono" maxlength="30">
+                            </div>
+                            <div class="form-check form-switch app-switch mt-1 d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" id="edit-es-whatsapp" name="es_whatsapp" value="1">
+                                <label class="form-check-label f-s-11 text-secondary" for="edit-es-whatsapp">
+                                    <i class="fa-brands fa-whatsapp text-success me-1"></i> WhatsApp
+                                </label>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label f-s-13 f-w-600">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="edit-email" name="email" maxlength="150">
+                            <label class="form-label f-s-13 f-w-600" for="edit-email">Correo Electrónico</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="email" class="form-control ps-5" id="edit-email" name="email" maxlength="150">
+                            </div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label f-s-13 f-w-600">Dirección Residencial</label>
-                            <input type="text" class="form-control" id="edit-direccion" name="direccion" maxlength="255">
+                            <label class="form-label f-s-13 f-w-600" for="edit-direccion">Dirección Residencial</label>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" id="edit-direccion" name="direccion" maxlength="255">
+                            </div>
                         </div>
                     </div>
 
@@ -946,7 +1020,7 @@ declare(strict_types=1);
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label f-s-13 f-w-600">País de Residencia</label>
+                            <label class="form-label f-s-13 f-w-600" for="edit-pais-residencia-id">País de Residencia</label>
                             <select class="form-select select-pais-residencia" id="edit-pais-residencia-id" name="pais_residencia_id" data-target-peru="#edit-seccion-peru" data-target-extranjero="#edit-seccion-extranjero">
                                 <?php foreach ($paises as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" data-iso="<?= e($p['codigo_iso2']) ?>">
@@ -960,7 +1034,7 @@ declare(strict_types=1);
                         <div class="col-md-8" id="edit-seccion-peru">
                             <div class="row g-2">
                                 <div class="col-md-4">
-                                    <label class="form-label f-s-13 f-w-600">Departamento</label>
+                                    <label class="form-label f-s-13 f-w-600" for="edit-departamento-id">Departamento</label>
                                     <select class="form-select select-departamento" id="edit-departamento-id" name="departamento_id" data-target-prov="#edit-provincia-id" data-target-dist="#edit-distrito-id">
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($departamentos as $dep): ?>
@@ -969,13 +1043,13 @@ declare(strict_types=1);
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label f-s-13 f-w-600">Provincia</label>
+                                    <label class="form-label f-s-13 f-w-600" for="edit-provincia-id">Provincia</label>
                                     <select class="form-select select-provincia" id="edit-provincia-id" name="provincia_id" data-target-dist="#edit-distrito-id">
                                         <option value="">Seleccione dpto...</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label f-s-13 f-w-600">Distrito / Ciudad</label>
+                                    <label class="form-label f-s-13 f-w-600" for="edit-distrito-id">Distrito / Ciudad</label>
                                     <select class="form-select select-distrito" id="edit-distrito-id" name="distrito_id">
                                         <option value="">Seleccione prov...</option>
                                     </select>
@@ -987,12 +1061,18 @@ declare(strict_types=1);
                         <div class="col-md-8 d-none" id="edit-seccion-extranjero">
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <label class="form-label f-s-13 f-w-600">Estado / Región Extranjera</label>
-                                    <input type="text" class="form-control" id="edit-region-extranjera" name="region_residencia_extranjera" maxlength="100">
+                                    <label class="form-label f-s-13 f-w-600" for="edit-region-extranjera">Estado / Región Extranjera</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-earth-americas position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control ps-5" id="edit-region-extranjera" name="region_residencia_extranjera" maxlength="100">
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label f-s-13 f-w-600">Ciudad Extranjera</label>
-                                    <input type="text" class="form-control" id="edit-ciudad-extranjera" name="ciudad_residencia_extranjera" maxlength="100">
+                                    <label class="form-label f-s-13 f-w-600" for="edit-ciudad-extranjera">Ciudad Extranjera</label>
+                                    <div class="icon-control position-relative">
+                                        <i class="fa-solid fa-city position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                        <input type="text" class="form-control ps-5" id="edit-ciudad-extranjera" name="ciudad_residencia_extranjera" maxlength="100">
+                                    </div>
                                 </div>
                             </div>
                         </div>

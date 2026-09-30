@@ -27,6 +27,12 @@ declare(strict_types=1);
 <!-- Controlador propio defensivo de selectores enriquecidos Camargo PMS -->
 <script src="<?= url_asset('js/camargo-select.js') ?>"></script>
 
+<!-- Validador de formularios oficial: PristineJS (Alina) -->
+<script src="<?= url_asset('vendor/pristine/pristine.min.js') ?>"></script>
+
+<!-- Controlador propio defensivo de formularios y validación Camargo PMS -->
+<script src="<?= url_asset('js/camargo-forms.js') ?>"></script>
+
 <!-- Controlador propio defensivo de interfaz Camargo PMS -->
 <script src="<?= url_asset('js/camargo-layout.js') ?>"></script>
 

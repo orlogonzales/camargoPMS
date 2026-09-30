@@ -342,32 +342,41 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-liquidar" class="app-form">
+            <form id="form-liquidar" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Contrato de Arrendamiento *</label>
-                            <select class="form-select b-r-20" name="arrendamiento_id" id="liq-arrendamiento-id" required>
+                            <select class="form-select basic-select2" name="arrendamiento_id" id="liq-arrendamiento-id" required>
                                 <option value="">Seleccione contrato...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Suministro a Liquidar *</label>
-                            <select class="form-select b-r-20" name="suministro_id" id="liq-suministro-id" required>
+                            <select class="form-select basic-select2" name="suministro_id" id="liq-suministro-id" required>
                                 <option value="">Seleccione suministro...</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Período Desde *</label>
-                            <input type="date" class="form-control b-r-20" name="periodo_desde" id="liq-periodo-desde" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="periodo_desde" id="liq-periodo-desde" required>
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Período Hasta *</label>
-                            <input type="date" class="form-control b-r-20" name="periodo_hasta" id="liq-periodo-hasta" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-days position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="periodo_hasta" id="liq-periodo-hasta" required>
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600">Fecha Vencimiento Cargo</label>
-                            <input type="date" class="form-control b-r-20" name="fecha_vencimiento" id="liq-fecha-vencimiento">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-check position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="fecha_vencimiento" id="liq-fecha-vencimiento">
+                            </div>
                         </div>
                     </div>
                     <div class="alert alert-info mt-3 mb-0 b-r-8 f-s-12">
@@ -396,53 +405,74 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-medidor" class="app-form">
+            <form id="form-medidor" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Suministro *</label>
-                            <select class="form-select b-r-20" name="suministro_id" id="med-suministro-id" required>
+                            <select class="form-select basic-select2" name="suministro_id" id="med-suministro-id" required>
                                 <option value="">Seleccione...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Unidad Física *</label>
-                            <select class="form-select b-r-20" name="unidad_id" id="med-unidad-id" required>
+                            <select class="form-select basic-select2" name="unidad_id" id="med-unidad-id" required>
                                 <option value="">Seleccione...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">N° de Serie / Placa *</label>
-                            <input type="text" class="form-control b-r-20" name="numero_serie" required placeholder="Ej. MED-ELEC-401">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-barcode position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="numero_serie" required placeholder="Ej. MED-ELEC-401">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Código Interno</label>
-                            <input type="text" class="form-control b-r-20" name="codigo_interno" placeholder="Ej. ACT-0023">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-hashtag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="codigo_interno" placeholder="Ej. ACT-0023">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Marca</label>
-                            <input type="text" class="form-control b-r-20" name="marca" placeholder="Ej. General Electric">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-industry position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="marca" placeholder="Ej. General Electric">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Modelo</label>
-                            <input type="text" class="form-control b-r-20" name="modelo" placeholder="Ej. I-210+">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-microchip position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="modelo" placeholder="Ej. I-210+">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Fecha Instalación *</label>
-                            <input type="date" class="form-control b-r-20" name="fecha_instalacion" value="<?= date('Y-m-d') ?>" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="fecha_instalacion" value="<?= date('Y-m-d') ?>" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Lectura Inicial *</label>
-                            <input type="number" step="0.0001" class="form-control b-r-20" name="lectura_inicial" value="0.0000" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-gauge-high position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.0001" class="form-control ps-5" name="lectura_inicial" value="0.0000" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Lectura Máxima (Dial)</label>
-                            <input type="number" step="0.0001" class="form-control b-r-20" name="lectura_maxima" placeholder="Ej. 99999.0000">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-gauge position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.0001" class="form-control ps-5" name="lectura_maxima" placeholder="Ej. 99999.0000">
+                            </div>
                         </div>
                         <div class="col-md-6 d-flex align-items-center pt-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permite_rollover" value="1" id="med-permite-rollover">
-                                <label class="form-check-label f-s-13 f-w-600" for="med-permite-rollover">
+                            <div class="form-check form-switch app-switch d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" name="permite_rollover" value="1" id="med-permite-rollover">
+                                <label class="form-check-label f-s-13 f-w-600 mb-0" for="med-permite-rollover">
                                     Permite Rollover (Dial cíclico)
                                 </label>
                             </div>
@@ -470,26 +500,32 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-lectura" class="app-form">
+            <form id="form-lectura" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-12">
                             <label class="form-label f-s-13 f-w-600">Medidor Activo *</label>
-                            <select class="form-select b-r-20" name="medidor_id" id="lec-medidor-id" required>
+                            <select class="form-select basic-select2" name="medidor_id" id="lec-medidor-id" required>
                                 <option value="">Seleccione medidor...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Fecha de Lectura *</label>
-                            <input type="date" class="form-control b-r-20" name="fecha_lectura" value="<?= date('Y-m-d') ?>" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="fecha_lectura" value="<?= date('Y-m-d') ?>" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Valor de Lectura *</label>
-                            <input type="number" step="0.0001" class="form-control b-r-20" name="valor_lectura" required placeholder="0.0000">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-gauge-high position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.0001" class="form-control ps-5" name="valor_lectura" required placeholder="0.0000">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Tipo de Evento *</label>
-                            <select class="form-select b-r-20" name="tipo_evento" required>
+                            <select class="form-select basic-select2" name="tipo_evento" required>
                                 <option value="PERIODICA">Periódica Regular</option>
                                 <option value="CORTE_TARIFARIO">Corte por Cambio de Tarifa</option>
                                 <option value="CORTE_CONTRATO">Corte por Entrada/Salida Arrendatario</option>
@@ -497,13 +533,16 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Arrendamiento Vinculado</label>
-                            <select class="form-select b-r-20" name="arrendamiento_id" id="lec-arrendamiento-id">
+                            <select class="form-select basic-select2" name="arrendamiento_id" id="lec-arrendamiento-id">
                                 <option value="">Ninguno / Opcional</option>
                             </select>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label f-s-13 f-w-600">Motivo u Observación</label>
-                            <input type="text" class="form-control b-r-20" name="motivo" placeholder="Ej. Lectura de cierre mensual de consumo">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-comment position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="motivo" placeholder="Ej. Lectura de cierre mensual de consumo">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -528,7 +567,7 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-corregir-lectura" class="app-form">
+            <form id="form-corregir-lectura" class="app-form app-icon-form" novalidate>
                 <input type="hidden" name="lectura_id" id="corr-lectura-id">
                 <div class="modal-body p-4">
                     <div class="alert alert-warning b-r-8 f-s-12">
@@ -537,15 +576,24 @@ declare(strict_types=1);
                     </div>
                     <div class="mb-3">
                         <label class="form-label f-s-13 f-w-600">Valor Original</label>
-                        <input type="text" class="form-control b-r-20 bg-light" id="corr-valor-original" readonly>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-gauge-simple position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="text" class="form-control ps-5 bg-light" id="corr-valor-original" readonly>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label f-s-13 f-w-600">Nuevo Valor Corregido *</label>
-                        <input type="number" step="0.0001" class="form-control b-r-20" name="nuevo_valor" id="corr-nuevo-valor" required>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-gauge-high position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input type="number" step="0.0001" class="form-control ps-5" name="nuevo_valor" id="corr-nuevo-valor" required>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label f-s-13 f-w-600">Motivo Obligatorio de la Corrección *</label>
-                        <textarea class="form-control b-r-8" name="motivo" id="corr-motivo" rows="3" required placeholder="Explique la causa del error en la lectura original..."></textarea>
+                        <div class="icon-control position-relative icon-textarea">
+                            <i class="fa-solid fa-pen-to-square position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                            <textarea class="form-control ps-5" name="motivo" id="corr-motivo" rows="3" required placeholder="Explique la causa del error en la lectura original..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top py-3">
@@ -625,18 +673,18 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <form id="form-tarifa" class="app-form">
+            <form id="form-tarifa" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-12">
                             <label class="form-label f-s-13 f-w-600">Suministro *</label>
-                            <select class="form-select b-r-20" name="suministro_id" id="tar-suministro-id" required>
+                            <select class="form-select basic-select2" name="suministro_id" id="tar-suministro-id" required>
                                 <option value="">Seleccione suministro...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Ámbito de Aplicación *</label>
-                            <select class="form-select b-r-20" name="ambito" id="tar-ambito" required>
+                            <select class="form-select basic-select2" name="ambito" id="tar-ambito" required>
                                 <option value="GLOBAL">Global (Todas las unidades)</option>
                                 <option value="PROPIEDAD">Por Propiedad / Inmueble</option>
                                 <option value="UNIDAD">Por Unidad Específica</option>
@@ -644,27 +692,36 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-6" id="tar-col-propiedad" style="display:none;">
                             <label class="form-label f-s-13 f-w-600">Propiedad</label>
-                            <select class="form-select b-r-20" name="propiedad_id" id="tar-propiedad-id">
+                            <select class="form-select basic-select2" name="propiedad_id" id="tar-propiedad-id">
                                 <option value="">Seleccione propiedad...</option>
                             </select>
                         </div>
                         <div class="col-md-6" id="tar-col-unidad" style="display:none;">
                             <label class="form-label f-s-13 f-w-600">Unidad</label>
-                            <select class="form-select b-r-20" name="unidad_id" id="tar-unidad-id">
+                            <select class="form-select basic-select2" name="unidad_id" id="tar-unidad-id">
                                 <option value="">Seleccione unidad...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Precio Unitario (PEN) *</label>
-                            <input type="number" step="0.0001" class="form-control b-r-20" name="precio_unitario" required placeholder="0.0000">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-money-bill-wave position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.0001" class="form-control ps-5" name="precio_unitario" required placeholder="0.0000">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Fecha Inicio Vigencia *</label>
-                            <input type="date" class="form-control b-r-20" name="fecha_inicio" required value="<?= date('Y-m-d') ?>">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="fecha_inicio" required value="<?= date('Y-m-d') ?>">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label f-s-13 f-w-600">Fecha Fin Vigencia</label>
-                            <input type="date" class="form-control b-r-20" name="fecha_fin" placeholder="Abierta si queda indefinida">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-calendar-check position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="date" class="form-control ps-5" name="fecha_fin" placeholder="Abierta si queda indefinida">
+                            </div>
                         </div>
                     </div>
                 </div>

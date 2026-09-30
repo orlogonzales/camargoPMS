@@ -212,12 +212,12 @@ declare(strict_types=1);
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-asistido" method="POST">
+            <form id="form-asistido" class="app-form app-icon-form" method="POST" novalidate>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label required">Establecimiento / Sede</label>
-                            <select class="form-select form-select-sm" name="propiedad_id" required>
+                            <select class="form-select basic-select2" name="propiedad_id" required>
                                 <option value="" selected disabled>-- Seleccione sede --</option>
                                 <?php foreach ($propiedades as $p): ?>
                                     <option value="<?= htmlspecialchars((string) $p->obtenerId()) ?>"><?= htmlspecialchars($p->obtenerNombre()) ?></option>
@@ -226,14 +226,14 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-3">
                             <label class="form-label required">Tipo Solicitud</label>
-                            <select class="form-select form-select-sm" name="tipo" required>
+                            <select class="form-select basic-select2" name="tipo" required>
                                 <option value="RECLAMO" selected>RECLAMO</option>
                                 <option value="QUEJA">QUEJA</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label required">Tipo Bien</label>
-                            <select class="form-select form-select-sm" name="tipo_bien" required>
+                            <select class="form-select basic-select2" name="tipo_bien" required>
                                 <option value="SERVICIO" selected>SERVICIO</option>
                                 <option value="PRODUCTO">PRODUCTO</option>
                             </select>
@@ -244,7 +244,7 @@ declare(strict_types=1);
 
                         <div class="col-md-3">
                             <label class="form-label required">Tipo Doc.</label>
-                            <select class="form-select form-select-sm" name="consumidor_tipo_documento" required>
+                            <select class="form-select basic-select2" name="consumidor_tipo_documento" required>
                                 <?php foreach ($tiposDoc as $td): ?>
                                     <option value="<?= htmlspecialchars($td->obtenerCodigo()) ?>"><?= htmlspecialchars($td->obtenerCodigo()) ?></option>
                                 <?php endforeach; ?>
@@ -252,29 +252,47 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4">
                             <label class="form-label required">N° Documento</label>
-                            <input type="text" class="form-control form-control-sm" name="consumidor_numero_documento" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="consumidor_numero_documento" required>
+                            </div>
                         </div>
                         <div class="col-md-5">
                             <label class="form-label required">Teléfono / Celular</label>
-                            <input type="tel" class="form-control form-control-sm" name="consumidor_telefono" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-phone position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="tel" class="form-control ps-5" name="consumidor_telefono" required>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label required">Nombres</label>
-                            <input type="text" class="form-control form-control-sm" name="consumidor_nombres" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="consumidor_nombres" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Apellidos</label>
-                            <input type="text" class="form-control form-control-sm" name="consumidor_apellidos" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-user-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="consumidor_apellidos" required>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label required">Correo Electrónico</label>
-                            <input type="email" class="form-control form-control-sm" name="consumidor_email" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="email" class="form-control ps-5" name="consumidor_email" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Domicilio</label>
-                            <input type="text" class="form-control form-control-sm" name="consumidor_direccion" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-location-dot position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="consumidor_direccion" required>
+                            </div>
                         </div>
 
                         <!-- Reclamación -->
@@ -282,27 +300,39 @@ declare(strict_types=1);
 
                         <div class="col-md-3">
                             <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm" name="monto_reclamado" value="0.00">
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-money-bill position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="number" step="0.01" class="form-control ps-5" name="monto_reclamado" value="0.00">
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Moneda</label>
-                            <select class="form-select form-select-sm" name="moneda">
+                            <select class="form-select basic-select2" name="moneda">
                                 <option value="PEN">PEN (S/)</option>
                                 <option value="USD">USD ($)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label required">Descripción Bien / Servicio</label>
-                            <input type="text" class="form-control form-control-sm" name="descripcion_bien" placeholder="Ej. Habitación 302, Desayuno buffet" required>
+                            <div class="icon-control position-relative">
+                                <i class="fa-solid fa-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                                <input type="text" class="form-control ps-5" name="descripcion_bien" placeholder="Ej. Habitación 302, Desayuno buffet" required>
+                            </div>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label required">Detalle de los Hechos</label>
-                            <textarea class="form-control form-control-sm" name="detalle_reclamacion" rows="3" placeholder="Detalle manifestado por el consumidor..." required></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="detalle_reclamacion" rows="3" placeholder="Detalle manifestado por el consumidor..." required></textarea>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label required">Pedido Concreto</label>
-                            <textarea class="form-control form-control-sm" name="pedido_consumidor" rows="2" placeholder="Qué solicita el consumidor..." required></textarea>
+                            <div class="icon-control position-relative icon-textarea">
+                                <i class="fa-solid fa-bullhorn position-absolute top-0 start-0 mt-3 ms-3 text-secondary"></i>
+                                <textarea class="form-control ps-5" name="pedido_consumidor" rows="2" placeholder="Qué solicita el consumidor..." required></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
