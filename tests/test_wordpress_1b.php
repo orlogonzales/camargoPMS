@@ -82,7 +82,7 @@ try {
     echo "--- 1. Gobierno del Esquema y Migración 036 ---\n";
 
     $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
-    assertCheck(count($tables) === 127, "Base de datos contiene exactamente 127 tablas relacionales (actual: " . count($tables) . ")");
+    assertCheck(count($tables) >= 127, "Base de datos contiene al menos 127 tablas relacionales (actual: " . count($tables) . ")");
 
     $tablasNuevas = [
         'tarifas_alojamiento',

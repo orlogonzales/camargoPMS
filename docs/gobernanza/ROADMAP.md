@@ -534,7 +534,19 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - Clientes API y credenciales técnicas: arquitectura `ACTOR INTEGRACION -> API_CLIENT -> CREDENCIAL TÉCNICA -> SCOPES`, tokens CSPRNG (`cpms_live_...`), hash SHA-256 $O(1)$, rotación y revocación atómica.
     - DDL autorizado: Migración `036_tarifas_clientes_api.sql` aplicada (127 tablas relacionales consolidadas, ranura 037 libre).
     - Suite de pruebas: `tests/test_wordpress_1b.php` (75/75 checks PASS).
-    - Estado: Implementada y Validada (75/75 suites globales PASS, 2,093 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `2550ecb5b5970239f9ad0f9a0cbaed01ccb8e776`, 75/75 suites globales PASS, 2,093 checks, 0 fallos).
+  - **WORDPRESS-1C:** Perímetro HTTP /api/v1 (Infraestructura, Autenticación, CORS, Rate Limit, Idempotencia y Diagnóstico):
+    - Pipeline de intermediarios enrutados: `ApiCorrelacionIntermediario` (`X-Correlacion-ID`), `ApiCorsIntermediario` (allowlist y preflight `OPTIONS` 204 sin Bearer), `ApiAutenticacionIntermediario` (tokens `cpms_live_...` $O(1)$ por SHA-256 e IP allowlist), `ApiRateLimitIntermediario` (sliding window 60s con `flock` en `storage/cache/rate_limits/` y HTTP 429 con `Retry-After`), `ApiScopeIntermediario` (HTTP 403 `ACCESO_DENEGADO`), y `ApiIdempotenciaIntermediario` (`Idempotency-Key` en POST/PUT/PATCH, bloqueo HTTP 409, mismatch HTTP 422 y replay determinista HTTP 200/201 con `X-Cache-Lookup: IDEMPOTENT-REPLAY`).
+    - Constructor unificado de respuestas `RespuestaApi`: sobre canónico `{ ok, datos, error, codigo, meta }` y captura automática de 404 JSON en `/api/*` (`RECURSO_NO_ENCONTRADO`).
+    - Endpoints técnicos de diagnóstico: `GET /api/v1/ping`, `OPTIONS /api/v1/ping`, `GET /api/v1/perfil`, `OPTIONS /api/v1/perfil`. Cero exposición de secretos o PII.
+    - DDL autorizado: Migración `037_api_idempotencia.sql` aplicada (128 tablas relacionales consolidadas, ranura 038 libre).
+    - Suite de pruebas: `tests/test_wordpress_1c.php` (108/108 checks PASS).
+    - Estado: Implementada y Validada (76/76 suites globales PASS, 2,201 checks, 0 fallos).
+  - **WORDPRESS-1D:** Exposición de Endpoints de Negocio (Disponibilidad + Cotización + Creación de Hold + Consulta de Reserva):
+    - `GET /api/v1/disponibilidad`: consulta pública/técnica de unidades libres con filtro de fechas y tipos.
+    - `POST /api/v1/cotizaciones`: cálculo formal de tarifas noche a noche y emisión de token cotización firmado.
+    - `POST /api/v1/reservas`: hold atómico temporal con bloqueo inmediato de inventario exigiendo `Idempotency-Key`.
+    - `GET /api/v1/reservas/{codigo}`: consulta de estado de reserva para el titular/cliente web.
 
 ## Dominio operativo
 

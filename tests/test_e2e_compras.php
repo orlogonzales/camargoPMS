@@ -447,7 +447,7 @@ try {
         'orden_compra_id' => $ocId,
         'tipo_comprobante' => 'FACTURA',
         'serie' => 'F002',
-        'numero' => '0000' . rand(1000, 9999),
+        'numero' => '00' . substr(str_replace('.', '', (string) microtime(true)), -6),
         'fecha_emision' => date('Y-m-d'),
         'fecha_vencimiento' => date('Y-m-d', strtotime('+30 days')),
         'subtotal' => '300.00',

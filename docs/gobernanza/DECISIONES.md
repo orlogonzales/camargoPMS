@@ -1839,6 +1839,49 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
    - Regresión transversal: 75 suites automatizadas, 2,093 checks, 0 fallos (100% PASS).
 
+### D-105 — Perímetro HTTP /api/v1 (Infraestructura, Autenticación, CORS, Rate Limit, Idempotencia y Diagnóstico)
+
+Aprobada en la microfase `WORDPRESS-1C` como arquitectura vinculante para la exposición segura del perímetro API REST de Camargo PMS hacia WordPress y consumidores externos.
+
+1. **Arquitectura del Pipeline de Intermediarios (D-105.1):**
+   - El enrutador (`Enrutador`) ejecuta un pipeline secuencial de intermediarios antes del controlador y un ciclo post-dispatch en orden inverso para operaciones de cierre (`despues()`).
+   - Cadena canónica para `/api/v1`:
+     $$\text{ApiCorrelacionIntermediario} \longrightarrow \text{ApiCorsIntermediario} \longrightarrow \text{ApiAutenticacionIntermediario} \longrightarrow \text{ApiRateLimitIntermediario} \longrightarrow \text{ApiScopeIntermediario} \longrightarrow \text{ApiIdempotenciaIntermediario}$$
+
+2. **CORS y Preflight OPTIONS sin Autenticación (D-105.2):**
+   - Las peticiones preflight HTTP `OPTIONS` son interceptadas inmediatamente por `ApiCorsIntermediario`, el cual inyecta las cabeceras CORS de allowlist y retorna HTTP 204 No Content.
+   - Esta respuesta temprana cortocircuita el enrutador antes de alcanzar `ApiAutenticacionIntermediario`, garantizando que navegadores web no sean rechazados por ausencia de credencial Bearer en preflight.
+   - Cabeceras de exposición estandarizadas: `X-Correlacion-ID`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After`, `Idempotency-Key`, `X-Cache-Lookup`.
+
+3. **Autenticación Bearer O(1) e IP Allowlist (D-105.3):**
+   - `ApiAutenticacionIntermediario` valida tokens con prefijo `cpms_live_` computando su hash SHA-256 en memoria y contrastándolo contra `api_credenciales.token_hash` en tiempo $O(1)$.
+   - Verifica vigencia temporal (`expira_en`), estado activo de credencial y cliente, y actor técnico de auditoría.
+   - Aplica filtro de dirección IP si el cliente API tiene configurada una lista blanca en `ips_permitidas`. Rechaza accesos indebidos con HTTP 403 `IP_NO_AUTORIZADA`.
+
+4. **Rate Limiting Autónomo Desacoplado (D-105.4):**
+   - Se prohíbe el uso de bases de datos o servicios en memoria externos (Redis/Memcached) para el conteo de rate limiting.
+   - `ApiRateLimitServicio` implementa una ventana deslizante (sliding window) de 60 segundos basada en archivos JSON bloqueados atómicamente con `flock(LOCK_EX)` en `storage/cache/rate_limits/`.
+   - Emite cabeceras informativas `X-RateLimit-*` y, al sobrepasar la cuota permitida, responde HTTP 429 `RATE_LIMIT_EXCEDIDO` con cabecera `Retry-After`.
+
+5. **Idempotencia Estricta y Replay Determinista (D-105.5):**
+   - La tabla `api_idempotencia` (migración 037) aplica la clave única compuesta `(api_cliente_id, ruta, clave_idempotencia)`.
+   - Se exige la cabecera `Idempotency-Key` exclusivamente en métodos mutables (`POST`, `PUT`, `PATCH`).
+   - Bloqueo de concurrencia: Si una petición con la misma clave está en procesamiento, responde inmediatamente HTTP 409 `OPERACION_EN_CURSO`.
+   - Detección de colisión de payload: Si la misma clave se reutiliza con un cuerpo distinto (hash SHA-256 no coincidente), responde HTTP 422 `IDEMPOTENCIA_DESAJUSTE_PAYLOAD`.
+   - Replay determinista: Respuestas previamente completadas (HTTP 200 a 499) son retransmitidas fielmente con la cabecera `X-Cache-Lookup: IDEMPOTENT-REPLAY`.
+
+6. **Constructor Unificado de Respuestas (`RespuestaApi`) (D-105.6):**
+   - Todas las respuestas del perímetro `/api/v1` adoptan el sobre JSON canónico `{ ok, datos, error, codigo, meta }`.
+   - Rutas inexistentes bajo `/api/` devuelven automáticamente HTTP 404 JSON con código semántico `RECURSO_NO_ENCONTRADO` en vez de HTML.
+
+7. **Invariantes de Gobernanza y Esquema (D-105.7):**
+   - Migración `037_api_idempotencia.sql` consumida y aplicada; total de tablas relacionales asciende a **128**.
+   - Ranura de migración `038` estrictamente LIBRE para fases posteriores.
+   - Paridad 100% en `SQL/camargo_pms.sql`.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Endpoints de negocio (`disponibilidad`, `cotizaciones`, `reservas`) diferidos formalmente a `WORDPRESS-1D`.
+   - Regresión transversal: 76 suites automatizadas, 2,201 checks, 0 fallos (100% PASS).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

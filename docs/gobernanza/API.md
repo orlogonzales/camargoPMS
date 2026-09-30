@@ -199,9 +199,40 @@ La ejecución periódica en background se apoya en los programadores nativos del
 - **Creación de Reservas Soberanas desde Cotización:**
   - `ReservaServicio::crearReservaDesdeCotizacion`: recibe y valida el token firmado, comprueba disponibilidad soberana en tiempo real, registra o asocia al titular y crea la reserva en hold `PENDIENTE` con expiración programada (`expira_en`).
   - Bloquea atómicamente el inventario en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`), garantizando la soberanía de inventario del PMS frente a sobreventas.
-- **Diferimiento a WORDPRESS-1C:**
-  - La tabla `api_idempotencia`, los intermediarios HTTP de rate limiting y CORS, y los controladores/rutas públicas HTTP `/api/v1/*` serán implementados en la microfase 1C.
+- **Consolidación en WORDPRESS-1C:**
+  - El perímetro HTTP, intermediarios, sobre unificado de respuesta, idempotencia persistida y endpoints técnicos de diagnóstico quedan completados y validados.
+
+### 9. Perímetro HTTP /api/v1 (WORDPRESS-1C)
+
+- **Pipeline de Intermediarios HTTP:**
+  - `ApiCorrelacionIntermediario`: Gestiona la cabecera `X-Correlacion-ID`. Si el cliente provee una válida (alfanumérica/guiones, máx 64 caracteres) la preserva; de lo contrario genera una segura con CSPRNG.
+  - `ApiCorsIntermediario`: Aplica la política CORS mediante allowlist configurable (`API_CORS_ORIGINS`). Resuelve de forma inmediata las peticiones preflight `OPTIONS` retornando `HTTP 204 No Content` con cabeceras completas de CORS sin requerir autenticación Bearer (cortocircuito anticipado del pipeline).
+  - `ApiAutenticacionIntermediario`: Autentica clientes mediante cabecera `Authorization: Bearer cpms_live_...`. Extrae el token, calcula su hash SHA-256 y verifica contra `api_credenciales` en tiempo $O(1)$. Comprueba estado activo de credencial y cliente, vigencia (`expira_en`), identidad técnica de auditoría (`actores`) y lista blanca de IPs (`ips_permitidas`). Retorna HTTP 401 (`NO_AUTORIZADO`, `TOKEN_INVALIDO`, `CREDENCIAL_INVALIDA`) o HTTP 403 (`IP_NO_AUTORIZADA`).
+  - `ApiRateLimitIntermediario`: Rate limiting desacoplado con ventana deslizante de 60 segundos gestionado por `ApiRateLimitServicio`. Utiliza archivos locales en `storage/cache/rate_limits/` con bloqueo exclusivo atómico `flock(LOCK_EX)`. Emite cabeceras estándar `X-RateLimit-Limit`, `X-RateLimit-Remaining` y `X-RateLimit-Reset`. Ante exceso de cuota responde `HTTP 429 Too Many Requests` con código semántico `RATE_LIMIT_EXCEDIDO` y cabecera obligatoria `Retry-After`.
+  - `ApiScopeIntermediario`: Valida que la credencial técnica posea los permisos específicos requeridos para la ruta solicitada. Responde `HTTP 403 Forbidden` (`ACCESO_DENEGADO`) sin exponer detalles internos de la entidad.
+  - `ApiIdempotenciaIntermediario`: Aplica exclusivamente a métodos mutables (`POST`, `PUT`, `PATCH`). Exige la cabecera `Idempotency-Key` (8-128 caracteres seguros). Si la clave está en proceso concurrente, responde `HTTP 409 Conflict` (`OPERACION_EN_CURSO`). Si la clave ya fue completada exitosamente, realiza replay determinista instantáneo retornando el código y cuerpo previo con cabecera `X-Cache-Lookup: IDEMPOTENT-REPLAY`. Si la misma clave se envía con un payload diferente (distinto hash SHA-256), responde `HTTP 422 Unprocessable Content` (`IDEMPOTENCIA_DESAJUSTE_PAYLOAD`). Captura la respuesta del controlador vía hook post-dispatch `despues()` y persiste el resultado en la tabla `api_idempotencia` (migración 037).
+- **Constructor Unificado de Respuestas (`RespuestaApi`):**
+  - Formato JSON homogéneo para todas las respuestas:
+    ```json
+    {
+        "ok": true,
+        "datos": { ... },
+        "error": null,
+        "codigo": "OPERACION_EXITOSA",
+        "meta": {
+            "correlacion_id": "...",
+            "marca_tiempo": "2026-09-30T23:00:00Z"
+        }
+    }
+    ```
+  - Errores de ruta inexistente bajo `/api/*` son capturados por el enrutador retornando automáticamente `HTTP 404 Not Found` en formato JSON con código `RECURSO_NO_ENCONTRADO`.
+- **Endpoints de Diagnóstico e Inspección Técnica:**
+  - `GET /api/v1/ping`: Endpoint público con correlación, rate limit y CORS. Retorna `{"servicio": "Camargo PMS API", "version": "1.0", "estado": "OPERATIVO"}` (HTTP 200).
+  - `OPTIONS /api/v1/ping`: Preflight CORS retornando HTTP 204.
+  - `GET /api/v1/perfil`: Inspección de la identidad técnica autenticada (HTTP 200). Retorna datos del cliente, metadatos de la credencial activa, actor técnico de auditoría y lista de scopes asignados. **Cero exposición de secretos en claro, contraseñas o hashes**.
+  - `OPTIONS /api/v1/perfil`: Preflight CORS retornando HTTP 204 sin requerir token Bearer.
 
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.
+

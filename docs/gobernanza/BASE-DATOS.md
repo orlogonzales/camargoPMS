@@ -373,7 +373,16 @@ En SERVICIOS-1 se implementa el catálogo de servicios complementarios, proveedo
     - **Estado general de la base de datos tras WORDPRESS-1B:**
       - **127 tablas relacionales** físicas consolidadas (122 previas + 5 nuevas de tarifas/API).
       - **Migración 036 (`036_tarifas_clientes_api.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
-      - **Ranura de migración 037 estrictamente LIBRE** para fases posteriores.
+      - **Ranura de migración 037 consumida por WORDPRESS-1C**.
+
+12. **Esquema de Idempotencia del Perímetro API (WORDPRESS-1C y Migración 037):**
+    - **`api_idempotencia`:** Registro de idempotencia y control de replay determinista (`id`, `api_cliente_id`, `clave_idempotencia`, `ruta`, `metodo`, `cuerpo_hash CHAR(64)`, `estado ENUM('PROCESANDO','COMPLETADO','ERROR')`, `codigo_http`, `cabeceras_json`, `respuesta_json`, `bloqueado_hasta`, `creado_en`, `actualizado_en`).
+    - Clave única de exclusión lógica: `uq_api_idemp_cliente_ruta_clave (api_cliente_id, ruta, clave_idempotencia)`. Clave foránea `fk_api_idemp_cliente` referenciando `api_clientes(id)` con `ON DELETE CASCADE`.
+    - Índices de rendimiento: `idx_api_idemp_limpieza (creado_en)` para barrido de retención, y `idx_api_idemp_bloqueo (estado, bloqueado_hasta)` para evaluación de bloqueos concurrentes.
+    - **Estado general de la base de datos tras WORDPRESS-1C:**
+      - **128 tablas relacionales** físicas consolidadas (127 previas + 1 de idempotencia).
+      - **Migración 037 (`037_api_idempotencia.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
+      - **Ranura de migración 038 estrictamente LIBRE** para fases posteriores.
 
 
 

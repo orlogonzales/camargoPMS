@@ -4,6 +4,29 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase WORDPRESS-1C — Perímetro HTTP /api/v1 (Infraestructura, Autenticación, CORS, Rate Limit, Idempotencia y Diagnóstico)
+
+- **Perímetro de Seguridad e Intermediarios HTTP para `/api/v1`:**
+  - `ApiCorrelacionIntermediario`: Trazabilidad transversal extremo a extremo mediante cabecera `X-Correlacion-ID` (adopta o genera identificador seguro CSPRNG).
+  - `ApiCorsIntermediario`: Allowlist configurable de orígenes y resolución inmediata de preflights `OPTIONS` con HTTP 204 No Content sin requerir autenticación Bearer.
+  - `ApiAutenticacionIntermediario`: Validación de tokens técnicos `cpms_live_...` en tiempo $O(1)$ mediante hash SHA-256 delegando en `ApiClientServicio::autenticarToken()`, verificación de clientes y credenciales activas, y restricción por lista blanca de IPs.
+  - `ApiRateLimitServicio` y `ApiRateLimitIntermediario`: Rate limiting desacoplado con ventana deslizante de 60 segundos almacenado en `storage/cache/rate_limits/` con `flock`, emitiendo cabeceras `X-RateLimit-*` y HTTP 429 con `Retry-After`.
+  - `ApiScopeIntermediario`: Control de granularidad por alcance de credencial técnica, rechazando peticiones no autorizadas con HTTP 403 `ACCESO_DENEGADO` sin exponer información de dominio.
+  - `ApiIdempotenciaIntermediario`: Idempotencia estricta para métodos mutables (`POST`, `PUT`, `PATCH`) mediante cabecera `Idempotency-Key`, exclusión mutua temporal (HTTP 409 `OPERACION_EN_CURSO`), detección de colisiones de payload (HTTP 422 `IDEMPOTENCIA_DESAJUSTE_PAYLOAD`), y replay determinista de respuestas completadas (HTTP 200/201 con `X-Cache-Lookup: IDEMPOTENT-REPLAY`).
+- **Constructor Unificado de Respuestas API (`RespuestaApi`):**
+  - Formato de sobre JSON estándar: `ok`, `datos`, `error`, `codigo`, `meta` (`correlacion_id`, `marca_tiempo`, `detalles`).
+  - Inyección transversal automática de cabeceras de correlación, CORS y rate limit.
+- **Endpoints de Diagnóstico y Estado Técnico:**
+  - `GET /api/v1/ping` y `OPTIONS /api/v1/ping`: Comprobación de estado operativo (`SERVICIO_OPERATIVO`).
+  - `GET /api/v1/perfil` y `OPTIONS /api/v1/perfil`: Inspección de identidad técnica autenticada (cliente, credencial, actor y scopes) con cero exposición de secretos o PII.
+  - Enrutamiento API seguro con captura de 404 estructurado en JSON (`RECURSO_NO_ENCONTRADO`).
+- **Gobernanza del Esquema y Migración 037:**
+  - Migración autorizada `SQL/migraciones/037_api_idempotencia.sql` consumida con éxito; esquema relacional avanza de 127 a exactamente 128 tablas relacionales.
+  - Paridad estricta y limpia con `SQL/camargo_pms.sql`. Ranura de migración 038 estrictamente libre.
+  - Catálogo Alina `admin-dashboard/` 100% intacto y de solo lectura.
+
+## Baseline oficial 2550ecb (WORDPRESS-1B)
+
 ### Microfase WORDPRESS-1B — Modelo Soberano de Tarifas + Clientes API + Cotización
 
 - **Modelo Soberano de Tarifas de Alojamiento (`tarifas_alojamiento`):**

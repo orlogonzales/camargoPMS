@@ -657,9 +657,9 @@ assertCheck(count($tablasBD) >= 122, "Base de datos contiene al menos 122 tablas
 $mig035Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '035_canales_ical.sql'")->fetchColumn();
 assertCheck($mig035Presente, "Migración 035_canales_ical.sql registrada en BD");
 
-// Ranura 037 libre
-$mig037 = glob(dirname(__DIR__) . '/SQL/migraciones/*037*');
-assertCheck(empty($mig037), "Ranura de migración 037 estrictamente LIBRE");
+// Ranura 038 libre
+$mig038 = glob(dirname(__DIR__) . '/SQL/migraciones/*038*');
+assertCheck(empty($mig038), "Ranura de migración 038 estrictamente LIBRE");
 
 // Paridad con SQL/camargo_pms.sql
 $sqlConsolidado = (string) file_get_contents(dirname(__DIR__) . '/SQL/camargo_pms.sql');

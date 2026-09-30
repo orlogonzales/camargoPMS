@@ -84,6 +84,19 @@ final class Enrutador
     }
 
     /**
+     * Registra una ruta para el método HTTP OPTIONS con intermediarios opcionales.
+     *
+     * @param string $ruta
+     * @param array|callable $manejador
+     * @param array<int, class-string|object> $intermediarios
+     * @return void
+     */
+    public function options(string $ruta, array|callable $manejador, array $intermediarios = []): void
+    {
+        $this->agregarRuta('OPTIONS', $ruta, $manejador, $intermediarios);
+    }
+
+    /**
      * Registra una ruta genérica indicando el método HTTP e intermediarios opcionales.
      *
      * @param string $metodo Método HTTP (GET, POST, etc.).
@@ -166,6 +179,7 @@ final class Enrutador
             $manejador = is_array($registro) && isset($registro['manejador']) ? $registro['manejador'] : $registro;
             $intermediarios = is_array($registro) && isset($registro['intermediarios']) ? $registro['intermediarios'] : [];
 
+            $instanciasIntermediarios = [];
             // Ejecución secuencial del pipeline de intermediarios
             foreach ($intermediarios as $intermediario) {
                 $instancia = is_string($intermediario) ? new $intermediario() : $intermediario;
@@ -175,13 +189,27 @@ final class Enrutador
                         return $respuestaIntermediario;
                     }
                 }
+                $instanciasIntermediarios[] = $instancia;
             }
 
             $respuesta = $this->ejecutarManejador($manejador, $parametrosRuta);
+
+            // Ejecución post-controlador de intermediarios en orden inverso
+            foreach (array_reverse($instanciasIntermediarios) as $instancia) {
+                if (method_exists($instancia, 'despues')) {
+                    $respuesta = $instancia->despues($respuesta) ?? $respuesta;
+                }
+            }
+
             if ($metodoNormalizado === 'HEAD') {
                 return new Respuesta('', $respuesta->obtenerCodigo(), $respuesta->obtenerCabeceras());
             }
             return $respuesta;
+        }
+
+        // Si la ruta solicitada corresponde al perímetro API, devolver error JSON estructurado
+        if (str_starts_with($rutaSolicitada, '/api/')) {
+            return RespuestaApi::error('Ruta de API no encontrada.', 'RECURSO_NO_ENCONTRADO', 404);
         }
 
         // Manejo controlado de ruta no encontrada (404)

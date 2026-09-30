@@ -1395,6 +1395,33 @@ $enrutador->get('/canales-ical/{id}/conflictos', [\CamargoPMS\Controladores\Cana
 // Integración iCalendar (RFC 5545) — Endpoint público de exportación por conexión (AIRBNB-ICAL-1B)
 $enrutador->get('/ical/exportar/{token}', [\CamargoPMS\Controladores\IcalExportarControlador::class, 'exportar']);
 
+// =====================================================================
+// PERÍMETRO API HTTP /api/v1 (WORDPRESS-1C)
+// =====================================================================
+
+// Ping técnico y diagnóstico operativo
+$enrutador->get('/api/v1/ping', [\CamargoPMS\Controladores\ApiPingControlador::class, 'ping'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+]);
+$enrutador->options('/api/v1/ping', [\CamargoPMS\Controladores\ApiPingControlador::class, 'ping'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
+// Perfil de identidad técnica autenticada
+$enrutador->get('/api/v1/perfil', [\CamargoPMS\Controladores\ApiPingControlador::class, 'perfil'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiAutenticacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+]);
+$enrutador->options('/api/v1/perfil', [\CamargoPMS\Controladores\ApiPingControlador::class, 'perfil'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 
@@ -1421,6 +1448,15 @@ $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'pagi
     error_log((string) $error);
 
     try {
+        if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+            \CamargoPMS\Nucleo\RespuestaApi::error(
+                $error->getMessage(),
+                'ERROR_' . $codigoHttp,
+                $codigoHttp
+            )->enviar();
+            exit;
+        }
+
         if (\CamargoPMS\Intermediarios\AutenticacionIntermediario::esperaRespuestaJson()) {
             \CamargoPMS\Nucleo\Respuesta::json([
                 'ok' => false,

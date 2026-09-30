@@ -321,17 +321,21 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **AIRBNB-ICAL-1C**  | `test_airbnb_ical_ui.php` (Secciones 1..12) | 94 | — | 94/94 PASS |
 | **AIRBNB-ICAL-1D**   | `test_airbnb_ical_scheduler.php` (Secciones 1..15) | 71 | — | 71/71 PASS |
 | **WORDPRESS-1B**    | `test_wordpress_1b.php` (Secciones 1..5) | 75 | — | 75/75 PASS |
-| **TOTALES CANÓNICOS**| **75 suites ejecutadas** | **—** | **—** | **2,093 checks PASS (100%)** |
+| **WORDPRESS-1C**    | `test_wordpress_1c.php` (Secciones 1..10) | 108 | — | 108/108 PASS |
+| **TOTALES CANÓNICOS**| **76 suites ejecutadas** | **—** | **—** | **2,201 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (WORDPRESS-1B):**
-    - Suite `test_wordpress_1b.php`: 75 comprobaciones automáticas cubriendo:
-      - Esquema y Migración 036: Creación de 5 tablas relacionales (`tarifas_alojamiento`, `api_clientes`, `api_credenciales`, `api_scopes`, `api_credencial_scopes`), catálogo de 6 scopes canónicos, 4 permisos RBAC de tarifas y clientes API, paridad con `SQL/camargo_pms.sql` y verificación de ranura 037 libre.
-      - Precedencia Jerárquica de Tarifas: Prevalencia estricta de `UNIDAD` > `TIPO_UNIDAD` > `PROPIEDAD`, resolución dinámica de fechas adyacentes y control estricto de anti-solapamiento temporal vía `SELECT ... FOR UPDATE` en `TarifaAlojamientoServicio`.
-      - Autoridad Monetaria de Cotización: Orquestación noche a noche en `CotizacionServicio`, cumplimiento estricto de política D-069 (BCMath, redondeo formal, 4 decimales intermedios, 2 decimales finales, regla provisional impuesto 0.00), token reproducible firmado criptográficamente con HMAC-SHA256, y principio hotelero inviolable de CERO inserciones físicas en inventario durante la cotización.
-      - Creación de Reservas desde Cotización: `ReservaServicio::crearReservaDesdeCotizacion()` hidratando desde token firmado, validación en tiempo real y hold atómico en estado `PENDIENTE` con bloqueo efectivo de noches en `inventario_diario_unidades`.
-      - Clientes API y Credenciales Técnicas Seguras: Arquitectura `ACTOR INTEGRACION -> API_CLIENT -> CREDENCIAL TÉCNICA -> SCOPES`, cero cuentas de usuarios humanos ficticios, tokens Bearer CSPRNG (`cpms_live_...`) no persistidos en claro, indexación y validación $O(1)$ por hash SHA-256, operaciones atómicas de rotación y revocación inmediata.
-    - Suites iCalendar (`AIRBNB-ICAL-1B`, `1C`, `1D`): 320 checks automáticos sin regresión.
-    - Suite `test_apisperu_integracion.php`: 92 checks sin regresión.
-    - Suites UI Alina y Componentes (`UI-ALINA-1A` a `UI-ALINA-1F` + `FIX-PERFIL-1`): 234 checks.
-    - Suites de dominio operativo, concurrencia y E2E: 1,372 checks.
-    - **Total Consolidado de Regresión Activa: 75/75 suites PASS — 2,093/2,093 checks PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (WORDPRESS-1C):**
+    - Suite `test_wordpress_1c.php`: 108 comprobaciones automáticas cubriendo:
+      - Esquema y Migración 037: Creación de tabla `api_idempotencia`, 128 tablas relacionales en total, ranura 038 estrictamente libre, paridad en `SQL/camargo_pms.sql` e inmutabilidad de `admin-dashboard/`.
+      - Modelo y Repositorio de Idempotencia: Inserción atómica con bloqueo temporal, detección de concurrencia simultánea, persistencia de respuesta determinista y eliminación limpia.
+      - Contexto HTTP y RespuestaApi: Envoltorio canónico `{ ok, datos, error, codigo, meta }`, propagación de `X-Correlacion-ID`, inyección de cabeceras CORS y rate limiting.
+      - Intermediario de Correlación: Adopción de cabecera enviada o generación de ID seguro CSPRNG.
+      - Intermediario de CORS: Allowlist de orígenes, respuesta HTTP 204 No Content inmediata ante preflights `OPTIONS` sin exigir token Bearer.
+      - Intermediario de Autenticación Bearer: Validación $O(1)$ por hash SHA-256 de tokens `cpms_live_...`, control de vigencia, revocación y lista blanca de IPs.
+      - Rate Limiting Desacoplado: Ventana deslizante de 60 segundos con exclusión mutua `flock`, emisión de cabeceras `X-RateLimit-*` y HTTP 429 con `Retry-After`.
+      - Control de Granularidad por Scopes: Evaluación estricta de permisos por credencial y respuesta HTTP 403 `ACCESO_DENEGADO`.
+      - Idempotencia Extremo a Extremo: Concurrencia bloqueada (HTTP 409 `OPERACION_EN_CURSO`), replay determinista inmediato (HTTP 200/201 con `X-Cache-Lookup: IDEMPOTENT-REPLAY`), y detección de colisión de cuerpo con misma clave (HTTP 422 `IDEMPOTENCIA_DESAJUSTE_PAYLOAD`).
+      - Endpoints End-to-End: `GET /api/v1/ping` (200), `OPTIONS /api/v1/ping` (204), `GET /api/v1/perfil` (401 sin token, 200 con token), `OPTIONS /api/v1/perfil` (204 sin token), y ruta inexistente `/api/v1/*` (404 JSON estructurado). Cero exposición de secretos o PII.
+    - Suites previas sin regresión: 75 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 76/76 suites PASS — 2,201/2,201 checks PASS — 0 fallos (100%)**.
+
