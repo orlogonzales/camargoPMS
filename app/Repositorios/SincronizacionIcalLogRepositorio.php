@@ -106,9 +106,50 @@ class SincronizacionIcalLogRepositorio
         $sql = 'SELECT * FROM sincronizaciones_ical_log WHERE conexion_ical_id = :conexion_id ORDER BY id DESC LIMIT 1';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['conexion_id' => $conexionId]);
-        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
-
         return $fila ? $this->mapearFila($fila) : null;
+    }
+
+    /**
+     * @return array<SincronizacionIcalLog>
+     */
+    public function listarPorConexion(int $conexionId, int $limite = 20): array
+    {
+        $sql = 'SELECT * FROM sincronizaciones_ical_log
+                WHERE conexion_ical_id = :conexion_id
+                ORDER BY id DESC
+                LIMIT :limite';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':conexion_id', $conexionId, PDO::PARAM_INT);
+        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map([$this, 'mapearFila'], $filas);
+    }
+
+    /**
+     * Determina si existe una sincronización activa en curso para evitar concurrencia y doble submit.
+     */
+    public function haySincronizacionEnCurso(int $conexionId, int $segundosMaximos = 120): bool
+    {
+        $sql = 'SELECT COUNT(*) FROM sincronizaciones_ical_log
+                WHERE conexion_ical_id = :conexion_id
+                  AND finalizado_en IS NULL
+                  AND iniciado_en >= NOW() - INTERVAL :segundos SECOND';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':conexion_id', $conexionId, PDO::PARAM_INT);
+        $stmt->bindValue(':segundos', $segundosMaximos, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return ((int) $stmt->fetchColumn()) > 0;
+    }
+
+    public function contarSincronizacionesHoy(): int
+    {
+        $sql = 'SELECT COUNT(*) FROM sincronizaciones_ical_log WHERE DATE(iniciado_en) = CURDATE()';
+        return (int) $this->pdo->query($sql)->fetchColumn();
     }
 
     /**

@@ -224,8 +224,87 @@ class EventoIcalExternoRepositorio
     }
 
     /**
-     * @param array<string, mixed> $fila
+     * Lista eventos en conflicto para una conexión específica.
+     *
+     * @return array<array<string, mixed>>
      */
+    public function listarConflictosPorConexion(int $conexionId): array
+    {
+        $sql = "SELECT e.id,
+                       e.conexion_ical_id,
+                       e.uid_externo,
+                       e.fecha_inicio,
+                       e.fecha_fin,
+                       e.noches,
+                       e.resumen,
+                       e.estado_evento,
+                       e.estado_bloqueo,
+                       e.detalle_conflicto,
+                       e.creado_en,
+                       c.nombre AS conexion_nombre,
+                       cd.nombre AS canal_nombre,
+                       cd.codigo AS canal_codigo,
+                       cd.color_badge AS canal_color_badge,
+                       u.nombre AS unidad_nombre,
+                       u.codigo AS unidad_codigo
+                FROM eventos_ical_externos e
+                JOIN conexiones_ical c ON c.id = e.conexion_ical_id
+                JOIN canales_distribucion cd ON cd.id = c.canal_id
+                JOIN unidades u ON u.id = c.unidad_id
+                WHERE e.conexion_ical_id = :conexion_id
+                  AND e.estado_bloqueo = 'EN_CONFLICTO'
+                ORDER BY e.fecha_inicio ASC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['conexion_id' => $conexionId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Lista todos los eventos en conflicto activos de todas las conexiones.
+     *
+     * @return array<array<string, mixed>>
+     */
+    public function listarTodosLosConflictos(): array
+    {
+        $sql = "SELECT e.id,
+                       e.conexion_ical_id,
+                       e.uid_externo,
+                       e.fecha_inicio,
+                       e.fecha_fin,
+                       e.noches,
+                       e.resumen,
+                       e.estado_evento,
+                       e.estado_bloqueo,
+                       e.detalle_conflicto,
+                       e.creado_en,
+                       c.nombre AS conexion_nombre,
+                       cd.nombre AS canal_nombre,
+                       cd.codigo AS canal_codigo,
+                       cd.color_badge AS canal_color_badge,
+                       u.nombre AS unidad_nombre,
+                       u.codigo AS unidad_codigo,
+                       p.nombre AS propiedad_nombre
+                FROM eventos_ical_externos e
+                JOIN conexiones_ical c ON c.id = e.conexion_ical_id
+                JOIN canales_distribucion cd ON cd.id = c.canal_id
+                JOIN unidades u ON u.id = c.unidad_id
+                JOIN propiedades p ON p.id = u.propiedad_id
+                WHERE e.estado_bloqueo = 'EN_CONFLICTO'
+                ORDER BY e.fecha_inicio ASC";
+
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Cuenta el total de eventos en conflicto en todo el sistema.
+     */
+    public function contarConflictosActivos(): int
+    {
+        $sql = "SELECT COUNT(*) FROM eventos_ical_externos WHERE estado_bloqueo = 'EN_CONFLICTO'";
+        return (int) $this->pdo->query($sql)->fetchColumn();
+    }
+
     private function mapearFila(array $fila): EventoIcalExterno
     {
         return new EventoIcalExterno(

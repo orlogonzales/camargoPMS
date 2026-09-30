@@ -415,6 +415,15 @@ class OrdenTrabajoRepositorio
             $correlativo = 1;
         }
 
-        return $prefijo . str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
+        $stmtExiste = $this->pdo->prepare('SELECT 1 FROM mantenimiento_ordenes WHERE codigo = :cod LIMIT 1');
+        do {
+            $candidato = $prefijo . str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
+            $stmtExiste->execute(['cod' => $candidato]);
+            if ($stmtExiste->fetchColumn()) {
+                $correlativo++;
+            } else {
+                return $candidato;
+            }
+        } while (true);
     }
 }

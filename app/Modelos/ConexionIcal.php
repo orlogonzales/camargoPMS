@@ -42,7 +42,9 @@ class ConexionIcal
         private ?string $canalNombre = null,
         private ?string $canalColorBadge = null,
         private ?string $unidadNombre = null,
-        private ?string $unidadCodigo = null
+        private ?string $unidadCodigo = null,
+        private ?string $propiedadNombre = null,
+        private ?int $propiedadId = null
     ) {
     }
 
@@ -181,6 +183,16 @@ class ConexionIcal
         return $this->unidadCodigo;
     }
 
+    public function obtenerPropiedadNombre(): ?string
+    {
+        return $this->propiedadNombre;
+    }
+
+    public function obtenerPropiedadId(): ?int
+    {
+        return $this->propiedadId;
+    }
+
     public function aArray(): array
     {
         return [
@@ -204,6 +216,8 @@ class ConexionIcal
             'canal_color_badge' => $this->canalColorBadge,
             'unidad_nombre' => $this->unidadNombre,
             'unidad_codigo' => $this->unidadCodigo,
+            'propiedad_nombre' => $this->propiedadNombre,
+            'propiedad_id' => $this->propiedadId,
         ];
     }
 }

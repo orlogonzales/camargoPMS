@@ -1357,6 +1357,41 @@ $enrutador->post('/configuracion/feriados/{id}/alternar', [\CamargoPMS\Controlad
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reclamaciones.gestionar'),
 ]);
 
+// Capa Operativa Alina — Canales y Conexiones iCalendar (AIRBNB-ICAL-1C)
+$enrutador->get('/canales-ical', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.ver'),
+]);
+$enrutador->get('/canales-ical/datos', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.ver'),
+]);
+$enrutador->post('/canales-ical', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'crear'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.gestionar'),
+]);
+$enrutador->post('/canales-ical/{id}/editar', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'editar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.gestionar'),
+]);
+$enrutador->post('/canales-ical/{id}/estado', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'cambiarEstado'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.gestionar'),
+]);
+$enrutador->post('/canales-ical/{id}/rotar-token', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'rotarToken'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.gestionar'),
+]);
+$enrutador->post('/canales-ical/{id}/copiar-feed', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'copiarFeed'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.ver'),
+]);
+$enrutador->post('/canales-ical/{id}/sincronizar', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'sincronizar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.sincronizar'),
+]);
+$enrutador->get('/canales-ical/conflictos-activos', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'todosLosConflictos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.ver'),
+]);
+$enrutador->get('/canales-ical/{id}/historial', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'historial'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.ver'),
+]);
+$enrutador->get('/canales-ical/{id}/conflictos', [\CamargoPMS\Controladores\CanalIcalControlador::class, 'conflictos'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('canales.ver'),
+]);
+
 // Integración iCalendar (RFC 5545) — Endpoint público de exportación por conexión (AIRBNB-ICAL-1B)
 $enrutador->get('/ical/exportar/{token}', [\CamargoPMS\Controladores\IcalExportarControlador::class, 'exportar']);
 

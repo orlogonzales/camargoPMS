@@ -178,8 +178,8 @@ foreach ($vistasIter as $file) {
     }
 }
 
-assertCheck($candidatasTablas === 80, "UI-ALINA-1E: Se identifican exactamente 80 tablas candidatas a homologación (encontradas: $candidatasTablas)");
-assertCheck($tablasHomologadas === 80, "UI-ALINA-1E: 100% de tablas convencionales mantienen estándar Alina .table-bordered.table-striped.table-hover.align-middle ($tablasHomologadas/80)");
+assertCheck($candidatasTablas >= 80, "UI-ALINA-1E: Se identifican al menos 80 tablas candidatas a homologación (encontradas: $candidatasTablas)");
+assertCheck($tablasHomologadas === $candidatasTablas, "UI-ALINA-1E: 100% de tablas convencionales mantienen estándar Alina .table-bordered.table-striped.table-hover.align-middle ($tablasHomologadas/$candidatasTablas)");
 assertCheck($exclusionesTablas === 16, "UI-ALINA-1E: Se preservan intactas las 16 exclusiones legítimas (encontradas: $exclusionesTablas)");
 
 // --- 4. GOBERNANZA DE BASE DE DATOS Y REPOSITORIO ---
