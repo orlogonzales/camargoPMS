@@ -507,8 +507,17 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
   - RBAC granular (`canales.ver`, `canales.gestionar`, `canales.sincronizar`) y protección CSRF estricta en todos los endpoints mutacionales.
   - Cero DDL (122 tablas relacionales preservadas, ranura 036 estrictamente libre, `admin-dashboard/` 100% inalterado).
   - Suite de pruebas: `tests/test_airbnb_ical_ui.php` (94/94 PASS).
-  - Estado: Implementada y Validada (73/73 suites globales PASS, 1,947 checks, 0 fallos).
-- **AIRBNB-ICAL-1D (Siguiente):** Automatización periódica desasistida (daemon/scheduler CLI, gestión de colas, retries con backoff y telemetría de fallos continuos).
+  - Estado: homologada y publicada (micro-baseline oficial `d8fe8c3c99f13ed0fcb6d85f6ad8b4a9b8ba15e7`, 73/73 suites globales PASS, 1,947 checks, 0 fallos).
+- **AIRBNB-ICAL-1D1:** Hardening del Motor, Contrato Único de Exclusión de Sincronización y CLI Seguro:
+  - Contrato único e inquebrantable de exclusión mutua por conexión encapsulado en `SincronizacionIcalServicio::sincronizarConexion()` (`GET_LOCK` no bloqueante con timeout 0 y liberación incondicional `RELEASE_LOCK` en bloque `finally`).
+  - Desacoplamiento de `CanalIcalControlador::sincronizar()`: delegación integral al servicio y traducción a HTTP 409 Conflict (`CONEXION_BLOQUEADA` / `CONEXION_EN_SINCRONIZACION`).
+  - Detección y saneamiento automático de ejecuciones huérfanas o stale runs (>120 segundos) mediante `SincronizacionIcalLogRepositorio::limpiarLogsHuerfanos()`.
+  - Consulta eficiente de conexiones debidas para sondeo `ConexionIcalRepositorio::listarDebidasParaSondeo()`.
+  - CLI runner `bin/sincronizar-ical.php` evolucionado con `--solo-debidas`, `--quiet`, aislamiento de fallos parciales, omisión elegante ante bloqueos concurrentes y códigos de salida formales (0, 1, 2).
+  - Cero DDL (122 tablas preservadas, ranura 036 estrictamente libre, cero daemon/Supervisor/Redis).
+  - Suite de pruebas: `tests/test_airbnb_ical_scheduler.php` (46/46 PASS).
+  - Estado: Implementada y Validada (74/74 suites globales PASS, 1,993 checks, 0 fallos).
+- **AIRBNB-ICAL-1D2 (Siguiente):** Automatización Periódica Desasistida (programador de tareas/cron, telemetría y monitoreo).
 
 ## Dominio operativo
 

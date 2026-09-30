@@ -12,6 +12,7 @@ use CamargoPMS\Modelos\SincronizacionIcalLog;
 use CamargoPMS\Nucleo\BaseDatos;
 use CamargoPMS\Nucleo\Configuracion;
 use CamargoPMS\Repositorios\ConexionIcalRepositorio;
+use CamargoPMS\Excepciones\ConexionIcalEnSincronizacionExcepcion;
 use CamargoPMS\Repositorios\EventoIcalExternoRepositorio;
 use CamargoPMS\Repositorios\SincronizacionIcalLogRepositorio;
 use DateTimeImmutable;
@@ -20,6 +21,7 @@ use Exception;
 use InvalidArgumentException;
 use PDO;
 use RuntimeException;
+use Throwable;
 
 /**
  * Servicio Central de Sincronización e Importación de Feeds iCalendar.
@@ -96,17 +98,42 @@ class SincronizacionIcalServicio
             throw new RuntimeException("La importación está deshabilitada para la conexión #$conexionId.");
         }
 
-        $tiempoInicio = microtime(true);
-        $logId = $this->logRepo->iniciarLog(
-            conexionId: $conexionId,
-            tipoOperacion: SincronizacionIcalLog::TIPO_IMPORTACION,
-            origenEjecucion: $origenEjecucion,
-            actorId: $actorId
-        );
+        // 1. Limpieza preventiva y normalización de stale runs (> 120s incompletos)
+        $this->logRepo->limpiarLogsHuerfanos($conexionId, 120);
 
-        $httpCodigo = 200;
-        $duracionDescargaMs = 0;
-        $contenidoIcs = '';
+        // 2. Control de concurrencia de ciclo de vida (log activo)
+        if ($this->logRepo->haySincronizacionEnCurso($conexionId, 120)) {
+            throw new ConexionIcalEnSincronizacionExcepcion(
+                'Ya existe una sincronización en curso para esta conexión. Por favor espere a que finalice.',
+                'CONEXION_EN_SINCRONIZACION'
+            );
+        }
+
+        // 3. Control atómico de concurrencia MySQL (GET_LOCK no bloqueante por conexión)
+        $lockName = "camargo_ical_sync_{$conexionId}";
+        $stmtLock = $this->pdo->prepare('SELECT GET_LOCK(:lock_name, 0)');
+        $stmtLock->execute(['lock_name' => $lockName]);
+        $lockAdquirido = (int) $stmtLock->fetchColumn() === 1;
+
+        if (!$lockAdquirido) {
+            throw new ConexionIcalEnSincronizacionExcepcion(
+                'Ya existe una sincronización en curso para esta conexión (bloqueo concurrente activo).',
+                'CONEXION_BLOQUEADA'
+            );
+        }
+
+        try {
+            $tiempoInicio = microtime(true);
+            $logId = $this->logRepo->iniciarLog(
+                conexionId: $conexionId,
+                tipoOperacion: SincronizacionIcalLog::TIPO_IMPORTACION,
+                origenEjecucion: $origenEjecucion,
+                actorId: $actorId
+            );
+
+            $httpCodigo = 200;
+            $duracionDescargaMs = 0;
+            $contenidoIcs = '';
 
         try {
             // 1. Obtención del contenido ICS
@@ -245,7 +272,7 @@ class SincronizacionIcalServicio
                 'conflictos' => $conflictos,
             ];
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $duracionTotalMs = (int) round((microtime(true) - $tiempoInicio) * 1000);
             $msgError = $e->getMessage();
 
@@ -267,7 +294,15 @@ class SincronizacionIcalServicio
 
             throw $e;
         }
+    } finally {
+        try {
+            $stmtRelease = $this->pdo->prepare('SELECT RELEASE_LOCK(:lock_name)');
+            $stmtRelease->execute(['lock_name' => $lockName]);
+        } catch (Throwable) {
+            // Silencioso ante desconexión o fallo residual
+        }
     }
+}
 
     /**
      * Procesa un evento individual respetando las reglas de soberanía, conflicto y solapamiento.

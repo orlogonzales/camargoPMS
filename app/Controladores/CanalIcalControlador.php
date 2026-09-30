@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CamargoPMS\Controladores;
 
+use CamargoPMS\Excepciones\ConexionIcalEnSincronizacionExcepcion;
 use CamargoPMS\Modelos\CanalDistribucion;
 use CamargoPMS\Modelos\ConexionIcal;
 use CamargoPMS\Modelos\EventoIcalExterno;
@@ -619,29 +620,6 @@ class CanalIcalControlador
             return Respuesta::json(['ok' => false, 'error' => 'La importación está deshabilitada para esta conexión.'], 422);
         }
 
-        // 1. Control de concurrencia a nivel de ciclo de vida (log activo)
-        if ($this->logRepo->haySincronizacionEnCurso($conexionId)) {
-            return Respuesta::json([
-                'ok' => false,
-                'error' => 'Ya existe una sincronización en curso para esta conexión. Por favor espere a que finalice.',
-                'codigo' => 'CONEXION_EN_SINCRONIZACION',
-            ], 409);
-        }
-
-        // 2. Control atómico de concurrencia MySQL (GET_LOCK no bloqueante)
-        $lockName = "camargo_ical_sync_{$conexionId}";
-        $stmtLock = $this->pdo->prepare('SELECT GET_LOCK(:lock_name, 0)');
-        $stmtLock->execute(['lock_name' => $lockName]);
-        $lockAdquirido = (int) $stmtLock->fetchColumn() === 1;
-
-        if (!$lockAdquirido) {
-            return Respuesta::json([
-                'ok' => false,
-                'error' => 'Ya existe una sincronización en curso para esta conexión (bloqueo concurrente activo).',
-                'codigo' => 'CONEXION_BLOQUEADA',
-            ], 409);
-        }
-
         $actorId = $this->resolverActorId($usuario);
 
         try {
@@ -676,19 +654,17 @@ class CanalIcalControlador
                 'mensaje' => $resultado['mensaje'] ?? 'Sincronización finalizada.',
                 'datos' => $resultado,
             ]);
+        } catch (ConexionIcalEnSincronizacionExcepcion $e) {
+            return Respuesta::json([
+                'ok' => false,
+                'error' => $e->getMessage(),
+                'codigo' => $e->obtenerCodigoError(),
+            ], 409);
         } catch (Throwable $e) {
             return Respuesta::json([
                 'ok' => false,
                 'error' => 'Error durante la sincronización: ' . $e->getMessage(),
             ], 500);
-        } finally {
-            // Liberación garantizada del semáforo atómico
-            try {
-                $stmtRelease = $this->pdo->prepare('SELECT RELEASE_LOCK(:lock_name)');
-                $stmtRelease->execute(['lock_name' => $lockName]);
-            } catch (Throwable) {
-                // Fallback continuo
-            }
         }
     }
 

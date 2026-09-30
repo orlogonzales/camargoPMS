@@ -182,6 +182,42 @@ class ConexionIcalRepositorio
         return array_map([$this, 'mapearFila'], $filas);
     }
 
+    /**
+     * Lista conexiones iCal activas y con importación habilitada cuya última
+     * sincronización haya superado su frecuencia configurada (o nunca hayan corrido).
+     *
+     * @return array<ConexionIcal>
+     */
+    public function listarDebidasParaSondeo(): array
+    {
+        $sql = "SELECT c.*,
+                       cd.codigo AS canal_codigo,
+                       cd.nombre AS canal_nombre,
+                       cd.color_badge AS canal_color_badge,
+                       u.nombre AS unidad_nombre,
+                       u.codigo AS unidad_codigo,
+                       p.nombre AS propiedad_nombre,
+                       p.id AS propiedad_id
+                FROM conexiones_ical c
+                JOIN canales_distribucion cd ON cd.id = c.canal_id
+                JOIN unidades u ON u.id = c.unidad_id
+                JOIN propiedades p ON p.id = u.propiedad_id
+                WHERE c.estado = 'ACTIVO'
+                  AND c.importacion_habilitada = 1
+                  AND c.url_importacion_cifrada IS NOT NULL
+                  AND cd.estado = 'ACTIVO'
+                  AND (
+                      c.ultima_sincronizacion_en IS NULL
+                      OR c.ultima_sincronizacion_en <= NOW() - INTERVAL c.frecuencia_minutos MINUTE
+                  )
+                ORDER BY c.id ASC";
+
+        $stmt = $this->pdo->query($sql);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map([$this, 'mapearFila'], $filas);
+    }
+
     public function crear(ConexionIcal $conexion): int
     {
         $sql = 'INSERT INTO conexiones_ical (

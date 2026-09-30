@@ -4,6 +4,32 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase AIRBNB-ICAL-1D1 — Hardening del Motor, Contrato Único de Exclusión de Sincronización y CLI Seguro
+
+- **Contrato Único de Exclusión Soberana en Sincronización:**
+  - Encapsulación unificada del bloqueo de concurrencia directamente en `SincronizacionIcalServicio::sincronizarConexion()`, garantizando que toda invocación —interfaz web administrativa Alina, comando CLI manual o futuro programador/cron desasistido— quede inexorablemente sometida a la misma política atómica de exclusión mutua por conexión.
+  - Bloqueo a nivel de conexión mediante `SELECT GET_LOCK('camargo_ical_sync_{id}', 0)` en MySQL con timeout 0 (fail-fast sin esperas activas) y liberación incondicional `SELECT RELEASE_LOCK(...)` garantizada en bloque `finally`.
+  - Excepción de dominio tipada `ConexionIcalEnSincronizacionExcepcion` con código `CONEXION_BLOQUEADA` ante colisiones concurrentes activas.
+- **Desacoplamiento Estricto del Controlador HTTP:**
+  - `CanalIcalControlador::sincronizar()` delega 100% de la lógica de locking al servicio soberano; su única responsabilidad es orquestar la petición HTTP, verificar CSRF/sesión y traducir `ConexionIcalEnSincronizacionExcepcion` a respuesta `HTTP 409 Conflict` con error estructurado `codigo: 'CONEXION_BLOQUEADA'`.
+- **Detección y Saneamiento Automático de Ejecuciones Huérfanas (Stale Runs):**
+  - Implementación de `SincronizacionIcalLogRepositorio::limpiarLogsHuerfanos(?int $conexionId, int $segundosMaximos = 120)` para identificar y cerrar de forma determinista corridas interrumpidas por crash de proceso cliente, SIGKILL o caída de socket (donde `finalizado_en IS NULL` y `iniciado_en < NOW() - INTERVAL 120 SECOND`), marcando su estado como `ERROR` y documentando el fallo en `mensaje_resultado`.
+  - La verificación previa `haySincronizacionEnCurso($conexionId, 120)` incorpora ventana de gracia de 120 segundos para evitar bloqueos perpetuos por procesos muertos.
+- **Selección Eficiente de Conexiones Debidas para Sondeo:**
+  - Implementación de `ConexionIcalRepositorio::listarDebidasParaSondeo()` que selecciona de forma óptima aquellas conexiones activas con importación habilitada cuya última sincronización sea `NULL` o supere el intervalo programado (`ultima_sincronizacion_en <= NOW() - INTERVAL frecuencia_minutos MINUTE`).
+- **Comando CLI Robusto y Preparado para Scheduler (`bin/sincronizar-ical.php`):**
+  - Incorporación de opciones `--solo-debidas`, `--quiet`/`--silencioso` y `--ayuda`.
+  - Contrato formal de códigos de salida: `0` (éxito total o 0 debidas), `1` (error fatal de argumentos o configuración), `2` (fallo parcial tolerante en lote).
+  - Aislamiento de fallos: omisión elegante `[OMITIDO]` ante conexiones bloqueadas concurrentemente, sin interrumpir el lote de sincronización ni generar reintentos de red inmediatos.
+  - Test negativo de salida confirmando cero filtración de secretos, tokens o variables `.env` en consola.
+- **Gobernanza, Calidad y Cero DDL:**
+  - Cero DDL: Base de datos relacional preservada estrictamente en **122 tablas**. Ranura de migración `036` permanece 100% **LIBRE**.
+  - Catálogo `admin-dashboard/` 100% inalterado y de solo lectura.
+  - Nueva suite automatizada `tests/test_airbnb_ical_scheduler.php` con 46 comprobaciones exhaustivas (46/46 PASS).
+  - Regresión transversal activa: 74 suites automatizadas, 1,993 comprobaciones, 0 fallos (100% PASS).
+
+## Baseline oficial d8fe8c3 (AIRBNB-ICAL-1C / 1C-C1)
+
 ### Microfase AIRBNB-ICAL-1C / 1C-C1 — Capa Operativa Alina para Canales y Conexiones iCalendar
 
 - **Interfaz Administrativa y Operativa Alina:**

@@ -146,6 +146,39 @@ class SincronizacionIcalLogRepositorio
         return ((int) $stmt->fetchColumn()) > 0;
     }
 
+    /**
+     * Limpia y normaliza logs huérfanos que quedaron sin finalizar por caídas o timeouts abruptos.
+     *
+     * @param int|null $conexionId Si se especifica, filtra por conexión; si es null, limpia todas.
+     * @param int $segundosMaximos Antigüedad mínima en segundos para considerar un log como huérfano.
+     * @return int Cantidad de registros normalizados.
+     */
+    public function limpiarLogsHuerfanos(?int $conexionId = null, int $segundosMaximos = 120): int
+    {
+        $sql = 'UPDATE sincronizaciones_ical_log
+                SET finalizado_en = NOW(),
+                    resultado = :resultado,
+                    mensaje_resultado = :mensaje
+                WHERE finalizado_en IS NULL
+                  AND iniciado_en < NOW() - INTERVAL :segundos SECOND';
+
+        $params = [
+            'resultado' => SincronizacionIcalLog::RESULTADO_ERROR,
+            'mensaje' => 'Ejecución interrumpida (timeout/crash previo)',
+            'segundos' => $segundosMaximos,
+        ];
+
+        if ($conexionId !== null) {
+            $sql .= ' AND conexion_ical_id = :conexion_id';
+            $params['conexion_id'] = $conexionId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->rowCount();
+    }
+
     public function contarSincronizacionesHoy(): int
     {
         $sql = 'SELECT COUNT(*) FROM sincronizaciones_ical_log WHERE DATE(iniciado_en) = CURDATE()';

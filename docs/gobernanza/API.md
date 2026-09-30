@@ -148,7 +148,8 @@ Endpoints administrativos internos para la gestión visual, monitorización téc
 - **`POST /canales-ical/{id}/sincronizar`**
   - **Permisos:** `canales.sincronizar` + CSRF obligatorio
   - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::sincronizar(int $id)`
-  - **Concurrencia:** Adquiere bloqueo cooperativo `GET_LOCK('camargo_pms_ical_sync_{id}', 10)` en base de datos. Si otra sincronización está en curso sobre la misma conexión, retorna HTTP 409 Conflict con código `CONEXION_EN_SINCRONIZACION`. El lock se libera incondicionalmente en bloque `finally`.
+  - **Concurrencia (Contrato Único de Exclusión Soberana):** La exclusión mutua se gestiona directamente en el dominio por `SincronizacionIcalServicio::sincronizarConexion()` mediante `GET_LOCK('camargo_ical_sync_{id}', 0)` en MySQL con timeout 0 (fail-fast sin esperas activas) y liberación incondicional `RELEASE_LOCK` en bloque `finally`.
+  - **Manejo de Conflictos:** Si otra sincronización (UI manual, CLI o scheduler) retiene el lock o existe una corrida en curso no expirada en `sincronizaciones_ical_log`, el servicio arroja `ConexionIcalEnSincronizacionExcepcion`, la cual el controlador traduce a `HTTP 409 Conflict` con sobre JSON: `{"ok": false, "error": "...", "codigo": "CONEXION_BLOQUEADA"}`.
 
 ### 5. Historial Técnico y Conflictos
 
@@ -161,6 +162,18 @@ Endpoints administrativos internos para la gestión visual, monitorización téc
   - **Permiso:** `canales.ver`
   - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::conflictos(int $id)` / `conflictosActivos()`
   - **Respuesta JSON:** Lista de eventos externos que solapan con reservas locales PMS y requieren atención operativa.
+
+### 6. Contrato de Ejecución CLI (`bin/sincronizar-ical.php`)
+
+Comando técnico de línea de órdenes para sincronización manual, de pruebas o ejecución periódica desasistida:
+- **`php bin/sincronizar-ical.php --conexion=<ID>`**: Sincroniza una conexión puntual. Retorna exit code `0` ante éxito o si fue omitida por lock concurrente, y `1` ante fallo técnico.
+- **`php bin/sincronizar-ical.php --solo-debidas`**: Sincroniza conexiones activas cuya frecuencia de sondeo (`frecuencia_minutos`) esté vencida según `listarDebidasParaSondeo()`.
+- **`php bin/sincronizar-ical.php --todas`**: Fuerza la sincronización de todas las conexiones activas con importación habilitada.
+- **`php bin/sincronizar-ical.php --quiet` / `--silencioso`**: Suprime banners informativos y cabeceras decorativas (adecuado para cron / tareas programadas).
+- **Códigos de Salida:**
+  - `0`: Ejecución exitosa (todas las conexiones procesadas correctamente o ninguna debida).
+  - `1`: Error fatal de bootstrap, base de datos, argumentos o configuración.
+  - `2`: Ejecución por lote completada con fallos técnicos en una o más conexiones (aislamiento de fallos).
 
 ## Evolución
 
