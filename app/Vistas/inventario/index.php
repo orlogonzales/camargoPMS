@@ -181,7 +181,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-existencias">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-existencias">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">SKU / Artículo</th>
@@ -223,7 +223,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-articulos">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-articulos">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">SKU</th>
@@ -270,7 +270,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-kardex">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-kardex">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Fecha / Código</th>
@@ -310,7 +310,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-activos">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-activos">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Placa / Serie</th>
@@ -341,7 +341,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-ubicaciones">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-ubicaciones">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Código</th>
@@ -377,7 +377,7 @@ declare(strict_types=1);
                                         Define el estándar de lencería, amenities o equipamiento que una unidad o tipo de unidad debe mantener.
                                     </p>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-hover mb-0" id="tabla-dotaciones-estandar">
+                                        <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0" id="tabla-dotaciones-estandar">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th class="f-s-11">Destino</th>

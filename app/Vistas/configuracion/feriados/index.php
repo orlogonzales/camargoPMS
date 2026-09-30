@@ -62,7 +62,7 @@ declare(strict_types=1);
 
             <!-- Tabla de Feriados -->
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="tabla-feriados">
+                <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-feriados">
                     <thead class="table-light">
                         <tr class="f-s-12 text-uppercase text-secondary">
                             <th class="ps-3">Fecha</th>

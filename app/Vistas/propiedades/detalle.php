@@ -153,7 +153,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
             <div class="card-body p-0">
                 <?php if (!empty($unidades)): ?>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-bordered table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr class="f-s-11 text-uppercase text-secondary">
                                     <th style="width: 15%;">Código</th>

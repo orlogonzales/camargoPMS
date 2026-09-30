@@ -99,7 +99,7 @@ declare(strict_types=1);
             <!-- Tabla de Reservas -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-reservas">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-reservas">
                         <thead class="table-light">
                             <tr class="f-s-12 text-uppercase text-secondary">
                                 <th class="ps-3">Código</th>
@@ -336,7 +336,7 @@ declare(strict_types=1);
                             <i class="fa-solid fa-door-open me-1"></i> Unidades Asignadas y Snapshot Económico (D-069)
                         </h6>
                         <div class="table-responsive border b-r-8">
-                            <table class="table table-sm align-middle mb-0">
+                            <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                                 <thead class="table-light f-s-11 text-uppercase text-secondary">
                                     <tr>
                                         <th class="ps-2">Unidad</th>

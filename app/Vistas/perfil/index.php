@@ -128,7 +128,7 @@ declare(strict_types=1);
 
                         <?php if ($persona !== null): ?>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle mb-4">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-4">
                                 <tbody>
                                     <tr>
                                         <th class="bg-light text-secondary f-s-13" style="width: 30%;">Nombres:</th>
@@ -163,7 +163,7 @@ declare(strict_types=1);
                             <i class="fa-solid fa-address-card text-primary me-2"></i>Documentos de Identificación
                         </h6>
                         <div class="table-responsive mb-4">
-                            <table class="table table-bordered table-hover align-middle mb-0">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12">Tipo de Documento</th>
@@ -211,7 +211,7 @@ declare(strict_types=1);
                             <i class="fa-solid fa-phone-volume text-primary me-2"></i>Canales de Contacto
                         </h6>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle mb-0">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12">Tipo de Contacto</th>
@@ -263,7 +263,7 @@ declare(strict_types=1);
                         </h6>
 
                         <div class="table-responsive mb-4">
-                            <table class="table table-bordered table-striped align-middle mb-0">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0">
                                 <tbody>
                                     <tr>
                                         <th class="bg-light text-secondary f-s-13" style="width: 35%;">Nombre de Usuario (Login):</th>

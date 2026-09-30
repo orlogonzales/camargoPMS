@@ -72,7 +72,7 @@ declare(strict_types=1);
             <!-- Tabla de Roles -->
             <div class="card-body p-0">
                 <div class="table-responsive" id="contenedor-tabla-roles">
-                    <table class="table table-hover align-middle mb-0" id="tabla-roles">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-roles">
                         <thead class="table-light">
                             <tr class="f-s-12 text-uppercase text-secondary">
                                 <th style="width: 25%;">Rol / Clave</th>
@@ -318,7 +318,7 @@ declare(strict_types=1);
             </div>
             <div class="modal-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0">
                         <thead class="table-light f-s-12 text-uppercase text-secondary">
                             <tr>
                                 <th>Usuario</th>

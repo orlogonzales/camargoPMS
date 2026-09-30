@@ -146,7 +146,7 @@ declare(strict_types=1);
             <!-- Tabla de Arrendamientos -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-arrendamientos">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-arrendamientos">
                         <thead class="bg-light text-secondary f-s-12 text-uppercase">
                             <tr>
                                 <th class="ps-3">Código</th>
@@ -387,7 +387,7 @@ declare(strict_types=1);
                             </button>
                         </div>
                         <div class="table-responsive border b-r-8">
-                            <table class="table table-sm table-hover align-middle mb-0">
+                            <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                                 <thead class="bg-light text-secondary f-s-11 text-uppercase">
                                     <tr>
                                         <th class="ps-3">Período</th>
@@ -414,7 +414,7 @@ declare(strict_types=1);
                             </button>
                         </div>
                         <div class="table-responsive border b-r-8">
-                            <table class="table table-sm table-hover align-middle mb-0">
+                            <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                                 <thead class="bg-light text-secondary f-s-11 text-uppercase">
                                     <tr>
                                         <th class="ps-3">Rol</th>

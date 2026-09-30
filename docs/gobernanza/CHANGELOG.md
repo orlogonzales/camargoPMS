@@ -4,6 +4,28 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1E — Homologación Transversal de Tablas Alina (D-098)
+
+- **Estándar Canónico Bordered + Striped + Hoverable (`.table.table-bordered.table-striped.table-hover.align-middle.mb-0`):**
+  - Homologación sistemática de 80 tablas en 30 archivos de vista a lo largo de todos los módulos del PMS.
+  - Implementación de `.table-bordered` para delimitación perimetral continua y celdas estructuradas.
+  - Implementación de `.table-striped` para alternancia cromática suave (`rgba(var(--light), 0.35)`).
+  - Implementación de `.table-hover` para retroalimentación interactiva al pasar el cursor (`rgba(var(--primary), 0.04)`).
+  - Alineación vertical obligatoria `align-middle` en celdas y cabeceras.
+  - Contenedor `.table-responsive` verificado y garantizado en el 100% de las tablas homologadas.
+- **Inventario Semántico y Clasificación:**
+  - 59 tablas de datos principales y listados de vistas operativas y administrativas.
+  - 4 tablas de configuración y catálogos maestros (`feriados`, `menu`, `roles`, `usuarios`).
+  - 17 tablas auxiliares dentro de modales interactivos.
+- **Exclusiones Legítimas Justificadas (16 tablas):**
+  - 6 tablas de plantilla PDF/impresión A4 (`hoja_reclamacion.php`).
+  - 2 grillas interactivas matriciales (`tape-chart-table` y `#tabla-rack`).
+  - 8 fichas de metadatos clave-valor con `.table-borderless`.
+- **Integridad y Calidad:**
+  - Nueva suite automatizada `tests/test_ui_alina_1e_tablas.php`.
+  - Cero DDL: Base de datos congelada en exactamente 118 tablas relacionales; última migración `034_*`; ranura `035_*` estrictamente libre.
+  - Directorio `admin-dashboard/` 100% intacto y de solo lectura.
+
 ### Microfase UI-ALINA-1D — Homologación Transversal de Componentes y Contenedores de Interacción Alina (D-097)
 
 - **Modales y Diálogos Centrados (`modal-dialog-centered`):**

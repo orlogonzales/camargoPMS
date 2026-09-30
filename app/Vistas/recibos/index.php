@@ -139,7 +139,7 @@ declare(strict_types=1);
             <!-- Tabla Principal de Recibos -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-recibos">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-recibos">
                         <thead class="table-light">
                             <tr>
                                 <th class="text-center" style="width: 12%;">Folio Recibo</th>
@@ -330,7 +330,7 @@ declare(strict_types=1);
                         </h6>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0 f-s-12">
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle f-s-12 mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-center" style="width: 5%;">#</th>

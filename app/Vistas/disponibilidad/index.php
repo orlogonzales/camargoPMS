@@ -189,7 +189,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Resultados de Disponibilidad -->
                         <div class="table-responsive border b-r-8">
-                            <table class="table table-hover align-middle mb-0" id="tabla-disponibilidad">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-disponibilidad">
                                 <thead class="table-light">
                                     <tr class="f-s-12 text-uppercase text-secondary">
                                         <th style="width: 14%;">Código Unidad</th>
@@ -300,7 +300,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive border b-r-8">
-                            <table class="table table-hover align-middle mb-0" id="tabla-bloqueos-maestro">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-bloqueos-maestro">
                                 <thead class="table-light">
                                     <tr class="f-s-12 text-uppercase text-secondary">
                                         <th style="width: 8%;">ID</th>

@@ -239,3 +239,26 @@ En cumplimiento de la Decisión **D-097**, se establece el contrato técnico vin
 8. **Barras de Progreso (Progress) — Criterio NO APLICA:**
    - **NO APLICA / SIN CASO REAL ACTUAL:** No existen procesos multifase cuantificables o tareas en segundo plano que justifiquen una barra de progreso real en el flujo operativo actual. Se prohíbe introducir barras de progreso artificiales, decorativas o estáticas que simulen falsos porcentajes de carga.
 
+### UI-ALINA-1E: Homologación transversal de tablas Alina
+
+A partir de la Decisión Vinculante **D-098**, todas las tablas de datos, catálogos, configuraciones y modales de Camargo PMS adoptan el estándar Alina:
+
+1. **Estándar Canónico: Bordered Tables With Striped + Hoverable:**
+   - Clases obligatorias: `.table.table-bordered.table-striped.table-hover.align-middle.mb-0`.
+   - Modificador para tablas compactas o densas (modales o sublistados): `.table.table-sm.table-bordered.table-striped.table-hover.align-middle.mb-0`.
+   - Contenedor responsive: Todo elemento tabular debe estar encapsulado en `.table-responsive` o `.table-responsive.app-scroll`.
+   - Alineación vertical: Todas las celdas y cabeceras deben llevar `align-middle`.
+   - Cabeceras (`thead`): Tipografía semibold, fondo claro tenue y borde inferior continuo definido por Alina.
+
+2. **Clasificación Semántica Transversal:**
+   - **Tablas de datos principales / catálogos (59 tablas):** Homologadas con `.table.table-bordered.table-striped.table-hover.align-middle.mb-0`.
+   - **Tablas de configuración (4 tablas):** Feriados, roles, usuarios y menú homologadas al estándar canónico.
+   - **Tablas dentro de modales (17 tablas):** Homologadas con el estándar bordered + striped + hoverable, adaptadas con `table-sm` cuando corresponde.
+
+3. **Exclusiones Legítimas Justificadas:**
+   - **Plantillas PDF / Impresión (6 tablas en `documentos/plantillas/hoja_reclamacion.php`):** Excluidas por responder a maquetación A4 y reglas de renderizado físico (hoja de reclamaciones INDECOPI).
+   - **Grillas Interactivas No Convencionales:**
+     - `tape-chart/index.php` (`.tape-chart-table`): Matriz interactiva de reservas con celdas de ocupación temporal y calendario.
+     - `disponibilidad/index.php` (`#tabla-rack`): Matriz de rack de habitaciones con coloreado contextual por celda de unidad.
+   - **Fichas de Metadatos Clave-Valor (8 tablas en `clientes/detalle.php`, `personal/index.php`, `recibos/index.php`):** Estructuras `.table.table-sm.table-borderless` que funcionan como fichas descriptivas sin columnas tabulares clásicas, donde aplicar rayado o bordes rompería su semántica de ficha técnica.
+

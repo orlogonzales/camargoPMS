@@ -81,7 +81,7 @@ declare(strict_types=1);
             <!-- Tabla de Usuarios -->
             <div class="card-body p-0">
                 <div class="table-responsive" id="contenedor-tabla-usuarios">
-                    <table class="table table-hover align-middle mb-0" id="tabla-usuarios">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-usuarios">
                         <thead class="table-light">
                             <tr class="f-s-12 text-uppercase text-secondary">
                                 <th style="width: 18%;">Usuario</th>
@@ -360,7 +360,7 @@ declare(strict_types=1);
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle mb-0">
+                    <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                         <thead class="table-light f-s-11 text-uppercase text-secondary">
                             <tr>
                                 <th>ID</th>

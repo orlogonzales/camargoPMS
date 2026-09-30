@@ -173,7 +173,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Folios -->
                         <div class="table-responsive border b-r-8">
-                            <table class="table table-hover align-middle mb-0" id="tabla-folios">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-folios">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase f-w-600">Código Folio</th>
@@ -457,7 +457,7 @@ declare(strict_types=1);
                         <h6 class="mb-0 f-s-13 f-w-700"><i class="fa-solid fa-list-check text-secondary me-2"></i> Cargos Imputados a la Cuenta</h6>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 f-s-12">
+                        <table class="table table-bordered table-striped table-hover align-middle f-s-12 mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Código</th>
@@ -484,7 +484,7 @@ declare(strict_types=1);
                         <h6 class="mb-0 f-s-13 f-w-700"><i class="fa-solid fa-money-check-dollar text-success me-2"></i> Pagos y Cobros Reconocidos</h6>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 f-s-12">
+                        <table class="table table-bordered table-striped table-hover align-middle f-s-12 mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Código</th>
@@ -510,7 +510,7 @@ declare(strict_types=1);
                         <h6 class="mb-0 f-s-13 f-w-700"><i class="fa-solid fa-arrow-rotate-left text-danger me-2"></i> Devoluciones y Reembolsos</h6>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 f-s-12">
+                        <table class="table table-bordered table-striped table-hover align-middle f-s-12 mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Código</th>

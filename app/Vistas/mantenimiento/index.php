@@ -177,7 +177,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Órdenes -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-ordenes">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-ordenes">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código</th>
@@ -257,7 +257,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Incidencias -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-incidencias">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-incidencias">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Ticket</th>

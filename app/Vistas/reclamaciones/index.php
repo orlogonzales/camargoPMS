@@ -167,7 +167,7 @@ declare(strict_types=1);
 
             <!-- Tabla de Expedientes -->
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="tabla-reclamaciones">
+                <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-reclamaciones">
                     <thead class="table-light">
                         <tr class="f-s-12 text-uppercase text-secondary">
                             <th class="ps-3">Hoja / Código</th>

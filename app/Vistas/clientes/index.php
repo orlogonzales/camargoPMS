@@ -130,7 +130,7 @@ declare(strict_types=1);
             <!-- Tabla de Clientes -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-clientes">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-clientes">
                         <thead class="table-light f-s-13">
                             <tr>
                                 <th class="ps-3" style="width: 110px;">Código</th>

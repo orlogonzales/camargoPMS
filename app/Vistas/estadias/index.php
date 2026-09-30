@@ -144,7 +144,7 @@ declare(strict_types=1);
             <!-- Tabla de Estadías -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-estadias">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-estadias">
                         <thead class="table-light">
                             <tr class="f-s-12 text-uppercase text-secondary">
                                 <th class="ps-3">Estadía</th>
@@ -275,7 +275,7 @@ declare(strict_types=1);
                                 </p>
 
                                 <div class="table-responsive bg-white b-r-6 border">
-                                    <table class="table table-sm table-hover align-middle mb-0" id="tabla-huespedes-checkin">
+                                    <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0" id="tabla-huespedes-checkin">
                                         <thead class="table-light">
                                             <tr class="f-s-11 text-uppercase text-secondary">
                                                 <th class="ps-2">Persona Registrada Central</th>
@@ -504,7 +504,7 @@ declare(strict_types=1);
                                 <span class="badge bg-light-primary" id="detalle-conteo-huespedes">0 personas</span>
                             </div>
                             <div class="table-responsive">
-                                <table class="table table-sm table-hover align-middle mb-0" id="tabla-detalle-huespedes">
+                                <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0" id="tabla-detalle-huespedes">
                                     <thead class="table-light">
                                         <tr class="f-s-11 text-uppercase text-secondary">
                                             <th class="ps-2">Nombre Completo</th>

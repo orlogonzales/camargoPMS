@@ -208,7 +208,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Tareas -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-tareas">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-tareas">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código</th>
@@ -239,7 +239,7 @@ declare(strict_types=1);
                             </button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-lotes">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-lotes">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código Lote</th>
@@ -345,7 +345,7 @@ declare(strict_types=1);
 
                 <!-- Tabla de Puntos de Control Checklist -->
                 <div class="table-responsive mb-3">
-                    <table class="table table-sm table-bordered align-middle">
+                    <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 15%;">Categoría</th>

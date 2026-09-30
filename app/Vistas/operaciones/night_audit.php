@@ -137,7 +137,7 @@ declare(strict_types=1);
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover align-middle mb-0 f-s-13 text-center" id="tabla-cierres">
+                        <table class="table table-bordered table-striped table-hover align-middle f-s-13 text-center mb-0" id="tabla-cierres">
                             <thead class="table-light text-uppercase f-s-11">
                                 <tr>
                                     <th>Fecha Hotelera</th>

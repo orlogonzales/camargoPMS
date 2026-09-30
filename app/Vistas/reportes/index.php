@@ -208,7 +208,7 @@ declare(strict_types=1);
                                 <span class="badge bg-light text-dark border" id="mdr-total-unidades-badge">0 unidades</span>
                             </div>
                             <div class="table-responsive p-0">
-                                <table class="table table-hover table-striped align-middle mb-0 f-s-13" id="tabla-mdr-unidades">
+                                <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0" id="tabla-mdr-unidades">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Código</th>
@@ -269,7 +269,7 @@ declare(strict_types=1);
                                 <span class="badge bg-success" id="fc-estado-cuadre">CUADRADO EXACTO</span>
                             </div>
                             <div class="table-responsive p-0">
-                                <table class="table table-bordered align-middle mb-0 f-s-13 text-center">
+                                <table class="table table-bordered table-striped table-hover align-middle f-s-13 text-center mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Medio de Tesorería</th>
@@ -319,7 +319,7 @@ declare(strict_types=1);
                                 <span class="badge bg-light text-dark border" id="fc-total-movs-badge">0 movimientos</span>
                             </div>
                             <div class="table-responsive p-0">
-                                <table class="table table-hover table-striped align-middle mb-0 f-s-13">
+                                <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>ID</th>
@@ -418,7 +418,7 @@ declare(strict_types=1);
                                 <span class="badge bg-light text-dark border" id="cxc-total-partidas-badge">0 partidas</span>
                             </div>
                             <div class="table-responsive p-0">
-                                <table class="table table-hover table-striped align-middle mb-0 f-s-13">
+                                <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Origen</th>
@@ -520,7 +520,7 @@ declare(strict_types=1);
                                 <span class="badge bg-light text-dark border" id="cxp-total-partidas-badge">0 partidas</span>
                             </div>
                             <div class="table-responsive p-0">
-                                <table class="table table-hover table-striped align-middle mb-0 f-s-13">
+                                <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Origen</th>

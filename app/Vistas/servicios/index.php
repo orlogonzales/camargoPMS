@@ -192,7 +192,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Servicios Contratados -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-servicios-contratados">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-servicios-contratados">
                                 <thead class="table-light">
                                     <tr class="f-s-12 text-uppercase text-secondary">
                                         <th class="ps-3">Código</th>
@@ -253,7 +253,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Catálogo -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-catalogo-servicios">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-catalogo-servicios">
                                 <thead class="table-light">
                                     <tr class="f-s-12 text-uppercase text-secondary">
                                         <th class="ps-3">Código</th>
@@ -313,7 +313,7 @@ declare(strict_types=1);
 
                         <!-- Tabla de Proveedores -->
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-proveedores">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-proveedores">
                                 <thead class="table-light">
                                     <tr class="f-s-12 text-uppercase text-secondary">
                                         <th class="ps-3">Código</th>
@@ -348,7 +348,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-traslados">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-traslados">
                                 <thead class="table-light">
                                     <tr class="f-s-12 text-uppercase text-secondary">
                                         <th class="ps-3">Código SC</th>

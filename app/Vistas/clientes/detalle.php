@@ -423,7 +423,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     <!-- 2. TAB: RESERVAS -->
                     <div class="tab-pane fade" id="tab-reservas" role="tabpanel">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 f-s-13">
+                            <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código</th>
@@ -473,7 +473,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     <!-- 3. TAB: ESTADÍAS -->
                     <div class="tab-pane fade" id="tab-estadias" role="tabpanel">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 f-s-13">
+                            <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código Estadía</th>
@@ -529,7 +529,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     <!-- 4. TAB: ARRENDAMIENTOS -->
                     <div class="tab-pane fade" id="tab-arrendamientos" role="tabpanel">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 f-s-13">
+                            <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código Contrato</th>
@@ -645,7 +645,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                     <?php if (!empty($fInfo['cargos'])): ?>
                                     <div class="p-2 bg-light f-s-12 f-w-600 border-bottom">Cargos a la Cuenta</div>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-hover mb-0 f-s-12">
+                                        <table class="table table-sm table-bordered table-striped table-hover align-middle f-s-12 mb-0">
                                             <thead>
                                                 <tr>
                                                     <th>Código</th>
@@ -686,7 +686,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                     <?php if (!empty($fInfo['pagos'])): ?>
                                     <div class="p-2 bg-light f-s-12 f-w-600 border-bottom border-top">Pagos Confirmados</div>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-hover mb-0 f-s-12">
+                                        <table class="table table-sm table-bordered table-striped table-hover align-middle f-s-12 mb-0">
                                             <thead>
                                                 <tr>
                                                     <th>Código</th>
@@ -720,7 +720,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                         <!-- Recibos de Pago Emitidos -->
                         <h6 class="f-w-700 text-primary f-s-14 mt-4 mb-3">Recibos de Cobro Emitidos</h6>
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 f-s-13">
+                            <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código Recibo</th>
@@ -762,7 +762,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     <!-- 6. TAB: SERVICIOS CONTRATADOS -->
                     <div class="tab-pane fade" id="tab-servicios" role="tabpanel">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 f-s-13">
+                            <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Código Servicio</th>
@@ -810,7 +810,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     <!-- 7. TAB: DOCUMENTOS EMITIDOS -->
                     <div class="tab-pane fade" id="tab-documentos" role="tabpanel">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 f-s-13">
+                            <table class="table table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Folio Documental</th>

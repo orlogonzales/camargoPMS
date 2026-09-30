@@ -79,7 +79,7 @@ declare(strict_types=1);
             <!-- Tabla de Empresas -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-empresas">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-empresas">
                         <thead class="bg-light text-secondary f-s-12 text-uppercase">
                             <tr>
                                 <th class="ps-4">Empresa / Emisor</th>

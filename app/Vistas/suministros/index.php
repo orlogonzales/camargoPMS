@@ -160,7 +160,7 @@ declare(strict_types=1);
                     </button>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="tabla-liquidaciones">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-liquidaciones">
                         <thead class="table-light">
                             <tr>
                                 <th>Folio</th>
@@ -198,7 +198,7 @@ declare(strict_types=1);
                     </button>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="tabla-medidores">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-medidores">
                         <thead class="table-light">
                             <tr>
                                 <th>N° Serie</th>
@@ -243,7 +243,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="tabla-lecturas">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-lecturas">
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
@@ -307,7 +307,7 @@ declare(strict_types=1);
                             <?php endif; ?>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle" id="tabla-tarifas">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-tarifas">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Ámbito</th>
@@ -646,7 +646,7 @@ declare(strict_types=1);
 
                 <h6 class="f-s-14 f-w-700 mb-2">Desglose de Tramos y Tarifas Aplicadas</h6>
                 <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle">
+                    <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th>Tramo</th>

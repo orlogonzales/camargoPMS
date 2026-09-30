@@ -170,7 +170,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-documentos">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-documentos">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Folio Oficial</th>
@@ -218,7 +218,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-incidencias">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-incidencias">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">ID</th>

@@ -154,3 +154,21 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
 9. **Progress (Criterio Rector):** Documentado explícitamente como **NO APLICA / SIN CASO REAL ACTUAL**, evitando la invención de barras de progreso artificiales sin procesos multifase reales en segundo plano.
 10. **Aislamiento e Inmutabilidad:** `admin-dashboard/` 100% intacta; base de datos preservada en exactamente 118 tablas y slot de migración 035 estrictamente libre (0 DDL).
 
+## Materialización en UI-ALINA-1E
+
+1. **Estándar Canónico Bordered + Striped + Hoverable (D-098):**
+   - Unificación de 80 tablas del PMS bajo las clases `.table.table-bordered.table-striped.table-hover.align-middle.mb-0` (y variante `.table-sm` en modales o vistas densas).
+   - Encapsulación en `.table-responsive` en el 100% de las tablas homologadas.
+   - Alineación vertical middle y tipografía semibold en `thead`.
+2. **Clasificación y Alcance Transversal:**
+   - **Tablas de datos principales / catálogos:** 59 tablas en arrendamientos, caja, clientes, compras, disponibilidad, documentos, empresas, estadías, gastos, housekeeping, inventario, mantenimiento, operaciones, personal, propiedades, recibos, reclamaciones, reportes, reservas, seguridad, servicios, suministros y unidades.
+   - **Tablas de configuración:** 4 tablas en feriados, menú, roles y usuarios.
+   - **Tablas en modales:** 17 tablas de selección, asignación y desgloses secundarios.
+3. **Exclusiones Legítimas Preservadas:**
+   - 6 tablas de plantilla PDF/impresión A4 (`hoja_reclamacion.php`).
+   - 2 grillas interactivas matriciales (`tape-chart-table` y `#tabla-rack`).
+   - 8 fichas de metadatos clave-valor con `.table-borderless`.
+4. **Integridad del Repositorio:**
+   - Cero alteraciones en `admin-dashboard/` (permanece 100% inmutable).
+   - Cero DDL: Base de datos congelada en exactamente 118 tablas y slot de migración 035 libre.
+

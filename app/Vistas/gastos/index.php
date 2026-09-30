@@ -147,7 +147,7 @@ declare(strict_types=1);
             <!-- Tabla de Gastos -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-gastos">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-gastos">
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">Código</th>

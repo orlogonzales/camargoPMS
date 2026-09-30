@@ -41,7 +41,7 @@ $permisos = $datosGestion['permisos'] ?? [];
 
             <div class="card-body p-3">
                 <div class="table-responsive" id="tabla-gestion-menu">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr class="f-s-12 text-uppercase text-secondary">
                                 <th style="width: 35%;">Opción / Jerarquía</th>

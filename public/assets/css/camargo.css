@@ -702,3 +702,64 @@ input, textarea, select, button,
     background-color: rgba(var(--success), 0.2);
     color: var(--bs-success, #198754);
 }
+
+/* ==========================================================================
+   6. TABLAS ALINA — BORDERED + STRIPED + HOVERABLE (UI-ALINA-1E)
+   ========================================================================== */
+
+/* Estandarización de tablas bordered, striped y hoverable Alina */
+.table.table-bordered {
+    border-color: rgba(var(--secondary), 0.18);
+}
+
+.table.table-bordered > :not(caption) > * > * {
+    border-color: rgba(var(--secondary), 0.18);
+}
+
+.table.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: rgba(var(--light), 0.35);
+    color: inherit;
+}
+
+.table.table-hover > tbody > tr:hover > * {
+    --bs-table-accent-bg: rgba(var(--primary), 0.04);
+}
+
+/* Alineación vertical centrada para celdas y cabeceras */
+.table.align-middle > :not(caption) > * > * {
+    vertical-align: middle;
+}
+
+/* Cabeceras de tabla Alina */
+.table thead th {
+    font-weight: 600;
+    color: rgba(var(--dark), 0.85);
+    background-color: rgba(var(--light), 0.5);
+    border-bottom: 1px solid rgba(var(--secondary), 0.25);
+    white-space: nowrap;
+}
+
+/* Integración armónica en tarjetas */
+.card .table-responsive:first-child .table,
+.card-body.p-0 > .table-responsive > .table {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.card-body.p-0 > .table-responsive > .table-bordered {
+    border-left: 0;
+    border-right: 0;
+}
+
+.card-body.p-0 > .table-responsive > .table-bordered > :not(caption) > * > :first-child {
+    border-left: 0;
+}
+
+.card-body.p-0 > .table-responsive > .table-bordered > :not(caption) > * > :last-child {
+    border-right: 0;
+}
+
+.card-body.p-0 > .table-responsive > .table-bordered > tbody > tr:last-child > * {
+    border-bottom: 0;
+}

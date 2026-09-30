@@ -184,7 +184,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-ordenes">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-ordenes">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Código OC</th>
@@ -229,7 +229,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-solicitudes">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-solicitudes">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Código</th>
@@ -267,7 +267,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive mb-4">
-                            <table class="table table-hover align-middle mb-0" id="tabla-recepciones">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-recepciones">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Folio Recepción</th>
@@ -302,7 +302,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-comprobantes">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-comprobantes">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Comprobante Fiscal</th>
@@ -345,7 +345,7 @@ declare(strict_types=1);
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-cxp">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-cxp">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="f-s-12 text-uppercase">Código CxP</th>
@@ -454,7 +454,7 @@ declare(strict_types=1);
                             </div>
                         </div>
                         <div class="table-responsive p-2">
-                            <table class="table table-sm align-middle mb-0" id="tabla-lineas-orden">
+                            <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0" id="tabla-lineas-orden">
                                 <thead>
                                     <tr>
                                         <th style="width: 10%;">Tipo</th>
@@ -533,7 +533,7 @@ declare(strict_types=1);
                             </button>
                         </div>
                         <div class="table-responsive p-2">
-                            <table class="table table-sm align-middle mb-0">
+                            <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
                                         <th style="width: 20%;">Tipo</th>
@@ -611,7 +611,7 @@ declare(strict_types=1);
                             <span class="f-s-13 f-w-700">Conteo Físico: Aceptado (Kardex) vs Rechazado</span>
                         </div>
                         <div class="table-responsive p-2">
-                            <table class="table table-sm align-middle mb-0">
+                            <table class="table table-sm table-bordered table-striped table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
                                         <th>Artículo</th>

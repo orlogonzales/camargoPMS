@@ -92,7 +92,7 @@ declare(strict_types=1);
             <!-- Tabla de Unidades -->
             <div class="card-body p-0">
                 <div class="table-responsive" id="contenedor-tabla-unidades">
-                    <table class="table table-hover align-middle mb-0" id="tabla-unidades">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-unidades">
                         <thead class="table-light">
                             <tr class="f-s-12 text-uppercase text-secondary">
                                 <th style="width: 12%;">Código</th>

@@ -1623,6 +1623,33 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Base de datos inmutable con exactamente 118 tablas, migración 034 aplicada, slot 035 estrictamente LIBRE (0 DDL).
    - Catálogo original `admin-dashboard/` 100% intacto y de solo lectura.
 
+### D-098 — Estandarización Transversal de Tablas Alina (Bordered + Striped + Hoverable) (UI-ALINA-1E)
+
+1. **Estándar Canónico Visual Alina:**
+   - Todas las tablas de datos, catálogos, configuraciones y modales de Camargo PMS adoptan la combinación oficial de la plantilla Alina: **Bordered Tables With Striped + Hoverable Table**.
+   - Clases CSS obligatorias: `.table.table-bordered.table-striped.table-hover.align-middle.mb-0` (con modificador `.table-sm` en modales o vistas densas cuando corresponde).
+   - Encapsulación en `.table-responsive` en el 100% de las tablas homologadas para garantizar adaptabilidad móvil y scroll controlado.
+   - Alineación vertical: Todas las celdas y cabeceras deben llevar `align-middle` para consistencia con botones de acción y badges.
+
+2. **Inventario y Clasificación Semántica (96 tablas auditadas en `app/Vistas/`):**
+   - **Tablas Homologadas (80 tablas):**
+     - 59 tablas de datos principales y sublistados de vista en todos los módulos de negocio.
+     - 4 tablas de configuración y catálogos maestros (`feriados`, `menu`, `roles`, `usuarios`).
+     - 17 tablas auxiliares dentro de modales (selección de líneas, asignación de permisos, huéspedes, etc.).
+   - **Exclusiones Legítimas Justificadas (16 tablas):**
+     - 6 tablas de la plantilla PDF/impresión A4 (`hoja_reclamacion.php`) por responder a reglas fijas de impresión física INDECOPI.
+     - 2 grillas interactivas matriciales no convencionales: `.tape-chart-table` (Tape Chart calendario) y `#tabla-rack` (rack de habitaciones) que requieren renderizado matricial especializado.
+     - 8 tablas de metadatos clave-valor con `.table-borderless` que funcionan como fichas descriptivas sin columnas tabulares.
+
+3. **Preservación de Ganancias Previas y Reglas de Calidad:**
+   - Preservación íntegra de badges suaves (`bg-light-*`), botones suaves `.btn-light-*`, inicialización de tooltips runtime con `bootstrap.Tooltip.getOrCreateInstance` y modales centrados (`modal-dialog-centered`).
+   - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
+   - Cero consultas directas a base de datos en vistas o scripts JS.
+
+4. **Integridad Relacional y de Repositorio:**
+   - Cero DDL: Exactamente 118 tablas relacionales; slot de migración 035 estrictamente LIBRE.
+   - Catálogo Alina inmutable: Directorio `admin-dashboard/` 100% intacto y de solo lectura.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

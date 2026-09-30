@@ -162,7 +162,7 @@ declare(strict_types=1);
 
     <!-- Tabla de Sesiones -->
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0" id="tabla-sesiones">
+        <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-sesiones">
             <thead class="table-light">
                 <tr>
                     <th style="width: 22%;">Usuario / Persona</th>

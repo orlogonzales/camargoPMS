@@ -168,7 +168,7 @@ declare(strict_types=1);
             <!-- Tabla de Colaboradores -->
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-personal">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0" id="tabla-personal">
                         <thead class="bg-light text-secondary f-s-12 text-uppercase">
                             <tr>
                                 <th class="ps-4">Colaborador</th>
@@ -720,7 +720,7 @@ declare(strict_types=1);
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-hover mb-0 align-middle f-s-13">
+                                    <table class="table table-sm table-bordered table-striped table-hover align-middle f-s-13 mb-0">
                                         <thead class="bg-light text-secondary">
                                             <tr>
                                                 <th class="ps-3">Episodio</th>
