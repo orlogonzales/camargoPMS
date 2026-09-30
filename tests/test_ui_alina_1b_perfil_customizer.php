@@ -105,7 +105,7 @@ test_afirmar(
     "PERFIL-CTRL-02: PerfilControlador valida la sesión del usuario mediante SesionServicio"
 );
 test_afirmar(
-    strpos($controladorPhp, 'obtenerDetalleCompleto') !== false,
+    strpos($controladorPhp, 'buscarDetallePorId') !== false,
     "PERFIL-CTRL-03: PerfilControlador carga datos técnicos del usuario mediante UsuarioRepositorio"
 );
 test_afirmar(

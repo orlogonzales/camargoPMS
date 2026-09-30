@@ -66,7 +66,7 @@ class PerfilControlador
         $personaId = (int) $usuarioActual->obtenerPersonaId();
 
         // 1. Cargar datos técnicos y roles del Usuario (cuenta de acceso)
-        $detalleUsuario = $this->usuarioRepo->obtenerDetalleCompleto($usuarioId);
+        $detalleUsuario = $this->usuarioRepo->buscarDetallePorId($usuarioId);
 
         // 2. Cargar datos de la Persona humana vinculada (sujeto natural)
         $persona = $this->personaRepo->buscarPorId($personaId, true);

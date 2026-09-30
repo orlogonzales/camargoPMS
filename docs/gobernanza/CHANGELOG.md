@@ -4,6 +4,19 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase FIX-PERFIL-1 — Alineación del Contrato de Detalle de Usuario en Perfil (D-100)
+
+- **Corrección de Contrato en Capa Controlador:**
+  - En `app/Controladores/PerfilControlador.php`, se reemplazó la invocación al método inexistente `obtenerDetalleCompleto($usuarioId)` por el contrato canónico formal `buscarDetallePorId($usuarioId)` en `UsuarioRepositorio`.
+  - En `app/Vistas/perfil/index.php`, se actualizó la referencia de sesiones activas al estándar del repositorio `sesiones_activas` con fallback defensivo `?? 0` (`(int) ($detalleUsuario['sesiones_activas'] ?? 0)`), erradicando claves no estándar (`total_sesiones_activas`) y evitando inferencias artificiales de datos.
+- **Inmutabilidad de Persistencia y Base de Datos:**
+  - `UsuarioRepositorio.php` permanece 100% inalterado (cero modificaciones).
+  - Cero DDL: Base de datos congelada en 118 tablas relacionales; última migración `034_agregar_foto_personas.sql`; ranura `035` estrictamente libre.
+- **Calidad y Cobertura:**
+  - Nueva suite automatizada `tests/test_fix_perfil_detalle.php` con 21 comprobaciones exhaustivas (21/21 PASS).
+  - Actualización de `tests/test_ui_alina_1b_perfil_customizer.php` para validar el contrato canónico `buscarDetallePorId` (46/46 PASS).
+  - Regresión global consolidada: 70 suites automatizadas, 1,600 checks, 0 fallos.
+
 ### Microfase UI-ALINA-1F-C1 — Corrección de Alcance y Certificación Final
 
 - **Delimitación Estricta de Alcance Arquitectónico:**

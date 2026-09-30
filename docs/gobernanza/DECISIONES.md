@@ -1679,6 +1679,23 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Directorio de referencia Alina `admin-dashboard/` 100% intacto, inmutable y de solo lectura.
    - Cobertura de regresión global incrementada a 69 suites de pruebas, 1,579 checks automatizados y 0 fallos.
 
+### D-100 — Alineación del Contrato de Detalle de Usuario en Perfil (FIX-PERFIL-1)
+
+1. **Resolución de la Incompatibilidad en PerfilControlador:**
+   - Se resuelve el defecto funcional preexistente desde UI-ALINA-1B en la ruta `/perfil`.
+   - `PerfilControlador::index()` invoca formalmente el contrato canónico existente `UsuarioRepositorio::buscarDetallePorId(int $id): ?array`.
+   - Queda erradicada cualquier referencia o invocación al método inexistente `obtenerDetalleCompleto()`.
+
+2. **Consumo Semántico de Sesiones Activas en Vista:**
+   - En `app/Vistas/perfil/index.php`, se normaliza el acceso al contador de sesiones concurrentes utilizando la clave formal del repositorio `$detalleUsuario['sesiones_activas']`.
+   - Se establece un fallback estricto `?? 0`, prohibiendo el uso de claves inexistentes (`total_sesiones_activas`) y evitando inventar datos con fallbacks artificiales (`?? 1`).
+
+3. **Inmutabilidad de la Capa de Persistencia y Base de Datos:**
+   - La clase `UsuarioRepositorio` permanece 100% inalterada, preservando la pureza de la capa de acceso a datos sin introducir métodos alias innecesarios.
+   - Cero DDL: Base de datos congelada en exactamente 118 tablas relacionales; última migración `034_agregar_foto_personas.sql`; ranura `035` estrictamente LIBRE.
+   - Catálogo `admin-dashboard/` 100% intacto y de solo lectura.
+   - Suite de regresión consolidada: 70 suites automatizadas, 1,600 checks, 0 fallos.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

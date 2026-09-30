@@ -302,7 +302,7 @@ declare(strict_types=1);
                                 <div>
                                     <span class="d-block f-w-600 text-dark f-s-14">Sesiones concurrentes del usuario</span>
                                     <span class="text-secondary f-s-13">
-                                        Actualmente tienes <strong><?= (int) ($detalleUsuario['total_sesiones_activas'] ?? 1) ?></strong> sesión(es) activa(s) registrada(s).
+                                        Actualmente tienes <strong><?= (int) ($detalleUsuario['sesiones_activas'] ?? 0) ?></strong> sesión(es) activa(s) registrada(s).
                                     </span>
                                 </div>
                                 <div>
