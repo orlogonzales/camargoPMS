@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <span class="badge ${u.limpieza_hoy.clase} f-s-11">${u.limpieza_hoy.codigo}</span>
                     </div>
-                    <div class="bg-light-subtle p-2 b-r-8 mb-2">
+                    <div class="bg-light p-2 b-r-8 mb-2">
                         <span class="text-secondary f-s-11 d-block">Condición Hoy:</span>
                         <strong class="f-s-13 text-dark text-truncate d-block">${escaparHtml(estadoTexto)}</strong>
                         ${celdaHoy && celdaHoy.codigo_referencia ? `<span class="f-s-11 text-primary font-monospace">${escaparHtml(celdaHoy.codigo_referencia)}</span>` : ''}

@@ -30,7 +30,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-calendar-week f-s-22"></i>
                     </span>
                     <div>
@@ -53,7 +53,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Barra de Controles Operativos (Propiedad, Horizontes y Flatpickr) -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <!-- Selector de Propiedad -->
                     <div class="col-lg-3 col-md-4 col-12">
@@ -282,7 +282,7 @@ declare(strict_types=1);
                 </div>
 
                 <!-- Resumen de Datos de la Celda -->
-                <div class="bg-light-subtle p-3 b-r-12 mb-3">
+                <div class="bg-light p-3 b-r-12 mb-3">
                     <div class="row g-2 f-s-13">
                         <div class="col-6">
                             <span class="text-secondary d-block f-s-11">Estado Operacional:</span>

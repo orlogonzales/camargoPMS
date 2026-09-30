@@ -773,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 html += `
                     <div class="col-md-6 col-12">
-                        <div class="border rounded p-2 h-100 bg-white d-flex align-items-start ${esCritico ? 'border-warning bg-warning-subtle' : ''}">
+                        <div class="border rounded p-2 h-100 bg-white d-flex align-items-start ${esCritico ? 'border-warning bg-light-warning' : ''}">
                             <div class="form-check d-flex align-items-start gap-2 mb-0">
                                 <input class="form-check-input f-s-18 mt-1 check-permiso" type="checkbox"
                                        value="${p.id}" id="permiso-${p.id}"

@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1F — Barrido Visual Global, Responsive y Cierre de Homologación Alina (D-099)
+
+- **Barrido Visual y Erradicación Total de Clases Residuales `-subtle`:**
+  - Auditoría transversal sobre 42 pantallas operativas y 54 archivos de vista en `app/Vistas/` y scripts JavaScript en `public/assets/js/`.
+  - Reemplazo del 100% de clases Bootstrap 5 `-subtle` remanentes (`bg-primary-subtle`, `bg-light-subtle`, `bg-secondary-subtle`, `bg-info-subtle`, `bg-warning-subtle`, `bg-danger-subtle`, `bg-success-subtle`, `border-danger-subtle`, `border-primary-subtle`, `text-light-subtle`) por superficies nativas Alina: `.bg-light-primary`, `.bg-light-secondary`, `.bg-light-info`, `.bg-light-warning`, `.bg-light-danger`, `.bg-light-success`, `.bg-light` y `.text-white-50`.
+  - Cero residuos `-subtle` en vistas, código JavaScript propio y reglas CSS.
+- **Consistencia de Diálogos Modales y Responsive:**
+  - 100% de modales con centrado vertical obligatorio `.modal-dialog-centered` (0 sin centrar).
+  - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
+  - Iconografía 100% Font Awesome 6 Free (cero iconos ajenos `ti-`, `bi-`, `feather-`).
+  - Verificación en vivo (runtime HTTPS sobre Apache) de 36 pantallas con respuesta HTTP 200 OK y estructura canónica Alina (`.app-wrapper`, `.app-navbar`, `.app-content`).
+  - Sincronización de `UsuarioRepositorio::obtenerDetalleCompleto()` asegurando la carga pasiva de `/perfil` respetando `PERSONA ≠ USUARIO`.
+- **Preservación Estricta de Ganancias Acumuladas:**
+  - Preservación íntegra de layouts modulares (1A), perfil y customizer Alina (1B/1B-C1), formularios y validación PristineJS (1C), componentes interactivos (1D) y 80 tablas convencionales con sus 16 exclusiones legítimas (1E).
+- **Gobernanza y Control de Versiones:**
+  - Nueva suite automatizada `tests/test_ui_alina_1f_barrido_final.php` con 24 comprobaciones exhaustivas (24/24 PASS).
+  - Regresión consolidada en 69 suites de pruebas, 1,579 checks automatizados y 0 fallos.
+  - Cero DDL: Base de datos congelada en exactamente 118 tablas relacionales; última migración `034_*`; ranura `035_*` estrictamente libre.
+  - Directorio `admin-dashboard/` 100% intacto, inmutable y de solo lectura.
+
 ### Microfase UI-ALINA-1E — Homologación Transversal de Tablas Alina (D-098)
 
 - **Estándar Canónico Bordered + Striped + Hoverable (`.table.table-bordered.table-striped.table-hover.align-middle.mb-0`):**

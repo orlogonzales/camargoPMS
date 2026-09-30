@@ -23,7 +23,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-sliders f-s-22"></i>
                     </span>
                     <div>
@@ -80,7 +80,7 @@ declare(strict_types=1);
                                     $valorPredet = $param['valor_predeterminado'] ?? '';
                                 ?>
                                     <div class="col-md-6 col-12">
-                                        <div class="card border p-3 h-100 bg-light-subtle">
+                                        <div class="card border p-3 h-100 bg-light">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <div>
                                                     <label for="cfg_<?= e(str_replace('.', '_', $clave)) ?>" class="form-label fw-bold mb-0">
@@ -159,7 +159,7 @@ declare(strict_types=1);
                                     $valorPredet = $param['valor_predeterminado'] ?? '';
                                 ?>
                                     <div class="col-md-6 col-12">
-                                        <div class="card border p-3 h-100 bg-light-subtle">
+                                        <div class="card border p-3 h-100 bg-light">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <div>
                                                     <label for="cfg_<?= e(str_replace('.', '_', $clave)) ?>" class="form-label fw-bold mb-0">
@@ -235,7 +235,7 @@ declare(strict_types=1);
                                     $valorPredet = $param['valor_predeterminado'] ?? '';
                                 ?>
                                     <div class="col-md-6 col-12">
-                                        <div class="card border p-3 h-100 bg-light-subtle">
+                                        <div class="card border p-3 h-100 bg-light">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <div>
                                                     <label for="cfg_<?= e(str_replace('.', '_', $clave)) ?>" class="form-label fw-bold mb-0">

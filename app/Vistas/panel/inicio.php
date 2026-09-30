@@ -14,7 +14,7 @@ declare(strict_types=1);
         <div class="card equal-card tarjeta-comprobacion h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3">
                         <i class="fa-solid fa-network-wired f-s-22"></i>
                     </span>
                     <div>
@@ -34,7 +34,7 @@ declare(strict_types=1);
         <div class="card equal-card tarjeta-comprobacion h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
-                    <span class="bg-info-subtle text-info p-2 b-r-8 me-3">
+                    <span class="bg-light-info text-info p-2 b-r-8 me-3">
                         <i class="fa-solid fa-table-columns f-s-22"></i>
                     </span>
                     <div>
@@ -54,7 +54,7 @@ declare(strict_types=1);
         <div class="card equal-card tarjeta-comprobacion h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
-                    <span class="bg-warning-subtle text-warning p-2 b-r-8 me-3">
+                    <span class="bg-light-warning text-warning p-2 b-r-8 me-3">
                         <i class="fa-brands fa-js f-s-22"></i>
                     </span>
                     <div>
@@ -74,7 +74,7 @@ declare(strict_types=1);
         <div class="card equal-card tarjeta-comprobacion h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
-                    <span class="bg-secondary-subtle text-secondary p-2 b-r-8 me-3">
+                    <span class="bg-light-secondary text-secondary p-2 b-r-8 me-3">
                         <i class="fa-solid fa-shield-halved f-s-22"></i>
                     </span>
                     <div>

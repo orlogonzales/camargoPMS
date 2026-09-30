@@ -172,3 +172,21 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
    - Cero alteraciones en `admin-dashboard/` (permanece 100% inmutable).
    - Cero DDL: Base de datos congelada en exactamente 118 tablas y slot de migración 035 libre.
 
+## Materialización en UI-ALINA-1F
+
+1. **Barrido Visual y Erradicación Total de Clases Residuales (D-099):**
+   - Auditoría transversal sobre las 42 pantallas mapeadas en `app/Vistas/` y scripts en `public/assets/js/`.
+   - Eliminación del 100% de clases Bootstrap 5 `-subtle` remanentes (`bg-primary-subtle`, `bg-light-subtle`, `bg-secondary-subtle`, `bg-info-subtle`, `bg-warning-subtle`, `bg-danger-subtle`, `bg-success-subtle`, `border-danger-subtle`, `border-primary-subtle`, `text-light-subtle`) en favor de las superficies Alina `.bg-light-*`, `.bg-light` y contraste `.text-white-50`.
+   - Cero clases residuales `-subtle` restantes en vistas, JavaScript y CSS propio.
+2. **Consistencia Transversal de Modales y Responsive:**
+   - 100% de modales con centrado vertical `.modal-dialog-centered`.
+   - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
+   - Iconografía 100% Font Awesome 6 Free (cero iconos ajenos `ti-`, `bi-`, `feather-`).
+   - Verificación de 36 pantallas en vivo bajo Apache HTTPS con código 200 OK y estructura canónica Alina.
+   - Sincronización de `UsuarioRepositorio::obtenerDetalleCompleto()` para la carga pasiva de `/perfil` respetando `PERSONA ≠ USUARIO`.
+3. **Preservación Estricta de Fases Previas (1A a 1E):**
+   - Preservación íntegra de layouts (1A), perfil y customizer (1B/1B-C1), formularios (1C), componentes interactivos (1D) y las 80 tablas convencionales y 16 exclusiones legítimas (1E).
+4. **Gobernanza y Estado Prístino:**
+   - Base de datos congelada en exactamente 118 tablas relacionales; última migración aplicada `034_agregar_foto_personas.sql`; ranura `035` estrictamente LIBRE (0 DDL).
+   - Catálogo de referencia `admin-dashboard/` 100% intacto, inmutable y de solo lectura.
+   - Regresión consolidada en 69 suites de pruebas, 1,579 checks automatizados y 0 fallos.

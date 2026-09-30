@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             for (const c of cols) {
-                const bgWeekend = c.es_fin_de_semana ? 'bg-secondary-subtle' : '';
+                const bgWeekend = c.es_fin_de_semana ? 'bg-light-secondary text-secondary' : '';
                 theadHtml += `
                     <th style="min-width: 34px; max-width: 36px;" class="${bgWeekend}" title="${c.fecha}">
                         <div class="f-s-10 text-muted">${c.nombre_dia}</div>
@@ -358,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (const c of cols) {
                     const celda = u.dias[c.fecha];
                     const esOcupado = celda && celda.estado === 'OCUPADO';
-                    let claseColor = 'bg-success-subtle text-success';
+                    let claseColor = 'bg-light-success text-success';
                     let icono = 'fa-solid fa-check';
                     let tooltip = `${c.fecha}: Disponible`;
 

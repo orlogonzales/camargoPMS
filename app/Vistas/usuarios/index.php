@@ -22,7 +22,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-users f-s-22"></i>
                     </span>
                     <div>
@@ -42,7 +42,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Barra de Filtros y Búsqueda -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-5 col-12">
                         <div class="input-group input-group-sm">
@@ -339,7 +339,7 @@ declare(strict_types=1);
 <div class="modal fade" id="modal-sesiones-usuario" tabindex="-1" aria-labelledby="modal-sesiones-usuario-titulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-info-subtle py-3 border-bottom">
+            <div class="modal-header bg-light-info py-3 border-bottom">
                 <h5 class="modal-title f-s-16 f-w-700 text-dark" id="modal-sesiones-usuario-titulo">
                     <i class="fa-solid fa-laptop me-1"></i> Sesiones Activas: <span id="sesiones-modal-usuario-txt"></span>
                 </h5>

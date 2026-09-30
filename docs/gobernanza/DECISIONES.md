@@ -1650,6 +1650,35 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Cero DDL: Exactamente 118 tablas relacionales; slot de migración 035 estrictamente LIBRE.
    - Catálogo Alina inmutable: Directorio `admin-dashboard/` 100% intacto y de solo lectura.
 
+### D-099 — Barrido Visual Global, Responsive y Cierre de Homologación Alina (UI-ALINA-1F)
+
+1. **Erradicación Total de Clases Residuales Bootstrap (`*-subtle`):**
+   - Se auditan exhaustivamente las 42 pantallas y 54 archivos de vista en `app/Vistas/` y todos los scripts JavaScript en `public/assets/js/`.
+   - Se erradican el 100% de las clases residuales `-subtle` (`bg-primary-subtle`, `bg-light-subtle`, `bg-secondary-subtle`, `bg-info-subtle`, `bg-warning-subtle`, `bg-danger-subtle`, `bg-success-subtle`, `border-danger-subtle`, `border-primary-subtle`, `text-light-subtle`) sustituyéndolas por las clases canónicas de la plantilla Alina:
+     - Superficies suaves con acento y contraste tipográfico: `.bg-light-primary`, `.bg-light-secondary`, `.bg-light-info`, `.bg-light-warning`, `.bg-light-danger`, `.bg-light-success`.
+     - Superficies neutras de tarjetas y filtros: `.bg-light`.
+     - Subtítulos sobre cabeceras oscuras: `.text-white-50`.
+   - Cero clases `-subtle` restantes en vistas, JavaScript y CSS propio (0 residuos).
+
+2. **Consistencia Transversal de Interacción y Responsive:**
+   - 100% de los diálogos modales implementan alineación vertical centrada `.modal-dialog-centered`.
+   - Ausencia absoluta de bordes punteados o entrecortados (`0 dotted / 0 dashed`) en reglas activas de CSS y estilos inline.
+   - Adherencia uniforme al catálogo oficial Font Awesome 6 (0 iconos ajenos `ti-`, `bi-`, `feather-`).
+   - Verificación en vivo (runtime HTTPS sobre servidor web Apache) de 36 pantallas operativas con respuesta HTTP 200 OK y estructura DOM canónica Alina (`.app-wrapper`, `.app-navbar`, `.app-content`).
+   - Sincronización del método `obtenerDetalleCompleto()` en `UsuarioRepositorio` para asegurar la carga pasiva del perfil respetando `PERSONA ≠ USUARIO`.
+
+3. **Preservación Estricta de Ganancias Acumuladas:**
+   - **UI-ALINA-1A:** Arquitectura modular de plantilla Alina (`blank.html`), navegación de dos columnas, cargador neutro.
+   - **UI-ALINA-1B / 1B-C1:** Perfil de usuario desacoplado, Theme Customizer con persistencia soberana en localStorage y gestión de foto de persona.
+   - **UI-ALINA-1C:** Estandarización de formularios (`app-form`, `app-icon-form`, `icon-control`, `floating-form`, validación cliente PristineJS sin acoplamiento a librerías AJAX de terceros).
+   - **UI-ALINA-1D:** Componentes de interacción homologados (badges Alina `.badge.bg-light-*`, modales centrados, alertas corporativas, acordeones, pestañas).
+   - **UI-ALINA-1E:** Estandarización de 80 tablas convencionales (`.table-bordered.table-striped.table-hover.align-middle`) y preservación estricta de las 16 exclusiones legítimas (6 tablas PDF A4, 1 Tape Chart, 1 Rack disponibilidad, 8 fichas descriptivas `table-borderless`).
+
+4. **Gobernanza Relacional y de Repositorio:**
+   - Cero DDL: Exactamente 118 tablas relacionales; última migración aplicada `034_agregar_foto_personas.sql`; ranura `035` estrictamente LIBRE.
+   - Directorio de referencia Alina `admin-dashboard/` 100% intacto, inmutable y de solo lectura.
+   - Cobertura de regresión global incrementada a 69 suites de pruebas, 1,579 checks automatizados y 0 fallos.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

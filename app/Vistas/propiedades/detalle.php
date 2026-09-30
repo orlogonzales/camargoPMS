@@ -30,7 +30,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
             <div class="card-body p-4">
                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <span class="bg-primary-subtle text-primary p-3 b-r-12 me-3 d-flex-center">
+                        <span class="bg-light-primary text-primary p-3 b-r-12 me-3 d-flex-center">
                             <i class="fa-solid fa-building f-s-32"></i>
                         </span>
                         <div>
@@ -196,7 +196,7 @@ $tieneCoordenadas = $lat !== null && $lng !== null;
                     </div>
                 <?php else: ?>
                     <div class="text-center py-5 p-3">
-                        <div class="p-3 b-r-12 bg-light-subtle d-inline-block mb-3">
+                        <div class="p-3 b-r-12 bg-light d-inline-block mb-3">
                             <i class="fa-solid fa-door-closed f-s-36 text-muted"></i>
                         </div>
                         <h6 class="f-w-700 f-s-15 mb-1">Sin unidades habitacionales registradas</h6>

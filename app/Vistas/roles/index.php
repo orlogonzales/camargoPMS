@@ -22,7 +22,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-shield-halved f-s-22"></i>
                     </span>
                     <div>
@@ -42,7 +42,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Barra de Filtros y Búsqueda -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-7 col-12">
                         <div class="input-group input-group-sm">
@@ -243,7 +243,7 @@ declare(strict_types=1);
                     <h5 class="modal-title f-s-16 f-w-600 text-white mb-0" id="modal-gestionar-permisos-titulo">
                         <i class="fa-solid fa-key me-2"></i> Matriz de Permisos
                     </h5>
-                    <div class="f-s-12 text-light-subtle mt-1" id="subtitulo-permisos-rol">
+                    <div class="f-s-12 text-white-50 mt-1" id="subtitulo-permisos-rol">
                         Configurando permisos del rol
                     </div>
                 </div>

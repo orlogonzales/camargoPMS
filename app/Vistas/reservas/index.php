@@ -24,7 +24,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-calendar-check f-s-22"></i>
                     </span>
                     <div>
@@ -49,7 +49,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Barra de Filtros y Búsqueda -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-3 col-12">
                         <div class="icon-control position-relative">
@@ -200,7 +200,7 @@ declare(strict_types=1);
                                     <i class="fa-solid fa-plus me-1"></i> Añadir Unidad
                                 </button>
                             </div>
-                            <div class="border b-r-8 p-2 bg-light-subtle">
+                            <div class="border b-r-8 p-2 bg-light">
                                 <div id="contenedor-unidades-reserva">
                                     <!-- Filas dinámicas de unidades -->
                                 </div>
@@ -296,7 +296,7 @@ declare(strict_types=1);
                 <div class="row g-3">
                     <!-- Datos del Titular -->
                     <div class="col-md-6">
-                        <div class="card border p-2 h-100 bg-light-subtle">
+                        <div class="card border p-2 h-100 bg-light">
                             <h6 class="f-s-12 f-w-700 text-uppercase text-secondary mb-2">
                                 <i class="fa-solid fa-user me-1"></i> Persona Titular
                             </h6>
@@ -312,7 +312,7 @@ declare(strict_types=1);
 
                     <!-- Datos Temporales y Operacionales -->
                     <div class="col-md-6">
-                        <div class="card border p-2 h-100 bg-light-subtle">
+                        <div class="card border p-2 h-100 bg-light">
                             <h6 class="f-s-12 f-w-700 text-uppercase text-secondary mb-2">
                                 <i class="fa-solid fa-calendar-days me-1"></i> Período Hotelero
                             </h6>

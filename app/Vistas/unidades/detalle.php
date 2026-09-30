@@ -29,7 +29,7 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
             <div class="card-body p-4">
                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                     <div class="d-flex align-items-center mb-2 mb-md-0">
-                        <span class="bg-primary-subtle text-primary p-3 b-r-10 me-3 d-flex-center">
+                        <span class="bg-light-primary text-primary p-3 b-r-10 me-3 d-flex-center">
                             <i class="fa-solid fa-door-open f-s-28"></i>
                         </span>
                         <div>
@@ -174,10 +174,10 @@ $estadoTexto = $esActiva ? 'ACTIVO' : 'INACTIVO';
         </div>
 
         <!-- Tarjeta: Ámbito Operativo Futuro (Placeholder Arquitectónico) -->
-        <div class="card equal-card shadow-sm border-0 mb-4 bg-light-subtle border-start border-4 border-info">
+        <div class="card equal-card shadow-sm border-0 mb-4 bg-light border-start border-4 border-info">
             <div class="card-body p-4">
                 <div class="d-flex align-items-start">
-                    <span class="bg-info-subtle text-info p-2 rounded me-3 mt-1">
+                    <span class="bg-light-info text-info p-2 rounded me-3 mt-1">
                         <i class="fa-solid fa-calendar-day f-s-24"></i>
                     </span>
                     <div>

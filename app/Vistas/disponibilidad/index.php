@@ -28,7 +28,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-calendar-days f-s-22"></i>
                     </span>
                     <div>
@@ -48,11 +48,11 @@ declare(strict_types=1);
             </div>
 
             <!-- KPIs de Inventario en Tiempo Real -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-3">
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
-                            <div class="bg-primary-subtle text-primary p-2 b-r-6 me-3">
+                            <div class="bg-light-primary text-primary p-2 b-r-6 me-3">
                                 <i class="fa-solid fa-door-open f-s-20"></i>
                             </div>
                             <div>
@@ -63,7 +63,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
-                            <div class="bg-success-subtle text-success p-2 b-r-6 me-3">
+                            <div class="bg-light-success text-success p-2 b-r-6 me-3">
                                 <i class="fa-solid fa-circle-check f-s-20"></i>
                             </div>
                             <div>
@@ -74,7 +74,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
-                            <div class="bg-danger-subtle text-danger p-2 b-r-6 me-3">
+                            <div class="bg-light-danger text-danger p-2 b-r-6 me-3">
                                 <i class="fa-solid fa-lock f-s-20"></i>
                             </div>
                             <div>
@@ -85,7 +85,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-3 col-6">
                         <div class="p-3 bg-white b-r-8 border d-flex align-items-center">
-                            <div class="bg-info-subtle text-info p-2 b-r-6 me-3">
+                            <div class="bg-light-info text-info p-2 b-r-6 me-3">
                                 <i class="fa-solid fa-percent f-s-20"></i>
                             </div>
                             <div>
@@ -127,7 +127,7 @@ declare(strict_types=1);
                     <div class="tab-pane fade show active" id="tab-consulta" role="tabpanel">
                         <!-- Barra de Consulta Hotelera -->
                         <div class="card border mb-3">
-                            <div class="card-body p-3 bg-light-subtle">
+                            <div class="card-body p-3 bg-light">
                                 <form id="form-consulta-disponibilidad" class="app-form app-icon-form row g-2 align-items-end">
                                     <div class="col-md-4 col-12">
                                         <label for="consulta-rango-fechas" class="form-label f-s-12 f-w-600 mb-1">
@@ -216,7 +216,7 @@ declare(strict_types=1);
                     <!-- TAB 2: MATRIZ MENSUAL (RACK DE OCUPACIÓN) -->
                     <!-- ======================================================== -->
                     <div class="tab-pane fade" id="tab-matriz" role="tabpanel">
-                        <div class="row g-2 mb-3 align-items-center bg-light-subtle p-2 b-r-8 border">
+                        <div class="row g-2 mb-3 align-items-center bg-light p-2 b-r-8 border">
                             <div class="col-md-4 col-12">
                                 <label for="matriz-propiedad-id" class="form-label f-s-12 f-w-600 mb-1">Propiedad a Visualizar</label>
                                 <select class="form-select basic-select2" id="matriz-propiedad-id">
@@ -269,7 +269,7 @@ declare(strict_types=1);
                     <!-- TAB 3: MAESTRO DE BLOQUEOS -->
                     <!-- ======================================================== -->
                     <div class="tab-pane fade" id="tab-bloqueos" role="tabpanel">
-                        <div class="row g-2 mb-3 bg-light-subtle p-2 b-r-8 border align-items-center">
+                        <div class="row g-2 mb-3 bg-light p-2 b-r-8 border align-items-center">
                             <div class="col-md-3 col-6">
                                 <select class="form-select basic-select2" id="filtro-bloqueos-propiedad" data-placeholder="Todas las propiedades">
                                     <option value="">Todas las propiedades</option>

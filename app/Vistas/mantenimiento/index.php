@@ -471,7 +471,7 @@ declare(strict_types=1);
 
                         <!-- Fechas de Bloqueo Físico (Visibles solo si requiere_bloqueo) -->
                         <div id="contenedor-fechas-bloqueo" class="col-12 d-none">
-                            <div class="row g-2 p-3 bg-light-danger border border-danger-subtle b-r-8">
+                            <div class="row g-2 p-3 bg-light-danger border border-danger b-r-8">
                                 <div class="col-12 mb-1">
                                     <span class="f-s-12 f-w-700 text-danger text-uppercase">
                                         <i class="fa-solid fa-shield-halved me-1"></i> Intervalo de Inhabilitación Física en Inventario

@@ -262,3 +262,19 @@ A partir de la Decisión Vinculante **D-098**, todas las tablas de datos, catál
      - `disponibilidad/index.php` (`#tabla-rack`): Matriz de rack de habitaciones con coloreado contextual por celda de unidad.
    - **Fichas de Metadatos Clave-Valor (8 tablas en `clientes/detalle.php`, `personal/index.php`, `recibos/index.php`):** Estructuras `.table.table-sm.table-borderless` que funcionan como fichas descriptivas sin columnas tabulares clásicas, donde aplicar rayado o bordes rompería su semántica de ficha técnica.
 
+### UI-ALINA-1F: Barrido visual global, responsive y cierre de homologación Alina
+
+En cumplimiento de la Decisión **D-099**:
+
+1. **Erradicación Total de Clases Residuales `-subtle`:**
+   - Auditoría transversal sobre las 42 pantallas del sistema (54 archivos de vista y scripts JS).
+   - Sustitución completa de clases Bootstrap 5 crudas (`bg-*-subtle`, `border-*-subtle`, `text-*-subtle`) por la paleta y superficies canónicas Alina: `.bg-light-primary`, `.bg-light-secondary`, `.bg-light-info`, `.bg-light-warning`, `.bg-light-danger`, `.bg-light-success`, `.bg-light` y `.text-white-50`.
+   - Cero clases residuales `-subtle` en vistas, scripts JavaScript propios y reglas CSS.
+
+2. **Consistencia de Diálogos Modales y Responsive:**
+   - 100% de modales centrados verticalmente (`.modal-dialog-centered`).
+   - Cero bordes punteados o entrecortados (`0 dotted / 0 dashed`).
+   - Iconografía 100% Font Awesome 6 Free (cero iconos ajenos `ti-`, `bi-`, `feather-`).
+   - Verificación de 36 pantallas en vivo bajo Apache HTTPS con código 200 OK y estructura canónica Alina.
+   - Sincronización del repositorio de usuarios para permitir la carga pasiva de `/perfil` respetando `PERSONA ≠ USUARIO`.
+

@@ -19,7 +19,7 @@ $permisos = $datosGestion['permisos'] ?? [];
         <div class="card equal-card mb-4 shadow-sm">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-bars f-s-22"></i>
                     </span>
                     <div>
@@ -63,13 +63,13 @@ $permisos = $datosGestion['permisos'] ?? [];
                             <?php else: ?>
                                 <?php foreach ($principales as $principal): ?>
                                     <!-- Fila Nivel 1: Dominio Principal -->
-                                    <tr class="table-light border-top border-2 border-primary-subtle"
+                                    <tr class="table-light border-top border-2 border-primary"
                                         data-item-id="<?= (int) $principal['id'] ?>"
                                         data-item-padre="null"
                                         data-item-nivel="1">
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <span class="bg-primary-subtle text-primary p-1 b-r-6 me-2 d-flex-center">
+                                                <span class="bg-light-primary text-primary p-1 b-r-6 me-2 d-flex-center">
                                                     <i class="<?= e($principal['icono'] ?? 'fa-solid fa-folder') ?> f-s-16"></i>
                                                 </span>
                                                 <strong class="f-s-14 text-dark"><?= e($principal['nombre']) ?></strong>
