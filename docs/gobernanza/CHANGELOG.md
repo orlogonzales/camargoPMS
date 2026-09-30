@@ -4,6 +4,14 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1F-C1 — Corrección de Alcance y Certificación Final
+
+- **Delimitación Estricta de Alcance Arquitectónico:**
+  - Reversión íntegra de la modificación en `app/Repositorios/UsuarioRepositorio.php` (el archivo vuelve a su estado idéntico a `b33128e...`).
+  - Clasificación de la llamada `$this->usuarioRepo->obtenerDetalleCompleto($usuarioId)` en `PerfilControlador.php` como **HALLAZGO FUNCIONAL — FUERA DE ALCANCE UI-ALINA-1F (CASO A: Defecto preexistente desde UI-ALINA-1B)**, preservando la inmutabilidad de la capa de persistencia en microfases visuales.
+- **Matriz de Validación de Pantallas Diferenciada:**
+  - Diferenciación explícita entre smoke test HTTP estructural (36 pantallas en runtime HTTPS 200 OK con wrappers Alina) y verificación visual responsive (Desktop/Tablet/Mobile en 12 pantallas críticas de operación, más 6 pantallas de solo código/plantilla).
+
 ### Microfase UI-ALINA-1F — Barrido Visual Global, Responsive y Cierre de Homologación Alina (D-099)
 
 - **Barrido Visual y Erradicación Total de Clases Residuales `-subtle`:**
@@ -15,7 +23,6 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
   - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
   - Iconografía 100% Font Awesome 6 Free (cero iconos ajenos `ti-`, `bi-`, `feather-`).
   - Verificación en vivo (runtime HTTPS sobre Apache) de 36 pantallas con respuesta HTTP 200 OK y estructura canónica Alina (`.app-wrapper`, `.app-navbar`, `.app-content`).
-  - Sincronización de `UsuarioRepositorio::obtenerDetalleCompleto()` asegurando la carga pasiva de `/perfil` respetando `PERSONA ≠ USUARIO`.
 - **Preservación Estricta de Ganancias Acumuladas:**
   - Preservación íntegra de layouts modulares (1A), perfil y customizer Alina (1B/1B-C1), formularios y validación PristineJS (1C), componentes interactivos (1D) y 80 tablas convencionales con sus 16 exclusiones legítimas (1E).
 - **Gobernanza y Control de Versiones:**

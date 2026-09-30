@@ -520,17 +520,6 @@ class UsuarioRepositorio
     }
 
     /**
-     * Obtiene el detalle completo del usuario (alias de buscarDetallePorId para PerfilControlador).
-     *
-     * @param int $id
-     * @return array<string, mixed>|null
-     */
-    public function obtenerDetalleCompleto(int $id): ?array
-    {
-        return $this->buscarDetallePorId($id);
-    }
-
-    /**
      * Lista personas naturales activas que aún no cuentan con una cuenta de usuario asignada.
      *
      * @param string $busqueda

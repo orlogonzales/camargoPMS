@@ -1664,8 +1664,8 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - 100% de los diálogos modales implementan alineación vertical centrada `.modal-dialog-centered`.
    - Ausencia absoluta de bordes punteados o entrecortados (`0 dotted / 0 dashed`) en reglas activas de CSS y estilos inline.
    - Adherencia uniforme al catálogo oficial Font Awesome 6 (0 iconos ajenos `ti-`, `bi-`, `feather-`).
-   - Verificación en vivo (runtime HTTPS sobre servidor web Apache) de 36 pantallas operativas con respuesta HTTP 200 OK y estructura DOM canónica Alina (`.app-wrapper`, `.app-navbar`, `.app-content`).
-   - Sincronización del método `obtenerDetalleCompleto()` en `UsuarioRepositorio` para asegurar la carga pasiva del perfil respetando `PERSONA ≠ USUARIO`.
+   - Verificación en vivo (runtime HTTPS sobre servidor web Apache) de 36 pantallas operativas con respuesta HTTP 200 OK y estructura DOM canónica Alina (`.app-wrapper`, `.app-navbar`, `.app-content`), distinguiendo expresamente el smoke test HTTP estructural de la verificación visual responsive (Desktop/Tablet/Mobile).
+   - Clasificación formal de la discrepancia de método en `/perfil` (`PerfilControlador` invoca `obtenerDetalleCompleto()` inexistente en `UsuarioRepositorio`, preexistente desde UI-ALINA-1B) como **HALLAZGO FUNCIONAL — FUERA DE ALCANCE UI-ALINA-1F (CASO A)**, manteniéndose la capa de persistencia 100% inalterada en esta fase visual.
 
 3. **Preservación Estricta de Ganancias Acumuladas:**
    - **UI-ALINA-1A:** Arquitectura modular de plantilla Alina (`blank.html`), navegación de dos columnas, cargador neutro.

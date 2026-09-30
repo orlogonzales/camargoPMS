@@ -182,8 +182,8 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
    - 100% de modales con centrado vertical `.modal-dialog-centered`.
    - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
    - Iconografía 100% Font Awesome 6 Free (cero iconos ajenos `ti-`, `bi-`, `feather-`).
-   - Verificación de 36 pantallas en vivo bajo Apache HTTPS con código 200 OK y estructura canónica Alina.
-   - Sincronización de `UsuarioRepositorio::obtenerDetalleCompleto()` para la carga pasiva de `/perfil` respetando `PERSONA ≠ USUARIO`.
+   - Verificación runtime bajo Apache HTTPS de 36 pantallas con código 200 OK y estructura canónica Alina, diferenciando formalmente smoke test HTTP de la verificación visual responsive (Desktop/Tablet/Mobile).
+   - Delimitación estricta del alcance: no se altera `UsuarioRepositorio`; la invocación en `/perfil` se cataloga formalmente como **Hallazgo Funcional Fuera de Alcance**.
 3. **Preservación Estricta de Fases Previas (1A a 1E):**
    - Preservación íntegra de layouts (1A), perfil y customizer (1B/1B-C1), formularios (1C), componentes interactivos (1D) y las 80 tablas convencionales y 16 exclusiones legítimas (1E).
 4. **Gobernanza y Estado Prístino:**

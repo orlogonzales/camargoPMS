@@ -275,6 +275,6 @@ En cumplimiento de la Decisión **D-099**:
    - 100% de modales centrados verticalmente (`.modal-dialog-centered`).
    - Cero bordes punteados o entrecortados (`0 dotted / 0 dashed`).
    - Iconografía 100% Font Awesome 6 Free (cero iconos ajenos `ti-`, `bi-`, `feather-`).
-   - Verificación de 36 pantallas en vivo bajo Apache HTTPS con código 200 OK y estructura canónica Alina.
-   - Sincronización del repositorio de usuarios para permitir la carga pasiva de `/perfil` respetando `PERSONA ≠ USUARIO`.
+   - Verificación en vivo bajo Apache HTTPS de 36 pantallas operativas con código 200 OK y estructura DOM canónica Alina, diferenciando smoke test HTTP estructural frente a validación visual responsive multidiseño.
+   - Preservación estricta de la capa de persistencia: la invocación a `obtenerDetalleCompleto()` en `/perfil` queda formalmente clasificada como **Hallazgo Funcional Fuera de Alcance UI-ALINA-1F**, sin alterar `UsuarioRepositorio`.
 
