@@ -318,13 +318,13 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **HOUSEKEEPING-1**  | `test_housekeeping_concurrencia.php` (HK-C01..C06) | 6 | — | 6/6 PASS |
 | **HOUSEKEEPING-1**  | `test_e2e_housekeeping.php` (E2E-HK-01..14) | — | 14 (`E2E-HK`) | 14/14 PASS |
 | **AIRBNB-ICAL-1B**  | `test_airbnb_ical.php` (Secciones 1..12) | 155 | — | 155/155 PASS |
-| **TOTALES CANÓNICOS**| **72 suites ejecutadas** | **—** | **—** | **1,847 checks PASS (100%)** |
+| **AIRBNB-ICAL-1C**  | `test_airbnb_ical_ui.php` (Secciones 1..12) | 94 | — | 94/94 PASS |
+| **TOTALES CANÓNICOS**| **73 suites ejecutadas** | **—** | **—** | **1,947 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (AIRBNB-ICAL-1B):**
+  - **Consolidado de Regresión Transversal Activa (AIRBNB-ICAL-1C):**
+    - Suite `test_airbnb_ical_ui.php`: 94 comprobaciones automáticas cubriendo RBAC granular (`canales.ver`, `canales.gestionar`, `canales.sincronizar`), protección CSRF, validación de esquemas y URLs, test negativo de filtración de secretos en listados y cabeceras (`Cache-Control: no-store`, `Pragma: no-cache`), semántica de edición con preservación de URL cifrada (Regla 15), rotación atómica de tokens (Regla 18), revocación lógica sin DELETE físico, bloqueo concurrente con `GET_LOCK()`, modales de historial y conflictos, auditoría inmutable desinfectada y fidelidad Alina (cero dotted/dashed/*-subtle, cero $.ajax/$.post/$.get, cero alert()/confirm()).
     - Suite `test_airbnb_ical.php`: 155 comprobaciones automáticas cubriendo paridad DDL de 4 tablas, criptografía AES-256-GCM, Anti-SSRF completo (IPv4/IPv6/CGNAT/metadata), adaptador Sabre 5.0, unión multi-OTA determinista, anti-echo y privacidad.
     - Suite `test_apisperu_integracion.php`: 92 comprobaciones (Personal, Proveedores, Gastos, Reclamaciones).
     - Suites UI Alina y Componentes (`UI-ALINA-1A` a `UI-ALINA-1F` + `FIX-PERFIL-1`): 234 checks.
     - Suites de dominio operativo, concurrencia y E2E: 1,366 checks.
-    - **Total Consolidado de Regresión Activa: 72/72 suites PASS — 1,847/1,847 checks PASS — 0 fallos (100%)**.
-
-
+    - **Total Consolidado de Regresión Activa: 73/73 suites PASS — 1,947/1,947 checks PASS — 0 fallos (100%)**.

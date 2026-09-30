@@ -95,6 +95,73 @@ Para la distribución multicanal hacia OTAs (Airbnb, Booking, VRBO), Camargo PMS
   - Uso: `php bin/sincronizar-ical.php [--conexion=ID]`
   - Descarga mediante cliente HTTP seguro con defensa en profundidad Anti-SSRF (`ClienteHttpIcalSeguro`), parseo con `sabre/vobject` vía `IcalAdaptador`, e inserción/actualización idempotente en `eventos_ical_externos` e `inventario_diario_unidades`.
 
+## Capa Operativa y Administración de Canales iCalendar (AIRBNB-ICAL-1C / 1C-C1)
+
+Endpoints administrativos internos para la gestión visual, monitorización técnica y sincronización manual de conexiones iCalendar desde la interfaz Alina.
+
+### 1. Vista Administrativa y Datos Reactivos
+
+- **`GET /canales-ical`**
+  - **Permiso:** `canales.ver`
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::index()`
+  - **Descripción:** Renderiza la vista Alina con layout principal, tabla responsiva y modales para la operación de canales.
+
+- **`GET /canales-ical/datos`**
+  - **Permiso:** `canales.ver`
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::datos()`
+  - **Respuesta JSON:**
+    - `ok: true`
+    - `conexiones: [...]`: Lista de conexiones con metadatos no sensibles (`id`, `nombre`, `canal_nombre`, `unidad_numero`, `estado`, `sincronizacion_activa`, `ultima_sincronizacion_en`, `ultimo_estado_sync`, `token_prefijo`, etc.). Omite estrictamente secretos y URLs privadas.
+    - `kpis: { total_conexiones, activas, pausadas, conflictos_pendientes }`
+
+### 2. Gestión de Conexiones y Edición Segura
+
+- **`POST /canales-ical`**
+  - **Permisos:** `canales.gestionar` + CSRF obligatorio
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::guardar()`
+  - **Payload:** `canal_id`, `unidad_id`, `nombre`, `url_importacion`, `sincronizacion_activa`, `exportacion_habilitada`
+  - **Respuesta:** HTTP 201 Created con el ID asignado. Cifra la URL de importación con AES-256-GCM y genera el token híbrido de exportación.
+
+- **`POST /canales-ical/{id}`**
+  - **Permisos:** `canales.gestionar` + CSRF obligatorio
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::guardar(int $id)`
+  - **Regla 15 (Edición Segura):** Si `url_importacion` se envía vacía, el backend conserva intacta la URL cifrada previamente almacenada, evitando la sobreescritura accidental por rellenado en blanco.
+
+### 3. Recuperación Protegida del Feed de Exportación y Hardening de Caché
+
+- **`POST /canales-ical/{id}/copiar-feed`**
+  - **Permisos:** `canales.ver` + CSRF obligatorio
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::copiarFeed(int $id)`
+  - **Cabeceras Obligatorias:**
+    - `Cache-Control: no-store, no-cache, must-revalidate`
+    - `Pragma: no-cache`
+  - **Respuesta JSON:** `ok: true`, `url_feed: "https://.../ical/exportar/{token_plano}"`
+  - **Seguridad:** Revelación estrictamente bajo demanda en memoria de ejecución. Ni el token plano ni la URL de feed se almacenan en cookies, cabeceras o respuestas de listados generales. Las cabeceras `no-store` previenen el almacenamiento de credenciales en historial de navegador o cachés intermedias.
+
+### 4. Rotación Criptográfica y Sincronización Manual Concurrente
+
+- **`POST /canales-ical/{id}/rotar-token`**
+  - **Permisos:** `canales.gestionar` + CSRF obligatorio
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::rotarToken(int $id)`
+  - **Efecto:** Genera un nuevo secreto CSPRNG de 32 bytes, recomputa el hash SHA-256 e invalida de forma inmediata el feed con el token anterior (HTTP 404).
+
+- **`POST /canales-ical/{id}/sincronizar`**
+  - **Permisos:** `canales.sincronizar` + CSRF obligatorio
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::sincronizar(int $id)`
+  - **Concurrencia:** Adquiere bloqueo cooperativo `GET_LOCK('camargo_pms_ical_sync_{id}', 10)` en base de datos. Si otra sincronización está en curso sobre la misma conexión, retorna HTTP 409 Conflict con código `CONEXION_EN_SINCRONIZACION`. El lock se libera incondicionalmente en bloque `finally`.
+
+### 5. Historial Técnico y Conflictos
+
+- **`GET /canales-ical/{id}/historial`**
+  - **Permiso:** `canales.ver`
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::historial(int $id)`
+  - **Respuesta JSON:** Últimos 20 registros de sincronización técnica para la conexión solicitada.
+
+- **`GET /canales-ical/{id}/conflictos`** y **`GET /canales-ical/conflictos-activos`**
+  - **Permiso:** `canales.ver`
+  - **Controlador:** `\CamargoPMS\Controladores\CanalIcalControlador::conflictos(int $id)` / `conflictosActivos()`
+  - **Respuesta JSON:** Lista de eventos externos que solapan con reservas locales PMS y requieren atención operativa.
+
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.

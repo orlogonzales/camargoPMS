@@ -576,6 +576,9 @@ class CanalIcalControlador
             return Respuesta::json([
                 'ok' => true,
                 'url_feed' => $urlFeed,
+            ], 200, [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
             ]);
         } catch (Throwable $e) {
             return Respuesta::json(['ok' => false, 'error' => 'Error al recuperar URL de exportación: ' . $e->getMessage()], 500);

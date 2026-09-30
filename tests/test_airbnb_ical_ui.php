@@ -347,6 +347,14 @@ $resPublica = $exportControlador->exportar($tokenExtraido);
 assertCheck($resPublica->obtenerCodigoEstado() === 200, "Endpoint público /ical/exportar/{token} responde HTTP 200 con token recuperado");
 assertCheck($resPublica->obtenerCabeceras()['Content-Type'] === 'text/calendar; charset=utf-8', "Content-Type del feed es text/calendar; charset=utf-8");
 
+// 6.3 Verificación de seguridad: Cache-Control y no filtración de secretos en cabeceras
+$cabecerasFeed = $resFeedOk->obtenerCabeceras();
+assertCheck(isset($cabecerasFeed['Cache-Control']) && str_contains($cabecerasFeed['Cache-Control'], 'no-store'), "Cabecera Cache-Control incluye directiva obligatoria no-store");
+assertCheck(isset($cabecerasFeed['Pragma']) && str_contains($cabecerasFeed['Pragma'], 'no-cache'), "Cabecera Pragma incluye no-cache para compatibilidad defensiva");
+$cabecerasValores = implode(' ', array_values($cabecerasFeed));
+assertCheck(!str_contains($cabecerasValores, $tokenExtraido), "Test Negativo: El token de exportación NO aparece filtrado en las cabeceras HTTP");
+assertCheck(!isset($cabecerasFeed['Set-Cookie']) || !str_contains($cabecerasFeed['Set-Cookie'], $tokenExtraido), "Test Negativo: El token de exportación NO se filtra en cookies");
+
 // =========================================================================
 // 7. ROTACIÓN CRIPTOGRÁFICA DE TOKEN (REGLA 18)
 // =========================================================================

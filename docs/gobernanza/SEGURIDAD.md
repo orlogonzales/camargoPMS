@@ -117,6 +117,12 @@ El servidor filtra las áreas y opciones visibles según permisos RBAC y el esta
    - El servicio de exportación suprime los eventos externos provenientes del mismo canal receptor, impidiendo la re-importación infinita de bloqueos propios.
    - Los calendarios exportados jamás filtran nombres de huéspedes, teléfonos, documentos de identidad, tarifas, códigos de reserva o UIDs de canales externos. Todo evento exportado se emite bajo el resumen neutral `SUMMARY: No disponible` y sin propiedad `DESCRIPTION`.
 
+5. **Capa Operativa, Protección de Secretos en Tránsito y Concurrencia (AIRBNB-ICAL-1C / 1C-C1):**
+   - **Exclusión de Secretos en Listados:** El endpoint `GET /canales-ical/datos` omite tajantemente los campos sensibles `url_importacion_cifrada`, `token_exportacion_hash`, `token_exportacion_cifrado` y cualquier derivado plano o claves de cifrado.
+   - **Defensa en Profundidad de Secretos Revelados (Cache-Control: no-store):** La recuperación del feed de exportación (`POST /canales-ical/{id}/copiar-feed`) requiere autenticación de sesión, permiso `canales.ver` y validación de CSRF. Para evitar la filtración del token en memorias intermedias, cachés de navegador o proxies corporativos (RFC 7234), la respuesta HTTP incluye obligatoriamente las cabeceras `Cache-Control: no-store, no-cache, must-revalidate` y `Pragma: no-cache`.
+   - **Rotación Criptográfica con Invalidación Atómica:** Al rotar el token de exportación (`POST /canales-ical/{id}/rotar-token`), se regenera un secreto CSPRNG de 32 bytes y su hash SHA-256 se actualiza de forma atómica en InnoDB. Cualquier petición subsecuente que intente consumir el feed con el token previo es rechazada inmediatamente con HTTP 404 Not Found.
+   - **Control Concurrente Distribuido:** Las operaciones manuales de sincronización emplean bloqueo a nivel de conexión mediante `GET_LOCK('camargo_pms_ical_sync_{id}', 10)` en base de datos, garantizando exclusión mutua contra peticiones simultáneas o dobles envíos accidentales. La liberación se asegura incondicionalmente mediante bloque `finally` con `RELEASE_LOCK()`.
+
 ## Revisión obligatoria
 
 Cambios de autenticación, permisos, pagos, webhooks, subida de archivos, contratos, caja o datos personales requieren pruebas negativas y revisión específica de amenazas antes del micro-baseline.

@@ -498,8 +498,17 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
   - Exportación segura Anti-Echo y anonimización de privacidad en `GET /ical/exportar/{token}`.
   - Invocación desacoplada y CLI runner `bin/sincronizar-ical.php`.
   - Suite de pruebas: `test_airbnb_ical.php` (155/155 PASS).
-  - Estado: Implementada y Validada (72/72 suites globales PASS, 1,847 checks, 0 fallos).
-- **AIRBNB-ICAL-1C (Siguiente):** Interfaz Alina para administración de canales, conexiones, copiado de URLs y telemetría de sincronización.
+  - Estado: homologada y publicada (micro-baseline oficial `991fba40e3831b5f5eb7e6812a16bb9100a64aef`, 72/72 suites globales PASS, 1,847 checks, 0 fallos).
+- **AIRBNB-ICAL-1C / 1C-C1:** Capa Operativa Alina para Canales y Conexiones iCalendar:
+  - Módulo administrativo interactivo bajo `/canales-ical` con diseño 100% Alina, 4 KPIs en vivo (Total, Activas, Pausadas, Conflictos), modales reactivos (Crear/Editar Conexión, Historial de Sincronizaciones, Matriz de Conflictos) y tabla responsiva.
+  - Sincronización manual bajo demanda con bloqueo distribuido concurrente (`GET_LOCK`), mitigación de doble click y prevención de colisiones.
+  - Protección estricta de secretos: URLs privadas de importación jamás viajan al cliente; recuperación de URL de exportación bajo demanda vía POST autenticado con directivas de cabecera `Cache-Control: no-store, no-cache, must-revalidate` y `Pragma: no-cache`.
+  - Rotación criptográfica de tokens con invalidación inmediata del feed previo (HTTP 404).
+  - RBAC granular (`canales.ver`, `canales.gestionar`, `canales.sincronizar`) y protección CSRF estricta en todos los endpoints mutacionales.
+  - Cero DDL (122 tablas relacionales preservadas, ranura 036 estrictamente libre, `admin-dashboard/` 100% inalterado).
+  - Suite de pruebas: `tests/test_airbnb_ical_ui.php` (94/94 PASS).
+  - Estado: Implementada y Validada (73/73 suites globales PASS, 1,947 checks, 0 fallos).
+- **AIRBNB-ICAL-1D (Siguiente):** Automatización periódica desasistida (daemon/scheduler CLI, gestión de colas, retries con backoff y telemetría de fallos continuos).
 
 ## Dominio operativo
 

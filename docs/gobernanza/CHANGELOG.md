@@ -4,6 +4,46 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase AIRBNB-ICAL-1C / 1C-C1 — Capa Operativa Alina para Canales y Conexiones iCalendar
+
+- **Interfaz Administrativa y Operativa Alina:**
+  - Implementación del módulo administrativo en `/canales-ical` y vista `app/Vistas/canales_ical/index.php`.
+  - 4 KPIs de monitorización en tiempo real: Conexiones Totales, Conexiones Activas, Conexiones Pausadas y Conflictos Pendientes.
+  - Tabla dinámica e interactiva con badges de canal y estado, acciones contextuales seguras, y modales nativos para:
+    - Crear y Editar Conexión (`#modal-conexion-ical`).
+    - Bitácora de Sincronizaciones Técnicas (`#modal-historial-ical`).
+    - Matriz de Conflictos con Reservas PMS (`#modal-conflictos-ical`).
+  - Cumplimiento riguroso de convenciones Alina: cero clases `dotted`, `dashed` o `*-subtle`.
+- **Operación Manual y Bloqueo Concurrente Robusto:**
+  - Endpoint de sincronización manual bajo demanda `POST /canales-ical/{id}/sincronizar`.
+  - Concurrencia blindada a nivel de conexión mediante bloqueo cooperativo en base de datos con `GET_LOCK('camargo_pms_ical_sync_{id}', 10)` y liberación incondicional `RELEASE_LOCK()` en bloque `finally`.
+  - Detección de sincronizaciones en curso con código de error estructurado `CONEXION_EN_SINCRONIZACION` (HTTP 409 Conflict).
+  - Mitigación frontend contra doble-clic, bloqueo de botones y feedback interactivo durante la sincronización.
+- **Seguridad en Revelación de Secretos y Hardening de Caché (AIRBNB-ICAL-1C-C1):**
+  - Protección estricta en listados: El endpoint `GET /canales-ical/datos` omite de forma absoluta `url_importacion_cifrada`, `token_exportacion_hash`, `token_exportacion_cifrado` y cualquier clave criptográfica.
+  - Recuperación controlada on-demand: La URL del feed de exportación se genera exclusivamente bajo petición expresa mediante `POST /canales-ical/{id}/copiar-feed`.
+  - Hardening de caché defensiva (RFC 7234): El endpoint `copiar-feed` responde con cabeceras explícitas `Cache-Control: no-store, no-cache, must-revalidate` y `Pragma: no-cache`, previniendo que navegadores o proxies almacenen el token descifrado en cachés de historial.
+- **Rotación Criptográfica y Revocación Lógica:**
+  - Endpoint `POST /canales-ical/{id}/rotar-token`: regenera un secreto CSPRNG de 32 bytes, recomputa el hash SHA-256 e invalida de forma inmediata el feed con el token anterior (HTTP 404).
+  - Preservación histórica: Cero `DELETE` físico. La revocación de conexiones se opera mediante transición de estado a `REVOCADO`, conservando eventos, logs de sincronización y auditoría inalterados.
+- **Autorización RBAC y Protección CSRF:**
+  - Permisos atómicos granulares: `canales.ver`, `canales.gestionar` y `canales.sincronizar`.
+  - Validación obligatoria de token CSRF en todos los endpoints mutacionales (`POST`).
+- **JavaScript Modular Nativo:**
+  - Implementación de `public/assets/js/gestion-canales-ical.js` en JavaScript ES6+ moderno.
+  - Consumo asíncrono con `Fetch API` y sobre JSON canónico. Cero uso de jQuery (`$.ajax`, `$.post`, `$.get`).
+  - Alertas y confirmaciones mediante SweetAlert2 integrado con Alina. Cero invocación a `alert()` o `confirm()` nativos.
+- **Ajuste Incidental de Estabilidad en Persistencia de Mantenimiento (Fuera del Dominio iCal):**
+  - En `app/Repositorios/IncidenciaRepositorio.php` y `app/Repositorios/OrdenTrabajoRepositorio.php`, se optimizó la generación de códigos únicos (`generarCodigo()`) mediante bucle de verificación de colisiones `do { ... } while (SELECT 1 ... WHERE codigo = :cod)`.
+  - Contexto: Corrección incidental defensiva para prevenir colisiones por clave duplicada (`1062 Duplicate entry`) durante ejecuciones repetitivas continuas del test `test_mantenimiento_matriz_40.php`, originadas por inserciones con códigos aleatorios en la suite de `Housekeeping`. Este ajuste técnico de persistencia estabiliza la suite global de mantenimiento y no altera en absoluto el dominio de canales iCalendar.
+- **Calidad, Pruebas y Cero DDL:**
+  - Nueva suite automatizada `tests/test_airbnb_ical_ui.php` con 94 comprobaciones exhaustivas (94/94 PASS).
+  - Regresión transversal: 73 suites automatizadas, 1,947 comprobaciones, 0 fallos (100% PASS).
+  - Cero DDL: 122 tablas relacionales preservadas; migración `035_canales_ical.sql` última ejecutada; ranura `036` estrictamente LIBRE.
+  - Catálogo `admin-dashboard/` 100% inalterado y de solo lectura.
+
+## Baseline oficial 991fba4 (AIRBNB-ICAL-1B)
+
 ### Microfase AIRBNB-ICAL-1B — Infraestructura Soberana Multicanal iCalendar (D-103)
 
 - **Separación Ontológica y Principios de Dominio:**
