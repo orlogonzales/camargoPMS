@@ -524,7 +524,17 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
   - Portabilidad y desacople de entorno: producción documentada explícitamente como NO VERIFICADO mediante plantillas parametrizadas con rutas absolutas; desarrollo local verificado sin tareas persistentes activas residuales.
   - Guía de operación completa en [`docs/gobernanza/SCHEDULER_ICAL.md`](file:///d:/laragon/www/app.camargo-pms/docs/gobernanza/SCHEDULER_ICAL.md) con instalación, telemetría, diagnóstico y desactivación.
   - Cero DDL (122 tablas relacionales preservadas, ranura 036 estrictamente libre, `admin-dashboard/` 100% inalterado).
-  - Estado: Implementada y Validada.
+  - Estado: homologada y publicada (micro-baseline oficial `c61a2f44c5f7723baf53784c142d05db83baed97`, 74/74 suites globales PASS, 2,018 checks, 0 fallos).
+- **WORDPRESS-1 / MOTOR-RESERVAS-1:** Integración Headless con Motor de Reservas Web y WordPress:
+  - **WORDPRESS-1A-AUDIT:** Auditoría arquitectónica READ-ONLY de contratos de disponibilidad soberana, cotización monetaria, hold, expiración y perímetro de seguridad para consumo headless externo. (Completada).
+  - **WORDPRESS-1B:** Modelo Soberano de Tarifas + Clientes API + Cotización:
+    - Modelo soberano de tarifas jerárquicas con precedencia: `UNIDAD` > `TIPO_UNIDAD` > `PROPIEDAD`, anti-solapamiento pesimista (`FOR UPDATE`) y normalización a 4 decimales.
+    - Autoridad centralizada de cotización `CotizacionServicio`: resolución noche a noche, cumplimiento estricto D-069 (BCMath, 'PEN', 2 decimales finales, impuesto provisional 0.00), token reproducible firmado criptográficamente con HMAC-SHA256, y principio hotelero de CERO bloqueos de inventario durante cotización.
+    - Creación de reservas online desde cotización soberana `ReservaServicio::crearReservaDesdeCotizacion()`: validación en tiempo real, hold atómico `PENDIENTE` y bloqueo efectivo en `inventario_diario_unidades`.
+    - Clientes API y credenciales técnicas: arquitectura `ACTOR INTEGRACION -> API_CLIENT -> CREDENCIAL TÉCNICA -> SCOPES`, tokens CSPRNG (`cpms_live_...`), hash SHA-256 $O(1)$, rotación y revocación atómica.
+    - DDL autorizado: Migración `036_tarifas_clientes_api.sql` aplicada (127 tablas relacionales consolidadas, ranura 037 libre).
+    - Suite de pruebas: `tests/test_wordpress_1b.php` (75/75 checks PASS).
+    - Estado: Implementada y Validada (75/75 suites globales PASS, 2,093 checks, 0 fallos).
 
 ## Dominio operativo
 

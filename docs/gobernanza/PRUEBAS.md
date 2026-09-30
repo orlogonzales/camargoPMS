@@ -320,15 +320,18 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **AIRBNB-ICAL-1B**  | `test_airbnb_ical.php` (Secciones 1..12) | 155 | — | 155/155 PASS |
 | **AIRBNB-ICAL-1C**  | `test_airbnb_ical_ui.php` (Secciones 1..12) | 94 | — | 94/94 PASS |
 | **AIRBNB-ICAL-1D**   | `test_airbnb_ical_scheduler.php` (Secciones 1..15) | 71 | — | 71/71 PASS |
-| **TOTALES CANÓNICOS**| **74 suites ejecutadas** | **—** | **—** | **2,018 checks PASS (100%)** |
+| **WORDPRESS-1B**    | `test_wordpress_1b.php` (Secciones 1..5) | 75 | — | 75/75 PASS |
+| **TOTALES CANÓNICOS**| **75 suites ejecutadas** | **—** | **—** | **2,093 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (AIRBNB-ICAL-1D2):**
-    - Suite `test_airbnb_ical_scheduler.php`: 71 comprobaciones automáticas cubriendo:
-      - Hardening 1D1: Contrato único de exclusión soberana en servicio (`GET_LOCK` con timeout 0 y `RELEASE_LOCK` en `finally`), rechazo de colisiones con `ConexionIcalEnSincronizacionExcepcion`, independencia de locks entre conexiones distintas, recuperación automática de locks tras crash/desconexión de cliente MySQL, detección y saneamiento de stale runs (>120s) con `limpiarLogsHuerfanos()`, traducción a HTTP 409 Conflict en controlador UI Alina, selección de debidas `listarDebidasParaSondeo()`, contrato CLI (`--solo-debidas`, `--quiet`, códigos de salida 0, 1, 2) y aislamiento de fallos en lote.
-      - Despliegue Portable 1D2: Contrato Linux con wrapper `bin/cron-ical.sh` (prevención de solapamiento con `flock -n`, manejo de rutas con espacios, tolerancia de argumentos), plantilla `bin/crontab-ical.template` (despertar cada 5 minutos), contrato Windows con wrapper PowerShell `bin/task-scheduler-ical.ps1` (prevención con `System.Threading.Mutex`) y plantilla XML `bin/task-scheduler-ical.xml` (`IgnoreNew`, repetición `PT5M`), ejecución E2E desasistida sin sesión HTTP ni cookies, test negativo de cero fugas de secretos en artefactos del scheduler, manual operativo `docs/gobernanza/SCHEDULER_ICAL.md`, ausencia absoluta de daemons o workers en segundo plano y ausencia de endpoints HTTP para cron.
-    - Suite `test_airbnb_ical_ui.php`: 94 comprobaciones automáticas cubriendo RBAC granular (`canales.ver`, `canales.gestionar`, `canales.sincronizar`), protección CSRF, validación de esquemas y URLs, test negativo de filtración de secretos en listados y cabeceras (`Cache-Control: no-store`, `Pragma: no-cache`), semántica de edición con preservación de URL cifrada (Regla 15), rotación atómica de tokens (Regla 18), revocación lógica sin DELETE físico, modales de historial y conflictos, auditoría inmutable desinfectada y fidelidad Alina.
-    - Suite `test_airbnb_ical.php`: 155 comprobaciones automáticas cubriendo paridad DDL de 4 tablas, criptografía AES-256-GCM, Anti-SSRF completo (IPv4/IPv6/CGNAT/metadata), adaptador Sabre 5.0, unión multi-OTA determinista, anti-echo y privacidad.
-    - Suite `test_apisperu_integracion.php`: 92 comprobaciones (Personal, Proveedores, Gastos, Reclamaciones).
+  - **Consolidado de Regresión Transversal Activa (WORDPRESS-1B):**
+    - Suite `test_wordpress_1b.php`: 75 comprobaciones automáticas cubriendo:
+      - Esquema y Migración 036: Creación de 5 tablas relacionales (`tarifas_alojamiento`, `api_clientes`, `api_credenciales`, `api_scopes`, `api_credencial_scopes`), catálogo de 6 scopes canónicos, 4 permisos RBAC de tarifas y clientes API, paridad con `SQL/camargo_pms.sql` y verificación de ranura 037 libre.
+      - Precedencia Jerárquica de Tarifas: Prevalencia estricta de `UNIDAD` > `TIPO_UNIDAD` > `PROPIEDAD`, resolución dinámica de fechas adyacentes y control estricto de anti-solapamiento temporal vía `SELECT ... FOR UPDATE` en `TarifaAlojamientoServicio`.
+      - Autoridad Monetaria de Cotización: Orquestación noche a noche en `CotizacionServicio`, cumplimiento estricto de política D-069 (BCMath, redondeo formal, 4 decimales intermedios, 2 decimales finales, regla provisional impuesto 0.00), token reproducible firmado criptográficamente con HMAC-SHA256, y principio hotelero inviolable de CERO inserciones físicas en inventario durante la cotización.
+      - Creación de Reservas desde Cotización: `ReservaServicio::crearReservaDesdeCotizacion()` hidratando desde token firmado, validación en tiempo real y hold atómico en estado `PENDIENTE` con bloqueo efectivo de noches en `inventario_diario_unidades`.
+      - Clientes API y Credenciales Técnicas Seguras: Arquitectura `ACTOR INTEGRACION -> API_CLIENT -> CREDENCIAL TÉCNICA -> SCOPES`, cero cuentas de usuarios humanos ficticios, tokens Bearer CSPRNG (`cpms_live_...`) no persistidos en claro, indexación y validación $O(1)$ por hash SHA-256, operaciones atómicas de rotación y revocación inmediata.
+    - Suites iCalendar (`AIRBNB-ICAL-1B`, `1C`, `1D`): 320 checks automáticos sin regresión.
+    - Suite `test_apisperu_integracion.php`: 92 checks sin regresión.
     - Suites UI Alina y Componentes (`UI-ALINA-1A` a `UI-ALINA-1F` + `FIX-PERFIL-1`): 234 checks.
-    - Suites de dominio operativo, concurrencia y E2E: 1,366 checks.
-    - **Total Consolidado de Regresión Activa: 74/74 suites PASS — 2,018/2,018 checks PASS — 0 fallos (100%)**.
+    - Suites de dominio operativo, concurrencia y E2E: 1,372 checks.
+    - **Total Consolidado de Regresión Activa: 75/75 suites PASS — 2,093/2,093 checks PASS — 0 fallos (100%)**.

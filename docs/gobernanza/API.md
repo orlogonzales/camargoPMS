@@ -183,6 +183,25 @@ La ejecución periódica en background se apoya en los programadores nativos del
 - **Sin Exposición de Secretos:** Los comandos y scripts no reciben contraseñas, tokens de exportación ni URLs privadas por argumentos de proceso (`ps aux` / `tasklist` limpios).
 - **Manual Operativo Completo:** Véase [`docs/gobernanza/SCHEDULER_ICAL.md`](file:///d:/laragon/www/app.camargo-pms/docs/gobernanza/SCHEDULER_ICAL.md) para los procedimientos de instalación, plantillas de cron/XML, diagnóstico y desactivación.
 
+### 8. Contratos de Disponibilidad, Cotización y Clientes API (WORDPRESS-1B)
+
+- **Arquitectura de Clientes API:**
+  - Cadena estricta de separación: `ACTOR INTEGRACION -> API_CLIENT -> CREDENCIAL TÉCNICA -> SCOPES`.
+  - Cero cuentas humanas ficticias; asignación de identidad formal técnica en `actores` (`tipo = 'INTEGRACION'`, `usuario_id = NULL`).
+  - Tokens Bearer criptográficos CSPRNG de alta entropía (`cpms_live_...`). El secreto en claro se entrega una sola vez; la persistencia almacena únicamente el hash SHA-256 para validación $O(1)$ y un prefijo de 16 caracteres para trazabilidad.
+  - Catálogo de scopes canónicos: `disponibilidad.leer`, `cotizacion.crear`, `reservas.hold`, `reservas.confirmar`, `reservas.cancelar`, `reservas.leer`.
+  - Operaciones atómicas de emisión, rotación segura con período de gracia opcional, y revocación inmediata.
+- **Autoridad Soberana de Cotización:**
+  - `CotizacionServicio`: orquesta noche a noche la tarifa jerárquica aplicable (`UNIDAD` > `TIPO_UNIDAD` > `PROPIEDAD`).
+  - Cumplimiento de directiva monetaria D-069: precisión con `BCMath`, moneda soberana 'PEN', redondeo formal bancario a 2 decimales (`round_half_up`), 4 decimales intermedios, regla provisional de impuestos 0.00.
+  - Emisión de token reproducible firmado con HMAC-SHA256 (`token_cotizacion`) con expiración temporal de 15 minutos.
+  - Principio hotelero fundamental: la cotización **no inserta filas físicas en inventario**.
+- **Creación de Reservas Soberanas desde Cotización:**
+  - `ReservaServicio::crearReservaDesdeCotizacion`: recibe y valida el token firmado, comprueba disponibilidad soberana en tiempo real, registra o asocia al titular y crea la reserva en hold `PENDIENTE` con expiración programada (`expira_en`).
+  - Bloquea atómicamente el inventario en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`), garantizando la soberanía de inventario del PMS frente a sobreventas.
+- **Diferimiento a WORDPRESS-1C:**
+  - La tabla `api_idempotencia`, los intermediarios HTTP de rate limiting y CORS, y los controladores/rutas públicas HTTP `/api/v1/*` serán implementados en la microfase 1C.
+
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.

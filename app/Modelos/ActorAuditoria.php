@@ -88,6 +88,11 @@ class ActorAuditoria
         return $this->estado === 'ACTIVO';
     }
 
+    public function estaActivo(): bool
+    {
+        return $this->esActivo();
+    }
+
     public function esHumano(): bool
     {
         return $this->tipo === TipoActor::USUARIO;

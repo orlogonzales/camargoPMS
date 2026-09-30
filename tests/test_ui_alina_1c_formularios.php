@@ -229,11 +229,11 @@ afirmar(
     $fallos, $totalCasos, $casosPasados
 );
 
-// Slot 036 libre
-$archivosSql = glob(dirname(__DIR__) . '/SQL/migraciones/036_*.sql');
+// Slot 037 libre
+$archivosSql = glob(dirname(__DIR__) . '/SQL/migraciones/037_*.sql');
 afirmar(
     empty($archivosSql),
-    "Slot 036 estrictamente LIBRE en SQL/migraciones/ (0 DDL en UI-ALINA-1C)",
+    "Slot 037 estrictamente LIBRE en SQL/migraciones/ (0 DDL no autorizado)",
     $fallos, $totalCasos, $casosPasados
 );
 

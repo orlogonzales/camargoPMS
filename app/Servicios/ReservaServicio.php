@@ -6,12 +6,14 @@ namespace CamargoPMS\Servicios;
 
 use CamargoPMS\Excepciones\ConfiguracionFaltanteExcepcion;
 use CamargoPMS\Excepciones\ConflictoDisponibilidadExcepcion;
+use CamargoPMS\Excepciones\CotizacionInvalidaExcepcion;
 use CamargoPMS\Excepciones\EstadoReservaInvalidoExcepcion;
 use CamargoPMS\Excepciones\IntervaloInvalidoExcepcion;
 use CamargoPMS\Excepciones\ReservaNoEncontradaExcepcion;
 use CamargoPMS\Excepciones\UnidadNoEncontradaExcepcion;
 use CamargoPMS\Excepciones\ValidacionExcepcion;
 use CamargoPMS\Modelos\ActorAuditoria;
+use CamargoPMS\Modelos\CotizacionResumen;
 use CamargoPMS\Modelos\Reserva;
 use CamargoPMS\Modelos\ReservaUnidad;
 use CamargoPMS\Nucleo\BaseDatos;
@@ -691,5 +693,76 @@ class ReservaServicio
         }
 
         return $enteros . '.' . $fraccion;
+    }
+
+    /**
+     * Crea una reserva directa en estado PENDIENTE (hold) a partir de una cotización soberana validada (WORDPRESS-1B).
+     *
+     * Garantiza que los precios y noches procedan exclusivamente de la autoridad monetaria del PMS,
+     * sin aceptar valores monetarios arbitrarios provistos por el cliente web.
+     *
+     * @param CotizacionResumen|string $cotizacion Instancia o token firmado de cotización
+     * @param int $personaTitularId
+     * @param array<string, mixed> $datosAdicionales (observaciones, duracion_hold_minutos, canal, origen)
+     * @param int|null $ejecutadoPorUsuarioId
+     * @return Reserva
+     * @throws CotizacionInvalidaExcepcion
+     * @throws ConflictoDisponibilidadExcepcion
+     */
+    public function crearReservaDesdeCotizacion(
+        CotizacionResumen|string $cotizacion,
+        int $personaTitularId,
+        array $datosAdicionales = [],
+        ?int $ejecutadoPorUsuarioId = null
+    ): Reserva {
+        $cotizacionServicio = new CotizacionServicio($this->pdo, $this->disponibilidadServicio);
+
+        if (is_string($cotizacion)) {
+            $payload = $cotizacionServicio->validarTokenCotizacion($cotizacion);
+            $fechaEntrada = (string) $payload['checkin'];
+            $fechaSalida = (string) $payload['checkout'];
+            $unidadId = (int) $payload['uni_id'];
+            $noches = (int) $payload['noches'];
+            $total = (string) $payload['total'];
+            $idCotizacion = (string) $payload['cot_id'];
+        } elseif ($cotizacion instanceof CotizacionResumen) {
+            if ($cotizacion->haExpirado()) {
+                throw new CotizacionInvalidaExcepcion("La cotización '{$cotizacion->obtenerIdCotizacion()}' ha expirado. Solicite una nueva cotización.");
+            }
+            $fechaEntrada = $cotizacion->obtenerFechaEntrada();
+            $fechaSalida = $cotizacion->obtenerFechaSalida();
+            $unidadId = (int) ($cotizacion->obtenerUnidadId() ?? 0);
+            $noches = $cotizacion->obtenerNoches();
+            $total = $cotizacion->obtenerTotal();
+            $idCotizacion = $cotizacion->obtenerIdCotizacion();
+        } else {
+            throw new CotizacionInvalidaExcepcion('Formato de cotización no soportado.');
+        }
+
+        if ($unidadId <= 0) {
+            throw new CotizacionInvalidaExcepcion('La cotización no cuenta con una unidad física asignada para el bloqueo.');
+        }
+
+        // Determinar precio unitario promedio por noche para el desglose
+        $precioUnitarioNoche = bcdiv($total, (string) max(1, $noches), 2);
+
+        $datosReserva = [
+            'persona_titular_id' => $personaTitularId,
+            'fecha_entrada' => $fechaEntrada,
+            'fecha_salida' => $fechaSalida,
+            'unidades' => [
+                [
+                    'unidad_id' => $unidadId,
+                    'precio_unitario_noche' => $precioUnitarioNoche,
+                ],
+            ],
+            'estado' => Reserva::ESTADO_PENDIENTE,
+            'canal' => $datosAdicionales['canal'] ?? Reserva::CANAL_WEB,
+            'origen' => $datosAdicionales['origen'] ?? 'WEB_DIRECTA',
+            'duracion_hold_minutos' => $datosAdicionales['duracion_hold_minutos'] ?? 15,
+            'observaciones' => $datosAdicionales['observaciones'] ?? "Cotización Soberana: {$idCotizacion}",
+        ];
+
+        return $this->crearReserva($datosReserva, $ejecutadoPorUsuarioId);
     }
 }

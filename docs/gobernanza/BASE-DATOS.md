@@ -359,10 +359,21 @@ En SERVICIOS-1 se implementa el catálogo de servicios complementarios, proveedo
     - **`eventos_ical_externos`:** Entidades de bloqueo iCalendar desacopladas (`id`, `conexion_id`, `uid_externo`, `resumen`, `fecha_inicio`, `fecha_fin`, `noches`, `es_todo_el_dia`, `estado_evento`, `estado_bloqueo`, `rrule`, `payload_bruto`, `primera_sincronizacion_en`, `ultima_sincronizacion_en`, `creado_en`, `actualizado_en`). Claves foráneas: `fk_eical_conexion`. Clave única de idempotencia: `uq_eical_conexion_uid (conexion_id, uid_externo)`.
     - **`sincronizaciones_ical_log`:** Telemetría inmutable de sincronización (`id`, `conexion_id`, `direccion`, `iniciada_en`, `finalizada_en`, `duracion_ms`, `eventos_detectados`, `eventos_creados`, `eventos_modificados`, `eventos_cancelados`, `eventos_en_conflicto`, `resultado`, `mensaje`, `http_status`, `bytes_procesados`, `creado_en`). Clave foránea: `fk_slog_conexion`.
     - **Cero DDL sobre `inventario_diario_unidades`:** El inventario físico conserva su enumeración canónica; los bloqueos se persisten con `tipo_bloqueo = 'BLOQUEO_MANUAL'`, `origen_tipo = 'EVENTO_ICAL_EXTERNO'` y `origen_id = eventos_ical_externos.id`.
-    - **Estado general de la base de datos tras AIRBNB-ICAL-1B:**
+    - **Estado general de la base de datos tras AIRBNB-ICAL-1B / 1D2:**
       - **122 tablas relacionales** físicas consolidadas (118 base + 4 iCal).
-      - **Migración 035 (`035_canales_ical.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
-      - **Ranura de migración 036 estrictamente LIBRE** para fases posteriores.
+      - **Migración 035 (`035_canales_ical.sql`) aplicada**.
+
+11. **Esquema de Tarifas de Alojamiento y Clientes API (WORDPRESS-1B y Migración 036):**
+    - **`tarifas_alojamiento`:** Modelo soberano jerárquico de precios por noche (`id`, `propiedad_id`, `tipo_unidad_id`, `unidad_id`, `ambito`, `nombre`, `precio_noche DECIMAL(12,4)`, `moneda CHAR(3)`, `fecha_inicio`, `fecha_fin`, `dias_semana_mascara`, `estancia_minima_noches`, `estado`, `creado_por_actor_id`, `creado_en`, `actualizado_en`). Precedencia: `UNIDAD` > `TIPO_UNIDAD` > `PROPIEDAD`. Claves foráneas: `fk_tarifa_propiedad`, `fk_tarifa_tipo_unidad`, `fk_tarifa_unidad`, `fk_tarifa_actor`.
+    - **`api_clientes`:** Directorio de aplicaciones y consumidores externos desacoplados (`id`, `actor_id`, `codigo UNIQUE`, `nombre`, `descripcion`, `contacto_email`, `ips_permitidas`, `limite_peticiones_minuto`, `estado`, `creado_en`, `actualizado_en`). Clave foránea `fk_apiclient_actor` vinculada a `actores(id)` de tipo `INTEGRACION`.
+    - **`api_credenciales`:** Credenciales técnicas Bearer seguras (`id`, `api_cliente_id`, `identificador_publico UNIQUE`, `token_hash CHAR(64) UNIQUE`, `token_prefijo VARCHAR(16)`, `nombre`, `estado`, `ultimo_uso_en`, `expira_en`, `creado_en`, `revocado_en`). Búsqueda indexada $O(1)$ por hash SHA-256; token plano jamás almacenado.
+    - **`api_scopes`:** Catálogo de alcances/permisos API canónicos (`id`, `codigo UNIQUE`, `nombre`, `descripcion`, `modulo`, `estado`, `creado_en`). Semillas: `disponibilidad.leer`, `cotizacion.crear`, `reservas.hold`, `reservas.confirmar`, `reservas.cancelar`, `reservas.leer`.
+    - **`api_credencial_scopes`:** Asociación relacional N:M de alcances por credencial técnica (`credencial_id`, `scope_id`, `asignado_en`). Clave primaria compuesta `(credencial_id, scope_id)`.
+    - **Cero DDL sobre inventario ni cotizaciones:** La cotización no inserta registros en la base de datos. Las reservas nacidas de cotización bloquean inventario mediante `inventario_diario_unidades` bajo reglas existentes.
+    - **Estado general de la base de datos tras WORDPRESS-1B:**
+      - **127 tablas relacionales** físicas consolidadas (122 previas + 5 nuevas de tarifas/API).
+      - **Migración 036 (`036_tarifas_clientes_api.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
+      - **Ranura de migración 037 estrictamente LIBRE** para fases posteriores.
 
 
 

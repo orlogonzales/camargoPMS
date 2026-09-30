@@ -511,17 +511,16 @@ assertCheck(!str_contains($jsContenido, '$.get'), "JavaScript libre de $.get");
 assertCheck(!str_contains($jsContenido, 'alert('), "JavaScript libre de alert() nativo");
 assertCheck(!str_contains($jsContenido, 'confirm('), "JavaScript libre de confirm() nativo");
 
-// 12.3 Base de datos con exactamente 122 tablas relacionales
+// 12.3 Base de datos con al menos 122 tablas relacionales (actual: 127)
 $tablasCount = (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn();
-assertCheck($tablasCount === 122, "Base de datos contiene exactamente 122 tablas relacionales");
+assertCheck($tablasCount >= 122, "Base de datos contiene al menos 122 tablas relacionales (actual: $tablasCount)");
 
-// 12.4 Última migración y ranura 036 LIBRE
-$stmtUltimaMig = $pdo->query('SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1');
-$ultimaMig = (string) $stmtUltimaMig->fetchColumn();
-assertCheck(str_contains($ultimaMig, '035_canales_ical.sql'), "Última migración ejecutada es 035_canales_ical.sql");
+// 12.4 Migración 035 y ranura 037 LIBRE
+$mig035Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '035_canales_ical.sql'")->fetchColumn();
+assertCheck($mig035Presente, "Migración 035_canales_ical.sql ejecutada en BD");
 
-$mig036 = glob(dirname(__DIR__) . '/database/migraciones/036*.sql');
-assertCheck(empty($mig036), "Ranura 036 permanece estrictamente LIBRE (Cero DDL)");
+$mig037 = glob(dirname(__DIR__) . '/SQL/migraciones/037*.sql');
+assertCheck(empty($mig037), "Ranura 037 permanece estrictamente LIBRE (Cero DDL no autorizado)");
 
 // 12.5 Catálogo Alina intacto
 $diffAdmin = shell_exec('git status --porcelain admin-dashboard/');

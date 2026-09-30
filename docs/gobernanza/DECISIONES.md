@@ -1794,6 +1794,51 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
    - Regresión transversal: 72 suites automatizadas, 1,847 checks, 0 fallos.
 
+### D-104 — Modelo Soberano de Tarifas, Clientes API y Cotización Headless (WORDPRESS-1B)
+
+1. **Axiomas de Arquitectura y Separación Estricta de Dominios (D-104.1):**
+   - $\text{COTIZACIÓN} \neq \text{RESERVA} \neq \text{HOLD} \neq \text{TARIFA} \neq \text{BLOQUEO DE INVENTARIO}$.
+   - $\text{ACTOR INTEGRACION} \neq \text{USUARIO HUMANO} \neq \text{API CLIENT} \neq \text{CREDENCIAL TÉCNICA}$.
+   - Una **cotización** es un cálculo transitorio de precio, reproducible y firmado; **JAMÁS bloquea inventario físico ni inserta filas en la base de datos**.
+   - Una **reserva** web nace únicamente tras verificar una cotización firmada, ejecutando la transición atómica a hold `PENDIENTE` y bloqueando inmediatamente las noches en `inventario_diario_unidades`.
+
+2. **Precedencia Jerárquica Soberana de Tarifas (D-104.2):**
+   - La tabla `tarifas_alojamiento` gestiona los precios por noche bajo estricta jerarquía de resolución:
+     $$\text{UNIDAD (override)} > \text{TIPO\_UNIDAD (estándar de categoría)} > \text{PROPIEDAD (fallback general)}$$
+   - El servicio `TarifaAlojamientoServicio` impone control de anti-solapamiento temporal para el mismo ámbito mediante bloqueo pesimista `SELECT ... FOR UPDATE` en MySQL, rechazando inserciones o modificaciones colisionantes con `ConflictoTarifaExcepcion` (HTTP 409).
+   - Los importes se persisten con tipo `DECIMAL(12,4)` y moneda soberana 'PEN', garantizando precisión de centésimas de centavo en cálculos acumulados sin desbordamientos de punto flotante.
+
+3. **Autoridad Monetaria Centralizada y Cumplimiento D-069 (D-104.3):**
+   - `CotizacionServicio` es la única autoridad de cálculo monetario para cotizaciones de alojamiento del PMS.
+   - Aplica rigurosamente la directiva D-069:
+     - Aritmética de precisión arbitraria mediante extensión `BCMath`.
+     - Moneda soberana `PEN` (Soles peruanos).
+     - Precisión intermedia a 4 decimales; redondeo bancario formal a 2 decimales (`round_half_up`) para subtotal y total.
+     - Regla provisional de impuestos `0.00` documentada formalmente.
+   - Emisión de token criptográfico firmado HMAC-SHA256 (`token_cotizacion`) con expiración temporal (15 minutos). Toda petición de reserva externa debe presentar un token íntegro; alteraciones de precio en el cliente web son rechazadas con `CotizacionInvalidaExcepcion`.
+
+4. **Integración con Reserva Soberana (D-104.4):**
+   - `ReservaServicio::crearReservaDesdeCotizacion()` hidrata la cotización a partir del token firmado, valida la disponibilidad en tiempo real contra `DisponibilidadServicio`, crea el titular como persona natural (`personas`, `personas_documentos`, `personas_contactos`, `clientes`) y genera la reserva en estado `PENDIENTE` (hold temporal).
+   - Bloquea atómicamente el inventario en `inventario_diario_unidades` (`tipo_bloqueo = 'BLOQUEO_MANUAL'`, `origen_tipo = 'RESERVA'`, `origen_id = reservas.id`).
+
+5. **Clientes API y Credenciales Técnicas Seguras (D-104.5):**
+   - Se prohíbe taxativamente la creación de cuentas de usuario humano ficticias para integraciones API.
+   - Se establece la cadena de identidad:
+     $$\text{Actor (tipo='INTEGRACION', usuario\_id=NULL)} \longrightarrow \text{ApiClient} \longrightarrow \text{ApiCredencial} \longrightarrow \text{ApiScopes}$$
+   - Emisión de tokens Bearer CSPRNG (`cpms_live_...`) con 48 bytes hexadecimales (entropía criptográfica alta). El token en claro se entrega una sola vez al emisor; en base de datos se almacena únicamente su hash SHA-256 para validación $O(1)$ y un prefijo de 16 caracteres para identificación de soporte.
+   - Catálogo canónico de scopes: `disponibilidad.leer`, `cotizacion.crear`, `reservas.hold`, `reservas.confirmar`, `reservas.cancelar`, `reservas.leer`.
+   - Rotación y revocación atómica e inmediata sin borrado físico (`revocado_en`, `estado = 'REVOCADO'`).
+
+6. **Diferimiento Explícito a Fase 1C (D-104.6):**
+   - Se difiere formalmente a la microfase `WORDPRESS-1C`: la tabla `api_idempotencia`, los intermediarios HTTP de rate-limiting, CORS, y los controladores/rutas públicas HTTP `/api/v1/*`. La microfase 1B concentra exclusivamente la capa de modelo, repositorio, servicio, pruebas de dominio y gobernanza del esquema.
+
+7. **Invariantes de Gobernanza y Esquema (D-104.7):**
+   - Migración `036_tarifas_clientes_api.sql` formalmente consumida y aplicada; total de tablas relacionales asciende a **127**.
+   - Ranura de migración `037` estrictamente LIBRE para fases posteriores.
+   - Paridad 100% en `SQL/camargo_pms.sql`.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Regresión transversal: 75 suites automatizadas, 2,093 checks, 0 fallos (100% PASS).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

@@ -379,8 +379,8 @@ assertCheck(count($tablas) >= 118, "Base de datos preservada con integridad rela
 $mig034Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
 assertCheck($mig034Presente, "Migración 034_agregar_foto_personas.sql presente en BD");
 
-$mig036 = glob(dirname(__DIR__) . '/SQL/migraciones/*036*');
-assertCheck(empty($mig036), "Ranura de migración 036 estrictamente LIBRE para fases posteriores");
+$mig037 = glob(dirname(__DIR__) . '/SQL/migraciones/*037*');
+assertCheck(empty($mig037), "Ranura de migración 037 estrictamente LIBRE para fases posteriores");
 
 // 5.3 admin-dashboard/ intacto
 $gitAlina = shell_exec('git status --porcelain admin-dashboard/');

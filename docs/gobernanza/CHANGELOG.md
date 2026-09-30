@@ -4,6 +4,33 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase WORDPRESS-1B — Modelo Soberano de Tarifas + Clientes API + Cotización
+
+- **Modelo Soberano de Tarifas de Alojamiento (`tarifas_alojamiento`):**
+  - Implementación de tarifas jerárquicas con precedencia vinculante: `UNIDAD` (override específico) > `TIPO_UNIDAD` (tarifa estándar del tipo) > `PROPIEDAD` (fallback general).
+  - Control riguroso de anti-solapamiento temporal mediante bloqueo pesimista `SELECT ... FOR UPDATE` en `TarifaAlojamientoServicio`, impidiendo duplicidad o colisiones en rangos de fechas dentro del mismo ámbito.
+  - Normalización monetaria con 4 decimales para almacenamiento y cálculos intermedios de alta precisión, garantizando consistencia absoluta según política D-069.
+- **Autoridad Soberana de Cotización (`CotizacionServicio`):**
+  - Orquestación centralizada de cotizaciones noche por noche resolviendo dinámicamente la tarifa de mayor jerarquía para cada fecha individual.
+  - Aplicación de política monetaria D-069 con aritmética de precisión arbitraria (BCMath), moneda soberana 'PEN', redondeo formal a 2 decimales (`round_half_up`) y regla provisional de impuestos 0.00.
+  - Emisión de token criptográfico reproducible firmado con HMAC-SHA256 (`token_cotizacion`), garantizando inmutabilidad del precio ante envíos desde checkout web.
+  - Principio Hotelero Inviolable: La cotización NO inserta bloqueos físicos en `inventario_diario_unidades`.
+- **Creación de Reservas Soberanas desde Cotización (`ReservaServicio::crearReservaDesdeCotizacion`):**
+  - Verificación e hidratación a partir de token firmado; validación de disponibilidad en tiempo real y creación atómica de hold `PENDIENTE` con expiración programada (`expira_en`).
+  - Bloqueo inmediato y exclusivo de noches en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`), impidiendo colisiones y sobreventas.
+- **Clientes API y Credenciales Técnicas Seguras (`api_clientes`, `api_credenciales`, `api_scopes`):**
+  - Arquitectura vinculante: `ACTOR INTEGRACION -> API_CLIENT -> CREDENCIAL TÉCNICA -> SCOPES`.
+  - Cero cuentas de usuario humano ficticias; asignación de identidad formal técnica en `actores` (`tipo = 'INTEGRACION'`, `usuario_id = NULL`).
+  - Tokens Bearer criptográficos CSPRNG (`cpms_live_...`) de alta entropía. El secreto se entrega una sola vez y jamás se almacena en claro; persistencia de hash SHA-256 para validación $O(1)$ y prefijo seguro para identificación.
+  - Catálogo de 6 scopes canónicos: `disponibilidad.leer`, `cotizacion.crear`, `reservas.hold`, `reservas.confirmar`, `reservas.cancelar`, `reservas.leer`.
+  - Operaciones atómicas de emisión, rotación segura y revocación inmutable con registro en auditoría.
+- **Gobernanza del Esquema y Migración 036:**
+  - Migración autorizada `SQL/migraciones/036_tarifas_clientes_api.sql` consumida con éxito; esquema relacional avanza de 122 a exactamente 127 tablas relacionales.
+  - Paridad estricta y limpia con `SQL/camargo_pms.sql`. Ranura de migración 037 estrictamente libre.
+  - Catálogo Alina `admin-dashboard/` 100% intacto y de solo lectura.
+
+## Baseline oficial c61a2f4 (AIRBNB-ICAL-1D2)
+
 ### Microfase AIRBNB-ICAL-1D2 — Despliegue y Operación Automática Portable del Scheduler iCalendar
 
 - **Infraestructura de Automatización Desasistida Portable:**
