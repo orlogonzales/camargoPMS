@@ -859,6 +859,11 @@ $enrutador->get('/documentos', [\CamargoPMS\Controladores\DocumentoControlador::
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),
 ]);
 
+// API: Consulta unificada de documentos de identidad (Local-First + APIsPERU DNI/RUC)
+$enrutador->get('/api/documentos/consultar', [\CamargoPMS\Controladores\DocumentoConsultaControlador::class, 'consultar'], [
+    new \CamargoPMS\Intermediarios\AutenticacionIntermediario(),
+]);
+
 // API: Documentos emitidos
 $enrutador->get('/api/documentos', [\CamargoPMS\Controladores\DocumentoControlador::class, 'apiListarDocumentos'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('documentos.ver'),

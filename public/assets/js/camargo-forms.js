@@ -185,6 +185,79 @@
         },
 
         /**
+         * Consulta de documentos de identidad (Local-First + APIsPERU DNI/RUC) - APISPERU-1B.
+         *
+         * @param {string} tipo 'DNI', 'RUC', 'CE', 'PASAPORTE'
+         * @param {string} numero Número de documento
+         * @param {Object} [callbacks={}]
+         * @param {Function} [callbacks.onStart]
+         * @param {Function} [callbacks.onSuccess]
+         * @param {Function} [callbacks.onNotFound]
+         * @param {Function} [callbacks.onError]
+         * @param {Function} [callbacks.onComplete]
+         * @returns {Promise<Object>}
+         */
+        async consultarDocumento(tipo, numero, callbacks = {}) {
+            const tipoDoc = String(tipo || '').trim().toUpperCase();
+            const numDoc = String(numero || '').trim();
+
+            if (typeof callbacks.onStart === 'function') {
+                callbacks.onStart();
+            }
+
+            if (!tipoDoc || !numDoc) {
+                const errorObj = {
+                    success: false,
+                    origen: 'ERROR',
+                    encontrado: false,
+                    mensaje: 'Debe especificar el tipo y número de documento.',
+                    datos: null
+                };
+                if (typeof callbacks.onError === 'function') callbacks.onError(errorObj);
+                if (typeof callbacks.onComplete === 'function') callbacks.onComplete(errorObj);
+                return errorObj;
+            }
+
+            try {
+                const url = `/api/documentos/consultar?tipo=${encodeURIComponent(tipoDoc)}&numero=${encodeURIComponent(numDoc)}`;
+                const respuesta = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await respuesta.json();
+
+                if (respuesta.ok && data.success && data.encontrado) {
+                    if (typeof callbacks.onSuccess === 'function') callbacks.onSuccess(data);
+                } else if (respuesta.ok && data.success && !data.encontrado) {
+                    if (typeof callbacks.onNotFound === 'function') callbacks.onNotFound(data);
+                    else if (typeof callbacks.onError === 'function') callbacks.onError(data);
+                } else {
+                    if (typeof callbacks.onError === 'function') callbacks.onError(data);
+                }
+
+                if (typeof callbacks.onComplete === 'function') {
+                    callbacks.onComplete(data);
+                }
+                return data;
+            } catch (err) {
+                const errorNetwork = {
+                    success: false,
+                    origen: 'ERROR',
+                    encontrado: false,
+                    mensaje: 'Error de red o comunicación al consultar documento.',
+                    datos: null,
+                    error: err
+                };
+                if (typeof callbacks.onError === 'function') callbacks.onError(errorNetwork);
+                if (typeof callbacks.onComplete === 'function') callbacks.onComplete(errorNetwork);
+                return errorNetwork;
+            }
+        },
+
+        /**
          * Escanea e inicializa formularios en el contenedor indicado.
          * @param {HTMLElement|Document} [contexto=document]
          */

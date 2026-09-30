@@ -53,6 +53,11 @@ final class Configuracion
             'DB_PASSWORD' => (string) ($_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: ''),
             'DB_CHARSET' => (string) ($_ENV['DB_CHARSET'] ?? getenv('DB_CHARSET') ?: 'utf8mb4'),
             'DB_COLLATION' => (string) ($_ENV['DB_COLLATION'] ?? getenv('DB_COLLATION') ?: 'utf8mb4_0900_ai_ci'),
+
+            // Integraciones externas: APIsPERU DNI/RUC
+            'APISPERU_DNIRUC_TOKEN' => (string) ($_ENV['APISPERU_DNIRUC_TOKEN'] ?? getenv('APISPERU_DNIRUC_TOKEN') ?: ''),
+            'APISPERU_DNIRUC_BASE_URL' => (string) ($_ENV['APISPERU_DNIRUC_BASE_URL'] ?? getenv('APISPERU_DNIRUC_BASE_URL') ?: 'https://dniruc.apisperu.com/api/v1'),
+            'APISPERU_DNIRUC_TIMEOUT' => (int) ($_ENV['APISPERU_DNIRUC_TIMEOUT'] ?? getenv('APISPERU_DNIRUC_TIMEOUT') ?: 5),
         ];
 
         // Establece la zona horaria técnica base
@@ -70,7 +75,17 @@ final class Configuracion
      */
     public static function obtener(string $clave, mixed $predeterminado = null): mixed
     {
-        return self::$valores[$clave] ?? $predeterminado;
+        if (array_key_exists($clave, self::$valores)) {
+            return self::$valores[$clave];
+        }
+        if (isset($_ENV[$clave])) {
+            return $_ENV[$clave];
+        }
+        $env = getenv($clave);
+        if ($env !== false) {
+            return $env;
+        }
+        return $predeterminado;
     }
 
     /**

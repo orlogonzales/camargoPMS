@@ -1693,8 +1693,30 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
 3. **Inmutabilidad de la Capa de Persistencia y Base de Datos:**
    - La clase `UsuarioRepositorio` permanece 100% inalterada, preservando la pureza de la capa de acceso a datos sin introducir métodos alias innecesarios.
    - Cero DDL: Base de datos congelada en exactamente 118 tablas relacionales; última migración `034_agregar_foto_personas.sql`; ranura `035` estrictamente LIBRE.
+### D-101 — Motor Seguro Local-First DNI/RUC e Integración Piloto APIsPERU (APISPERU-1B)
+
+1. **Principio Soberano Local-First para Identidad (D-101.1):**
+   - Camargo PMS es la fuente central y soberana de verdad. Toda consulta de DNI o RUC valida en primer término la persistencia local (`PersonaRepositorio::buscarPorDocumento`, `EmpresaRepositorio::buscarPorNumeroDocumento`).
+   - Si la persona o empresa ya existe en la base de datos local, se devuelve con `origen: 'LOCAL'` y queda estrictamente prohibido realizar cualquier llamada de red al proveedor externo (0 consumo de cuota y menor latencia).
+
+2. **Adaptador Técnico cURL y Aislamiento de Secretos (D-101.2):**
+   - El consumo de APIsPERU se encapsula en `ApisPeruAdaptador` mediante cURL nativo con el token en query parameter (`?token=...`) conforme al contrato OpenAPI/Swagger del proveedor.
+   - Es mandatorio el blindaje total de secretos: bajo ninguna circunstancia se imprimen, loguean o exponen el token, query string o URL completa en trazas, mensajes de error o excepciones del sistema.
+   - Timeout configurable mediante `APISPERU_DNIRUC_TIMEOUT` con valor predeterminado seguro de 5 segundos.
+   - El adaptador implementa soporte para inyección de callable/mock HTTP, permitiendo pruebas 100% aisladas sin red en suites automatizadas.
+
+3. **Alcance y Delimitación Estricta de Integración (D-101.3):**
+   - DNI y RUC son los dos únicos tipos de documento automatizados en esta fase.
+   - Carné de Extranjería (CE) y Pasaporte carecen de endpoint en el proveedor y se mantienen en captura 100% manual con `origen: 'MANUAL'` y 0 consumo externo.
+   - Cero invención de datos: el DNI en Reniec no provee género, fecha de nacimiento ni domicilio; queda prohibido inferir o fabricar tales atributos.
+   - La integración de interfaz queda delimitada como piloto en Clientes (DNI) y Empresas (RUC); módulos como Personal, Gastos o Reclamaciones quedan reservados para fases posteriores.
+   - En Empresas, el estado y condición de SUNAT se presentan exclusivamente como badge informativo en la UI sin alterar el estado operativo interno del emisor en el PMS.
+   - Autocompletado no destructivo: solo se rellenan campos vacíos, respetando los datos previamente ingresados por el usuario.
+
+4. **Invariantes de Gobernanza:**
+   - Cero DDL: 118 tablas relacionales preservadas; migración `034_agregar_foto_personas.sql` como última aplicada; ranura `035` estrictamente LIBRE.
    - Catálogo `admin-dashboard/` 100% intacto y de solo lectura.
-   - Suite de regresión consolidada: 70 suites automatizadas, 1,600 checks, 0 fallos.
+   - Suite de regresión consolidada: 71 suites automatizadas, 1,673 checks, 0 fallos.
 
 ## Pendientes de decisión
 

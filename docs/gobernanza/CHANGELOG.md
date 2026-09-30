@@ -4,6 +4,33 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase APISPERU-1B — Motor Seguro Local-First DNI/RUC e Integración Piloto (D-101)
+
+- **Arquitectura de Integración Externa y Adaptador Técnico:**
+  - Creación de `app/Adaptadores/ApisPeruAdaptador.php` para consumo seguro de APIsPERU vía cURL nativo con token en query string (`?token=...`).
+  - Protección estricta contra fuga de credenciales: Ni el token, ni el query string, ni la URL completa se imprimen, loguean o exponen en excepciones o mensajes.
+  - Timeout configurable con valor defensivo por defecto de 5 segundos (`APISPERU_DNIRUC_TIMEOUT=5`).
+  - Soporte de cliente HTTP mock inyectable para pruebas 100% aisladas con 0 consumo de cuota real.
+- **Servicio Soberano y Política Local-First:**
+  - Implementación de `app/Servicios/ConsultaDocumentoServicio.php` gobernado por la política Local-First: si la persona natural o empresa existe en la base de datos local del PMS (`PersonaRepositorio`, `EmpresaRepositorio`), se retorna con origen `'LOCAL'` sin invocar la red externa.
+  - Fallback a APIsPERU únicamente para DNI y RUC cuando no existen localmente (`origen: 'APISPERU'`).
+  - Validación estructural estricta: DNI (8 dígitos) y RUC (11 dígitos).
+  - Tipos no automatizados (CE, Pasaporte, Otros) quedan formalmente delimitados a registro manual con `origen: 'MANUAL'` y 0 peticiones de red.
+  - Normalización no destructiva y cero invención de datos (DNI no inventa género, domicilio ni fecha de nacimiento).
+- **Capa Controlador y Enrutamiento Interno:**
+  - Creación de `app/Controladores/DocumentoConsultaControlador.php` exponiendo el endpoint interno `GET /api/documentos/consultar`.
+  - Registro de la ruta en `public/index.php` protegida mediante `AutenticacionIntermediario`.
+- **Frontend y UX Piloto Alina:**
+  - Incorporación del método asíncrono universal `CamargoForms.consultarDocumento(tipo, numero, callbacks)` en `public/assets/js/camargo-forms.js`.
+  - Integración piloto en Clientes (`app/Vistas/clientes/index.php`): cableado de `#btn-verificar-persona` y botón `#btn-consultar-dni-alta` para DNI. Si es local selecciona la persona; si es APIsPERU autocompleta nombres y apellidos en campos vacíos de alta sin sobreescribir.
+  - Integración piloto en Empresas (`app/Vistas/empresas/index.php`): botón `#btn-consultar-ruc` con autocompletado no destructivo y badge informativo `#empresa-sunat-badge` (condición y estado SUNAT) sin alterar el estado operativo interno del emisor.
+- **Configuración y Gobernanza:**
+  - Variables de plantilla añadidas en `.env.example` (`APISPERU_DNIRUC_TOKEN=`, `APISPERU_DNIRUC_BASE_URL=`, `APISPERU_DNIRUC_TIMEOUT=5`).
+  - Soporte en `Configuracion.php` para carga y lectura transparente de variables `APISPERU_*`.
+  - Cero DDL: 118 tablas relacionales preservadas; migración `034_agregar_foto_personas.sql` última; ranura `035` libre.
+  - Catálogo `admin-dashboard/` 100% intacto.
+  - Nueva suite automatizada `tests/test_apisperu_integracion.php` con 73 comprobaciones (73/73 PASS).
+
 ### Microfase FIX-PERFIL-1 — Alineación del Contrato de Detalle de Usuario en Perfil (D-100)
 
 - **Corrección de Contrato en Capa Controlador:**

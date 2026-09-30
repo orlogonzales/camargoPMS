@@ -236,12 +236,18 @@ declare(strict_types=1);
                         </div>
                         <div class="col-md-4">
                             <label class="form-label f-s-13 f-w-600" for="empresa-num-documento">RUC / Número Documento <span class="text-danger">*</span></label>
-                            <div class="icon-control position-relative">
-                                <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="text" class="form-control ps-5" id="empresa-num-documento" name="numero_documento"
-                                       placeholder="Ej. 20600000005" required maxlength="30">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card text-secondary"></i></span>
+                                <input type="text" class="form-control" id="empresa-num-documento" name="numero_documento"
+                                       placeholder="Ej. 20600000005" required maxlength="11">
+                                <button class="btn btn-outline-primary" type="button" id="btn-consultar-ruc" title="Consultar RUC en SUNAT / APIsPERU">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Consultar
+                                </button>
                             </div>
-                            <div class="form-text f-s-11">Validación estructural Modulo 11 para Perú.</div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <div class="form-text f-s-11 mb-0">RUC de 11 dígitos numéricos.</div>
+                                <div id="empresa-sunat-badge" class="d-none"></div>
+                            </div>
                         </div>
 
                         <!-- Razón Social y Nombre Comercial -->
@@ -444,12 +450,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalVincular = new bootstrap.Modal(modalVincularEl);
     const formVincular = document.getElementById('form-vincular-propiedades');
 
+    const badgeSunat = document.getElementById('empresa-sunat-badge');
+
     // 1. Abrir Modal Crear
     const btnNueva = document.getElementById('btn-nueva-empresa');
     if (btnNueva) {
         btnNueva.addEventListener('click', function () {
             formEmpresa.reset();
             document.getElementById('empresa-id').value = '';
+            if (badgeSunat) {
+                badgeSunat.classList.add('d-none');
+                badgeSunat.innerHTML = '';
+            }
             document.getElementById('modalEmpresaTitulo').innerHTML = '<i class="fa-solid fa-building text-primary me-2"></i> Registrar Empresa / Emisor';
             modalEmpresa.show();
         });
@@ -459,6 +471,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.btn-editar-empresa').forEach(btn => {
         btn.addEventListener('click', async function () {
             const id = this.getAttribute('data-id');
+            if (badgeSunat) {
+                badgeSunat.classList.add('d-none');
+                badgeSunat.innerHTML = '';
+            }
             try {
                 const res = await fetch(`/api/empresas/${id}`, {
                     headers: { 'Accept': 'application/json' }
@@ -497,6 +513,96 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // 2.1 Consulta asistida de RUC (Local-First + APIsPERU SUNAT) - APISPERU-1B
+    const btnConsultarRuc = document.getElementById('btn-consultar-ruc');
+    const inputRuc = document.getElementById('empresa-num-documento');
+
+    if (btnConsultarRuc && inputRuc) {
+        btnConsultarRuc.addEventListener('click', async function () {
+            const rucVal = inputRuc.value.trim();
+            if (!rucVal) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Atención', 'Ingrese el número de RUC para consultar.', 'warning');
+                }
+                return;
+            }
+
+            if (!/^\d{11}$/.test(rucVal)) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Formato Inválido', 'El RUC debe contener exactamente 11 dígitos numéricos.', 'warning');
+                }
+                return;
+            }
+
+            const textoOriginal = btnConsultarRuc.innerHTML;
+            btnConsultarRuc.disabled = true;
+            btnConsultarRuc.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Consultando...';
+            if (badgeSunat) {
+                badgeSunat.classList.add('d-none');
+                badgeSunat.innerHTML = '';
+            }
+
+            try {
+                const res = await CamargoForms.consultarDocumento('RUC', rucVal);
+                if (res.success && res.encontrado && res.datos) {
+                    const d = res.datos;
+                    const elRazon = document.getElementById('empresa-razon-social');
+                    const elComercial = document.getElementById('empresa-nombre-comercial');
+                    const elDireccion = document.getElementById('empresa-direccion-fiscal');
+                    const elDep = document.getElementById('empresa-departamento');
+                    const elProv = document.getElementById('empresa-provincia');
+                    const elDist = document.getElementById('empresa-distrito');
+                    const elUbigeo = document.getElementById('empresa-ubigeo');
+                    const elTel = document.getElementById('empresa-telefono');
+
+                    // Autocompletado no destructivo (solo si los campos están vacíos)
+                    if (elRazon && !elRazon.value && d.razon_social) elRazon.value = d.razon_social;
+                    if (elComercial && !elComercial.value && d.nombre_comercial) elComercial.value = d.nombre_comercial;
+                    if (elDireccion && !elDireccion.value && d.direccion) elDireccion.value = d.direccion;
+                    if (elDep && !elDep.value && d.departamento) elDep.value = d.departamento;
+                    if (elProv && !elProv.value && d.provincia) elProv.value = d.provincia;
+                    if (elDist && !elDist.value && d.distrito) elDist.value = d.distrito;
+                    if (elUbigeo && !elUbigeo.value && d.ubigeo) elUbigeo.value = d.ubigeo;
+                    if (elTel && !elTel.value && Array.isArray(d.telefonos) && d.telefonos.length > 0) {
+                        elTel.value = d.telefonos[0];
+                    }
+
+                    // Badge informativo SUNAT (SIN alterar el estado operativo interno de la empresa en el PMS)
+                    if (badgeSunat && (d.estado_sunat || d.condicion_sunat)) {
+                        const esActivo = (d.estado_sunat || '').toUpperCase() === 'ACTIVO';
+                        const esHabido = (d.condicion_sunat || '').toUpperCase() === 'HABIDO';
+                        const badgeClass = (esActivo && esHabido) ? 'bg-light-success text-success border border-success' : 'bg-light-warning text-warning border border-warning';
+                        badgeSunat.className = `badge ${badgeClass} f-s-11`;
+                        badgeSunat.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>SUNAT: ${d.estado_sunat || '-'} / ${d.condicion_sunat || '-'}`;
+                        badgeSunat.classList.remove('d-none');
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        const origenDesc = res.origen === 'LOCAL' ? 'Base de datos local' : 'APIsPERU (SUNAT)';
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Datos Obtenidos',
+                            text: `RUC consultado con éxito (${origenDesc}). Se autocompletaron los campos disponibles.`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('No Encontrado', res.mensaje || 'No se obtuvieron datos para el RUC indicado.', 'info');
+                    }
+                }
+            } catch (e) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'No se pudo completar la consulta de RUC.', 'error');
+                }
+            } finally {
+                btnConsultarRuc.disabled = false;
+                btnConsultarRuc.innerHTML = textoOriginal;
+            }
+        });
+    }
 
     // 3. Guardar Empresa (Crear / Editar)
     formEmpresa.addEventListener('submit', async function (e) {

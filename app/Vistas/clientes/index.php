@@ -314,9 +314,12 @@ declare(strict_types=1);
                                 </div>
                                 <div class="col-md-5 col-6">
                                     <label class="form-label f-s-12 f-w-600" for="alta-num-doc">Número Documento</label>
-                                    <div class="icon-control position-relative">
-                                        <i class="fa-solid fa-id-card position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                        <input type="text" class="form-control form-control-sm ps-5" name="numero_documento" id="alta-num-doc" placeholder="Número">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text"><i class="fa-solid fa-id-card text-secondary"></i></span>
+                                        <input type="text" class="form-control" name="numero_documento" id="alta-num-doc" placeholder="Número">
+                                        <button class="btn btn-outline-primary" type="button" id="btn-consultar-dni-alta" title="Consultar DNI en APIsPERU">
+                                            <i class="fa-solid fa-magnifying-glass"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-12">
@@ -772,20 +775,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const selEmail = document.getElementById('sel-persona-email');
     const btnQuitarSel = document.getElementById('btn-quitar-persona-sel');
 
-    btnVerificar.addEventListener('click', function () {
+    btnVerificar.addEventListener('click', async function () {
         const val = inputBuscarDoc.value.trim();
         if (!val) return;
 
         spinnerBuscar.classList.remove('d-none');
         feedbackBuscar.textContent = '';
 
-        fetch(`/api/clientes/buscar-persona?documento=${encodeURIComponent(val)}`, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(r => r.json())
-        .then(res => {
-            spinnerBuscar.classList.add('d-none');
+        try {
+            // 1. Consulta primero si ya existe la persona en el PMS local
+            const r = await fetch(`/api/clientes/buscar-persona?documento=${encodeURIComponent(val)}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const res = await r.json();
+
             if (res.encontrado && res.persona) {
+                spinnerBuscar.classList.add('d-none');
                 if (res.es_cliente) {
                     feedbackBuscar.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-exclamation me-1"></i>Esta persona ya es cliente (${res.cliente_codigo}).</span>`;
                     return;
@@ -798,15 +803,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 selEmail.innerHTML = `<i class="fa-solid fa-envelope me-1"></i>${res.persona.email || 'Sin correo'}`;
 
                 boxPersonaSel.classList.remove('d-none');
-                feedbackBuscar.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Persona seleccionada correctamente.</span>`;
-            } else {
-                feedbackBuscar.innerHTML = `<span class="text-warning"><i class="fa-solid fa-info-circle me-1"></i>Persona no encontrada. Puede crearla en "Crear Nueva Persona".</span>`;
+                feedbackBuscar.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Persona seleccionada correctamente (Local PMS).</span>`;
+                return;
             }
-        })
-        .catch(() => {
+
+            // 2. Si no existe localmente y parece un DNI (8 dígitos), consultar APIsPERU (Reniec)
+            if (/^\d{8}$/.test(val)) {
+                feedbackBuscar.innerHTML = '<span class="text-muted"><i class="fa-solid fa-cloud-arrow-down me-1"></i>Consultando en APIsPERU...</span>';
+                const resApis = await CamargoForms.consultarDocumento('DNI', val);
+                spinnerBuscar.classList.add('d-none');
+
+                if (resApis.success && resApis.encontrado && resApis.datos) {
+                    // Cambiar al modo de crear nueva persona
+                    radNueva.checked = true;
+                    secNueva.classList.remove('d-none');
+                    secExistente.classList.add('d-none');
+
+                    const d = resApis.datos;
+                    const elNumDoc = document.getElementById('alta-num-doc');
+                    const elNombres = document.getElementById('alta-nombres');
+                    const elPaterno = document.getElementById('alta-paterno');
+                    const elMaterno = document.getElementById('alta-materno');
+
+                    if (elNumDoc && !elNumDoc.value) elNumDoc.value = d.numero_documento || val;
+                    if (elNombres && !elNombres.value && d.nombres) elNombres.value = d.nombres;
+                    if (elPaterno && !elPaterno.value && d.apellido_paterno) elPaterno.value = d.apellido_paterno;
+                    if (elMaterno && !elMaterno.value && d.apellido_materno) elMaterno.value = d.apellido_materno;
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Persona Encontrada (Reniec)',
+                            text: `DNI ${val} verificado vía APIsPERU. Se preparó el formulario de alta.`,
+                            timer: 2200,
+                            showConfirmButton: false
+                        });
+                    }
+                    return;
+                }
+            }
+
+            spinnerBuscar.classList.add('d-none');
+            feedbackBuscar.innerHTML = `<span class="text-warning"><i class="fa-solid fa-info-circle me-1"></i>Persona no encontrada. Puede crearla en "Crear Nueva Persona".</span>`;
+        } catch (e) {
             spinnerBuscar.classList.add('d-none');
             feedbackBuscar.innerHTML = `<span class="text-danger">Error al consultar persona.</span>`;
-        });
+        }
     });
 
     btnQuitarSel.addEventListener('click', function () {
@@ -815,6 +857,70 @@ document.addEventListener('DOMContentLoaded', function () {
         feedbackBuscar.textContent = '';
         inputBuscarDoc.value = '';
     });
+
+    // Consulta asistida de DNI en Sección 2 (Crear Nueva Persona) - APISPERU-1B
+    const btnConsultarDniAlta = document.getElementById('btn-consultar-dni-alta');
+    const inputDniAlta = document.getElementById('alta-num-doc');
+
+    if (btnConsultarDniAlta && inputDniAlta) {
+        btnConsultarDniAlta.addEventListener('click', async function () {
+            const num = inputDniAlta.value.trim();
+            if (!num) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Atención', 'Ingrese el número de documento para consultar.', 'warning');
+                }
+                return;
+            }
+
+            if (!/^\d{8}$/.test(num)) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Formato Inválido', 'La consulta automática externa requiere un DNI de 8 dígitos numéricos.', 'warning');
+                }
+                return;
+            }
+
+            const origHtml = btnConsultarDniAlta.innerHTML;
+            btnConsultarDniAlta.disabled = true;
+            btnConsultarDniAlta.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            try {
+                const res = await CamargoForms.consultarDocumento('DNI', num);
+                if (res.success && res.encontrado && res.datos) {
+                    const d = res.datos;
+                    const elNombres = document.getElementById('alta-nombres');
+                    const elPaterno = document.getElementById('alta-paterno');
+                    const elMaterno = document.getElementById('alta-materno');
+
+                    // Autocompletado no destructivo (solo si están vacíos)
+                    if (elNombres && !elNombres.value && d.nombres) elNombres.value = d.nombres;
+                    if (elPaterno && !elPaterno.value && d.apellido_paterno) elPaterno.value = d.apellido_paterno;
+                    if (elMaterno && !elMaterno.value && d.apellido_materno) elMaterno.value = d.apellido_materno;
+
+                    const origenMsg = res.origen === 'LOCAL' ? 'Base de datos local' : 'APIsPERU (Reniec)';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Datos Obtenidos',
+                            text: `DNI verificado con éxito (${origenMsg}).`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('No Encontrado', res.mensaje || 'No se obtuvieron datos para el DNI indicado.', 'info');
+                    }
+                }
+            } catch (err) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'No se pudo consultar el documento.', 'error');
+                }
+            } finally {
+                btnConsultarDniAlta.disabled = false;
+                btnConsultarDniAlta.innerHTML = origHtml;
+            }
+        });
+    }
 
     // Cascada Geográfica INEI
     const selPaisResidencia = document.getElementById('alta-pais-residencia');
