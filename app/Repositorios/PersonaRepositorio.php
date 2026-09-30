@@ -137,12 +137,12 @@ class PersonaRepositorio
                     nombres, apellido_paterno, apellido_materno, genero,
                     fecha_nacimiento, pais_nacionalidad_id, pais_residencia_id,
                     distrito_id, region_residencia_extranjera, ciudad_residencia_extranjera,
-                    direccion, estado
+                    direccion, foto_ruta, estado
                 ) VALUES (
                     :nombres, :apellido_paterno, :apellido_materno, :genero,
                     :fecha_nacimiento, :pais_nacionalidad_id, :pais_residencia_id,
                     :distrito_id, :region_residencia_extranjera, :ciudad_residencia_extranjera,
-                    :direccion, :estado
+                    :direccion, :foto_ruta, :estado
                 )";
 
         $stmt = $this->pdo->prepare($sql);
@@ -157,6 +157,7 @@ class PersonaRepositorio
         $stmt->bindValue(':region_residencia_extranjera', $persona->obtenerRegionResidenciaExtranjera(), $persona->obtenerRegionResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':ciudad_residencia_extranjera', $persona->obtenerCiudadResidenciaExtranjera(), $persona->obtenerCiudadResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':direccion', $persona->obtenerDireccion(), $persona->obtenerDireccion() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':foto_ruta', $persona->obtenerFotoRuta(), $persona->obtenerFotoRuta() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':estado', $persona->obtenerEstado(), PDO::PARAM_STR);
         $stmt->execute();
 
@@ -187,6 +188,7 @@ class PersonaRepositorio
                     region_residencia_extranjera = :region_residencia_extranjera,
                     ciudad_residencia_extranjera = :ciudad_residencia_extranjera,
                     direccion = :direccion,
+                    foto_ruta = :foto_ruta,
                     estado = :estado
                 WHERE id = :id";
 
@@ -203,8 +205,25 @@ class PersonaRepositorio
         $stmt->bindValue(':region_residencia_extranjera', $persona->obtenerRegionResidenciaExtranjera(), $persona->obtenerRegionResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':ciudad_residencia_extranjera', $persona->obtenerCiudadResidenciaExtranjera(), $persona->obtenerCiudadResidenciaExtranjera() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':direccion', $persona->obtenerDireccion(), $persona->obtenerDireccion() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':foto_ruta', $persona->obtenerFotoRuta(), $persona->obtenerFotoRuta() !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmt->bindValue(':estado', $persona->obtenerEstado(), PDO::PARAM_STR);
 
+        return $stmt->execute();
+    }
+
+    /**
+     * Actualiza exclusivamente la referencia relativa de fotografía de una persona.
+     *
+     * @param int $personaId
+     * @param string|null $fotoRuta Referencia relativa (ej. 'avatars/<id>.jpg') o null para limpiar.
+     * @return bool
+     */
+    public function actualizarFotoRuta(int $personaId, ?string $fotoRuta): bool
+    {
+        $sql = "UPDATE personas SET foto_ruta = :foto_ruta WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':foto_ruta', $fotoRuta !== null && trim($fotoRuta) !== '' ? trim($fotoRuta) : null, $fotoRuta !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+        $stmt->bindValue(':id', $personaId, PDO::PARAM_INT);
         return $stmt->execute();
     }
 

@@ -63,6 +63,29 @@ final class Ayudante
     }
 
     /**
+     * Genera la URL pública normalizada para un recurso persistido en storage.
+     * Si la referencia es nula o vacía, resuelve opcionalmente un recurso de fallback desde assets.
+     *
+     * @param string|null $recurso Referencia relativa almacenada (ej. "avatars/abc.jpg").
+     * @param string|null $fallback Recurso de fallback en assets si la referencia es nula (ej. "images/avatar/01.png").
+     * @return string URL absoluta normalizada para el navegador.
+     */
+    public static function storage(?string $recurso, ?string $fallback = null): string
+    {
+        if ($recurso !== null && trim($recurso) !== '') {
+            $recursoLimpio = ltrim(trim($recurso), '/');
+            $base = self::$urlBase;
+            return ($base === '' ? '' : $base) . '/storage/' . $recursoLimpio;
+        }
+
+        if ($fallback !== null && trim($fallback) !== '') {
+            return self::asset($fallback);
+        }
+
+        return '';
+    }
+
+    /**
      * Escapa caracteres especiales en cadenas para prevenir XSS en vistas HTML.
      *
      * @param mixed $valor Valor a escapar.

@@ -27,7 +27,7 @@ declare(strict_types=1);
                     <div class="image-details position-relative text-center">
                         <div class="profile-pic mx-auto position-relative" style="width: 120px; height: 120px;">
                             <div class="avatar-preview">
-                                <div id="imgPreview" style="background-image: url('<?= url_asset('images/avatar/01.png') ?>');"></div>
+                                <div id="imgPreview" style="background-image: url('<?= e($urlFoto ?? url_asset('images/avatar/01.png')) ?>');"></div>
                             </div>
                             <div class="avatar-edit">
                                 <input type="file" id="imageUpload" accept=".png, .jpg, .jpeg" aria-label="Seleccionar fotografía de perfil">
@@ -35,6 +35,29 @@ declare(strict_types=1);
                                     <i class="fa-solid fa-camera f-s-14 text-dark"></i>
                                 </label>
                             </div>
+                        </div>
+
+                        <!-- Botones de Acción de Fotografía (UI-ALINA-1B-C1) -->
+                        <div id="contenedorAccionesFoto" class="mt-3 d-none">
+                            <button type="button" id="btnGuardarFoto" class="btn btn-primary btn-sm me-1">
+                                <i class="fa-solid fa-cloud-arrow-up me-1"></i> <span id="textoBtnGuardar">Guardar</span>
+                            </button>
+                            <button type="button" id="btnCancelarFoto" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-xmark me-1"></i> Cancelar
+                            </button>
+                        </div>
+
+                        <?php if (!empty($fotoRuta)): ?>
+                            <div id="contenedorEliminarFoto" class="mt-2">
+                                <button type="button" id="btnEliminarFoto" class="btn btn-outline-danger btn-sm f-s-12">
+                                    <i class="fa-solid fa-trash me-1"></i> Restablecer avatar
+                                </button>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Alertas de Estado y Feedback -->
+                        <div id="alertaFoto" class="mt-2 d-none alert alert-dismissible fade show f-s-12 text-center" role="alert">
+                            <span id="mensajeAlertaFoto"></span>
                         </div>
                     </div>
 
@@ -297,27 +320,56 @@ declare(strict_types=1);
     </div>
 </div>
 
-<!-- Script interactivo en Vanilla JS para previsualizador de fotografía (profile.html) -->
+<!-- Script interactivo en Vanilla JS para persistencia y UX de fotografía Alina (profile.html / UI-ALINA-1B-C1) -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const inputFoto = document.getElementById('imageUpload');
     const previewDiv = document.getElementById('imgPreview');
+    const contenedorAcciones = document.getElementById('contenedorAccionesFoto');
+    const btnGuardar = document.getElementById('btnGuardarFoto');
+    const btnCancelar = document.getElementById('btnCancelarFoto');
+    const btnEliminar = document.getElementById('btnEliminarFoto');
+    const contenedorEliminar = document.getElementById('contenedorEliminarFoto');
+    const alertaFoto = document.getElementById('alertaFoto');
+    const mensajeAlerta = document.getElementById('mensajeAlertaFoto');
+    const textoBtnGuardar = document.getElementById('textoBtnGuardar');
 
+    let urlFotoPersistida = <?= json_encode($urlFoto ?? url_asset('images/avatar/01.png')) ?>;
+    const tokenCsrf = <?= json_encode($csrf_token ?? '') ?>;
+    const rutaSubirFoto = <?= json_encode(url_ruta('/perfil/foto')) ?>;
+    const rutaEliminarFoto = <?= json_encode(url_ruta('/perfil/foto/eliminar')) ?>;
+
+    function mostrarAlerta(mensaje, esExito) {
+        if (!alertaFoto || !mensajeAlerta) return;
+        alertaFoto.className = 'mt-2 alert alert-dismissible fade show f-s-12 text-center alert-' + (esExito ? 'success' : 'danger');
+        mensajeAlerta.textContent = mensaje;
+        alertaFoto.classList.remove('d-none');
+    }
+
+    function ocultarAlerta() {
+        if (alertaFoto) {
+            alertaFoto.classList.add('d-none');
+        }
+    }
+
+    // 1. Selección y previsualización local (FileReader)
     if (inputFoto && previewDiv) {
         inputFoto.addEventListener('change', function () {
+            ocultarAlerta();
+
             if (this.files && this.files[0]) {
                 const archivo = this.files[0];
 
-                // Validación de cliente por tipo de imagen
+                // Validación cliente de tipo MIME
                 if (!archivo.type.match(/^image\/(png|jpe?g)$/i)) {
-                    alert('Formato de imagen no permitido. Utilice únicamente archivos .png, .jpg o .jpeg.');
+                    mostrarAlerta('Formato no permitido. Se aceptan exclusivamente archivos JPG y PNG.', false);
                     this.value = '';
                     return;
                 }
 
-                // Validación de tamaño (máx 2MB)
+                // Validación cliente de tamaño (máx 2MB)
                 if (archivo.size > 2 * 1024 * 1024) {
-                    alert('El archivo supera el tamaño máximo permitido de 2 MB.');
+                    mostrarAlerta('El archivo supera el tamaño máximo permitido de 2 MB.', false);
                     this.value = '';
                     return;
                 }
@@ -325,9 +377,119 @@ document.addEventListener('DOMContentLoaded', function () {
                 const lector = new FileReader();
                 lector.onload = function (evento) {
                     previewDiv.style.backgroundImage = 'url(' + evento.target.result + ')';
+                    if (contenedorAcciones) {
+                        contenedorAcciones.classList.remove('d-none');
+                    }
                 };
                 lector.readAsDataURL(archivo);
             }
+        });
+    }
+
+    // 2. Cancelar selección y restaurar imagen persistida
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', function () {
+            ocultarAlerta();
+            if (inputFoto) inputFoto.value = '';
+            if (previewDiv) previewDiv.style.backgroundImage = 'url(' + urlFotoPersistida + ')';
+            if (contenedorAcciones) contenedorAcciones.classList.add('d-none');
+        });
+    }
+
+    // 3. Guardar fotografía en backend (POST asíncrono con CSRF)
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', function () {
+            if (!inputFoto || !inputFoto.files || !inputFoto.files[0]) {
+                mostrarAlerta('Seleccione un archivo de imagen antes de guardar.', false);
+                return;
+            }
+
+            ocultarAlerta();
+            btnGuardar.disabled = true;
+            if (btnCancelar) btnCancelar.disabled = true;
+            if (textoBtnGuardar) textoBtnGuardar.textContent = 'Guardando...';
+
+            const formData = new FormData();
+            formData.append('foto', inputFoto.files[0]);
+            formData.append('_csrf_token', tokenCsrf);
+
+            fetch(rutaSubirFoto, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': tokenCsrf
+                }
+            })
+            .then(function (respuesta) {
+                return respuesta.json().then(function (datos) {
+                    return { estado: respuesta.status, datos: datos };
+                });
+            })
+            .then(function (resultado) {
+                btnGuardar.disabled = false;
+                if (btnCancelar) btnCancelar.disabled = false;
+                if (textoBtnGuardar) textoBtnGuardar.textContent = 'Guardar';
+
+                if (resultado.estado >= 200 && resultado.estado < 300 && resultado.datos.ok) {
+                    urlFotoPersistida = resultado.datos.url_foto;
+                    if (previewDiv) previewDiv.style.backgroundImage = 'url(' + urlFotoPersistida + ')';
+                    if (inputFoto) inputFoto.value = '';
+                    if (contenedorAcciones) contenedorAcciones.classList.add('d-none');
+                    if (contenedorEliminar) contenedorEliminar.classList.remove('d-none');
+                    mostrarAlerta(resultado.datos.mensaje || 'Fotografía actualizada correctamente.', true);
+                } else {
+                    mostrarAlerta(resultado.datos.error || 'Ocurrió un error al guardar la fotografía.', false);
+                }
+            })
+            .catch(function (error) {
+                btnGuardar.disabled = false;
+                if (btnCancelar) btnCancelar.disabled = false;
+                if (textoBtnGuardar) textoBtnGuardar.textContent = 'Guardar';
+                mostrarAlerta('Error de comunicación con el servidor al guardar la fotografía.', false);
+            });
+        });
+    }
+
+    // 4. Restablecer avatar a fallback
+    if (btnEliminar) {
+        btnEliminar.addEventListener('click', function () {
+            if (!confirm('¿Desea restablecer su fotografía de perfil al avatar predeterminado?')) {
+                return;
+            }
+
+            ocultarAlerta();
+            btnEliminar.disabled = true;
+
+            const formData = new FormData();
+            formData.append('_csrf_token', tokenCsrf);
+
+            fetch(rutaEliminarFoto, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': tokenCsrf
+                }
+            })
+            .then(function (respuesta) {
+                return respuesta.json();
+            })
+            .then(function (datos) {
+                btnEliminar.disabled = false;
+                if (datos.ok) {
+                    urlFotoPersistida = datos.url_foto;
+                    if (previewDiv) previewDiv.style.backgroundImage = 'url(' + urlFotoPersistida + ')';
+                    if (contenedorEliminar) contenedorEliminar.classList.add('d-none');
+                    mostrarAlerta(datos.mensaje || 'Avatar restablecido correctamente.', true);
+                } else {
+                    mostrarAlerta(datos.error || 'No se pudo restablecer la fotografía.', false);
+                }
+            })
+            .catch(function () {
+                btnEliminar.disabled = false;
+                mostrarAlerta('Error de conexión al intentar restablecer el avatar.', false);
+            });
         });
     }
 });

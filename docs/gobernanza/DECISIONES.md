@@ -1533,6 +1533,29 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - Se reproduce la estructura visual de `admin-dashboard/alina/template/profile.html` (`.profile-container`, `.profile-pic`, `.avatar-preview`, `#imgPreview`, `.avatar-edit`, `#imageUpload`) con previsualización dinámica interactiva en Vanilla JS (FileReader API, cero jQuery).
    - Se preservan las fronteras arquitectónicas: no se duplican operaciones de autenticación ni revocación masiva de sesiones dentro del perfil; se enlaza de forma segura a la consola existente de sesiones (`/seguridad/sesiones`).
 
+### D-095 — Persistencia Segura y Desacoplada de Fotografía de Persona (UI-ALINA-1B-C1)
+
+1. **Axioma Ontológico: Fotografía $\to$ Persona | Credencial $\to$ Usuario:**
+   - La fotografía personal pertenece soberanamente a la entidad `Persona` (sujeto humano natural), jamás a `Usuario` (credenciales técnicas y parámetros de acceso).
+   - Se prohíbe introducir columnas de avatar o foto en la tabla `usuarios` o duplicar imágenes en dominios de acceso.
+
+2. **Semántica de Referencia Relativa Desacoplada (`foto_ruta`):**
+   - El atributo `foto_ruta VARCHAR(255) NULL` en `personas` (incorporado mediante migración `034_agregar_foto_personas.sql`) almacena exclusivamente una referencia relativa controlada (ej. `avatars/avatar_<hash>.jpg`), desacoplada de la ruta física en disco del servidor (`public/storage/...`) y de la URL absoluta del host (`https://...`).
+   - La capa de aplicación resuelve la tríada:
+     $$\text{referencia en BD} \longrightarrow \text{directorio de storage configurado} \longrightarrow \text{URL pública de presentación}$$
+   - Si `foto_ruta` es `NULL`, la capa de presentación resuelve automáticamente el avatar neutro canónico de Alina (`images/avatar/01.png`), sin persistir rutas de fallback en la base de datos.
+
+3. **Reemplazo Atómico y Resiliente en Almacenamiento:**
+   - La persistencia sigue una secuencia defensiva estricta:
+     $$\text{validar nuevo} \longrightarrow \text{nombre seguro} \longrightarrow \text{guardar archivo} \longrightarrow \text{actualizar BD} \longrightarrow \text{confirmar persistencia} \longrightarrow \text{eliminar foto previa}$$
+   - Si la actualización en base de datos falla, se elimina de inmediato el archivo nuevo huérfano y se preserva intacta la fotografía anterior del usuario.
+   - La eliminación física de archivos viejos está protegida contra *path traversal* (restringida al subdirectorio administrado `public/storage/avatars/`) y jamás elimina recursos de fallback o activos de la plantilla.
+
+4. **Seguridad Estricta de Carga Binaria:**
+   - Se validan exclusivamente los tipos MIME `image/jpeg` y `image/png` mediante inspección binaria real (`finfo_file`). Se rechaza categóricamente SVG, GIF y cualquier contenido ejecutable.
+   - Se descarta el nombre de archivo enviado por el cliente; el identificador físico se genera mediante entropía criptográfica (`random_bytes(16)`) con extensión derivada del MIME verificado. Límite máximo: 2 MB.
+   - La subida y eliminación de foto en `/perfil/foto` exige sesión activa, token CSRF válido y deriva la Persona objetivo directamente del usuario autenticado en sesión, impidiendo la manipulación de personas ajenas.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

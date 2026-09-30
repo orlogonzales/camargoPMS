@@ -280,16 +280,16 @@ test_afirmar(
     "BD-01: Total de tablas relacionales se mantiene estrictamente en 118 (cero DDL no autorizado)"
 );
 
-$slot034 = glob(__DIR__ . '/../SQL/migraciones/034*');
+$slot035 = glob(__DIR__ . '/../SQL/migraciones/035*');
 test_afirmar(
-    empty($slot034),
-    "BD-02: Ranura de migración 034 permanece estrictamente LIBRE (cero DDL consumido)"
+    empty($slot035),
+    "BD-02: Ranura de migración 035 permanece estrictamente LIBRE (cero DDL no autorizado)"
 );
 
 $lastMig = $pdo->query('SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1')->fetchColumn();
 test_afirmar(
-    $lastMig === '033_reorganizar_menu_alina.sql',
-    "BD-03: Última migración aplicada en camargo_pms sigue siendo 033_reorganizar_menu_alina.sql"
+    $lastMig === '034_agregar_foto_personas.sql',
+    "BD-03: Última migración aplicada en camargo_pms es 034_agregar_foto_personas.sql"
 );
 
 // Resumen Final

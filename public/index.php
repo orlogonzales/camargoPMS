@@ -67,8 +67,14 @@ $enrutador->get('/', [\CamargoPMS\Controladores\PanelControlador::class, 'inicio
     \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
 ]);
 
-// Ruta de Perfil de Usuario (UI-ALINA-1B)
+// Ruta de Perfil de Usuario (UI-ALINA-1B / UI-ALINA-1B-C1)
 $enrutador->get('/perfil', [\CamargoPMS\Controladores\PerfilControlador::class, 'index'], [
+    \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
+]);
+$enrutador->post('/perfil/foto', [\CamargoPMS\Controladores\PerfilControlador::class, 'actualizarFoto'], [
+    \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
+]);
+$enrutador->post('/perfil/foto/eliminar', [\CamargoPMS\Controladores\PerfilControlador::class, 'eliminarFoto'], [
     \CamargoPMS\Intermediarios\AutenticacionIntermediario::class,
 ]);
 

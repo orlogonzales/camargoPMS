@@ -113,3 +113,18 @@ if (!function_exists('insignia_estado')) {
     }
 }
 
+if (!function_exists('url_storage')) {
+    /**
+     * Genera la URL pública normalizada para un recurso en storage, con fallback de avatar.
+     *
+     * @param string|null $recurso Referencia relativa almacenada (ej. "avatars/abc.jpg").
+     * @param string|null $fallback Ruta relativa en assets en caso de recurso nulo.
+     * @return string URL absoluta para su inclusión en HTML/CSS.
+     */
+    function url_storage(?string $recurso = null, ?string $fallback = 'images/avatar/01.png'): string
+    {
+        return Ayudante::storage($recurso, $fallback);
+    }
+}
+
+

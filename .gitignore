@@ -18,11 +18,13 @@ storage/logs/*
 storage/privados/*
 storage/uploads/*
 storage/logos/*
+public/storage/avatars/*
 !storage/cache/.gitkeep
 !storage/logs/.gitkeep
 !storage/privados/.gitkeep
 !storage/uploads/.gitkeep
 !storage/logos/.gitkeep
+!public/storage/avatars/.gitkeep
 *.log
 sess_*
 

@@ -29,6 +29,7 @@ final class Persona
     private ?string $regionResidenciaExtranjera;
     private ?string $ciudadResidenciaExtranjera;
     private ?string $direccion;
+    private ?string $fotoRuta = null;
     private string $estado;
     private ?string $creadoEn;
     private ?string $actualizadoEn;
@@ -90,7 +91,8 @@ final class Persona
         ?Pais $paisResidencia = null,
         ?Distrito $distrito = null,
         array $documentos = [],
-        array $contactos = []
+        array $contactos = [],
+        ?string $fotoRuta = null
     ) {
         $this->id = $id;
         $this->nombres = trim($nombres);
@@ -104,6 +106,7 @@ final class Persona
         $this->regionResidenciaExtranjera = $regionResidenciaExtranjera !== null && trim($regionResidenciaExtranjera) !== '' ? trim($regionResidenciaExtranjera) : null;
         $this->ciudadResidenciaExtranjera = $ciudadResidenciaExtranjera !== null && trim($ciudadResidenciaExtranjera) !== '' ? trim($ciudadResidenciaExtranjera) : null;
         $this->direccion = $direccion !== null && trim($direccion) !== '' ? trim($direccion) : null;
+        $this->fotoRuta = $fotoRuta !== null && trim($fotoRuta) !== '' ? trim($fotoRuta) : null;
         $this->estado = strtoupper(trim($estado));
         $this->creadoEn = $creadoEn;
         $this->actualizadoEn = $actualizadoEn;
@@ -131,7 +134,13 @@ final class Persona
             isset($datos['direccion']) && $datos['direccion'] !== null ? (string) $datos['direccion'] : null,
             (string) ($datos['estado'] ?? 'ACTIVO'),
             isset($datos['creado_en']) ? (string) $datos['creado_en'] : null,
-            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null
+            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null,
+            null,
+            null,
+            null,
+            [],
+            [],
+            isset($datos['foto_ruta']) && $datos['foto_ruta'] !== null && trim((string) $datos['foto_ruta']) !== '' ? trim((string) $datos['foto_ruta']) : null
         );
 
         if (isset($datos['departamento'])) {
@@ -228,6 +237,16 @@ final class Persona
     public function obtenerDireccion(): ?string
     {
         return $this->direccion;
+    }
+
+    public function obtenerFotoRuta(): ?string
+    {
+        return $this->fotoRuta;
+    }
+
+    public function asignarFotoRuta(?string $fotoRuta): void
+    {
+        $this->fotoRuta = $fotoRuta !== null && trim($fotoRuta) !== '' ? trim($fotoRuta) : null;
     }
 
     public function obtenerEstado(): string
@@ -415,6 +434,7 @@ final class Persona
             'region_residencia_extranjera' => $this->regionResidenciaExtranjera,
             'ciudad_residencia_extranjera' => $this->ciudadResidenciaExtranjera,
             'direccion' => $this->direccion,
+            'foto_ruta' => $this->fotoRuta,
             'estado' => $this->estado,
             'creado_en' => $this->creadoEn,
             'actualizado_en' => $this->actualizadoEn,

@@ -4,6 +4,26 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1B-C1 — Persistencia Segura de Fotografía de Persona (D-095)
+
+- **Persistencia y Desacoplamiento de Fotografía (`foto_ruta`):**
+  - Consumo formal de la migración `034_agregar_foto_personas.sql` agregando la columna `foto_ruta VARCHAR(255) NULL` a la tabla `personas`. Paridad 100% con `SQL/camargo_pms.sql`.
+  - La base de datos mantiene exactamente 118 tablas relacionales y la ranura `035_*` permanece estrictamente libre.
+  - Almacena una referencia relativa controlada (`avatars/<id-seguro>.<ext>`), desacoplada de la ruta física del servidor y de URLs absolutas.
+  - Resolución limpia: referencia relativa $\to$ almacenamiento público $\to$ URL de presentación (`Ayudante::storage()`, `url_storage()`) con fallback canónico de Alina (`images/avatar/01.png`).
+- **Servicio Soberano de Almacenamiento (`FotoPersonaServicio`):**
+  - Implementación de `FotoPersonaServicio` con validación estricta de binarios mediante Fileinfo (`image/jpeg` $\to$ `.jpg`, `image/png` $\to$ `.png`). Rechazo absoluto de SVG, GIF, ejecutables y archivos $> 2$ MB.
+  - Reemplazo atómico y seguro: validación $\to$ identificador seguro (`random_bytes(16)`) $\to$ guardado físico $\to$ actualización en BD $\to$ confirmación $\to$ eliminación segura de foto anterior. Si falla la BD, se destruye el archivo nuevo huérfano y se preserva intacta la foto previa.
+  - Protección contra *path traversal* en borrado y neutralización de rutas relativas maliciosas.
+- **Endpoints Autenticados y Controlador Delgado:**
+  - Registro de `POST /perfil/foto` y `POST /perfil/foto/eliminar` en `public/index.php`, protegidos por `AutenticacionIntermediario`.
+  - Validación obligatoria de CSRF y resolución estricta de la Persona vinculada a la sesión del usuario (se rechaza `persona_id` externo del cliente).
+- **Interfaz Alina profile.html y UX Interactivo:**
+  - Previsualización dinámica con `FileReader` de cliente, botones de Guardar y Cancelar, estado de carga (spinner), alertas de feedback y opción para restablecer avatar.
+- **Verificación y Cobertura:**
+  - Nueva suite automatizada `tests/test_ui_alina_1b_c1_foto_persona.php` con 39 comprobaciones rigurosas (100% PASS).
+  - Regresión global ampliada: 65/65 suites evaluadas, 65/65 PASSED (100%), 1,487 checks verificados (+39 checks sobre 1B), 0 fallos.
+
 ### Microfase UI-ALINA-1B — Perfil de Usuario + Theme Customizer + Flotante Lateral (D-094)
 
 - **Theme Customizer y Flotante Lateral Alina (`app/Vistas/componentes/personalizador.php`):**
