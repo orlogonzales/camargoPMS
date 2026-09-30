@@ -204,3 +204,38 @@ Conforme a la regla superior (**Alina es el sistema de diseño de Camargo PMS**)
 
 Prohibición transversal vinculante: **`border-style: dotted/dashed` no está permitido** en ningún componente propio de Camargo PMS.
 
+## Componentes y Contenedores de Interacción Alina (UI-ALINA-1D)
+
+En cumplimiento de la Decisión **D-097**, se establece el contrato técnico vinculante para componentes interactivos y contenedores visuales:
+
+1. **Modales Centrados y Escalamiento:**
+   - Todo modal de interacción en el sistema debe incluir la clase `modal-dialog-centered`.
+   - Dimensionamiento estricto mediante clases de cuadrícula Alina: `modal-sm`, `modal-lg`, `modal-xl` (o clases utilitarias `.app-modal-*`).
+   - Cabeceras con botón de cierre limpio, cuerpo con espaciado consistente y pie con botones sólidos de acción (`.btn-primary`) y cancelación suave (`.btn-light-secondary`).
+
+2. **SweetAlert2 — Separación Estricta de Responsabilidades:**
+   - SweetAlert2 se reserva exclusivamente para confirmaciones de alto impacto (anulación, revocación, eliminación) y retroalimentación interactiva (éxito, advertencia, error).
+   - **Prohibición:** Queda prohibido el uso de SweetAlert2 como sustituto de formularios CRUD completos. Toda captura de datos estructurada debe residir en modales semánticos HTML o páginas dedicadas validadas con PristineJS.
+
+3. **Tooltips Runtime Centralizados:**
+   - La inicialización de tooltips se ejecuta centralizadamente en `camargo-forms.js` (`CamargoForms.inicializarTooltips`) y se expone en `CamargoPMS.inicializarTooltips` mediante `bootstrap.Tooltip.getOrCreateInstance()`.
+   - Soporte reactivo para elementos dinámicos mediante escucha automática del evento `shown.bs.modal`.
+
+4. **Botones Sólidos e Iconografía Soberana:**
+   - Se priorizan botones sólidos Alina: `.btn-primary`, `.btn-secondary`, `.btn-light-secondary`, `.btn-light-danger`, `.btn-light-success`.
+   - **Iconografía:** Exclusividad de **Font Awesome 6 Free** (`fa-solid`, `fa-regular`, `fa-brands`). Prohibición absoluta de librerías heterogéneas (`ti-`, `bi-`, `feather-`).
+
+5. **Acordeones Nativos Alina (`.app-accordion`):**
+   - Estructura canónica: `.accordion.app-accordion`, `.accordion-item`, `.accordion-header`, `.accordion-button.accordion-icon`.
+   - Indicador de colapso mediante chevron rotatorio suave sin líneas discontinuas.
+
+6. **Alertas y Badges — Erradicación de `-subtle`:**
+   - Queda erradicada la sintaxis Bootstrap 5 cruda `*-subtle` (`bg-primary-subtle`, `alert-success-subtle`, etc.) en favor del estándar Alina: `.bg-light-*` y `.alert-light-*`.
+   - Todos los badges y chips deben cumplir la regla de cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
+
+7. **Placeholders / Preload Skeleton:**
+   - Para estados de carga asíncrona (como listados de suministros o datos remotos), se emplea la estructura `.placeholder-glow` con `.placeholder` en lugar de textos planos estáticos. Se provee la utilidad `CamargoForms.crearPlaceholder(lineas)`.
+
+8. **Barras de Progreso (Progress) — Criterio NO APLICA:**
+   - **NO APLICA / SIN CASO REAL ACTUAL:** No existen procesos multifase cuantificables o tareas en segundo plano que justifiquen una barra de progreso real en el flujo operativo actual. Se prohíbe introducir barras de progreso artificiales, decorativas o estáticas que simulen falsos porcentajes de carga.
+

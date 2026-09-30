@@ -178,7 +178,7 @@ declare(strict_types=1);
 <!-- Modal: Formular Contrato de Arrendamiento (app-form app-icon-form)        -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-crear-arrendamiento" tabindex="-1" aria-labelledby="modalCrearLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title f-s-16 f-w-700" id="modalCrearLabel">
@@ -294,7 +294,7 @@ declare(strict_types=1);
 <!-- Modal: Detalle Completo de Arrendamiento                                   -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-detalle-arrendamiento" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-light border-bottom py-3">
                 <div class="d-flex align-items-center gap-2">
@@ -498,7 +498,7 @@ declare(strict_types=1);
 <!-- Modal: Prorrogar Contrato                                                 -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-prorrogar" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title f-s-15 f-w-700"><i class="fa-solid fa-calendar-plus me-2"></i> Prórroga de Contrato</h5>
@@ -520,7 +520,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm">Confirmar Prórroga</button>
                 </div>
             </form>
@@ -532,7 +532,7 @@ declare(strict_types=1);
 <!-- Modal: Rescindir Contrato                                                 -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-rescindir" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-danger text-white py-3">
                 <h5 class="modal-title f-s-15 f-w-700"><i class="fa-solid fa-ban me-2"></i> Rescisión Anticipada de Contrato</h5>
@@ -558,7 +558,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-danger btn-sm">Confirmar Rescisión</button>
                 </div>
             </form>
@@ -570,7 +570,7 @@ declare(strict_types=1);
 <!-- Modal: Incorporar Residente (Sujeto)                                      -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-agregar-persona" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white py-3">
                 <h5 class="modal-title f-s-15 f-w-700"><i class="fa-solid fa-user-plus me-2"></i> Incorporar Residente al Contrato</h5>
@@ -599,7 +599,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm">Vincular Persona</button>
                 </div>
             </form>

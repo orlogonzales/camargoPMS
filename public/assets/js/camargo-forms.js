@@ -148,6 +148,43 @@
         },
 
         /**
+         * Inicializa tooltips de Bootstrap / Alina de forma idempotente.
+         *
+         * @param {HTMLElement|Document} [contenedor=document]
+         */
+        inicializarTooltips(contenedor = document) {
+            if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) return;
+            const elementos = contenedor.querySelectorAll('[data-bs-toggle="tooltip"]');
+            elementos.forEach(el => {
+                try {
+                    if (typeof bootstrap.Tooltip.getOrCreateInstance === 'function') {
+                        bootstrap.Tooltip.getOrCreateInstance(el);
+                    } else if (!bootstrap.Tooltip.getInstance(el)) {
+                        new bootstrap.Tooltip(el);
+                    }
+                } catch (e) {
+                    // Degradación silenciosa con title nativo
+                }
+            });
+        },
+
+        /**
+         * Genera un bloque HTML de placeholder skeleton según el patrón Alina (UI-ALINA-1D).
+         *
+         * @param {number} [lineas=3]
+         * @returns {string}
+         */
+        crearPlaceholder(lineas = 3) {
+            let html = '<div class="placeholder-glow py-2">';
+            for (let i = 0; i < lineas; i++) {
+                const col = (i % 2 === 0) ? 'col-8' : 'col-5';
+                html += `<span class="placeholder ${col} d-block mb-2"></span>`;
+            }
+            html += '</div>';
+            return html;
+        },
+
+        /**
          * Escanea e inicializa formularios en el contenedor indicado.
          * @param {HTMLElement|Document} [contexto=document]
          */
@@ -156,6 +193,7 @@
             formularios.forEach(form => {
                 CamargoForms.inicializar(form);
             });
+            CamargoForms.inicializarTooltips(contexto);
         }
     };
 
@@ -172,6 +210,9 @@
             if (modal) {
                 // Re-escanear formularios dentro del modal
                 CamargoForms.autoInicializar(modal);
+
+                // Re-inicializar tooltips dentro del modal
+                CamargoForms.inicializarTooltips(modal);
 
                 // Re-inicializar selectores Select2 si CamargoSelect está disponible
                 if (window.CamargoSelect && typeof window.CamargoSelect.autoInicializar === 'function') {

@@ -271,7 +271,7 @@ declare(strict_types=1);
 
 <!-- Modal: Crear Tarea Manual -->
 <div class="modal fade" id="modal-crear-tarea" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 f-w-700">Nueva Tarea de Limpieza</h5>
@@ -315,7 +315,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-tarea">
                         <i class="fa-solid fa-check me-1"></i> Guardar Tarea
                     </button>
@@ -327,7 +327,7 @@ declare(strict_types=1);
 
 <!-- Modal: Inspeccionar Tarea (Checklist y Calificación) -->
 <div class="modal fade" id="modal-inspeccionar-tarea" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <div>
@@ -368,12 +368,12 @@ declare(strict_types=1);
             </div>
             <div class="modal-footer border-top d-flex justify-content-between">
                 <div>
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btn-rechazar-inspeccion">
+                    <button type="button" class="btn btn-light-danger btn-sm" id="btn-rechazar-inspeccion">
                         <i class="fa-solid fa-xmark me-1"></i> Rechazar (Retoque)
                     </button>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm me-2" data-bs-dismiss="modal">Cerrar</button>
                     <button type="button" class="btn btn-success btn-sm" id="btn-aprobar-inspeccion">
                         <i class="fa-solid fa-check me-1"></i> Aprobar Habitación (VR)
                     </button>
@@ -385,7 +385,7 @@ declare(strict_types=1);
 
 <!-- Modal: Finalizar Limpieza y Registro de Consumos -->
 <div class="modal fade" id="modal-finalizar-limpieza" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 f-w-700">Finalizar Limpieza</h5>
@@ -411,7 +411,7 @@ declare(strict_types=1);
                 </p>
             </div>
             <div class="modal-footer border-top">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary btn-sm" id="btn-confirmar-finalizacion">
                     <i class="fa-solid fa-paper-plane me-1"></i> Enviar a Inspección
                 </button>
@@ -422,7 +422,7 @@ declare(strict_types=1);
 
 <!-- Modal: Reportar Desperfecto Físico a Mantenimiento -->
 <div class="modal fade" id="modal-reportar-desperfecto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 f-w-700">Levantar Incidencia a Mantenimiento</h5>
@@ -449,7 +449,7 @@ declare(strict_types=1);
                 </div>
             </div>
             <div class="modal-footer border-top">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-warning btn-sm" id="btn-enviar-desperfecto">
                     <i class="fa-solid fa-wrench me-1"></i> Reportar a Mantenimiento
                 </button>

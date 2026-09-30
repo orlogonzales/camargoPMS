@@ -1587,6 +1587,42 @@ Gobierna el reconocimiento económico formal del alojamiento noche a noche, el p
    - La ranura `035` de migraciones permanece estrictamente LIBRE (0 DDL).
    - El catálogo de referencia original `admin-dashboard/` permanece 100% intacto y de solo lectura.
 
+### D-097 — Homologación Transversal de Componentes y Contenedores de Interacción Alina (UI-ALINA-1D)
+
+1. **Modales Centrados y Escalamiento Visual:**
+   - Todo modal de interacción en Camargo PMS adopta la clase `modal-dialog-centered` de forma obligatoria para garantizar ergonomía visual y compatibilidad responsive en cualquier resolución.
+   - Dimensionamiento estricto mediante clases de cuadrícula Alina: `modal-sm`, `modal-lg`, `modal-xl` (o utilitarios `.app-modal-*`).
+   - Cabeceras estandarizadas con botón de cierre limpio, divisores `border-bottom`, padding uniforme y pie con botones sólidos de acción (`.btn-primary`) y cancelación suave (`.btn-light-secondary`).
+
+2. **SweetAlert2 — Delimitación Estricta a Confirmaciones y Avisos:**
+   - SweetAlert2 se reserva con la paleta Alina (`.swal2-confirm`, `.swal2-cancel`) exclusivamente para confirmaciones de impacto (anulaciones, revocaciones, eliminaciones) y notificaciones de éxito/advertencia/error.
+   - **Prohibición vinculante de uso como formulario CRUD:** Ninguna entidad del PMS se captura o muta dentro de un diálogo SweetAlert2; la captura estructurada reside obligatoriamente en modales semánticos HTML o páginas dedicadas validadas con PristineJS.
+
+3. **Tooltips Runtime Centralizados:**
+   - Inicialización centralizada con `bootstrap.Tooltip.getOrCreateInstance()` mediante `CamargoForms.inicializarTooltips()` y `CamargoPMS.inicializarTooltips()`.
+   - Soporte reactivo en el ciclo de vida de modales escuchando automáticamente el evento `shown.bs.modal`.
+
+4. **Botones Sólidos y Exclusividad Font Awesome 6:**
+   - Estandarización de botones sólidos Alina (`.btn-primary`, `.btn-secondary`, `.btn-light-secondary`, `.btn-light-danger`, `.btn-light-success`).
+   - Iconografía 100% Font Awesome 6 Free (`fa-solid`, `fa-regular`, `fa-brands`); prohibición absoluta de iconos heterogéneos (Tabler `ti-`, Bootstrap `bi-`, Feather `feather-`).
+
+5. **Acordeones Nativos Alina (`.app-accordion`):**
+   - Estandarización con `.accordion.app-accordion`, `.accordion-item`, `.accordion-button.accordion-icon` y chevron rotatorio continuo sin bordes punteados o discontinuos (ej. ficha 360° en `clientes/detalle.php`).
+
+6. **Erradicación de Clases Bootstrap Crudas (`-subtle`):**
+   - Sustitución sistemática de clases `bg-*-subtle` y `alert-*-subtle` en favor del sistema nativo Alina: `.bg-light-*` y `.alert-light-*`.
+   - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`) en todos los badges, chips y divisores.
+
+7. **Placeholders / Preload Skeleton:**
+   - Adopción de esqueletos visuales `.placeholder-glow` con `.placeholder` para cargas asíncronas (`suministros/index.php`, `CamargoForms.crearPlaceholder()`).
+
+8. **Progress Bar — Criterio Rector Vinculante:**
+   - **NO APLICA / SIN CASO REAL ACTUAL:** No existen procesos multifase cuantificables o tareas asíncronas en segundo plano que justifiquen barras de progreso en el flujo actual. Se prohíbe introducir barras de progreso artificiales o ficticias.
+
+9. **Integridad de Base de Datos y Aislamiento:**
+   - Base de datos inmutable con exactamente 118 tablas, migración 034 aplicada, slot 035 estrictamente LIBRE (0 DDL).
+   - Catálogo original `admin-dashboard/` 100% intacto y de solo lectura.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

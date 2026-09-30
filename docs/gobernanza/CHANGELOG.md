@@ -4,6 +4,35 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase UI-ALINA-1D — Homologación Transversal de Componentes y Contenedores de Interacción Alina (D-097)
+
+- **Modales y Diálogos Centrados (`modal-dialog-centered`):**
+  - Homologación transversal del centrado vertical y dimensionamiento canónico (`modal-sm`, `modal-lg`, `modal-xl`) en todos los modales del sistema (100% de cumplimiento en arrendamientos, gastos, housekeeping, bitácora, reclamaciones, feriados, suministros, clientes, empresas, personal y sesiones).
+  - Normalización de cabeceras, divisores (`border-bottom`) y pies de modal con botones de acción sólidos (`.btn-primary`) y botones de cancelación suaves (`.btn-light-secondary`).
+- **SweetAlert2 — Delimitación Estricta a Confirmaciones y Avisos:**
+  - Adaptación de la paleta corporativa Alina en SweetAlert2 (`.swal2-confirm`, `.swal2-cancel`).
+  - Prohibición vinculante de formularios CRUD anidados dentro de SweetAlert; toda captura estructurada reside en modales semánticos HTML o páginas dedicadas validadas con PristineJS.
+- **Tooltips Runtime Centralizados:**
+  - Inicialización defensiva de tooltips mediante `bootstrap.Tooltip.getOrCreateInstance` en `camargo-forms.js` (`CamargoForms.inicializarTooltips`) y `camargo-layout.js` (`CamargoPMS.inicializarTooltips`).
+  - Escucha automática del evento `shown.bs.modal` para refrescar instancias en modales dinámicos.
+- **Botones Sólidos y Exclusividad Font Awesome 6:**
+  - Estandarización de botones sólidos Alina (`.btn-primary`, `.btn-secondary`, `.btn-light-secondary`, `.btn-light-danger`, `.btn-light-success`).
+  - Iconografía 100% Font Awesome 6 Free (`fa-solid`, `fa-regular`, `fa-brands`); prohibición absoluta de iconos heterogéneos (Tabler `ti-`, Bootstrap `bi-`, Feather `feather-`).
+- **Acordeones Nativos Alina (`.app-accordion`):**
+  - Integración del componente canónico `.accordion.app-accordion`, `.accordion-item`, `.accordion-button.accordion-icon` con chevron rotatorio continuo (ej. información de trazabilidad y auditoría en `clientes/detalle.php`).
+- **Erradicación de Clases Bootstrap Crudas (`-subtle`):**
+  - Reemplazo integral y sistemático de sintaxis `bg-*-subtle` y `alert-*-subtle` por el estándar Alina: `.bg-light-*` y `.alert-light-*`.
+  - Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`) en todos los badges, chips y divisores.
+- **Placeholders / Preload Skeleton:**
+  - Adopción de esqueletos visuales `.placeholder-glow` con `.placeholder` para cargas asíncronas en lugar de textos planos (`suministros/index.php`, `CamargoForms.crearPlaceholder()`).
+- **Progress Bar — Criterio Rector Vinculante:**
+  - Documentado explícitamente como **NO APLICA / SIN CASO REAL ACTUAL**, evitando la invención de barras de progreso artificiales sin procesos multifase reales en segundo plano.
+- **Verificación y Cobertura:**
+  - Nueva suite automatizada `tests/test_ui_alina_1d_componentes.php` con 17 comprobaciones exhaustivas (17/17 PASS).
+  - Regresión global del repositorio: 67/67 suites evaluadas, 67/67 PASSED (100%), 0 fallos.
+  - Base de datos: exactamente 118 tablas relacionales; migración `034_*` última aplicada; ranura `035_*` estrictamente libre (0 DDL).
+  - Catálogo Alina original (`admin-dashboard/`) 100% inalterado y prístino.
+
 ### Microfase UI-ALINA-1C — Homologación Transversal de Formularios y Controles Alina (D-096)
 
 - **Estandarización de Formularios Canónicos Alina (`Vertical Form With Icon`):**

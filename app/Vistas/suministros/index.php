@@ -283,7 +283,14 @@ declare(strict_types=1);
                             <?php endif; ?>
                         </div>
                         <ul class="list-group list-group-flush" id="lista-suministros">
-                            <li class="list-group-item text-center py-3 text-muted">Cargando suministros...</li>
+                            <li class="list-group-item py-3 placeholder-glow">
+                                <span class="placeholder col-7 mb-1"></span>
+                                <span class="placeholder col-4 d-block"></span>
+                            </li>
+                            <li class="list-group-item py-3 placeholder-glow">
+                                <span class="placeholder col-6 mb-1"></span>
+                                <span class="placeholder col-3 d-block"></span>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -385,7 +392,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-3">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-liquidar">
                         <i class="fa-solid fa-check me-1"></i> Computar y Devengar Cargo
                     </button>
@@ -480,7 +487,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-3">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-medidor">
                         <i class="fa-solid fa-save me-1"></i> Guardar e Instalar
                     </button>
@@ -547,7 +554,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-3">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-lectura">
                         <i class="fa-solid fa-save me-1"></i> Asentar Lectura
                     </button>
@@ -597,7 +604,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-3">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-warning btn-sm" id="btn-submit-corregir-lectura">
                         <i class="fa-solid fa-check me-1"></i> Asentar Corrección
                     </button>
@@ -726,7 +733,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top py-3">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success btn-sm" id="btn-submit-tarifa">
                         <i class="fa-solid fa-save me-1"></i> Guardar Tarifa
                     </button>

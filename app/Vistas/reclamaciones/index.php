@@ -22,7 +22,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0 b-r-20">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-book-open-reader f-s-22"></i>
                     </span>
                     <div>
@@ -45,11 +45,11 @@ declare(strict_types=1);
             </div>
 
             <!-- KPIs Regulatorios -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-3">
                     <div class="col-md-2 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-primary-subtle text-primary p-2 rounded-circle me-2">
+                            <span class="bg-light-primary text-primary p-2 rounded-circle me-2">
                                 <i class="fa-solid fa-folder-open f-s-16"></i>
                             </span>
                             <div>
@@ -60,7 +60,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-info-subtle text-info p-2 rounded-circle me-2">
+                            <span class="bg-light-info text-info p-2 rounded-circle me-2">
                                 <i class="fa-solid fa-clock f-s-16"></i>
                             </span>
                             <div>
@@ -71,7 +71,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-warning-subtle text-warning p-2 rounded-circle me-2">
+                            <span class="bg-light-warning text-warning p-2 rounded-circle me-2">
                                 <i class="fa-solid fa-pause f-s-16"></i>
                             </span>
                             <div>
@@ -82,7 +82,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-danger-subtle text-danger p-2 rounded-circle me-2">
+                            <span class="bg-light-danger text-danger p-2 rounded-circle me-2">
                                 <i class="fa-solid fa-triangle-exclamation f-s-16"></i>
                             </span>
                             <div>
@@ -93,7 +93,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-warning-subtle text-dark p-2 rounded-circle me-2">
+                            <span class="bg-light-warning text-warning p-2 rounded-circle me-2">
                                 <i class="fa-solid fa-hourglass-half f-s-16 text-warning"></i>
                             </span>
                             <div>
@@ -104,7 +104,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-success-subtle text-success p-2 rounded-circle me-2">
+                            <span class="bg-light-success text-success p-2 rounded-circle me-2">
                                 <i class="fa-solid fa-circle-check f-s-16"></i>
                             </span>
                             <div>
@@ -204,7 +204,7 @@ declare(strict_types=1);
 <!-- Modal Registro Asistido en Recepción -->
 <?php if (!empty($permisos['puede_crear'])): ?>
 <div class="modal fade" id="modal-nueva-reclamacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 f-w-700">
@@ -337,7 +337,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-asistido">
                         <i class="fa-solid fa-save me-1"></i> Asentar en Libro
                     </button>
@@ -402,17 +402,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     badgeColor = semaforo.color;
                 }
 
-                var tipoBadge = rec.tipo === 'RECLAMO' 
-                    ? '<span class="badge bg-primary-subtle text-primary">RECLAMO</span>' 
-                    : '<span class="badge bg-warning-subtle text-dark">QUEJA</span>';
+                var tipoBadge = rec.tipo === 'RECLAMO'
+                    ? '<span class="badge bg-light-primary text-primary">RECLAMO</span>'
+                    : '<span class="badge bg-light-warning text-warning">QUEJA</span>';
 
                 var estadoBadge = '<span class="badge bg-secondary">' + rec.estado + '</span>';
                 if (rec.estado === 'REGISTRADO' || rec.estado === 'EN_PROCESO') {
-                    estadoBadge = '<span class="badge bg-info-subtle text-info">' + rec.estado + '</span>';
+                    estadoBadge = '<span class="badge bg-light-info text-info">' + rec.estado + '</span>';
                 } else if (rec.estado === 'SUSPENDIDO_OFRECIMIENTO') {
-                    estadoBadge = '<span class="badge bg-warning-subtle text-dark">SUSPENDIDO</span>';
+                    estadoBadge = '<span class="badge bg-light-warning text-warning">SUSPENDIDO</span>';
                 } else if (rec.estado === 'ATENDIDO' || rec.estado === 'CONCLUIDO_POR_ACUERDO') {
-                    estadoBadge = '<span class="badge bg-success-subtle text-success">' + rec.estado + '</span>';
+                    estadoBadge = '<span class="badge bg-light-success text-success">' + rec.estado + '</span>';
                 } else if (rec.estado === 'ANULADO') {
                     estadoBadge = '<span class="badge bg-dark">ANULADO</span>';
                 }

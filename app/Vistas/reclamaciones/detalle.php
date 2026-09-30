@@ -35,7 +35,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
         <div class="card equal-card shadow-sm border-0 b-r-20">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-file-shield f-s-22"></i>
                     </span>
                     <div>
@@ -232,9 +232,9 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                 <?php else: ?>
                     <div class="timeline-container">
                         <?php foreach ($actuaciones as $act): ?>
-                            <div class="card mb-3 border-0 bg-light-subtle rounded-3 p-3">
+                            <div class="card mb-3 border-0 bg-light rounded-3 p-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="badge bg-primary-subtle text-primary f-s-11">
+                                    <span class="badge bg-light-primary text-primary f-s-11">
                                         <?= htmlspecialchars($act->obtenerTipoActuacion()) ?>
                                     </span>
                                     <span class="text-muted f-s-11">
@@ -266,7 +266,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
 
 <!-- Modal 1: Añadir Nota Interna -->
 <div class="modal fade" id="modal-nota-interna" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 fw-bold"><i class="fa-solid fa-note-sticky text-info me-2"></i> Añadir Nota Interna</h5>
@@ -281,7 +281,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-info btn-sm text-white" id="btn-guardar-nota">Guardar Nota</button>
                 </div>
             </form>
@@ -291,7 +291,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
 
 <!-- Modal 2: Formular Ofrecimiento -->
 <div class="modal fade" id="modal-formular-ofrecimiento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 fw-bold text-warning"><i class="fa-solid fa-handshake-angle me-2"></i> Formular Ofrecimiento de Solución</h5>
@@ -328,7 +328,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-warning btn-sm fw-bold" id="btn-guardar-ofrecimiento">Formular y Suspender Plazo</button>
                 </div>
             </form>
@@ -338,7 +338,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
 
 <!-- Modal 3: Responder Ofrecimiento -->
 <div class="modal fade" id="modal-responder-ofrecimiento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 fw-bold"><i class="fa-solid fa-reply text-success me-2"></i> Respuesta a Ofrecimiento</h5>
@@ -368,7 +368,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-resp-ofrecimiento">Guardar Respuesta</button>
                 </div>
             </form>
@@ -378,7 +378,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
 
 <!-- Modal 4: Emitir Respuesta Formal -->
 <div class="modal fade" id="modal-respuesta-formal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 fw-bold text-success"><i class="fa-solid fa-envelope-circle-check me-2"></i> Emitir Respuesta Formal al Reclamo / Queja</h5>
@@ -412,7 +412,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success btn-sm text-white" id="btn-guardar-respuesta-formal">Concluir como ATENDIDO</button>
                 </div>
             </form>
@@ -422,7 +422,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
 
 <!-- Modal 5: Anulación Supervisada -->
 <div class="modal fade" id="modal-anular-expediente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 fw-bold text-danger"><i class="fa-solid fa-ban me-2"></i> Anulación Supervisada de Expediente</h5>
@@ -440,7 +440,7 @@ $estaSuspendido = ($estado === \CamargoPMS\Modelos\Reclamacion::ESTADO_SUSPENDID
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-danger btn-sm" id="btn-guardar-anular">Confirmar Anulación</button>
                 </div>
             </form>

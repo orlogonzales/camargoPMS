@@ -24,7 +24,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-shield-halved f-s-22"></i>
                     </span>
                     <div>
@@ -60,7 +60,7 @@ declare(strict_types=1);
                         </h3>
                         <span class="f-s-11 text-muted">Vigentes (&le; <?= e((string) $minutos_inactividad) ?>m inactividad)</span>
                     </div>
-                    <div class="bg-primary-subtle text-primary p-3 b-r-10 d-flex-center">
+                    <div class="bg-light-primary text-primary p-3 b-r-10 d-flex-center">
                         <i class="fa-solid fa-desktop f-s-20"></i>
                     </div>
                 </div>
@@ -79,7 +79,7 @@ declare(strict_types=1);
                         </h3>
                         <span class="f-s-11 text-muted">Presencia HTTP (&le; 15 min)</span>
                     </div>
-                    <div class="bg-success-subtle text-success p-3 b-r-10 d-flex-center">
+                    <div class="bg-light-success text-success p-3 b-r-10 d-flex-center">
                         <i class="fa-solid fa-bolt f-s-20"></i>
                     </div>
                 </div>
@@ -98,7 +98,7 @@ declare(strict_types=1);
                         </h3>
                         <span class="f-s-11 text-muted">Por inactividad o duraci&oacute;n (&gt; <?= e((string) $horas_duracion_maxima) ?>h)</span>
                     </div>
-                    <div class="bg-warning-subtle text-warning p-3 b-r-10 d-flex-center">
+                    <div class="bg-light-warning text-warning p-3 b-r-10 d-flex-center">
                         <i class="fa-solid fa-clock f-s-20"></i>
                     </div>
                 </div>
@@ -117,7 +117,7 @@ declare(strict_types=1);
                         </h3>
                         <span class="f-s-11 text-muted"><?= e((string) ($metricas_iniciales['revocadas_hoy'] ?? 0)) ?> cerradas hoy</span>
                     </div>
-                    <div class="bg-danger-subtle text-danger p-3 b-r-10 d-flex-center">
+                    <div class="bg-light-danger text-danger p-3 b-r-10 d-flex-center">
                         <i class="fa-solid fa-ban f-s-20"></i>
                     </div>
                 </div>
@@ -128,7 +128,7 @@ declare(strict_types=1);
 
 <!-- Filtros y Tabla Principal -->
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body p-3 bg-light-subtle border-bottom">
+    <div class="card-body p-3 bg-light border-bottom">
         <div class="row g-2 align-items-center">
             <div class="col-md-4 col-12">
                 <div class="input-group input-group-sm">
@@ -299,12 +299,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let badgePresencia = '';
             if (s.presencia_reciente === 'PRESENCIA_RECIENTE') {
-                badgePresencia = '<span class="badge bg-success-subtle text-success border border-success-subtle ms-1" title="Actividad en los últimos 15 min"><i class="fa-solid fa-bolt f-s-10 me-1"></i>Reciente</span>';
+                badgePresencia = '<span class="badge bg-light-success text-success ms-1" title="Actividad en los últimos 15 min"><i class="fa-solid fa-bolt f-s-10 me-1"></i>Reciente</span>';
             }
 
             let badgeActual = '';
             if (s.es_sesion_actual) {
-                badgeActual = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1"><i class="fa-solid fa-user-check f-s-10 me-1"></i>Esta sesión</span>';
+                badgeActual = '<span class="badge bg-light-primary text-primary ms-1"><i class="fa-solid fa-user-check f-s-10 me-1"></i>Esta sesión</span>';
             }
 
             const relativeActividad = formatearFechaRelativa(s.ultima_actividad_en);

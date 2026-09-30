@@ -179,7 +179,7 @@ declare(strict_types=1);
 
 <!-- Modal: Registrar Nuevo Gasto -->
 <div class="modal fade" id="modal-nuevo-gasto" tabindex="-1" aria-labelledby="modalNuevoGastoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content b-r-12">
             <div class="modal-header border-bottom py-3">
                 <h5 class="modal-title f-w-700" id="modalNuevoGastoLabel">
@@ -324,7 +324,7 @@ declare(strict_types=1);
 
 <!-- Modal: Detalle de Gasto y Evidencias -->
 <div class="modal fade" id="modal-detalle-gasto" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content b-r-12">
             <div class="modal-header border-bottom py-3">
                 <h5 class="modal-title f-w-700" id="modalDetalleLabel">
@@ -351,7 +351,7 @@ declare(strict_types=1);
 
 <!-- Modal: Registrar Pago de Egreso (Tesorería) -->
 <div class="modal fade" id="modal-pago-gasto" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-12">
             <div class="modal-header border-bottom py-3">
                 <h5 class="modal-title f-w-700" id="modalPagoLabel">
@@ -557,10 +557,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function obtenerBadgeEstado(estado) {
         switch (estado) {
-            case 'APROBADO': return '<span class="badge bg-success-subtle text-success">APROBADO</span>';
-            case 'REGISTRADO': return '<span class="badge bg-primary-subtle text-primary">REGISTRADO</span>';
-            case 'BORRADOR': return '<span class="badge bg-secondary-subtle text-secondary">BORRADOR</span>';
-            case 'ANULADO': return '<span class="badge bg-danger-subtle text-danger">ANULADO</span>';
+            case 'APROBADO': return '<span class="badge bg-light-success text-success">APROBADO</span>';
+            case 'REGISTRADO': return '<span class="badge bg-light-primary text-primary">REGISTRADO</span>';
+            case 'BORRADOR': return '<span class="badge bg-light-secondary text-secondary">BORRADOR</span>';
+            case 'ANULADO': return '<span class="badge bg-light-danger text-danger">ANULADO</span>';
             default: return `<span class="badge bg-light text-dark">${estado}</span>`;
         }
     }
@@ -854,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div>
                             <i class="fa-solid fa-money-bill-transfer text-success me-2"></i>
                             Aplicación <strong>${ap.codigo}</strong>
-                            <span class="badge ${ap.estado === 'ACTIVO' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} ms-2">${ap.estado}</span>
+                            <span class="badge ${ap.estado === 'ACTIVO' ? 'bg-light-success text-success' : 'bg-light-danger text-danger'} ms-2">${ap.estado}</span>
                         </div>
                         <strong>S/ ${parseFloat(ap.monto_aplicado).toFixed(2)}</strong>
                     </li>

@@ -26,7 +26,7 @@ declare(strict_types=1);
 <!-- Banner de Gobernanza y Axioma de Dominio -->
 <div class="alert alert-info border-0 shadow-sm b-r-12 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div class="d-flex align-items-center">
-        <span class="bg-info-subtle text-info p-2 b-r-8 me-3 d-flex-center">
+        <span class="bg-light-info text-info p-2 b-r-8 me-3 d-flex-center">
             <i class="fa-solid fa-users f-s-20"></i>
         </span>
         <div>
@@ -50,7 +50,7 @@ declare(strict_types=1);
     <div class="col-xl-3 col-sm-6">
         <div class="card equal-card shadow-sm border-0 b-r-16">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="avatar-md bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="avatar-md bg-light-primary text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
                     <i class="fa-solid fa-users f-s-22"></i>
                 </div>
                 <div>
@@ -63,7 +63,7 @@ declare(strict_types=1);
     <div class="col-xl-3 col-sm-6">
         <div class="card equal-card shadow-sm border-0 b-r-16">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="avatar-md bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="avatar-md bg-light-success text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
                     <i class="fa-solid fa-user-check f-s-22"></i>
                 </div>
                 <div>
@@ -76,7 +76,7 @@ declare(strict_types=1);
     <div class="col-xl-3 col-sm-6">
         <div class="card equal-card shadow-sm border-0 b-r-16">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="avatar-md bg-secondary-subtle text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="avatar-md bg-light-secondary text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
                     <i class="fa-solid fa-user-xmark f-s-22"></i>
                 </div>
                 <div>
@@ -89,7 +89,7 @@ declare(strict_types=1);
     <div class="col-xl-3 col-sm-6">
         <div class="card equal-card shadow-sm border-0 b-r-16">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="avatar-md bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="avatar-md bg-light-info text-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
                     <i class="fa-solid fa-key f-s-22"></i>
                 </div>
                 <div>
@@ -107,7 +107,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0 b-r-20">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-address-card f-s-22"></i>
                     </span>
                     <div>
@@ -128,7 +128,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Filtros Rápidos -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-5 col-12">
                         <div class="input-group input-group-sm">
@@ -218,7 +218,7 @@ declare(strict_types=1);
                                 </td>
                                 <td>
                                     <?php if (!empty($col['numero_documento'])): ?>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle f-s-12">
+                                        <span class="badge bg-light-primary text-primary f-s-12">
                                             <?= e($col['tipo_documento'] ?: 'DOC') ?>: <?= e($col['numero_documento']) ?>
                                         </span>
                                     <?php else: ?>
@@ -232,7 +232,7 @@ declare(strict_types=1);
                                             <span class="text-secondary f-s-11 d-block"><i class="fa-solid fa-briefcase me-1"></i><?= e($col['cargo_departamento']) ?></span>
                                         <?php endif; ?>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary-subtle text-secondary border f-s-11">Sin cargo activo</span>
+                                        <span class="badge bg-light-secondary text-secondary f-s-11">Sin cargo activo</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -250,7 +250,7 @@ declare(strict_types=1);
                                 </td>
                                 <td class="text-center">
                                     <?php if ($tieneUsuario): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle f-s-12" title="Usuario: <?= e($col['username'] ?? '') ?>">
+                                        <span class="badge bg-light-success text-success f-s-12" title="Usuario: <?= e($col['username'] ?? '') ?>">
                                             <i class="fa-solid fa-user-shield me-1"></i> <?= e($col['username'] ?? 'Usuario') ?>
                                         </span>
                                     <?php else: ?>
@@ -337,7 +337,7 @@ declare(strict_types=1);
             <form id="form-alta-colaborador" class="app-form app-icon-form" novalidate>
                 <div class="modal-body p-4">
                     <!-- Paso 1: Búsqueda o Reutilización de Persona -->
-                    <div class="card bg-light-subtle border mb-4">
+                    <div class="card bg-light border mb-4">
                         <div class="card-body p-3">
                             <h6 class="f-w-700 f-s-13 text-primary mb-2">
                                 <i class="fa-solid fa-address-book me-1"></i> Paso 1: Verificación de Identidad Humana (PERSONA)
@@ -630,7 +630,7 @@ declare(strict_types=1);
                 <div class="row g-4">
                     <!-- Tarjeta 1: Identidad Humana -->
                     <div class="col-md-6">
-                        <div class="card h-100 border shadow-none bg-light-subtle">
+                        <div class="card h-100 border shadow-none bg-light">
                             <div class="card-header bg-white py-2 f-w-700 f-s-13 text-secondary border-bottom">
                                 <i class="fa-regular fa-id-card me-1 text-primary"></i> Identidad Humana (PERSONA)
                             </div>
@@ -679,7 +679,7 @@ declare(strict_types=1);
 
                     <!-- Tarjeta 2: Vínculo de Acceso / Usuario -->
                     <div class="col-md-6">
-                        <div class="card h-100 border shadow-none bg-light-subtle">
+                        <div class="card h-100 border shadow-none bg-light">
                             <div class="card-header bg-white py-2 f-w-700 f-s-13 text-secondary border-bottom">
                                 <i class="fa-solid fa-key me-1 text-info"></i> Acceso al Sistema (USUARIO & ROLES)
                             </div>
@@ -877,7 +877,7 @@ declare(strict_types=1);
             <form id="form-reingreso-laboral" class="app-form app-icon-form" novalidate>
                 <input type="hidden" id="reingreso-colaborador-id" name="colaborador_id">
                 <div class="modal-body p-4">
-                    <div class="alert alert-success-subtle border f-s-12 mb-3">
+                    <div class="alert alert-light-success border f-s-12 mb-3">
                         <i class="fa-solid fa-rotate-right me-1"></i>
                         Colaborador cesado: <strong id="reingreso-nombre" class="text-dark">-</strong>.
                         <div class="mt-1">Se abrirá un nuevo episodio laboral sin duplicar la persona ni el registro de colaborador existente.</div>
@@ -1506,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('ficha-usuario-username').textContent = u.username || '-';
                     document.getElementById('ficha-usuario-email').textContent = u.email || '-';
 
-                    const rolesTxt = (u.roles || []).map(r => `<span class="badge bg-info-subtle text-info border me-1">${r.nombre || r}</span>`).join('');
+                    const rolesTxt = (u.roles || []).map(r => `<span class="badge bg-light-info text-info me-1">${r.nombre || r}</span>`).join('');
                     document.getElementById('ficha-usuario-roles').innerHTML = rolesTxt || '<span class="text-muted">Sin roles</span>';
                 } else {
                     document.getElementById('ficha-usuario-estado').innerHTML = '<span class="badge bg-secondary">Sin credenciales de acceso</span>';
@@ -1540,12 +1540,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         tr.innerHTML = `
-                            <td class="ps-3"><span class="badge ${esEpActivo ? 'bg-success-subtle text-success' : 'bg-light text-secondary border'}">#${ep.id}</span></td>
+                            <td class="ps-3"><span class="badge ${esEpActivo ? 'bg-light-success text-success' : 'bg-light text-secondary border'}">#${ep.id}</span></td>
                             <td>
                                 <div><strong>${ep.fecha_inicio}</strong> al <strong>${ep.fecha_fin || 'Vigente'}</strong></div>
                                 <small class="text-muted">${esEpActivo ? 'Episodio laboral en curso' : 'Episodio concluido'}</small>
                             </td>
-                            <td>${ep.motivo_cese ? `<span class="badge bg-danger-subtle text-danger border">${ep.motivo_cese}</span>` : '<span class="text-muted">-</span>'}</td>
+                            <td>${ep.motivo_cese ? `<span class="badge bg-light-danger text-danger">${ep.motivo_cese}</span>` : '<span class="text-muted">-</span>'}</td>
                             <td>${cargosHtml}</td>
                             <td>${ep.observaciones || '<span class="text-muted">-</span>'}</td>
                         `;

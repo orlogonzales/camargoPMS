@@ -591,6 +591,10 @@
         }
     };
 
+    // Exponer utilidades globales en namespace CamargoPMS
+    window.CamargoPMS = window.CamargoPMS || {};
+    window.CamargoPMS.inicializarTooltips = inicializarTooltips;
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', iniciar);
     } else {

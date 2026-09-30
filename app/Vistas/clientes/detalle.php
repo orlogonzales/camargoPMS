@@ -93,22 +93,22 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
             <div class="card-body p-4">
                 <div class="d-flex flex-wrap align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="avatar-lg bg-primary-subtle text-primary rounded-circle d-flex-center p-3 me-3" style="width: 64px; height: 64px;">
+                        <div class="avatar-lg bg-light-primary text-primary rounded-circle d-flex-center p-3 me-3" style="width: 64px; height: 64px;">
                             <i class="fa-solid fa-user f-s-28"></i>
                         </div>
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                                 <h3 class="mb-0 f-w-700 text-dark"><?= e($nombreCompleto) ?></h3>
                                 <span class="badge bg-primary text-white f-s-12 px-2 py-1"><?= e($cliente['codigo']) ?></span>
-                                <span class="badge bg-<?= e($colorCat) ?>-subtle text-<?= e($colorCat) ?> f-s-12 px-2 py-1">
+                                <span class="badge bg-light-<?= e($colorCat) ?> text-<?= e($colorCat) ?> f-s-12 px-2 py-1">
                                     <i class="fa-solid fa-award me-1"></i><?= e($categoria['nombre'] ?? 'Estándar') ?>
                                 </span>
                                 <?php if ($cliente['estado'] === 'ACTIVO'): ?>
-                                    <span class="badge bg-success-subtle text-success f-s-12 px-2 py-1">ACTIVO</span>
+                                    <span class="badge bg-light-success text-success f-s-12 px-2 py-1">ACTIVO</span>
                                 <?php elseif ($cliente['estado'] === 'BLOQUEADO'): ?>
                                     <span class="badge bg-danger text-white f-s-12 px-2 py-1"><i class="fa-solid fa-lock me-1"></i>BLOQUEADO</span>
                                 <?php else: ?>
-                                    <span class="badge bg-secondary-subtle text-secondary f-s-12 px-2 py-1">INACTIVO</span>
+                                    <span class="badge bg-light-secondary text-secondary f-s-12 px-2 py-1">INACTIVO</span>
                                 <?php endif; ?>
                             </div>
                             <div class="text-secondary f-s-13 d-flex flex-wrap gap-3">
@@ -181,7 +181,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
         </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
-        <div class="card border-0 shadow-sm b-r-12 h-100 <?= bccomp((string) $kpis['saldo_pendiente_consolidado'], '0.00', 2) > 0 ? 'bg-danger-subtle' : '' ?>">
+        <div class="card border-0 shadow-sm b-r-12 h-100 <?= bccomp((string) $kpis['saldo_pendiente_consolidado'], '0.00', 2) > 0 ? 'bg-light-danger' : '' ?>">
             <div class="card-body p-3 text-center">
                 <span class="text-secondary f-s-12 d-block mb-1">Saldo Exigible</span>
                 <h4 class="f-w-700 <?= bccomp((string) $kpis['saldo_pendiente_consolidado'], '0.00', 2) > 0 ? 'text-danger' : 'text-success' ?> mb-0">
@@ -216,17 +216,17 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-13 f-w-600" id="tab-reservas-btn" data-bs-toggle="tab" data-bs-target="#tab-reservas" type="button" role="tab">
-                            <i class="fa-solid fa-calendar-check me-1"></i> Reservas <span class="badge bg-primary-subtle text-primary ms-1"><?= count($reservas) ?></span>
+                            <i class="fa-solid fa-calendar-check me-1"></i> Reservas <span class="badge bg-light-primary text-primary ms-1"><?= count($reservas) ?></span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-13 f-w-600" id="tab-estadias-btn" data-bs-toggle="tab" data-bs-target="#tab-estadias" type="button" role="tab">
-                            <i class="fa-solid fa-bed me-1"></i> Estadías <span class="badge bg-info-subtle text-info ms-1"><?= count($estadias) ?></span>
+                            <i class="fa-solid fa-bed me-1"></i> Estadías <span class="badge bg-light-info text-info ms-1"><?= count($estadias) ?></span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-13 f-w-600" id="tab-arrendamientos-btn" data-bs-toggle="tab" data-bs-target="#tab-arrendamientos" type="button" role="tab">
-                            <i class="fa-solid fa-file-contract me-1"></i> Arrendamientos <span class="badge bg-warning-subtle text-warning ms-1"><?= count($arrendamientos) ?></span>
+                            <i class="fa-solid fa-file-contract me-1"></i> Arrendamientos <span class="badge bg-light-warning text-warning ms-1"><?= count($arrendamientos) ?></span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -236,12 +236,12 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-13 f-w-600" id="tab-servicios-btn" data-bs-toggle="tab" data-bs-target="#tab-servicios" type="button" role="tab">
-                            <i class="fa-solid fa-bell-concierge me-1"></i> Servicios <span class="badge bg-dark-subtle text-dark ms-1"><?= count($servicios) ?></span>
+                            <i class="fa-solid fa-bell-concierge me-1"></i> Servicios <span class="badge bg-light-dark text-dark ms-1"><?= count($servicios) ?></span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link f-s-13 f-w-600" id="tab-documentos-btn" data-bs-toggle="tab" data-bs-target="#tab-documentos" type="button" role="tab">
-                            <i class="fa-solid fa-file-pdf me-1"></i> Documentos <span class="badge bg-secondary-subtle text-secondary ms-1"><?= count($documentos) ?></span>
+                            <i class="fa-solid fa-file-pdf me-1"></i> Documentos <span class="badge bg-light-secondary text-secondary ms-1"><?= count($documentos) ?></span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -260,7 +260,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                         <div class="row g-4">
                             <!-- Datos de Identidad Soberana (Persona) -->
                             <div class="col-md-6 col-12">
-                                <div class="card border bg-light-subtle h-100">
+                                <div class="card border bg-light h-100">
                                     <div class="card-header bg-white py-2 border-bottom">
                                         <h6 class="mb-0 f-w-700 text-primary f-s-13">
                                             <i class="fa-solid fa-id-card me-1"></i> Identidad Soberana (Persona Natural)
@@ -328,7 +328,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
 
                             <!-- Perfil Comercial -->
                             <div class="col-md-6 col-12">
-                                <div class="card border bg-light-subtle h-100">
+                                <div class="card border bg-light h-100">
                                     <div class="card-header bg-white py-2 border-bottom">
                                         <h6 class="mb-0 f-w-700 text-primary f-s-13">
                                             <i class="fa-solid fa-briefcase me-1"></i> Perfil Comercial y Parámetros
@@ -343,7 +343,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                             <tr>
                                                 <th class="text-secondary ps-0">Categoría Comercial:</th>
                                                 <td>
-                                                    <span class="badge bg-<?= e($colorCat) ?>-subtle text-<?= e($colorCat) ?>">
+                                                    <span class="badge bg-light-<?= e($colorCat) ?> text-<?= e($colorCat) ?>">
                                                         <?= e($categoria['nombre'] ?? 'Estándar') ?>
                                                     </span>
                                                 </td>
@@ -352,11 +352,11 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                                 <th class="text-secondary ps-0">Estado Comercial:</th>
                                                 <td>
                                                     <?php if ($cliente['estado'] === 'ACTIVO'): ?>
-                                                        <span class="badge bg-success-subtle text-success">ACTIVO</span>
+                                                        <span class="badge bg-light-success text-success">ACTIVO</span>
                                                     <?php elseif ($cliente['estado'] === 'BLOQUEADO'): ?>
                                                         <span class="badge bg-danger text-white"><i class="fa-solid fa-lock me-1"></i>BLOQUEADO</span>
                                                     <?php else: ?>
-                                                        <span class="badge bg-secondary-subtle text-secondary">INACTIVO</span>
+                                                        <span class="badge bg-light-secondary text-secondary">INACTIVO</span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
@@ -381,6 +381,39 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                                 <td><?= nl2br(e($cliente['observaciones'] ?? 'Ninguna registrada.')) ?></td>
                                             </tr>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion Alina: Información de Trazabilidad y Auditoría -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="accordion app-accordion" id="accordionInfoCliente">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingAuditoria">
+                                            <button class="accordion-button accordion-icon collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuditoria" aria-expanded="false" aria-controls="collapseAuditoria">
+                                                <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i> Información de Auditoría y Trazabilidad
+                                            </button>
+                                        </h2>
+                                        <div id="collapseAuditoria" class="accordion-collapse collapse" aria-labelledby="headingAuditoria" data-bs-parent="#accordionInfoCliente">
+                                            <div class="accordion-body f-s-13">
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <span class="text-secondary d-block">ID Registro Cliente:</span>
+                                                        <strong><?= e((string)$cliente['id']) ?></strong>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <span class="text-secondary d-block">ID Registro Persona:</span>
+                                                        <strong><?= e((string)$persona['id']) ?></strong>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <span class="text-secondary d-block">Creado en el sistema:</span>
+                                                        <strong><?= e((string)($cliente['creado_en'] ?? '—')) ?></strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -419,13 +452,13 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                         <td class="f-w-600">S/ <?= number_format((float) $res['total'], 2) ?></td>
                                         <td>
                                             <?php if ($res['estado'] === 'CONFIRMADA'): ?>
-                                                <span class="badge bg-success-subtle text-success">CONFIRMADA</span>
+                                                <span class="badge bg-light-success text-success">CONFIRMADA</span>
                                             <?php elseif ($res['estado'] === 'PENDIENTE'): ?>
-                                                <span class="badge bg-warning-subtle text-warning">PENDIENTE</span>
+                                                <span class="badge bg-light-warning text-warning">PENDIENTE</span>
                                             <?php elseif ($res['estado'] === 'CANCELADA'): ?>
-                                                <span class="badge bg-danger-subtle text-danger">CANCELADA</span>
+                                                <span class="badge bg-light-danger text-danger">CANCELADA</span>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary-subtle text-secondary"><?= e($res['estado']) ?></span>
+                                                <span class="badge bg-light-secondary text-secondary"><?= e($res['estado']) ?></span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-muted"><?= substr((string) $res['creado_en'], 0, 10) ?></td>
@@ -469,7 +502,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                             <?php if ($est['rol_estadia'] === 'RESPONSABLE'): ?>
                                                 <span class="badge bg-primary text-white"><i class="fa-solid fa-crown me-1"></i>RESPONSABLE</span>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary-subtle text-secondary"><i class="fa-solid fa-user-group me-1"></i>ACOMPAÑANTE</span>
+                                                <span class="badge bg-light-secondary text-secondary"><i class="fa-solid fa-user-group me-1"></i>ACOMPAÑANTE</span>
                                             <?php endif; ?>
                                         </td>
                                         <td><?= e($est['fecha_entrada']) ?></td>
@@ -478,11 +511,11 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                         <td><?= !empty($est['checkout_en']) ? substr((string) $est['checkout_en'], 0, 16) : '-' ?></td>
                                         <td>
                                             <?php if ($est['estado'] === 'EN_CURSO'): ?>
-                                                <span class="badge bg-success-subtle text-success">EN CURSO</span>
+                                                <span class="badge bg-light-success text-success">EN CURSO</span>
                                             <?php elseif ($est['estado'] === 'FINALIZADA'): ?>
-                                                <span class="badge bg-secondary-subtle text-secondary">FINALIZADA</span>
+                                                <span class="badge bg-light-secondary text-secondary">FINALIZADA</span>
                                             <?php else: ?>
-                                                <span class="badge bg-danger-subtle text-danger">ANULADA</span>
+                                                <span class="badge bg-light-danger text-danger">ANULADA</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -524,7 +557,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                             <?php if ($arr['tipo_relacion'] === 'TITULAR'): ?>
                                                 <span class="badge bg-primary text-white">TITULAR</span>
                                             <?php elseif ($arr['tipo_relacion'] === 'COTITULAR'): ?>
-                                                <span class="badge bg-info-subtle text-info">COTITULAR</span>
+                                                <span class="badge bg-light-info text-info">COTITULAR</span>
                                             <?php else: ?>
                                                 <span class="badge bg-light text-secondary border">OCUPANTE</span>
                                             <?php endif; ?>
@@ -542,11 +575,11 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                         <td>S/ <?= number_format((float) $arr['deposito_garantia'], 2) ?></td>
                                         <td>
                                             <?php if ($arr['estado'] === 'VIGENTE'): ?>
-                                                <span class="badge bg-success-subtle text-success">VIGENTE</span>
+                                                <span class="badge bg-light-success text-success">VIGENTE</span>
                                             <?php elseif ($arr['estado'] === 'FINALIZADO'): ?>
-                                                <span class="badge bg-secondary-subtle text-secondary">FINALIZADO</span>
+                                                <span class="badge bg-light-secondary text-secondary">FINALIZADO</span>
                                             <?php elseif ($arr['estado'] === 'RESCINDIDO'): ?>
-                                                <span class="badge bg-danger-subtle text-danger">RESCINDIDO</span>
+                                                <span class="badge bg-light-danger text-danger">RESCINDIDO</span>
                                             <?php else: ?>
                                                 <span class="badge bg-light text-dark"><?= e($arr['estado']) ?></span>
                                             <?php endif; ?>
@@ -562,7 +595,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                     <!-- 5. TAB: ESTADO DE CUENTA (SOBERANO) -->
                     <div class="tab-pane fade" id="tab-cuenta" role="tabpanel">
                         <!-- Balance Consolidado -->
-                        <div class="card bg-light-subtle border mb-4">
+                        <div class="card bg-light border mb-4">
                             <div class="card-body p-3">
                                 <div class="row g-3 text-center">
                                     <div class="col-md-3 col-6">
@@ -635,11 +668,11 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                                     <td class="text-info">S/ <?= number_format((float) ($crg['monto_aplicado_acumulado'] ?? 0), 2) ?></td>
                                                     <td>
                                                         <?php if (($crg['estado'] ?? '') === 'DEVENGADO'): ?>
-                                                            <span class="badge bg-success-subtle text-success">DEVENGADO</span>
+                                                            <span class="badge bg-light-success text-success">DEVENGADO</span>
                                                         <?php elseif (($crg['estado'] ?? '') === 'PROVISIONAL'): ?>
-                                                            <span class="badge bg-warning-subtle text-warning">PROVISIONAL</span>
+                                                            <span class="badge bg-light-warning text-warning">PROVISIONAL</span>
                                                         <?php else: ?>
-                                                            <span class="badge bg-danger-subtle text-danger">ANULADO</span>
+                                                            <span class="badge bg-light-danger text-danger">ANULADO</span>
                                                         <?php endif; ?>
                                                     </td>
                                                 </tr>
@@ -672,7 +705,7 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                                     <td class="f-w-600 text-success">S/ <?= number_format((float) ($pag['monto_total'] ?? 0), 2) ?></td>
                                                     <td class="text-info">S/ <?= number_format((float) ($pag['monto_aplicado'] ?? 0), 2) ?></td>
                                                     <td class="text-dark">S/ <?= number_format((float) ($pag['saldo_disponible'] ?? 0), 2) ?></td>
-                                                    <td><span class="badge bg-success-subtle text-success"><?= e($pag['estado'] ?? '') ?></span></td>
+                                                    <td><span class="badge bg-light-success text-success"><?= e($pag['estado'] ?? '') ?></span></td>
                                                 </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
@@ -713,9 +746,9 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                         <td class="f-w-600 text-success">S/ <?= number_format((float) $rec['monto_recaudado'], 2) ?></td>
                                         <td>
                                             <?php if ($rec['estado'] === 'EMITIDO'): ?>
-                                                <span class="badge bg-success-subtle text-success">EMITIDO</span>
+                                                <span class="badge bg-light-success text-success">EMITIDO</span>
                                             <?php else: ?>
-                                                <span class="badge bg-danger-subtle text-danger">ANULADO</span>
+                                                <span class="badge bg-light-danger text-danger">ANULADO</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -761,9 +794,9 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                         <td><span class="badge bg-light text-dark border"><?= e($srv['estado_operativo']) ?></span></td>
                                         <td>
                                             <?php if ($srv['estado_financiero'] === 'FACTURADO' || $srv['estado_financiero'] === 'PAGADO'): ?>
-                                                <span class="badge bg-success-subtle text-success"><?= e($srv['estado_financiero']) ?></span>
+                                                <span class="badge bg-light-success text-success"><?= e($srv['estado_financiero']) ?></span>
                                             <?php else: ?>
-                                                <span class="badge bg-warning-subtle text-warning"><?= e($srv['estado_financiero']) ?></span>
+                                                <span class="badge bg-light-warning text-warning"><?= e($srv['estado_financiero']) ?></span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -802,9 +835,9 @@ $colorCat = $categoria['color_badge'] ?? 'secondary';
                                         <td><?= substr((string) $doc['emitido_en'], 0, 16) ?></td>
                                         <td>
                                             <?php if ($doc['estado'] === 'VALIDO'): ?>
-                                                <span class="badge bg-success-subtle text-success">VÁLIDO</span>
+                                                <span class="badge bg-light-success text-success">VÁLIDO</span>
                                             <?php else: ?>
-                                                <span class="badge bg-danger-subtle text-danger">ANULADO</span>
+                                                <span class="badge bg-light-danger text-danger">ANULADO</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-end">

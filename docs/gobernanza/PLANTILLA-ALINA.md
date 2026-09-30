@@ -141,3 +141,16 @@ Este acoplamiento debe conservarse como contrato de datos, no como HTML cableado
 5. **Preparación Estructural para APIsPERU:** Identificación de matriz de 9 campos DNI/RUC en 6 módulos del PMS sin invocar prematuramente servicios externos.
 6. **Catálogo Alina Intacto:** Cero modificaciones en `admin-dashboard/`. 100% de assets consumidos desde copias locales controladas.
 
+## Materialización en UI-ALINA-1D
+
+1. **Modales y Diálogos:** Homologación transversal del centrado vertical obligatorio (`modal-dialog-centered`) en todos los modales del sistema (100% de cumplimiento en modales de arrendamientos, gastos, housekeeping, bitácora, reclamaciones, feriados, suministros, clientes, empresas, personal y sesiones). Sizing estándar (`modal-sm`, `modal-lg`, `modal-xl`).
+2. **SweetAlert2 Alina:** Estandarización de alertas interactivas y confirmaciones con la paleta Alina (`.swal2-confirm`, `.swal2-cancel`). Prohibición expresa de su uso como contenedor de formularios CRUD.
+3. **Tooltips Runtime:** Delegación e inicialización defensiva mediante `bootstrap.Tooltip.getOrCreateInstance` en `camargo-forms.js` y `camargo-layout.js`, con auto-refresco en el evento `shown.bs.modal`.
+4. **Botones y Enlaces:** Botones sólidos Alina (.btn-primary, .btn-secondary, .btn-light-secondary, .btn-light-danger, .btn-light-success) con iconografía 100% Font Awesome 6 Free (erradicación de librerías heterogéneas).
+5. **Accordions y Elementos Colapsables:** Adopción del componente canónico `.accordion.app-accordion` con `.accordion-button.accordion-icon` y chevron rotatorio suave (ej. ficha 360° en `clientes/detalle.php`).
+6. **Erradicación de `-subtle`:** Reemplazo integral de clases Bootstrap crudas (`bg-*-subtle`, `alert-*-subtle`) por la paleta nativa Alina (`bg-light-*`, `alert-light-*`).
+7. **Badges, Chips y Bordes:** Cero bordes punteados o discontinuos (`0 dotted / 0 dashed`).
+8. **Placeholders / Preload Skeleton:** Implementación de esqueletos de carga visual `.placeholder-glow` con `.placeholder` en lugar de textos planos en cargas asíncronas (`suministros/index.php`, `CamargoForms.crearPlaceholder()`).
+9. **Progress (Criterio Rector):** Documentado explícitamente como **NO APLICA / SIN CASO REAL ACTUAL**, evitando la invención de barras de progreso artificiales sin procesos multifase reales en segundo plano.
+10. **Aislamiento e Inmutabilidad:** `admin-dashboard/` 100% intacta; base de datos preservada en exactamente 118 tablas y slot de migración 035 estrictamente libre (0 DDL).
+

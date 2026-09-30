@@ -31,7 +31,7 @@ declare(strict_types=1);
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                     <div class="d-flex align-items-center">
-                        <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                        <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                             <i class="fa-solid fa-book-bookmark f-s-22"></i>
                         </span>
                         <div>
@@ -67,7 +67,7 @@ declare(strict_types=1);
                             </h3>
                             <span class="f-s-11 text-muted">Total general: <?= e((string) ($metricas_iniciales['total_general'] ?? 0)) ?> registros</span>
                         </div>
-                        <div class="bg-primary-subtle text-primary p-3 b-r-10 d-flex-center">
+                        <div class="bg-light-primary text-primary p-3 b-r-10 d-flex-center">
                             <i class="fa-solid fa-clipboard-list f-s-20"></i>
                         </div>
                     </div>
@@ -88,7 +88,7 @@ declare(strict_types=1);
                                 <?= e((string) ($metricas_iniciales['pendientes'] ?? 0)) ?> pendientes, <?= e((string) ($metricas_iniciales['en_proceso'] ?? 0)) ?> en proceso
                             </span>
                         </div>
-                        <div class="bg-warning-subtle text-warning p-3 b-r-10 d-flex-center">
+                        <div class="bg-light-warning text-warning p-3 b-r-10 d-flex-center">
                             <i class="fa-solid fa-hourglass-half f-s-20"></i>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ declare(strict_types=1);
                             </h3>
                             <span class="f-s-11 text-muted">Requieren atención prioritaria de turno</span>
                         </div>
-                        <div class="bg-danger-subtle text-danger p-3 b-r-10 d-flex-center">
+                        <div class="bg-light-danger text-danger p-3 b-r-10 d-flex-center">
                             <i class="fa-solid fa-triangle-exclamation f-s-20"></i>
                         </div>
                     </div>
@@ -128,7 +128,7 @@ declare(strict_types=1);
                                 <?= e((string) ($metricas_iniciales['consignas_activas'] ?? 0)) ?> consignas, <?= e((string) ($metricas_iniciales['incidencias_activas'] ?? 0)) ?> incidencias
                             </span>
                         </div>
-                        <div class="bg-info-subtle text-info p-3 b-r-10 d-flex-center">
+                        <div class="bg-light-info text-info p-3 b-r-10 d-flex-center">
                             <i class="fa-solid fa-clipboard-check f-s-20"></i>
                         </div>
                     </div>
@@ -257,7 +257,7 @@ declare(strict_types=1);
     <!-- MODAL: REGISTRAR ENTRADA EN BITÁCORA -->
     <!-- ========================================================================= -->
     <div class="modal fade" id="modal-crear-entrada" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title f-s-16 f-w-700">
@@ -362,7 +362,7 @@ declare(strict_types=1);
     <!-- MODAL: AGREGAR SEGUIMIENTO / ENMIENDA (APPEND-ONLY) -->
     <!-- ========================================================================= -->
     <div class="modal fade" id="modal-agregar-seguimiento" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title f-s-16 f-w-700">
@@ -403,7 +403,7 @@ declare(strict_types=1);
     <!-- MODAL: CAMBIAR ESTADO OPERATIVO -->
     <!-- ========================================================================= -->
     <div class="modal fade" id="modal-cambiar-estado" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title f-s-16 f-w-700">
@@ -431,7 +431,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-warning btn-sm">
                             <i class="fa-solid fa-check me-1"></i> Actualizar Estado
                         </button>
@@ -445,7 +445,7 @@ declare(strict_types=1);
     <!-- MODAL: RESOLVER CONSIGNAS / INCIDENCIAS -->
     <!-- ========================================================================= -->
     <div class="modal fade" id="modal-resolver-entrada" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title f-s-16 f-w-700">
@@ -468,7 +468,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-success btn-sm">
                             <i class="fa-solid fa-check-circle me-1"></i> Confirmar Resolución
                         </button>
@@ -482,7 +482,7 @@ declare(strict_types=1);
     <!-- MODAL: REABRIR ENTRADA -->
     <!-- ========================================================================= -->
     <div class="modal fade" id="modal-reabrir-entrada" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title f-s-16 f-w-700">
@@ -502,7 +502,7 @@ declare(strict_types=1);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-info text-white btn-sm">
                             <i class="fa-solid fa-arrow-rotate-left me-1"></i> Reabrir Novedad
                         </button>
@@ -516,7 +516,7 @@ declare(strict_types=1);
     <!-- MODAL: ANULACIÓN SUPERVISADA (ANULAR != DELETE) -->
     <!-- ========================================================================= -->
     <div class="modal fade" id="modal-anular-entrada" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title f-s-16 f-w-700 text-danger">
@@ -580,31 +580,31 @@ declare(strict_types=1);
 
     function badgeTipo(t) {
         switch (t) {
-            case 'CONSIGNA': return '<span class="badge bg-primary-subtle text-primary border border-primary"><i class="fa-solid fa-clipboard-check me-1"></i>CONSIGNA</span>';
-            case 'INCIDENCIA': return '<span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>INCIDENCIA</span>';
-            case 'RELEVO': return '<span class="badge bg-info-subtle text-info border border-info"><i class="fa-solid fa-people-arrows me-1"></i>RELEVO</span>';
-            case 'AVISO_GENERAL': return '<span class="badge bg-warning-subtle text-warning border border-warning"><i class="fa-solid fa-bullhorn me-1"></i>AVISO GENERAL</span>';
-            default: return '<span class="badge bg-secondary-subtle text-secondary border border-secondary"><i class="fa-solid fa-note-sticky me-1"></i>NOVEDAD</span>';
+            case 'CONSIGNA': return '<span class="badge bg-light-primary text-primary"><i class="fa-solid fa-clipboard-check me-1"></i>CONSIGNA</span>';
+            case 'INCIDENCIA': return '<span class="badge bg-light-danger text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>INCIDENCIA</span>';
+            case 'RELEVO': return '<span class="badge bg-light-info text-info"><i class="fa-solid fa-people-arrows me-1"></i>RELEVO</span>';
+            case 'AVISO_GENERAL': return '<span class="badge bg-light-warning text-warning"><i class="fa-solid fa-bullhorn me-1"></i>AVISO GENERAL</span>';
+            default: return '<span class="badge bg-light-secondary text-secondary"><i class="fa-solid fa-note-sticky me-1"></i>NOVEDAD</span>';
         }
     }
 
     function badgeEstado(e) {
         switch (e) {
-            case 'RESUELTA': return '<span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>RESUELTA</span>';
-            case 'EN_PROCESO': return '<span class="badge bg-info text-white"><i class="fa-solid fa-spinner fa-spin me-1"></i>EN PROCESO</span>';
-            case 'PENDIENTE': return '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>PENDIENTE</span>';
-            case 'ANULADA': return '<span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-ban me-1"></i>ANULADA</span>';
-            default: return '<span class="badge bg-secondary">REGISTRADA</span>';
+            case 'RESUELTA': return '<span class="badge bg-light-success text-success"><i class="fa-solid fa-check me-1"></i>RESUELTA</span>';
+            case 'EN_PROCESO': return '<span class="badge bg-light-info text-info"><i class="fa-solid fa-spinner fa-spin me-1"></i>EN PROCESO</span>';
+            case 'PENDIENTE': return '<span class="badge bg-light-warning text-warning"><i class="fa-solid fa-clock me-1"></i>PENDIENTE</span>';
+            case 'ANULADA': return '<span class="badge bg-light-danger text-danger"><i class="fa-solid fa-ban me-1"></i>ANULADA</span>';
+            default: return '<span class="badge bg-light-secondary text-secondary">REGISTRADA</span>';
         }
     }
 
     function badgeEvento(ev) {
         switch (ev) {
-            case 'ENMIENDA': return '<span class="badge bg-warning-subtle text-dark border border-warning f-s-10">ENMIENDA</span>';
-            case 'CAMBIO_ESTADO': return '<span class="badge bg-info-subtle text-info border border-info f-s-10">CAMBIO ESTADO</span>';
-            case 'RESOLUCION': return '<span class="badge bg-success-subtle text-success border border-success f-s-10">RESOLUCIÓN</span>';
-            case 'REAPERTURA': return '<span class="badge bg-primary-subtle text-primary border border-primary f-s-10">REAPERTURA</span>';
-            case 'ANULACION': return '<span class="badge bg-danger-subtle text-danger border border-danger f-s-10">ANULACIÓN</span>';
+            case 'ENMIENDA': return '<span class="badge bg-light-warning text-dark f-s-10">ENMIENDA</span>';
+            case 'CAMBIO_ESTADO': return '<span class="badge bg-light-info text-info f-s-10">CAMBIO ESTADO</span>';
+            case 'RESOLUCION': return '<span class="badge bg-light-success text-success f-s-10">RESOLUCIÓN</span>';
+            case 'REAPERTURA': return '<span class="badge bg-light-primary text-primary f-s-10">REAPERTURA</span>';
+            case 'ANULACION': return '<span class="badge bg-light-danger text-danger f-s-10">ANULACIÓN</span>';
             default: return '<span class="badge bg-light text-secondary border f-s-10">COMENTARIO</span>';
         }
     }
@@ -770,7 +770,7 @@ declare(strict_types=1);
                             ${badgePrioridad(e.prioridad)}
                             ${badgeEstado(e.estado)}
                             <span class="badge bg-light text-secondary border">Turno: ${escapeHtml(e.turno)}</span>
-                            ${e.unidad_numero ? `<span class="badge bg-primary-subtle text-primary"><i class="fa-solid fa-door-open me-1"></i>Hab/Unidad ${escapeHtml(e.unidad_numero)}</span>` : ''}
+                            ${e.unidad_numero ? `<span class="badge bg-light-primary text-primary"><i class="fa-solid fa-door-open me-1"></i>Hab/Unidad ${escapeHtml(e.unidad_numero)}</span>` : ''}
                         </div>
                         <div class="text-end f-s-12 text-muted">
                             <span><i class="fa-solid fa-calendar me-1"></i>${escapeHtml(e.fecha_operativa)}</span>
@@ -786,7 +786,7 @@ declare(strict_types=1);
                         <span><i class="fa-solid fa-user-pen me-1"></i>Autor: ${escapeHtml(e.usuario_creador_nombre || 'Colaborador')}</span>
                     </div>
 
-                    <div class="bg-light p-3 rounded mb-3 border-start border-3 border-primary-subtle">
+                    <div class="bg-light p-3 rounded mb-3 border-start border-3 border-primary">
                         <div class="f-s-11 f-w-700 text-uppercase text-secondary mb-1">
                             <i class="fa-solid fa-lock me-1"></i>Relato Original Inmutable:
                         </div>

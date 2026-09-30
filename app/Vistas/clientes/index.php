@@ -26,7 +26,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0 b-r-20">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-users f-s-22"></i>
                     </span>
                     <div>
@@ -49,11 +49,11 @@ declare(strict_types=1);
             </div>
 
             <!-- Métricas Principales Rápidas -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-3">
                     <div class="col-md-4 col-12">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-primary-subtle text-primary p-2 rounded-circle me-3">
+                            <span class="bg-light-primary text-primary p-2 rounded-circle me-3">
                                 <i class="fa-solid fa-id-card f-s-18"></i>
                             </span>
                             <div>
@@ -64,7 +64,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-4 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-success-subtle text-success p-2 rounded-circle me-3">
+                            <span class="bg-light-success text-success p-2 rounded-circle me-3">
                                 <i class="fa-solid fa-user-check f-s-18"></i>
                             </span>
                             <div>
@@ -75,7 +75,7 @@ declare(strict_types=1);
                     </div>
                     <div class="col-md-4 col-6">
                         <div class="d-flex align-items-center p-2 bg-white rounded border">
-                            <span class="bg-danger-subtle text-danger p-2 rounded-circle me-3">
+                            <span class="bg-light-danger text-danger p-2 rounded-circle me-3">
                                 <i class="fa-solid fa-user-lock f-s-18"></i>
                             </span>
                             <div>
@@ -88,7 +88,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Filtros de Directorio -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-4 col-12">
                         <div class="input-group input-group-sm">
@@ -198,7 +198,7 @@ declare(strict_types=1);
                     </div>
 
                     <!-- SECCIÓN 1: VINCULAR PERSONA EXISTENTE -->
-                    <div id="seccion-persona-existente" class="card bg-light-subtle border mb-4">
+                    <div id="seccion-persona-existente" class="card bg-light border mb-4">
                         <div class="card-body p-3">
                             <h6 class="f-w-700 f-s-13 text-primary mb-2">
                                 <i class="fa-solid fa-address-book me-1"></i> Verificación de Identidad Soberana (PERSONA)
@@ -208,7 +208,7 @@ declare(strict_types=1);
                             </p>
                             <div class="row g-2 align-items-end mb-2">
                                 <div class="col-md-6 col-12">
-                                    <label class="form-label f-s-12 f-w-600" for="alta-buscar-doc">Número de Documento o Búsqueda</label>
+                                     <label class="form-label f-s-12 f-w-600" for="alta-buscar-doc">Número de Documento o Búsqueda</label>
                                     <div class="input-group input-group-sm">
                                         <input type="text" class="form-control" id="alta-buscar-doc" placeholder="Ej. 12345678 o Nombre" autocomplete="off">
                                         <button class="btn btn-primary" type="button" id="btn-verificar-persona">
@@ -229,7 +229,7 @@ declare(strict_types=1);
                                     <div>
                                         <h6 class="mb-1 f-w-700 text-dark" id="sel-persona-nombre">-</h6>
                                         <div class="text-secondary f-s-12">
-                                            <span class="badge bg-secondary-subtle text-secondary me-1" id="sel-persona-doc">-</span>
+                                            <span class="badge bg-light-secondary text-secondary me-1" id="sel-persona-doc">-</span>
                                             <span class="me-2" id="sel-persona-tel"><i class="fa-solid fa-phone me-1"></i>-</span>
                                             <span id="sel-persona-email"><i class="fa-solid fa-envelope me-1"></i>-</span>
                                         </div>
@@ -243,7 +243,7 @@ declare(strict_types=1);
                     </div>
 
                     <!-- SECCIÓN 2: CREAR NUEVA PERSONA ATÓMICAMENTE -->
-                    <div id="seccion-persona-nueva" class="card bg-light-subtle border mb-4 d-none">
+                    <div id="seccion-persona-nueva" class="card bg-light border mb-4 d-none">
                         <div class="card-body p-3">
                             <h6 class="f-w-700 f-s-13 text-primary mb-3">
                                 <i class="fa-solid fa-id-card me-1"></i> Identidad Biológica y Civil de la Persona
@@ -429,7 +429,7 @@ declare(strict_types=1);
                     </div>
 
                     <!-- SECCIÓN 3: PERFIL COMERCIAL DEL CLIENTE -->
-                    <div class="card bg-light-subtle border">
+                    <div class="card bg-light border">
                         <div class="card-body p-3">
                             <h6 class="f-w-700 f-s-13 text-primary mb-3">
                                 <i class="fa-solid fa-briefcase me-1"></i> Parámetros de la Relación Comercial
@@ -604,15 +604,15 @@ document.addEventListener('DOMContentLoaded', function () {
         let html = '';
         clientes.forEach(c => {
             // Badges nativos Alina
-            let badgeCategoria = `<span class="badge bg-${c.categoria_color_badge || 'secondary'}-subtle text-${c.categoria_color_badge || 'secondary'}">${c.categoria_nombre || 'Estándar'}</span>`;
+            let badgeCategoria = `<span class="badge bg-light-${c.categoria_color_badge || 'secondary'} text-${c.categoria_color_badge || 'secondary'}">${c.categoria_nombre || 'Estándar'}</span>`;
 
             let badgeEstado = '';
             if (c.estado === 'ACTIVO') {
-                badgeEstado = `<span class="badge bg-success-subtle text-success">ACTIVO</span>`;
+                badgeEstado = `<span class="badge bg-light-success text-success">ACTIVO</span>`;
             } else if (c.estado === 'BLOQUEADO') {
                 badgeEstado = `<span class="badge bg-danger text-white" title="${c.motivo_bloqueo || ''}"><i class="fa-solid fa-lock me-1"></i>BLOQUEADO</span>`;
             } else {
-                badgeEstado = `<span class="badge bg-secondary-subtle text-secondary">INACTIVO</span>`;
+                badgeEstado = `<span class="badge bg-light-secondary text-secondary">INACTIVO</span>`;
             }
 
             let docInfo = c.numero_documento 

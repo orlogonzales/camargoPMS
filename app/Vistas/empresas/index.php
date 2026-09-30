@@ -24,7 +24,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0 b-r-20">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-building f-s-22"></i>
                     </span>
                     <div>
@@ -47,7 +47,7 @@ declare(strict_types=1);
             </div>
 
             <!-- Filtros Rápidos -->
-            <div class="card-body p-3 bg-light-subtle border-bottom">
+            <div class="card-body p-3 bg-light border-bottom">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-6 col-12">
                         <div class="input-group input-group-sm">
@@ -122,7 +122,7 @@ declare(strict_types=1);
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle f-s-12">
+                                    <span class="badge bg-light-primary text-primary f-s-12">
                                         <?= e($emp->obtenerTipoDocumentoCodigo() ?: 'RUC') ?>: <?= e($emp->obtenerNumeroDocumento()) ?>
                                     </span>
                                 </td>
@@ -139,7 +139,7 @@ declare(strict_types=1);
                                         <div class="f-s-13 f-w-600 text-dark"><?= e($emp->obtenerRepresentanteNombreCompleto()) ?></div>
                                         <span class="text-secondary f-s-11 d-block"><?= e($emp->obtenerRepresentanteCargo() ?: 'Gerente General') ?></span>
                                         <?php if ($emp->obtenerRepresentanteDocumento()): ?>
-                                            <span class="text-muted f-s-11">Doc: <?= e($emp->obtenerRepresentanteDocumento()) ?></span>
+                                             <span class="text-muted f-s-11">Doc: <?= e($emp->obtenerRepresentanteDocumento()) ?></span>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <span class="text-muted f-s-12 f-italic">Sin representante asignado</span>
@@ -154,7 +154,7 @@ declare(strict_types=1);
                                 </td>
                                 <td class="text-center">
                                     <?php if ($emp->esPrincipal()): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle f-s-12">
+                                        <span class="badge bg-light-success text-success f-s-12">
                                             <i class="fa-solid fa-star me-1"></i> Principal
                                         </span>
                                     <?php else: ?>

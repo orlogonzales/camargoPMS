@@ -20,7 +20,7 @@ declare(strict_types=1);
         <div class="card equal-card shadow-sm border-0 b-r-20">
             <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center">
-                    <span class="bg-primary-subtle text-primary p-2 b-r-8 me-3 d-flex-center">
+                    <span class="bg-light-primary text-primary p-2 b-r-8 me-3 d-flex-center">
                         <i class="fa-solid fa-calendar-days f-s-22"></i>
                     </span>
                     <div>
@@ -93,16 +93,16 @@ declare(strict_types=1);
                                 <td><?= htmlspecialchars($f->obtenerDescripcion()) ?></td>
                                 <td>
                                     <?php if ($f->obtenerTipo() === \CamargoPMS\Modelos\Feriado::TIPO_FERIADO_LEGAL): ?>
-                                        <span class="badge bg-primary-subtle text-primary">FERIADO LEGAL</span>
+                                        <span class="badge bg-light-primary text-primary">FERIADO LEGAL</span>
                                     <?php else: ?>
-                                        <span class="badge bg-warning-subtle text-dark">NO LABORABLE</span>
+                                        <span class="badge bg-light-warning text-warning">NO LABORABLE</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
                                     <?php if ($f->aplicaSectorPrivado()): ?>
-                                        <span class="badge bg-success-subtle text-success"><i class="fa-solid fa-check me-1"></i> Sí (Pausa)</span>
+                                        <span class="badge bg-light-success text-success"><i class="fa-solid fa-check me-1"></i> Sí (Pausa)</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary-subtle text-secondary">No (Solo público)</span>
+                                        <span class="badge bg-light-secondary text-secondary">No (Solo público)</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
@@ -129,7 +129,7 @@ declare(strict_types=1);
 
 <!-- Modal Añadir / Editar Feriado -->
 <div class="modal fade" id="modal-feriado" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content b-r-16">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title f-s-16 fw-bold"><i class="fa-solid fa-calendar-plus text-primary me-2"></i> Fecha en Calendario</h5>
@@ -149,7 +149,7 @@ declare(strict_types=1);
                     <div class="mb-3">
                         <label class="form-label required">Tipo de Declaración</label>
                         <select class="form-select" name="tipo" id="feriado_tipo" required>
-                            <option value="FERIADO_LEGAL" selected>Feriado Legal Nacional (D.L. 713 / Ley)</option>
+                             <option value="FERIADO_LEGAL" selected>Feriado Legal Nacional (D.L. 713 / Ley)</option>
                             <option value="NO_LABORABLE_COMPENSABLE">Día No Laborable Compensable (D.S.)</option>
                         </select>
                     </div>
@@ -167,7 +167,7 @@ declare(strict_types=1);
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="btn-guardar-feriado">Guardar Feriado</button>
                 </div>
             </form>
@@ -195,11 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
             var html = '';
             data.datos.forEach(function(f) {
                 var tipoBadge = f.tipo === 'FERIADO_LEGAL'
-                    ? '<span class="badge bg-primary-subtle text-primary">FERIADO LEGAL</span>'
-                    : '<span class="badge bg-warning-subtle text-dark">NO LABORABLE</span>';
+                    ? '<span class="badge bg-light-primary text-primary">FERIADO LEGAL</span>'
+                    : '<span class="badge bg-light-warning text-warning">NO LABORABLE</span>';
                 var privBadge = f.aplica_sector_privado
-                    ? '<span class="badge bg-success-subtle text-success"><i class="fa-solid fa-check me-1"></i> Sí (Pausa)</span>'
-                    : '<span class="badge bg-secondary-subtle text-secondary">No (Solo público)</span>';
+                    ? '<span class="badge bg-light-success text-success"><i class="fa-solid fa-check me-1"></i> Sí (Pausa)</span>'
+                    : '<span class="badge bg-light-secondary text-secondary">No (Solo público)</span>';
                 var actBadge = f.activo
                     ? '<span class="badge bg-success">Activo</span>'
                     : '<span class="badge bg-secondary">Inactivo</span>';

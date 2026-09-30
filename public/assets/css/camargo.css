@@ -609,4 +609,96 @@ input, textarea, select, button,
     border-color: var(--bs-success, #198754);
 }
 
+/* =========================================================================
+   5. CONTENEDORES Y COMPONENTES DE INTERACCIÓN ALINA (UI-ALINA-1D / D-097)
+   ========================================================================= */
 
+/* Modales Alina: Modal Sizing & Default Modal */
+.modal-content {
+    border-radius: var(--app-border-radius, 16px);
+    border: 1px solid var(--app-border-color, rgba(0, 0, 0, 0.1));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-top-left-radius: var(--app-border-radius, 16px);
+    border-top-right-radius: var(--app-border-radius, 16px);
+    border-bottom: 1px solid var(--app-border-color, #e9ecef);
+}
+
+.modal-footer {
+    border-bottom-left-radius: var(--app-border-radius, 16px);
+    border-bottom-right-radius: var(--app-border-radius, 16px);
+    border-top: 1px solid var(--app-border-color, #e9ecef);
+}
+
+/* Acordeón con Icono Alina (Accordions with Icon) */
+.app-accordion .accordion-button.accordion-icon {
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.app-accordion .accordion-button.accordion-icon i {
+    font-size: 1.15rem;
+}
+
+/* Placeholders y Skeleton Preload Alina */
+.placeholder-glow .placeholder {
+    border-radius: 4px;
+    background-color: rgba(var(--dark), 0.12);
+}
+
+/* SweetAlert2 Alina Theme Styling */
+.swal2-popup {
+    border-radius: var(--app-border-radius, 16px) !important;
+    font-family: inherit !important;
+}
+
+.swal2-popup .swal2-confirm {
+    border-radius: var(--app-border-radius, 8px) !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1.25rem !important;
+}
+
+.swal2-popup .swal2-cancel {
+    border-radius: var(--app-border-radius, 8px) !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1.25rem !important;
+}
+
+/* Botones Suaves / Sólidos Alina */
+.btn-light-secondary {
+    background-color: rgba(var(--secondary), 0.12);
+    color: var(--bs-secondary, #6c757d);
+    border: 1px solid transparent;
+}
+
+.btn-light-secondary:hover,
+.btn-light-secondary:focus {
+    background-color: rgba(var(--secondary), 0.2);
+    color: var(--bs-secondary, #6c757d);
+}
+
+.btn-light-danger {
+    background-color: rgba(var(--danger), 0.12);
+    color: var(--bs-danger, #dc3545);
+    border: 1px solid transparent;
+}
+
+.btn-light-danger:hover,
+.btn-light-danger:focus {
+    background-color: rgba(var(--danger), 0.2);
+    color: var(--bs-danger, #dc3545);
+}
+
+.btn-light-success {
+    background-color: rgba(var(--success), 0.12);
+    color: var(--bs-success, #198754);
+    border: 1px solid transparent;
+}
+
+.btn-light-success:hover,
+.btn-light-success:focus {
+    background-color: rgba(var(--success), 0.2);
+    color: var(--bs-success, #198754);
+}
