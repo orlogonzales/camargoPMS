@@ -324,20 +324,18 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **WORDPRESS-1C**    | `test_wordpress_1c.php` (Secciones 1..10) | 108 | — | 108/108 PASS |
 | **WORDPRESS-1D**    | `test_wordpress_1d.php` (Secciones 1..7) | 95 | — | 95/95 PASS |
 | **PAGOS-1B**        | `test_pagos_1b.php` (Secciones 1..7) | 90 | — | 90/90 PASS |
-| **TOTALES CANÓNICOS**| **78 suites ejecutadas** | **—** | **—** | **2,380 checks PASS (100%)** |
+| **PAGOS-1C**        | `test_pagos_1c.php` (Secciones 1..8) | 75 | — | 75/75 PASS |
+| **TOTALES CANÓNICOS**| **79 suites ejecutadas** | **—** | **—** | **2,455 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (PAGOS-1B):**
-    - Suite `test_pagos_1b.php`: 90 comprobaciones automáticas cubriendo:
-      - Esquema y ranura de migración: 130 tablas relacionales en total (`pagos_transacciones_pasarela`, `pagos_webhooks_eventos`), migración 038 registrada, ranura 039 estrictamente libre, `admin-dashboard/` 100% inalterado y `SQL/camargo_pms.sql` sincronizado.
-      - Actor técnico `PASARELA_CULQI` tipo `PROVEEDOR_PAGO` registrado bajo directiva D-061 (`ACTOR != USUARIO`).
-      - Modelos de dominio (`PagoTransaccionPasarela`, `PagoWebhookEvento`) con paridad de campos y métodos de estado (`estaAprobado`, `estaPendiente`, `estaConciliado`, `tieneDiscrepancia`, `esReembolsable`, serialización y deserialización).
-      - Repositorios de persistencia (`PagoTransaccionPasarelaRepositorio`, `PagoWebhookEventoRepositorio`) con transaccionalidad, bloqueo pesimista `SELECT ... FOR UPDATE`, registro idempotente de eventos y control de duplicados.
-      - DTOs neutrales y contrato `ProveedorPagoInterfaz` (`IntencionPagoSolicitud`, `IntencionPagoResultado`, `WebhookNotificacionResultado`, `ConsultaOrdenResultado`, `ConsultaTransaccionResultado`, `ReembolsoSolicitud`, `ReembolsoResultado`).
-      - Fábrica desacoplada `FabricaProveedoresPago` (soporte CULQI, IZIPAY, PAYPAL) y Driver `CulqiProveedor` con conversión aritmética exacta BCMath (Soles a céntimos `PEN * 100`), autenticación Bearer, verificación de webhooks HMAC-SHA256, consultas y reembolsos.
-      - Orquestador Soberano `PagoServicio`: creación de intenciones de pago, procesamiento atómico de webhooks, confirmación de reserva y generación de folios/cargos devengados, imputación de cobros en `pagos_cuenta` y aplicaciones en cuenta.
-      - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: Pagos recibidos tras la expiración del hold registran dinero externo en `APROBADO` con `DISCREPANCIA_HOLD_EXPIRADO`, cuarentena administrativa, **cero folios espurios** (`cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`), y reserva permanece `EXPIRADA`.
-      - Detección de discrepancias de monto con preservación de cuarentena.
-      - Reembolsos soberanos y limpieza defensiva de datos de prueba.
-    - Suites previas sin regresión: 77 suites históricas ejecutadas y validadas al 100%.
-    - **Total Consolidado de Regresión Activa: 78/78 suites PASS — 2,380 checks PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (PAGOS-1C):**
+    - Suite `test_pagos_1c.php`: 75 comprobaciones automáticas cubriendo:
+      - Gobierno del esquema y ranura de migración: 130 tablas relacionales en total (`pagos_transacciones_pasarela`, `pagos_webhooks_eventos`, `api_idempotencia`), migración 038 registrada, ranura 039 estrictamente libre, `admin-dashboard/` 100% inalterado.
+      - Clientes API y credenciales de prueba con scopes `reservas.hold` y `disponibilidad.leer`.
+      - Endpoint 1: `POST /api/v1/pagos/intenciones`: 401 sin Bearer, 400 sin `Idempotency-Key`, 403 sin scope `reservas.hold`, 404 reserva inexistente, 422 reservas no pagables (cancelada, confirmada, hold expirado), 422 proveedor no soportado, 201 intención exitosa con `proveedor_orden_id` y soberanía monetaria estricta (ignora montos arbitrarios del cliente), entrega de `llave_publica` de Culqi sin exponer secretos, idempotencia con replay 201 determinista y 422 ante desajuste de payload, preflight `OPTIONS` 204.
+      - Endpoint 2: `POST /api/v1/webhooks/pagos/culqi`: 400 ante payload vacío o JSON inválido (server-to-server sin dependencia de Bearer), preflight `OPTIONS` 204, procesamiento atómico de orden aprobada respondiendo 200 OK a Culqi, transición de reserva a CONFIRMADA, creación de folio y registro de cobro en `pagos_cuenta`, replay idempotente respondiendo 200 OK (`reintento = true`) sin duplicar pagos.
+      - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: pago tardío con hold expirado responde HTTP 200 OK a Culqi en cuarentena (`PAGO_TARDIO_EN_CUARENTENA`), dinero externo en `APROBADO`, estado de conciliación `DISCREPANCIA_HOLD_EXPIRADO`, **cero folios espurios** (`cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`), y reserva permanece `EXPIRADA`.
+      - Discrepancia de monto en webhook: respuesta HTTP 200 OK con estado `DISCREPANCIA_MONTO` y folio `NULL`.
+      - Limpieza defensiva de fixtures de prueba completada.
+    - Suites previas sin regresión: 78 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 79/79 suites PASS — 2,455 checks PASS — 0 fallos (100%)**.
 

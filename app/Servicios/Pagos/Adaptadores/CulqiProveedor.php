@@ -51,6 +51,11 @@ class CulqiProveedor implements ProveedorPagoInterfaz
         return 'CULQI';
     }
 
+    public function obtenerLlavePublica(): string
+    {
+        return $this->llavePublica;
+    }
+
     public function crearIntencionPago(IntencionPagoSolicitud $solicitud): IntencionPagoResultado
     {
         // Culqi requiere importes en céntimos (enteros)

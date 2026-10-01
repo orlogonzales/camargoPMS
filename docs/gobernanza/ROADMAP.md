@@ -561,7 +561,15 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - Transaccionalidad coordinada en `CuentaFolioServicio` (`$debeCerrarTx = !$this->pdo->inTransaction()`).
     - DDL autorizado: Migración `038_pagos_pasarelas.sql` aplicada (130 tablas relacionales consolidadas, ranura 039 libre).
     - Suite de pruebas: `tests/test_pagos_1b.php` (90/90 checks PASS).
-    - Estado: Implementada y Validada (78/78 suites globales PASS, 2,380 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `bc6af54604e6b62376ae9c5b8df33708634f160e`, 78/78 suites globales PASS, 2,380 checks, 0 fallos).
+  - **PAGOS-1C:** Superficie HTTP de Pagos + Webhook Culqi:
+    - Controlador `ApiPagoControlador` orquestando la creación de intenciones y recepción de webhooks de Culqi delegando estrictamente en la capa de servicio soberana.
+    - `POST /api/v1/pagos/intenciones`: creación segura de intenciones vinculadas a reservas en hold (`PENDIENTE`). Validación de vigencia de hold, soberanía monetaria (ignora montos arbitrarios del cliente), emisión de `llave_publica` de checkout y código de transacción. Protección: Bearer Token, scope `reservas.hold`, Rate Limit y cabecera obligatoria `Idempotency-Key` (soporte de replay determinista y detección de desajustes de payload con HTTP 422).
+    - `POST /api/v1/webhooks/pagos/culqi`: canal server-to-server directo sin Bearer de cliente ni idempotencia HTTP genérica. Procesa eventos de forma asíncrona reconociendo pagos aprobados, deduplicando reintentos con HTTP 200 OK (`reintento: true`), aislando pagos tardíos con hold expirado en cuarentena administrativa (`DISCREPANCIA_HOLD_EXPIRADO`, `cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`, reserva `EXPIRADA`), y señalizando discrepancias de monto.
+    - Preflights CORS `OPTIONS` con HTTP 204 No Content para ambos endpoints.
+    - Cero DDL: 130 tablas relacionales en BD, migración 038 como última aplicada, ranura 039 estrictamente libre.
+    - Suite de pruebas: `tests/test_pagos_1c.php` (75/75 checks PASS).
+    - Estado: Implementada y Validada (79/79 suites globales PASS, 2,455 checks, 0 fallos).
 
 ## Dominio operativo
 

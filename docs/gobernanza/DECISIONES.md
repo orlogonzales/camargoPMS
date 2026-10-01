@@ -1955,6 +1955,40 @@ Aprobada en la microfase `PAGOS-1B` como arquitectura contractual vinculante par
    - Cierra formalmente la decisión pendiente **P-008 (Proveedor inicial de pagos: Culqi)**.
    - Regresión transversal: 78 suites automatizadas, 2,380 checks, 0 fallos (100% PASS).
 
+### D-108 — Exposición de Endpoints de Pago, Webhook Culqi y Trust Boundaries (PAGOS-1C)
+
+Aprobada en la microfase `PAGOS-1C` como arquitectura contractual vinculante para la superficie HTTP del dominio de pagos y notificaciones asíncronas de pasarela en Camargo PMS.
+
+1. **Perímetro Dual de Seguridad y Confianza (D-108.1):**
+   - Se formaliza la separación estricta de dos perímetros HTTP independientes:
+     - **Perímetro de Intención (`POST /api/v1/pagos/intenciones`):** Autenticado vía Bearer Token (`ApiAutenticacionIntermediario`), scope `reservas.hold` (`ApiScopeIntermediario`), rate limiting con sliding window (`ApiRateLimitIntermediario`), idempotencia obligatoria mediante cabecera `Idempotency-Key` (`ApiIdempotenciaIntermediario`).
+     - **Perímetro de Webhook (`POST /api/v1/webhooks/pagos/culqi`):** Notificación server-to-server directa de la pasarela. Exento de Bearer Token de cliente y exento de `Idempotency-Key` genérica HTTP, delegando su deduplicación e integridad en la capa soberana de pagos (`pagos_webhooks_eventos`).
+   - Soporte nativo para CORS y peticiones preflight `OPTIONS` con respuesta temprana HTTP 204 No Content.
+
+2. **Soberanía Monetaria y Validación Rigurosa de Hold (D-108.2):**
+   - El cliente API o frontend web jamás impone ni envía el monto a cobrar. Cualquier parámetro de monto provisto en el payload JSON es ignorado por completo.
+   - El monto, la moneda y la vigencia del hold se extraen y validan soberanamente desde la entidad `Reserva` en la base de datos de Camargo PMS.
+   - Se rechaza la creación de intenciones para reservas que no estén en estado `PENDIENTE` o cuyos holds hayan expirado (HTTP 422 `HOLD_EXPIRADO`, `RESERVA_YA_CONFIRMADA`, `RESERVA_NO_PAGABLE`).
+
+3. **Seguridad Zero-Trust y Manejo Seguro de Secretos (D-108.3):**
+   - La respuesta JSON del endpoint de intenciones retorna exclusivamente la clave pública (`llave_publica`) requerida por Culqi Checkout / SDK frontend para tokenización segura.
+   - Cero exposición de secretos: Ni la clave secreta privada (`llave_secreta`) ni el `webhook_secret` viajan jamás en las respuestas HTTP hacia el cliente o logs.
+   - Cero exposición de PAN o CVV: Camargo PMS no procesa, transmite ni almacena números de tarjeta bancaria.
+
+4. **Respuestas HTTP y Contrato de Reintentos de Webhook (D-108.4):**
+   - El controlador de webhook (`ApiPagoControlador::webhookCulqi()`) responde HTTP 200 OK tanto para confirmaciones exitosas como para eventos ya procesados (replay idempotente con `reintento: true`), pagos tardíos con hold expirado puestos en cuarentena (`PAGO_TARDIO_EN_CUARENTENA`) y discrepancias de monto (`PAGO_APROBADO_CON_DISCREPANCIA_MONTO`).
+   - Esta semántica satisface el protocolo de pasarelas de pago para confirmar la recepción inmutable del evento y detener reintentos redundantes una vez que el estado fue catalogado de forma determinista en el PMS.
+
+5. **Invariante Hotelero Inviolable en Runtime HTTP (D-108.5):**
+   - El circuito HTTP garantiza la preservación del invariante C1/C2 acordado en PAGOS-1A/1B: ante un pago tardío para un hold expirado, el webhook reconoce el dinero en `estado_pago = APROBADO` y `estado_conciliacion = DISCREPANCIA_HOLD_EXPIRADO`, pero `cuenta_folio_id` y `pago_cuenta_id` permanecen estrictamente `NULL` (cero folios de contingencia espurios), y la reserva permanece `EXPIRADA` sin reactivar inventario liberado sin intervención humana.
+
+6. **Invariantes de Esquema y Gobernanza (D-108.6):**
+   - Cero DDL: No se introduce migración en la ranura 039; las estructuras de `038` y `037` cubren integralmente el requerimiento.
+   - Total de tablas relacionales permanece estrictamente en **130**.
+   - Ranura de migración `039` estrictamente LIBRE.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Cobertura de regresión transversal: 79 suites automatizadas, checks en verde (100% PASS).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

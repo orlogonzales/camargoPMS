@@ -4,6 +4,23 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase PAGOS-1C — Superficie HTTP de Pagos + Webhook Culqi
+
+- **Superficie HTTP de Pagos (`ApiPagoControlador`):**
+  - Implementación de `POST /api/v1/pagos/intenciones`: creación de intenciones de cobro vinculadas a reservas en hold (`PENDIENTE`). Valida reservas existentes, estados pagables, expiración de holds y soberanía monetaria (ignora montos manipulados por el cliente). Emite clave pública de Culqi y código de transacción sin exponer credenciales privadas ni secretos de webhook.
+  - Implementación de `POST /api/v1/webhooks/pagos/culqi`: endpoint server-to-server directo para notificaciones asíncronas de Culqi (`order.status.changed`). Procesa transaccionalmente el payload raw y cabeceras normalizadas. Responde HTTP 200 OK determinista tanto para pagos confirmados, repeticiones idempotentes (`reintento = true`), pagos tardíos en cuarentena como discrepancias de importe.
+  - Soporte de preflights CORS `OPTIONS /api/v1/pagos/intenciones` y `OPTIONS /api/v1/webhooks/pagos/culqi` con HTTP 204 No Content.
+- **Enrutamiento y Blindaje de Perímetros (`public/index.php`):**
+  - Perímetro de Intención: protegido secuencialmente con `ApiCorrelacionIntermediario`, `ApiCorsIntermediario`, `ApiAutenticacionIntermediario` (Bearer), `ApiRateLimitIntermediario`, `ApiScopeIntermediario` (`reservas.hold`), `ApiIdempotenciaIntermediario` (`Idempotency-Key`).
+  - Perímetro de Webhook: canal server-to-server blindado con `ApiCorrelacionIntermediario` y enrutamiento directo al controlador, exento de dependencias de Bearer tokens de cliente o idempotencia HTTP genérica.
+- **Preservación Inviolable de Reglas Hoteleras y Gobernanza:**
+  - Invariante C1/C2 de Pagos Tardíos: pagos aprobados tras expirar el hold se aíslan en cuarentena (`DISCREPANCIA_HOLD_EXPIRADO`), con `cuenta_folio_id = NULL` y `pago_cuenta_id = NULL` (cero folios espurios), manteniendo la reserva en estado `EXPIRADA`.
+  - Cero DDL: Base de datos congelada en exactamente 130 tablas relacionales; ranura de migración 039 estrictamente libre.
+  - Catálogo Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+  - Cobertura de pruebas: 79 suites de prueba automatizadas.
+
+## Baseline oficial bc6af54 (PAGOS-1B)
+
 ### Microfase PAGOS-1B — Infraestructura Soberana del Dominio de Pagos, Adaptador Desacoplado y Driver Culqi
 
 - **Infraestructura Relacional del Dominio de Pagos (Migración 038):**

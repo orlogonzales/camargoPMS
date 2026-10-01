@@ -1479,6 +1479,33 @@ $enrutador->options('/api/v1/reservas/{codigo}', [\CamargoPMS\Controladores\ApiR
     \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
 ]);
 
+// =====================================================================
+// RUTAS DE PAGOS Y PASARELAS API RESTful v1 (PAGOS-1C)
+// =====================================================================
+
+// 1. Creación de intención de pago sobre reserva en hold
+$enrutador->post('/api/v1/pagos/intenciones', [\CamargoPMS\Controladores\ApiPagoControlador::class, 'crearIntencion'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiAutenticacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+    new \CamargoPMS\Intermediarios\ApiScopeIntermediario('reservas.hold'),
+    \CamargoPMS\Intermediarios\ApiIdempotenciaIntermediario::class,
+]);
+$enrutador->options('/api/v1/pagos/intenciones', [\CamargoPMS\Controladores\ApiPagoControlador::class, 'preflight'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
+// 2. Webhook server-to-server de Culqi (sin Bearer de cliente, verificación del proveedor)
+$enrutador->post('/api/v1/webhooks/pagos/culqi', [\CamargoPMS\Controladores\ApiPagoControlador::class, 'webhookCulqi'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+]);
+$enrutador->options('/api/v1/webhooks/pagos/culqi', [\CamargoPMS\Controladores\ApiPagoControlador::class, 'preflight'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 

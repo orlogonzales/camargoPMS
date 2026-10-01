@@ -175,10 +175,13 @@ class PagoServicio
             actorId: $actorFinalId
         );
 
+        $tx = $this->txRepo->buscarPorId($txId);
+
         return [
             'exito' => true,
             'codigo' => 'INTENCION_PAGO_CREADA',
             'transaccion_id' => $txId,
+            'codigo_transaccion' => $tx?->obtenerCodigo(),
             'proveedor' => $proveedor,
             'proveedor_orden_id' => $resultado->proveedorOrdenId,
             'token_transaccion' => $resultado->tokenTransaccion,
