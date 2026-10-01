@@ -323,17 +323,21 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **WORDPRESS-1B**    | `test_wordpress_1b.php` (Secciones 1..5) | 75 | — | 75/75 PASS |
 | **WORDPRESS-1C**    | `test_wordpress_1c.php` (Secciones 1..10) | 108 | — | 108/108 PASS |
 | **WORDPRESS-1D**    | `test_wordpress_1d.php` (Secciones 1..7) | 95 | — | 95/95 PASS |
-| **TOTALES CANÓNICOS**| **77 suites ejecutadas** | **—** | **—** | **2,290 checks PASS (100%)** |
+| **PAGOS-1B**        | `test_pagos_1b.php` (Secciones 1..7) | 90 | — | 90/90 PASS |
+| **TOTALES CANÓNICOS**| **78 suites ejecutadas** | **—** | **—** | **2,380 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (WORDPRESS-1D):**
-    - Suite `test_wordpress_1d.php`: 95 comprobaciones automáticas cubriendo:
-      - Esquema y ranura de migración: 128 tablas relacionales en total, migración 037 registrada, ranura 038 estrictamente libre, `admin-dashboard/` 100% inalterado y `SQL/` inmutable.
-      - Clientes API y credenciales de prueba: autenticación con actor de tipo `INTEGRACION` (D-061: `ACTOR != USUARIO`), scopes granulares y fixture de pruebas.
-      - Endpoint 1 (`GET /api/v1/disponibilidad`): rechazo sin token (HTTP 401), preflight `OPTIONS` (HTTP 204 con CORS), validación de parámetros y fechas (HTTP 422 `PARAMETROS_REQUERIDOS` / `INTERVALO_INVALIDO`), consulta válida (HTTP 200 `DISPONIBILIDAD_CONSULTADA`), cálculo exacto de noches e inventario disponible en tiempo real.
-      - Endpoint 2 (`POST /api/v1/cotizaciones`): rechazo sin token (HTTP 401), rechazo por scope insuficiente (HTTP 403 `ACCESO_DENEGADO`), preflight `OPTIONS` (HTTP 204), cálculo tarifario noche a noche soberano bajo directiva D-069 y `BCMath`, moneda 'PEN', total mayor a cero, validación del token firmado HMAC-SHA256, y **principio inviolable: cero bloqueos en inventario diario**.
-      - Endpoint 3 (`POST /api/v1/reservas`): rechazo sin `Idempotency-Key` (HTTP 400 `IDEMPOTENCIA_REQUERIDA`), rechazo sin scope (HTTP 403), rechazo por token adulterado (HTTP 422 `COTIZACION_INVALIDA`), creación exitosa de hold `PENDIENTE` (HTTP 201 `RESERVA_HOLD_CREADA`), código de reserva único, fecha de expiración (`expira_en`), enmascaramiento de titular, bloqueo atómico en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`), vinculación al actor técnico en `creado_por_actor_id`, replay determinista con `X-Cache-Lookup: IDEMPOTENT-REPLAY`, detección de desajuste de payload con misma clave (HTTP 422 `IDEMPOTENCIA_DESAJUSTE_PAYLOAD`), prevención de doble reserva (HTTP 409 `CONFLICTO_DISPONIBILIDAD`), y preflight `OPTIONS` (HTTP 204).
-      - Endpoint 4 (`GET /api/v1/reservas/{codigo}`): rechazo sin token (HTTP 401), rechazo sin scope (HTTP 403), reserva inexistente (HTTP 404 `RESERVA_NO_ENCONTRADA`), consulta exitosa de reserva (HTTP 200 `RESERVA_RECUPERADA`), y estricta ofuscación de PII (Directiva D-106.3: apellido con inicial `Carlos A.`, correo ofuscado `c***t@camargopms.test`, IDs numéricos de BD ocultos, notas internas no expuestas).
-      - Limpieza defensiva y liberación de datos de prueba: remoción segura de inventario y reservas de prueba.
-    - Suites previas sin regresión: 76 suites históricas ejecutadas y validadas al 100%.
-    - **Total Consolidado de Regresión Activa: 77/77 suites PASS — 2,290 checks PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (PAGOS-1B):**
+    - Suite `test_pagos_1b.php`: 90 comprobaciones automáticas cubriendo:
+      - Esquema y ranura de migración: 130 tablas relacionales en total (`pagos_transacciones_pasarela`, `pagos_webhooks_eventos`), migración 038 registrada, ranura 039 estrictamente libre, `admin-dashboard/` 100% inalterado y `SQL/camargo_pms.sql` sincronizado.
+      - Actor técnico `PASARELA_CULQI` tipo `PROVEEDOR_PAGO` registrado bajo directiva D-061 (`ACTOR != USUARIO`).
+      - Modelos de dominio (`PagoTransaccionPasarela`, `PagoWebhookEvento`) con paridad de campos y métodos de estado (`estaAprobado`, `estaPendiente`, `estaConciliado`, `tieneDiscrepancia`, `esReembolsable`, serialización y deserialización).
+      - Repositorios de persistencia (`PagoTransaccionPasarelaRepositorio`, `PagoWebhookEventoRepositorio`) con transaccionalidad, bloqueo pesimista `SELECT ... FOR UPDATE`, registro idempotente de eventos y control de duplicados.
+      - DTOs neutrales y contrato `ProveedorPagoInterfaz` (`IntencionPagoSolicitud`, `IntencionPagoResultado`, `WebhookNotificacionResultado`, `ConsultaOrdenResultado`, `ConsultaTransaccionResultado`, `ReembolsoSolicitud`, `ReembolsoResultado`).
+      - Fábrica desacoplada `FabricaProveedoresPago` (soporte CULQI, IZIPAY, PAYPAL) y Driver `CulqiProveedor` con conversión aritmética exacta BCMath (Soles a céntimos `PEN * 100`), autenticación Bearer, verificación de webhooks HMAC-SHA256, consultas y reembolsos.
+      - Orquestador Soberano `PagoServicio`: creación de intenciones de pago, procesamiento atómico de webhooks, confirmación de reserva y generación de folios/cargos devengados, imputación de cobros en `pagos_cuenta` y aplicaciones en cuenta.
+      - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: Pagos recibidos tras la expiración del hold registran dinero externo en `APROBADO` con `DISCREPANCIA_HOLD_EXPIRADO`, cuarentena administrativa, **cero folios espurios** (`cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`), y reserva permanece `EXPIRADA`.
+      - Detección de discrepancias de monto con preservación de cuarentena.
+      - Reembolsos soberanos y limpieza defensiva de datos de prueba.
+    - Suites previas sin regresión: 77 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 78/78 suites PASS — 2,380 checks PASS — 0 fallos (100%)**.
 

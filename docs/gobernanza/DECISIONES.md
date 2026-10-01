@@ -1917,6 +1917,44 @@ Aprobada en la microfase `WORDPRESS-1D` como arquitectura vinculante para la exp
    - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
    - Regresión transversal: 77 suites automatizadas, 2,290 checks, 0 fallos (100% PASS).
 
+### D-107 — Arquitectura Soberana de Pasarelas de Pago, Tres Ejes de Estado y Driver Culqi (PAGOS-1B)
+
+Aprobada en la microfase `PAGOS-1B` como arquitectura contractual vinculante para el dominio soberano de pagos y pasarelas de Camargo PMS.
+
+1. **Soberanía y Desacoplamiento de Proveedores (D-107.1):**
+   - El dominio financiero de Camargo PMS es la única fuente de verdad; las pasarelas externas (Culqi, Izipay, PayPal) son meros canales de cobro y conciliación subordinados.
+   - Todo adaptador implementa el contrato neutral `ProveedorPagoInterfaz` y opera exclusivamente mediante DTOs tipados agnósticos (`IntencionPagoSolicitud`, `IntencionPagoResultado`, `WebhookNotificacionResultado`, `ConsultaOrdenResultado`, `ConsultaTransaccionResultado`, `ReembolsoSolicitud`, `ReembolsoResultado`).
+   - El orquestador soberano `PagoServicio` centraliza la lógica de negocio, verificación de firmas, conciliación contable y transiciones atómicas.
+
+2. **Modelo de Tres Ejes de Estado Independientes (D-107.2):**
+   - Se supera la ambigüedad de estados planos mediante la separación explícita de tres dimensiones no interferentes en `pagos_transacciones_pasarela`:
+     - `estado_pago`: `INICIADO`, `PENDIENTE`, `PROCESANDO`, `APROBADO`, `FALLIDO`, `EXPIRADO`, `ANULADO`.
+     - `estado_conciliacion`: `PENDIENTE`, `CONCILIADO`, `DISCREPANCIA_MONTO`, `DISCREPANCIA_HOLD_EXPIRADO`, `DISCREPANCIA_MANUAL`.
+     - `estado_reembolso`: `NO_APLICA`, `PENDIENTE`, `PROCESANDO`, `REEMBOLSADO_PARCIAL`, `REEMBOLSADO_TOTAL`, `FALLIDO`.
+
+3. **Invariante Hotelero Inviolable: Pagos Tardíos y Holds Expirados (D-107.3):**
+   - Si un webhook confirma un pago aprobado externamente pero la reserva asociada ya se encuentra en estado `EXPIRADA` (o su `expira_en` fue rebasado):
+     - La transacción de pasarela se actualiza a `estado_pago = APROBADO` y `estado_conciliacion = DISCREPANCIA_HOLD_EXPIRADO`.
+     - El dinero se coloca en **cuarentena administrativa** con su correspondiente auditoría.
+     - **Prohibición estricta de folios de contingencia espurios**: `cuenta_folio_id` y `pago_cuenta_id` permanecen estrictamente en `NULL`.
+     - La reserva **permanece inalterada en estado `EXPIRADA`** y ningún inventario liberado es re-bloqueado unilateralmente sin acción humana.
+
+4. **Idempotencia y Trazabilidad de Webhooks (D-107.4):**
+   - La tabla `pagos_webhooks_eventos` registra de forma atómica cada notificación entrante con su huella `cuerpo_hash` (SHA-256) y clave única `(proveedor, proveedor_evento_id)`.
+   - Eventos repetidos son interceptados de forma idempotente respondiendo confirmación exitosa de repetición (`reintento = true`) sin re-ejecutar imputaciones contables ni duplicar asientos en libro mayor.
+
+5. **Driver Culqi y Aritmética Exacta (D-107.5):**
+   - El adaptador `CulqiProveedor` implementa conversión exacta de unidades menores a mayores con `BCMath` (`PEN * 100` a céntimos enteros, y viceversa) sin pérdida de precisión ni redondeos en coma flotante.
+   - Valida firmas HMAC-SHA256 en webhooks y soporta cliente HTTP inyectable para testing y ambientes mockables.
+
+6. **Invariantes de Esquema y Gobernanza (D-107.6):**
+   - Migración `038_pagos_pasarelas.sql` consumida y aplicada; total de tablas relacionales asciende exactamente a **130** (`pagos_transacciones_pasarela`, `pagos_webhooks_eventos`).
+   - Ranura de migración `039` estrictamente LIBRE.
+   - Paridad sincronizada al 100% en `SQL/camargo_pms.sql` (Sección 42).
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Cierra formalmente la decisión pendiente **P-008 (Proveedor inicial de pagos: Culqi)**.
+   - Regresión transversal: 78 suites automatizadas, 2,380 checks, 0 fallos (100% PASS).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |
@@ -1926,6 +1964,6 @@ Aprobada en la microfase `WORDPRESS-1D` como arquitectura vinculante para la exp
 | P-005 | Moneda, redondeo e impuestos | Antes de tarifas/caja | **Cerrada en D-069** |
 | P-006 | Estrategia de concurrencia para disponibilidad | Antes de reservas | **Cerrada en D-067** |
 | P-007 | Librería PDF | Antes de contratos/recibos | **Cerrada en D-079** |
-| P-008 | Proveedor inicial de pagos | Antes de integración de pagos | Pendiente |
+| P-008 | Proveedor inicial de pagos | Antes de integración de pagos | **Cerrada en D-107 (Culqi)** |
 | P-009 | Retención de datos y auditoría | Antes de producción | Pendiente |
 

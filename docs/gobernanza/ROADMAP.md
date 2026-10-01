@@ -549,9 +549,19 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - `POST /api/v1/reservas`: creación de hold comercial atómico en estado `PENDIENTE`. Exige cabecera `Idempotency-Key` (8-128 chars) y scope `reservas.hold`. Bloquea atómicamente noches en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`) con orden determinista (D-067). Asigna actor técnico de auditoría (D-061: `ACTOR != USUARIO`). Replay determinista ante reenvío y HTTP 409 ante colisiones concurrentes.
     - `GET /api/v1/reservas/{codigo}`: consulta pública segura por código de reserva. Ocultación total de identificadores relacionales y notas internas, enmascarando nombre y datos de contacto (Directiva D-106.3). Scope `reservas.leer`.
     - Preflights `OPTIONS` con HTTP 204 No Content para todas las rutas.
-    - Cero DDL (128 tablas relacionales preservadas, ranura 038 libre, `admin-dashboard/` 100% inmutable).
     - Suite de pruebas: `tests/test_wordpress_1d.php` (95/95 checks PASS).
-    - Estado: Implementada y Validada (77/77 suites globales PASS, 2,290 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `6977c7725b61a54235f2beb686a8e066def03686`, 77/77 suites globales PASS, 2,290 checks, 0 fallos).
+  - **PAGOS-1B:** Infraestructura Soberana del Dominio de Pagos, Adaptador Desacoplado y Driver Culqi:
+    - Dominio soberano e independiente de pasarelas: contratos neutrales (`ProveedorPagoInterfaz`), DTOs tipados agnósticos y registro desacoplado en `FabricaProveedoresPago` (CULQI, IZIPAY, PAYPAL).
+    - Driver `CulqiProveedor`: API Culqi v2, conversión exacta en céntimos `PEN * 100` con `BCMath`, verificación HMAC-SHA256 y cliente HTTP inyectable.
+    - Modelo de Tres Ejes de Estado Independientes (`estado_pago`, `estado_conciliacion`, `estado_reembolso`) en `pagos_transacciones_pasarela`.
+    - Idempotencia y trazabilidad de eventos entrantes en `pagos_webhooks_eventos` con hash SHA-256 (`cuerpo_hash`) y mitigación de duplicados.
+    - Orquestador `PagoServicio`: creación de intenciones de pago, webhook processing con bloqueos ACID pesimistas, confirmación de reserva, generación de cargos y aplicación contable en folios.
+    - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: Pagos tardíos tras expiración del hold registran dinero externo en `APROBADO`, estado de conciliación `DISCREPANCIA_HOLD_EXPIRADO`, cuarentena administrativa, **cero folios espurios** (`cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`), y reserva permanece `EXPIRADA`.
+    - Transaccionalidad coordinada en `CuentaFolioServicio` (`$debeCerrarTx = !$this->pdo->inTransaction()`).
+    - DDL autorizado: Migración `038_pagos_pasarelas.sql` aplicada (130 tablas relacionales consolidadas, ranura 039 libre).
+    - Suite de pruebas: `tests/test_pagos_1b.php` (90/90 checks PASS).
+    - Estado: Implementada y Validada (78/78 suites globales PASS, 2,380 checks, 0 fallos).
 
 ## Dominio operativo
 

@@ -4,6 +4,37 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase PAGOS-1B — Infraestructura Soberana del Dominio de Pagos, Adaptador Desacoplado y Driver Culqi
+
+- **Infraestructura Relacional del Dominio de Pagos (Migración 038):**
+  - Creación de tabla `pagos_transacciones_pasarela`: persiste la intención y ciclo de vida de cobro con identificadores separados de proveedor (`proveedor_orden_id`, `proveedor_transaccion_id`, `proveedor_referencia`), tres ejes de estado independientes (`estado_pago`, `estado_conciliacion`, `estado_reembolso`), montos exactos `DECIMAL(15,2)` en moneda 'PEN', metadatos estructurados y motivos de discrepancia/reembolso.
+  - Creación de tabla `pagos_webhooks_eventos`: registro atómico de cada notificación entrante con su hash SHA-256 (`cuerpo_hash`), payload íntegro (`payload_raw`), cabeceras HTTP y clave única `(proveedor, proveedor_evento_id)`.
+  - Total de tablas relacionales en base de datos asciende a **130 tablas**. Ranura `039` estrictamente libre. Paridad total en `SQL/camargo_pms.sql` (Sección 42).
+- **Modelos de Dominio y Repositorios:**
+  - `PagoTransaccionPasarela` y `PagoWebhookEvento`: entidades tipadas con métodos de comprobación de estado y serialización.
+  - `PagoTransaccionPasarelaRepositorio`: operaciones CRUD, generación de código secuencial `TX-PAG-XXXXXX` y bloqueo pesimista `SELECT ... FOR UPDATE`.
+  - `PagoWebhookEventoRepositorio`: persistencia idempotente con captura de duplicados, trazabilidad de estados y auditoría de reintentos.
+- **Contrato Neutral y DTOs Neutrales (`ProveedorPagoInterfaz`):**
+  - Desacoplamiento total del proveedor mediante DTOs: `IntencionPagoSolicitud`, `IntencionPagoResultado`, `WebhookNotificacionResultado`, `ConsultaOrdenResultado`, `ConsultaTransaccionResultado`, `ReembolsoSolicitud`, `ReembolsoResultado`.
+  - Registro dinámico extensible en `FabricaProveedoresPago` con validación previa de soporte (CULQI, IZIPAY, PAYPAL).
+- **Adaptador y Driver Culqi (`CulqiProveedor`):**
+  - Integración oficial de API Culqi v2 (`/orders`, `/charges`, `/refunds`).
+  - Conversión aritmética exacta sin coma flotante: Soles a céntimos `PEN * 100` y viceversa mediante `BCMath`.
+  - Validación de webhooks, verificación de firmas HMAC-SHA256 y cliente HTTP inyectable para testing y ambientes mockables.
+- **Orquestador Soberano de Pagos (`PagoServicio`):**
+  - Generación de intenciones de pago vinculadas a reservas en hold (`PENDIENTE`).
+  - Procesamiento transaccional de webhooks con resolución determinista de eventos de aprobación, fallo y expiración.
+  - Confirmación atómica de reservas: transición a `CONFIRMADA`, creación de folios contables (`cuentas_folios`), generación de cargos devengados de alojamiento (`cargos_cuenta`), imputación de cobros en libro de caja (`pagos_cuenta`) y aplicaciones de pago (`aplicaciones_pago`).
+  - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: Pagos recibidos tras la expiración del hold registran dinero externo en `APROBADO` con `DISCREPANCIA_HOLD_EXPIRADO`, cuarentena administrativa, **cero folios espurios** (`cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`), y reserva permanece `EXPIRADA`.
+  - Detección de discrepancias en importes cobrados (`DISCREPANCIA_MONTO`) y reembolsos soberanos.
+- **Transaccionalidad en Servicios Financieros (`CuentaFolioServicio`):**
+  - Métodos `registrarPago`, `aplicarPago`, `reversarPago` y `registrarDevolucion` adaptados para coordinar transacciones anidadas (`$debeCerrarTx = !$this->pdo->inTransaction()`), permitiendo atomicidad total en el orquestador sin prematuras confirmaciones ni excepciones por transacción activa.
+- **Gobernanza y Regresión Integral:**
+  - `admin-dashboard/` 100% intacto y de solo lectura.
+  - Suite de regresión integral: 78 suites / 2,380 checks automatizados (100% PASS).
+
+## Baseline oficial 6977c77 (WORDPRESS-1D)
+
 ### Microfase WORDPRESS-1D — Exposición de Endpoints de Negocio (Disponibilidad, Cotizaciones y Reservas Directas)
 
 - **Controlador RESTful `ApiReservaControlador`:**

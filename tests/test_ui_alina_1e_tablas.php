@@ -175,8 +175,8 @@ try {
     $mig034Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
     assertCheck($mig034Presente, "Migración 034_agregar_foto_personas.sql presente en BD");
 
-    $migraciones038 = glob(dirname(__DIR__) . '/SQL/migraciones/038_*.sql');
-    assertCheck(empty($migraciones038), "Slot de migración 038 estrictamente LIBRE en SQL/migraciones/ (0 DDL no autorizado)");
+    $migraciones039 = glob(dirname(__DIR__) . '/SQL/migraciones/039_*.sql');
+    assertCheck(empty($migraciones039), "Slot de migración 039 estrictamente LIBRE en SQL/migraciones/ (0 DDL no autorizado)");
 } catch (Exception $e) {
     assertCheck(false, "Error al verificar BD: " . $e->getMessage());
 }

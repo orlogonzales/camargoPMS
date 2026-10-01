@@ -281,7 +281,10 @@ class CuentaFolioServicio
         }
         $montoNorm = bcadd($montoTotal, '0.00', 2);
 
-        $this->pdo->beginTransaction();
+        $debeCerrarTx = !$this->pdo->inTransaction();
+        if ($debeCerrarTx) {
+            $this->pdo->beginTransaction();
+        }
         try {
             $folio = $this->folioRepo->obtenerPorId($folioId, true);
             if ($folio === null) {
@@ -365,10 +368,12 @@ class CuentaFolioServicio
                 $this->cajaRepo->crearMovimientoBancario($movBanco);
             }
 
-            $this->pdo->commit();
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
             return $this->pagoRepo->obtenerPorId($pagoId);
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
             throw $e;
@@ -391,7 +396,10 @@ class CuentaFolioServicio
         }
         $montoNorm = bcadd($montoAplicar, '0.00', 2);
 
-        $this->pdo->beginTransaction();
+        $debeCerrarTx = !$this->pdo->inTransaction();
+        if ($debeCerrarTx) {
+            $this->pdo->beginTransaction();
+        }
         try {
             // Bloqueo pesimista ordenado de pago y cargo para prevenir deadlocks en concurrencia
             $pago = $this->pagoRepo->obtenerPorId($pagoId, true);
@@ -446,10 +454,12 @@ class CuentaFolioServicio
             $this->pagoRepo->actualizarMontoAplicado($pagoId, $montoNorm);
             $this->cargoRepo->actualizarMontoAplicado($cargoId, $montoNorm);
 
-            $this->pdo->commit();
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
             return $this->aplicacionRepo->obtenerPorId($id);
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
             throw $e;
@@ -467,7 +477,10 @@ class CuentaFolioServicio
             throw new MontoInvalidoExcepcion('motivo_reverso', 'El motivo de reverso es obligatorio');
         }
 
-        $this->pdo->beginTransaction();
+        $debeCerrarTx = !$this->pdo->inTransaction();
+        if ($debeCerrarTx) {
+            $this->pdo->beginTransaction();
+        }
         try {
             $pago = $this->pagoRepo->obtenerPorId($pagoId, true);
             if ($pago === null) {
@@ -489,10 +502,12 @@ class CuentaFolioServicio
             // Marcar pago como REVERSADO
             $this->pagoRepo->reversar($pagoId, $motivo, $actorIdFinal, $ahoraUtc);
 
-            $this->pdo->commit();
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
             return $this->pagoRepo->obtenerPorId($pagoId);
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
             throw $e;
@@ -523,7 +538,10 @@ class CuentaFolioServicio
             throw new MontoInvalidoExcepcion('motivo', 'El motivo de devolución es obligatorio');
         }
 
-        $this->pdo->beginTransaction();
+        $debeCerrarTx = !$this->pdo->inTransaction();
+        if ($debeCerrarTx) {
+            $this->pdo->beginTransaction();
+        }
         try {
             $pago = $this->pagoRepo->obtenerPorId($pagoOrigenId, true);
             if ($pago === null) {
@@ -608,10 +626,12 @@ class CuentaFolioServicio
                 $this->cajaRepo->crearMovimientoBancario($movBanco);
             }
 
-            $this->pdo->commit();
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
             return $this->devolucionRepo->obtenerPorId($devId);
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
             throw $e;
