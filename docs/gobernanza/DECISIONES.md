@@ -2063,6 +2063,41 @@ Aprobada en la microfase `REPORTES-1A` como base y autoridad soberana de cálcul
    - Directorio de referencia Alina `admin-dashboard/` 100% inalterado y de solo lectura.
    - Cobertura de regresión transversal: 81 suites automatizadas (todas en verde, 100% PASS), 2,597 checks superados.
 
+### D-111 — Interfaz Alina, ApexCharts, Tablas y Exportación Analítica (REPORTES-1B)
+
+Aprobada en la microfase `REPORTES-1B` como arquitectura vinculante para la capa de presentación gerencial, visualización interactiva de series temporales con ApexCharts, tablas operativas y exportación analítica estructurada en Camargo PMS.
+
+1. **Fidelidad al Sistema de Diseño Alina y Ergonomía Visual (D-111.1):**
+   - Construcción visual soberana sobre la plantilla base canónica `admin-dashboard/alina/template/blank.html`:
+     - Fila ejecutiva superior con 5 tarjetas métricas de altura uniforme mediante `.equal-card.shadow-sm.border-0.b-r-20` (Ocupación Media %, ADR Promedio en S/, RevPAR Promedio en S/, TRevPAR Promedio en S/ e Ingreso Neto de Alojamiento en S/).
+     - Selector de rango temporal exclusivamente mediante Flatpickr Range Picker con atributo nativo `data-provider="rangepicker"` y vinculación bidireccional mediante `data-target-inicio="#filtro-analitica-desde"` y `data-target-fin="#filtro-analitica-hasta"`. Prohibición absoluta de selectores nativos `input[type="date"]`.
+     - Migas de pan, selectores de propiedad y botones de acción rápida con iconografía homogénea de Font Awesome 6 Free.
+
+2. **Soberanía Analítica Backend y Desacoplamiento de ApexCharts (D-111.2):**
+   - El controlador frontend (`public/assets/js/camargo-reportes-analitica.js`) actúa como mero consumidor y renderizador de datos preparados: PROHIBIDO recalcular Ocupación, ADR, RevPAR, ingresos o distribuciones en JavaScript.
+   - Integración nativa de la librería local Alina ApexCharts (`public/assets/vendor/apexcharts/apexcharts.min.js` y `apexcharts.css`):
+     - **Gráfico de Serie Temporal Continua:** Gráfico multi-eje responsivo que combina Área / Línea con eje Y derecho para Ocupación (%) y eje Y izquierdo para ADR y RevPAR (PEN), con tooltips interactivos que distinguen pernoctaciones auditadas en Night Audit de proyecciones vivas.
+     - **Gráfico Donut de Canales:** Gráfico de distribución porcentual de noches y cuota de ingresos que excluye automáticamente los feeds externos de solo disponibilidad.
+
+3. **Homologación de Tablas Alina y Salvaguarda Visual iCalendar (D-111.3):**
+   - Todas las tablas del módulo (`tabla-rendimiento-canales`, `tabla-serie-temporal`, `tabla-devengado-conceptos`, `tabla-percibido-medios`) cumplen el estándar Alina: `.table.table-bordered.table-striped.table-hover.align-middle` encapsuladas en contenedores `.table-responsive`.
+   - Distinción visual explícita entre producción comercial demostrable (insignias `bg-light-success` / `bg-light-primary`) y bloqueos operativos de feeds iCalendar externos (`bg-light-warning`).
+   - Inclusión obligatoria de banner de advertencia (`#alerta-ical-salvaguarda`) que certifica que los bloqueos externos no acreditan facturación comercial ni distorsionan el ADR hotelero.
+   - Presentación dual y clara de la contabilidad devengada (Accrual) vs percibida (Cash) con cálculo de la brecha patrimonial de recaudación.
+
+4. **Exportación CSV Analítica Oficial y Sanitización (D-111.4):**
+   - Endpoint dedicado `GET /reportes/analitica/exportar/csv` que produce un flujo descargable oficial con Content-Type `text/csv; charset=UTF-8` y Content-Disposition `attachment; filename="reporte_analitica_*.csv"`.
+   - Inclusión obligatoria de marca de orden de bytes (BOM UTF-8 `\xEF\xBB\xBF`) para compatibilidad universal con Microsoft Excel.
+   - Sanitización preventiva de celdas ante inyección de fórmulas de hoja de cálculo (`=`, `+`, `-`, `@`).
+   - Secciones estructuradas completas: Metadatos del periodo, Resumen Ejecutivo (KPIs), Rendimiento por Canal, Resumen Financiero Dual, Serie Temporal Diaria y Nota de Salvaguarda iCalendar.
+
+5. **Invariantes de Esquema, Ranura 039 Libre y Regresión (D-111.5):**
+   - Cero DDL: No se introduce migración en la ranura 039; las estructuras de datos preexistentes son plenamente suficientes.
+   - La base de datos relacional se mantiene estrictamente en **130 tablas**.
+   - Ranura de migración `039` estrictamente LIBRE.
+   - Directorio de referencia Alina `admin-dashboard/` y directorio `SQL/` 100% inalterados y de solo lectura.
+   - Cobertura de regresión transversal: 82 suites automatizadas (todas en verde, 100% PASS), 23,527 checks superados.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

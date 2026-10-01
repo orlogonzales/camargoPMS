@@ -1219,6 +1219,20 @@ $enrutador->get('/reportes/exportar/pdf', [\CamargoPMS\Controladores\ReporteCont
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.exportar'),
 ]);
 
+// Analítica Gerencial y Rendimiento por Canal (REPORTES-1B)
+$enrutador->get('/reportes/analitica', [\CamargoPMS\Controladores\ReporteControlador::class, 'analitica'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.ver'),
+]);
+$enrutador->get('/reportes/analitica/datos', [\CamargoPMS\Controladores\ReporteControlador::class, 'analiticaJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.ver'),
+]);
+$enrutador->get('/api/reportes/analitica', [\CamargoPMS\Controladores\ReporteControlador::class, 'analiticaJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.ver'),
+]);
+$enrutador->get('/reportes/analitica/exportar/csv', [\CamargoPMS\Controladores\ReporteControlador::class, 'analiticaExportarCsv'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('reportes.ver'),
+]);
+
 // Rutas de Monitoreo y Revocación Administrativa de Sesiones (SESIONES-1 / D-088)
 $enrutador->get('/seguridad/sesiones', [\CamargoPMS\Controladores\SesionControlador::class, 'mostrarConsolaSesiones'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('sesiones.ver'),

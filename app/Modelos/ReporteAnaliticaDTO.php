@@ -49,6 +49,7 @@ class ReporteAnaliticaDTO
     public function obtenerPropiedadNombre(): ?string { return $this->propiedadNombre; }
     public function obtenerTotalDias(): int { return $this->totalDias; }
     public function obtenerResumenKpis(): array { return $this->resumenKpis; }
+    public function obtenerKpis(): array { return $this->resumenKpis; }
     public function obtenerDesgloseIngresosDevengados(): array { return $this->desgloseIngresosDevengados; }
     public function obtenerDesgloseIngresosPercibidos(): array { return $this->desgloseIngresosPercibidos; }
     /** @return array<RendimientoCanalDTO> */
@@ -57,6 +58,7 @@ class ReporteAnaliticaDTO
     /** @return array<PuntoSerieTemporalDTO> */
     public function obtenerSerieTemporal(): array { return $this->serieTemporal; }
     public function obtenerMonedaCodigo(): string { return $this->monedaCodigo; }
+    public function obtenerMoneda(): string { return $this->monedaCodigo; }
     public function obtenerGeneradoEn(): ?string { return $this->generadoEn; }
 
     /**

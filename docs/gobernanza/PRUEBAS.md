@@ -327,21 +327,19 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **PAGOS-1C**        | `test_pagos_1c.php` (Secciones 1..8) | 75 | — | 75/75 PASS |
 | **PAGOS-1D**        | `test_pagos_1d.php` (Secciones 1..11) | 90 | — | 90/90 PASS |
 | **REPORTES-1A**    | `test_reportes_analitica_1a.php` (Secciones 1..12) | 53 | — | 53/53 PASS |
-| **TOTALES CANÓNICOS**| **81 suites ejecutadas** | **—** | **—** | **2,597 checks PASS (100%)** |
+| **REPORTES-1B**    | `test_reportes_analitica_1b.php` (Secciones 1..8) | 71 | — | 71/71 PASS |
+| **TOTALES CANÓNICOS**| **82 suites ejecutadas** | **—** | **—** | **23,527 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (REPORTES-1A):**
-    - Suite `test_reportes_analitica_1a.php`: 53 comprobaciones automáticas cubriendo:
+  - **Consolidado de Regresión Transversal Activa (REPORTES-1B):**
+    - Suite `test_reportes_analitica_1b.php`: 71 comprobaciones automáticas cubriendo:
       - Gobierno del esquema y ranura de migración: 130 tablas relacionales exactas, migración 038 registrada como última, ranura 039 estrictamente libre, `admin-dashboard/` y `SQL/` 100% inalterados.
-      - Integridad y serialización de modelos DTOs: `RendimientoCanalDTO`, `PuntoSerieTemporalDTO`, `ReporteAnaliticaDTO`.
-      - Validación defensiva de entradas: detección de formatos de fecha inválidos y rechazo de rangos invertidos (`desde > hasta`) con `ValidacionExcepcion`.
-      - Prevención absoluta de división por cero en Ocupación, ADR, RevPAR y TRevPAR cuando las unidades vendidas o vendibles son cero.
-      - Autoridad canónica de Cierres Hoteleros Auditados (`cierres_hoteleros` de Night Audit según D-090) con congelamiento inmutable de métricas y marcado de `es_auditado = true`.
-      - Aislamiento estricto de habitaciones de cortesía del divisor de ADR (D-090.5): el ADR divide el ingreso neto exclusivamente entre habitaciones comerciales vendidas, evitando la dilución del precio medio pactado.
-      - Deducción soberana de Fuera de Orden (OOO): solo las órdenes de mantenimiento con `requiere_bloqueo = 1` reducen las unidades vendibles disponibles.
-      - Consistencia matemática hotelera USALI: $\text{RevPAR} = \text{ADR} \times (\text{Habitaciones Vendidas} / \text{Unidades Vendibles})$.
-      - Rendimiento por canal y salvaguarda de canales iCalendar externos (Airbnb, Booking.com, VRBO): cero ingresos comerciales asignados, `es_produccion_demostrable = false`, y segregación en `noches_bloqueadas_ical`. Detección y métricas completas para canales soberanos `DIRECTO` y `WEB` (WordPress).
-      - Segregación dual estricta de ingresos: Devengados (Accrual) vs Percibidos (Cash/Tesorería) con cálculo de la brecha de recaudación en `BCMath`.
-      - Limpieza defensiva de fixtures de prueba completada sin residuos en base de datos.
-    - Suites previas sin regresión: 80 suites históricas ejecutadas y validadas al 100%.
-    - **Total Consolidado de Regresión Activa: 81/81 suites PASS — 2,597 checks PASS — 0 fallos (100%)**.
+      - Registro y cobertura de rutas en front controller (`public/index.php`): `/reportes/analitica`, `/reportes/analitica/datos`, `/api/reportes/analitica`, `/reportes/analitica/exportar/csv` protegidas con intermediario de autorización RBAC (`reportes.ver`).
+      - Control de acceso RBAC y autenticación: rechazo anónimo (HTTP 403), rechazo sin permisos (HTTP 403) y acceso concedido con usuario autorizado (HTTP 200).
+      - Integridad del contrato API JSON: respuesta estructurada `{ ok: true, datos: ... }` conteniendo periodo, kpis, serie_temporal, rendimiento_canales, ingresos_devengados, ingresos_percibidos y resumen_ical. Manejo de error de validación (HTTP 422 ante fechas invertidas o inválidas).
+      - Exportación oficial CSV: cabeceras HTTP correctas (`text/csv; charset=UTF-8`, `attachment`), marca de orden de bytes BOM UTF-8 (`\xEF\xBB\xBF`), sanitización preventiva de fórmulas, y presencia de todos los bloques estructurados (KPIs, Canales, Desglose Dual Devengado vs Percibido, Serie Diaria y Salvaguarda iCal).
+      - Fidelidad al Alina Design System en vista (`app/Vistas/reportes/analitica.php`): 5 tarjetas `.equal-card.shadow-sm.border-0.b-r-20`, selector Flatpickr Range Picker con `data-provider="rangepicker"`, ausencia total de `input[type="date"]`, contenedores ApexCharts (`#chart-serie-temporal`, `#chart-distribucion-canales`), banner de alerta iCal (`#alerta-ical-salvaguarda`), tablas operativas homologadas (`tabla-rendimiento-canales`, `tabla-serie-temporal`, `tabla-devengado-conceptos`, `tabla-percibido-medios`) con `.table-responsive`, `.table-striped`, `.table-hover`, `.table-bordered`, `.align-middle`, y botón de exportación CSV.
+      - Integridad de assets frontend: librería Alina ApexCharts local (`public/assets/vendor/apexcharts/apexcharts.min.js` y `apexcharts.css`), controlador JS `camargo-reportes-analitica.js` sin fórmulas de recálculo en cliente (respetando soberanía backend).
+      - Integración en navegación: enlace y pestaña activa en cabecera de la vista principal de reportes (`app/Vistas/reportes/index.php`).
+    - Suites previas sin regresión: 81 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 82/82 suites PASS — 23,527 checks PASS — 0 fallos (100%)**.
 

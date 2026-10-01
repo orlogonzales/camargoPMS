@@ -592,7 +592,25 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - Cero DDL: Base de datos consolidada en 130 tablas relacionales, ranura 039 estrictamente libre.
     - `admin-dashboard/` y `SQL/` 100% inalterados.
     - Suite de pruebas: `tests/test_reportes_analitica_1a.php` (53/53 checks PASS).
-    - Estado: Implementada y Validada (81/81 suites globales PASS, 2,597 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `2483ac2c59629f108a508bccdcf5ef2daeab94ee`, 81/81 suites globales PASS, 2,597 checks, 0 fallos).
+  - **REPORTES-1B:** Interfaz Alina, ApexCharts, Tablas y Exportación Analítica:
+    - Controlador gerencial `ReporteControlador` con acciones `analitica()`, `analiticaJson()` y `analiticaExportarCsv()`.
+    - Endpoints protegidos en `public/index.php` con intermediario de autorización RBAC (`reportes.ver`):
+      - `GET /reportes/analitica`: Renderizado de vista ejecutiva bajo Alina Design System (`blank.html`).
+      - `GET /reportes/analitica/datos` y `GET /api/reportes/analitica`: Endpoints JSON asíncronos para consumo frontend.
+      - `GET /reportes/analitica/exportar/csv`: Descarga oficial en formato CSV con BOM UTF-8 y sanitización de celdas.
+    - Vista ejecutiva `app/Vistas/reportes/analitica.php`:
+      - 5 tarjetas métricas de cabecera `.equal-card.shadow-sm.border-0.b-r-20` (Ocupación Media %, ADR, RevPAR, TRevPAR e Ingreso Neto de Alojamiento).
+      - Selector de fechas Flatpickr Range Picker obligatorio (`data-provider="rangepicker"`, `data-target-inicio="#filtro-analitica-desde"`, `data-target-fin="#filtro-analitica-hasta"`, CERO `input[type="date"]`).
+      - Gráficos interactivos ApexCharts: serie temporal continua multi-eje (Ocupación % en eje derecho, ADR/RevPAR en eje izquierdo con distinción de Night Audit vs Proyección) y gráfico donut de distribución de canales comerciales.
+      - Tablas homologadas Alina (`.table.table-bordered.table-striped.table-hover.align-middle` en `.table-responsive`) para rendimiento por canal y serie temporal diaria.
+      - Salvaguarda visual y banner de gobernanza iCalendar (`#alerta-ical-salvaguarda`): distinción estricta de canales comerciales demostrables vs bloqueos iCal (0.00 PEN).
+      - Desglose contable dual: sección de ingresos devengados (Accrual) vs ingresos percibidos (Cash/Tesorería) con cómputo de la brecha patrimonial de recaudación.
+    - Controlador Frontend `public/assets/js/camargo-reportes-analitica.js`: Vanilla JS moderno sin jQuery, consume endpoints y renderiza ApexCharts sin recalcular fórmulas matemáticas.
+    - Exportación CSV estructurada en `ReporteServicio::exportarCSV('ANALITICA', ...)` con BOM UTF-8, sanitización anti-fórmulas y bloques estructurados para KPIs, Canales, Resumen Dual, Serie Diaria y Salvaguarda iCal.
+    - Cero DDL: 130 tablas relacionales consolidadas, ranura 039 estrictamente libre, `admin-dashboard/` y `SQL/` 100% inalterados.
+    - Suite de pruebas: `tests/test_reportes_analitica_1b.php` (71/71 checks PASS).
+    - Estado: Implementada y Validada (82/82 suites globales PASS, 23,527 checks, 0 fallos).
 
 ## Dominio operativo
 

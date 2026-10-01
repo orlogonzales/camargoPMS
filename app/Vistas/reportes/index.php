@@ -32,7 +32,9 @@ declare(strict_types=1);
                         </p>
                     </div>
                 </div>
-                <div class="mt-2 mt-md-0 d-flex gap-2">
+                    <a href="<?= url_ruta('/reportes/analitica') ?>" class="btn btn-outline-primary btn-sm">
+                        <i class="fa-solid fa-chart-line me-1"></i> Analítica & Canales
+                    </a>
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-exportar-csv-activo">
                         <i class="fa-solid fa-file-csv me-1 text-success"></i> Exportar CSV
                     </button>
@@ -48,6 +50,11 @@ declare(strict_types=1);
             <!-- Navegación por Pestañas (Tabs) -->
             <div class="card-body p-0">
                 <ul class="nav nav-tabs px-3 pt-2 bg-light border-bottom" id="reportesTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link f-w-600 text-primary" href="<?= url_ruta('/reportes/analitica') ?>">
+                            <i class="fa-solid fa-chart-pie me-1 text-primary"></i> Analítica & Canales <span class="badge bg-light-primary text-primary ms-1 f-s-10">D-110</span>
+                        </a>
+                    </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active f-w-600" id="tab-diario-btn" data-bs-toggle="tab" data-bs-target="#tab-diario" type="button" role="tab">
                             <i class="fa-solid fa-calendar-day me-1 text-primary"></i> Reporte Diario Gerencial (MDR)

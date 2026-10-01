@@ -380,4 +380,140 @@ class ReporteControlador
             return Respuesta::json(['ok' => false, 'mensaje' => 'Error al exportar PDF: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Renderiza la vista del Panel de Analítica Gerencial y Rendimiento por Canal (GET /reportes/analitica).
+     */
+    public function analitica(): Respuesta
+    {
+        SesionServicio::iniciarSesionPhp();
+
+        $usuarioActual = $this->sesionServicio->validarSesionActual();
+        $usuarioActualId = $usuarioActual !== null ? (int) $usuarioActual->obtenerId() : 0;
+
+        if (!$this->autorizacionServicio->puede($usuarioActualId, 'reportes.ver')) {
+            return new Respuesta($this->vista->renderizar('errores/error', [
+                'titulo' => '403 — Acceso denegado',
+                'codigo' => 403,
+                'mensaje' => 'No tiene permisos para consultar el módulo de analítica gerencial.',
+            ], 'error'), 403);
+        }
+
+        // Listar propiedades para el filtro
+        $propiedades = $this->propiedadRepo->listar(null, 'ACTIVO', null, 100, 0);
+        $propiedadesFormateadas = array_map(static function ($p) {
+            return [
+                'id' => (int) $p->obtenerId(),
+                'codigo' => $p->obtenerCodigo(),
+                'nombre' => $p->obtenerNombre(),
+                'zona_horaria' => $p->obtenerZonaHoraria(),
+            ];
+        }, $propiedades);
+
+        $tzCentral = (string) $this->configuracionServicio->obtener('operacion.zona_horaria_predeterminada', 'America/Lima');
+        $zonaHoraria = (!empty($propiedades) && $propiedades[0]->obtenerZonaHoraria())
+            ? $propiedades[0]->obtenerZonaHoraria()
+            : $tzCentral;
+        $dtHoy = new DateTimeImmutable('now', new DateTimeZone($zonaHoraria));
+        $fechaHasta = isset($_GET['fecha_hasta']) && trim((string) $_GET['fecha_hasta']) !== ''
+            ? trim((string) $_GET['fecha_hasta'])
+            : $dtHoy->format('Y-m-d');
+        $fechaDesde = isset($_GET['fecha_desde']) && trim((string) $_GET['fecha_desde']) !== ''
+            ? trim((string) $_GET['fecha_desde'])
+            : $dtHoy->format('Y-m-01');
+        $propiedadId = isset($_GET['propiedad_id']) && is_numeric($_GET['propiedad_id']) && (int) $_GET['propiedad_id'] > 0
+            ? (int) $_GET['propiedad_id']
+            : null;
+
+        // Generar reporte analítico inicial precargado (soberanía backend)
+        try {
+            $reporteAnalitico = $this->reporteServicio->generarReporteAnalitico($fechaDesde, $fechaHasta, $propiedadId);
+        } catch (Throwable $e) {
+            $fechaDesde = $dtHoy->format('Y-m-01');
+            $fechaHasta = $dtHoy->format('Y-m-d');
+            $reporteAnalitico = $this->reporteServicio->generarReporteAnalitico($fechaDesde, $fechaHasta, $propiedadId);
+        }
+
+        $capacidades = [
+            'puede_ver' => true,
+            'puede_exportar' => $this->autorizacionServicio->puede($usuarioActualId, 'reportes.exportar')
+                || $this->autorizacionServicio->puede($usuarioActualId, 'reportes.ver'),
+        ];
+
+        $datos = [
+            'titulo' => 'Camargo PMS — Analítica Gerencial & Rendimiento por Canal',
+            'categoriaActiva' => 'reportes',
+            'subcategoriaActiva' => 'reportes_analitica',
+            'migasPan' => [
+                ['etiqueta' => 'Panel', 'url' => url_ruta('/'), 'activo' => false],
+                ['etiqueta' => 'Reportes', 'url' => url_ruta('/reportes'), 'activo' => false],
+                ['etiqueta' => 'Analítica & Canales', 'url' => url_ruta('/reportes/analitica'), 'activo' => true],
+            ],
+            'capacidades' => $capacidades,
+            'propiedades' => $propiedadesFormateadas,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'propiedadId' => $propiedadId,
+            'reporteAnalitico' => $reporteAnalitico,
+            'csrf_token' => $this->csrfServicio->obtenerToken(),
+        ];
+
+        $html = $this->vista->renderizar('reportes/analitica', $datos, 'principal');
+
+        return new Respuesta($html, 200);
+    }
+
+    /**
+     * Endpoint API JSON: Analítica Gerencial y Rendimiento por Canal (GET /api/reportes/analitica).
+     */
+    public function analiticaJson(): Respuesta
+    {
+        SesionServicio::iniciarSesionPhp();
+
+        $usuarioActual = $this->sesionServicio->validarSesionActual();
+        $usuarioActualId = $usuarioActual !== null ? (int) $usuarioActual->obtenerId() : 0;
+
+        if (!$this->autorizacionServicio->puede($usuarioActualId, 'reportes.ver')) {
+            return Respuesta::json(['ok' => false, 'mensaje' => 'Acceso denegado: permiso requerido reportes.ver.'], 403);
+        }
+
+        $fechaDesde = isset($_GET['fecha_desde']) && trim((string) $_GET['fecha_desde']) !== ''
+            ? trim((string) $_GET['fecha_desde'])
+            : date('Y-m-01');
+        $fechaHasta = isset($_GET['fecha_hasta']) && trim((string) $_GET['fecha_hasta']) !== ''
+            ? trim((string) $_GET['fecha_hasta'])
+            : date('Y-m-d');
+        $propiedadId = isset($_GET['propiedad_id']) && is_numeric($_GET['propiedad_id']) && (int) $_GET['propiedad_id'] > 0
+            ? (int) $_GET['propiedad_id']
+            : null;
+
+        try {
+            $dto = $this->reporteServicio->generarReporteAnalitico($fechaDesde, $fechaHasta, $propiedadId);
+
+            return Respuesta::json([
+                'ok' => true,
+                'datos' => $dto->aArreglo(),
+            ], 200);
+        } catch (ValidacionExcepcion $e) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => $e->getMessage(),
+                'errores' => $e->obtenerErrores(),
+            ], 422);
+        } catch (Throwable $e) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => 'Error al generar la Analítica Gerencial: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Descarga del reporte analítico en formato CSV (GET /reportes/analitica/exportar/csv).
+     */
+    public function analiticaExportarCsv(): Respuesta
+    {
+        $_GET['tipo'] = 'ANALITICA';
+        return $this->exportarCsv();
+    }
 }

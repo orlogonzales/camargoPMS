@@ -4,6 +4,34 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase REPORTES-1B — Interfaz Alina, ApexCharts, Tablas y Exportación Analítica
+
+- **Superficie HTTP, Enrutamiento y Controlador Gerencial (`ReporteControlador`):**
+  - Implementación de `GET /reportes/analitica`: Renderizado de la vista ejecutiva con precarga soberana de datos en SSR bajo Alina Design System (`blank.html`).
+  - Implementación de `GET /reportes/analitica/datos` y `GET /api/reportes/analitica`: Endpoints JSON asíncronos que transportan el DTO sin recálculos en cliente.
+  - Implementación de `GET /reportes/analitica/exportar/csv`: Descarga oficial estructurada con UTF-8 BOM, sanitización de celdas y cabeceras attachment.
+  - Protección estricta en front controller (`public/index.php`) con intermediario de autorización y permisos RBAC (`reportes.ver`).
+- **Vista Analítica Ejecutiva Alina (`app/Vistas/reportes/analitica.php`):**
+  - Fila superior de 5 tarjetas métricas `.equal-card.shadow-sm.border-0.b-r-20` (Ocupación Media %, ADR, RevPAR, TRevPAR, Ingreso Neto).
+  - Selector de fechas con Flatpickr Range Picker obligatorio (`data-provider="rangepicker"`, `data-target-inicio`, `data-target-fin`, CERO `input[type="date"]`).
+  - Gráficos interactivos ApexCharts: serie temporal multi-eje (área/línea con Ocupación a la derecha y ADR/RevPAR a la izquierda, indicación Night Audit vs Proyección) y gráfico donut de distribución de canales comerciales.
+  - Tablas operativas homologadas (`.table.table-bordered.table-striped.table-hover.align-middle` en `.table-responsive`) para rendimiento por canal y serie temporal diaria.
+  - Salvaguarda visual iCalendar: distinción explícita de canales comerciales demostrables vs bloqueos iCal (0.00 PEN), con banner de gobernanza explicativo.
+  - Desglose contable dual: sección de ingresos devengados (Accrual) vs ingresos percibidos (Cash/Tesorería) con cómputo de la brecha patrimonial de recaudación.
+- **Controlador Frontend Soberano (`public/assets/js/camargo-reportes-analitica.js`):**
+  - Vanilla JS ES6+ moderno sin jQuery: consume endpoints JSON y renderiza ApexCharts sin recalcular fórmulas.
+- **Exportación CSV Estructurada en Servicio (`ReporteServicio::exportarCSV('ANALITICA', ...)`):**
+  - Generación de flujo descargable con BOM UTF-8, sanitización preventiva contra inyección de fórmulas CSV (`=`, `+`, `-`, `@`), y bloques estructurados para KPIs, Canales, Devengado vs Percibido, Serie Diaria y Salvaguarda iCal.
+- **Integración de Navegación y Vendor Alina:**
+  - Inclusión de pestaña y botón "Analítica & Canales" en la vista principal de reportes (`app/Vistas/reportes/index.php`).
+  - Incorporación de assets nativos de Alina ApexCharts en `public/assets/vendor/apexcharts/` (JS y CSS), manteniendo `admin-dashboard/` intacto.
+- **Gobernanza y Pruebas:**
+  - Cero DDL: Ranura 039 estrictamente libre; 130 tablas relacionales consolidadas.
+  - Suite de pruebas dedicada `tests/test_reportes_analitica_1b.php` (71/71 checks, 100% PASS).
+  - Regresión transversal global: 82 suites ejecutadas (100% PASS), 23,527 checks en verde.
+
+## Baseline oficial 2483ac2 (REPORTES-1A)
+
 ### Microfase REPORTES-1A — Autoridad Analítica Backend, Fórmulas Soberanas y Rendimiento por Canal
 
 - **Modelos y DTOs Tipados de Analítica e Indicadores:**

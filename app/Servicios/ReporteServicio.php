@@ -767,6 +767,14 @@ class ReporteServicio
                 $this->escribirCsvAging($handle, $dto);
                 break;
 
+            case 'ANALITICA':
+                $fechaDesde = $filtros['fecha_desde'] ?? date('Y-m-01');
+                $fechaHasta = $filtros['fecha_hasta'] ?? date('Y-m-d');
+                $propiedadId = isset($filtros['propiedad_id']) && $filtros['propiedad_id'] !== '' ? (int) $filtros['propiedad_id'] : null;
+                $dto = $this->generarReporteAnalitico($fechaDesde, $fechaHasta, $propiedadId);
+                $this->escribirCsvReporteAnalitico($handle, $dto);
+                break;
+
             default:
                 fclose($handle);
                 throw new ValidacionExcepcion("Tipo de reporte [{$tipo}] no soportado para exportación CSV.", ['tipo_reporte' => "Tipo de reporte [{$tipo}] no soportado para exportación CSV."]);
@@ -930,6 +938,114 @@ class ReporteServicio
                 ]);
             }
         }
+    }
+
+    /**
+     * Escribe la estructura completa de Analítica Gerencial, Canales y Series Temporales en el CSV.
+     *
+     * @param resource $handle
+     */
+    private function escribirCsvReporteAnalitico($handle, ReporteAnaliticaDTO $dto): void
+    {
+        $this->escribirFilaCsv($handle, ['CAMARGO PMS — REPORTE ANALÍTICO GERENCIAL Y RENDIMIENTO POR CANAL']);
+        $this->escribirFilaCsv($handle, ['Periodo Desde', $dto->obtenerFechaDesde()]);
+        $this->escribirFilaCsv($handle, ['Periodo Hasta', $dto->obtenerFechaHasta()]);
+        $this->escribirFilaCsv($handle, ['Total Dias', (string) $dto->obtenerTotalDias()]);
+        $this->escribirFilaCsv($handle, ['Propiedad ID', $dto->obtenerPropiedadId() !== null ? (string) $dto->obtenerPropiedadId() : 'Todas las propiedades']);
+        $this->escribirFilaCsv($handle, ['Moneda Canonica', $dto->obtenerMonedaCodigo()]);
+        $this->escribirFilaCsv($handle, []);
+
+        $kpis = $dto->obtenerResumenKpis();
+        $this->escribirFilaCsv($handle, ['--- RESUMEN EJECUTIVO (KPIS CLAVE) ---']);
+        $this->escribirFilaCsv($handle, ['Ocupacion Media (%)', number_format($kpis['ocupacion_media_porcentaje'], 2, '.', '') . '%']);
+        $this->escribirFilaCsv($handle, ['ADR Promedio (PEN)', $kpis['adr_promedio']]);
+        $this->escribirFilaCsv($handle, ['RevPAR Promedio (PEN)', $kpis['revpar_promedio']]);
+        $this->escribirFilaCsv($handle, ['TRevPAR Promedio (PEN)', $kpis['trevpar_promedio']]);
+        $this->escribirFilaCsv($handle, ['Total Noches Disponibles', (string) ($kpis['noches_disponibles_totales'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Total Noches Ocupadas Fisicas', (string) ($kpis['noches_ocupadas_totales'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Total Habitaciones Vendidas', (string) ($kpis['habitaciones_vendidas_totales'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Total Habitaciones Cortesia', (string) ($kpis['habitaciones_cortesia_totales'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Total Fuera de Orden (OOO)', (string) ($kpis['unidades_ooo_totales'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Ingreso Alojamiento Neto Total (PEN)', $kpis['ingreso_alojamiento_neto'] ?? '0.00']);
+        $this->escribirFilaCsv($handle, []);
+
+        $this->escribirFilaCsv($handle, ['--- RENDIMIENTO POR CANAL Y DISTRIBUCIÓN COMERCIAL ---']);
+        $this->escribirFilaCsv($handle, [
+            'Codigo Canal', 'Nombre Canal', 'Tipo', 'Produccion Demostrable',
+            'Reservas Totales', 'Confirmadas', 'Canceladas', 'Tasa Cancelacion (%)',
+            'Noches Vendidas', 'Cuota Noches (%)', 'Ingresos Totales (PEN)', 'Cuota Ingresos (%)',
+            'ADR Medio (PEN)', 'ALOS (Noches)', 'Lead Time (Dias)', 'Noches Bloqueadas iCal'
+        ]);
+        foreach ($dto->obtenerRendimientoCanales() as $c) {
+            $this->escribirFilaCsv($handle, [
+                $c->obtenerCodigoCanal(),
+                $c->obtenerNombreCanal(),
+                $c->obtenerTipoCanal(),
+                $c->esProduccionDemostrable() ? 'SI' : 'NO (iCal Feed)',
+                (string) $c->obtenerReservasTotales(),
+                (string) $c->obtenerReservasConfirmadas(),
+                (string) $c->obtenerReservasCanceladas(),
+                number_format($c->obtenerTasaCancelacionPorcentaje(), 2, '.', '') . '%',
+                (string) $c->obtenerNochesVendidas(),
+                number_format($c->obtenerCuotaNochesPorcentaje(), 2, '.', '') . '%',
+                $c->obtenerIngresosTotales(),
+                number_format($c->obtenerCuotaIngresosPorcentaje(), 2, '.', '') . '%',
+                $c->obtenerAdrMedio(),
+                number_format($c->obtenerAlosNoches(), 2, '.', ''),
+                number_format($c->obtenerLeadTimeDias(), 1, '.', ''),
+                (string) $c->obtenerNochesBloqueadasIcal(),
+            ]);
+        }
+        $this->escribirFilaCsv($handle, []);
+
+        $dev = $dto->obtenerDesgloseIngresosDevengados();
+        $perc = $dto->obtenerDesgloseIngresosPercibidos();
+        $this->escribirFilaCsv($handle, ['--- RESUMEN FINANCIERO: DEVENGADO VS PERCIBIDO ---']);
+        $this->escribirFilaCsv($handle, ['Ingresos Devengados (Alojamiento Neto)', $dev['alojamiento_neto']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Devengados (Impuestos Alojamiento)', $dev['alojamiento_impuestos']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Devengados (Servicios Extras)', $dev['servicios_extras']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Devengados (Arrendamientos)', $dev['arrendamientos']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Devengados (Suministros y Consumos)', $dev['suministros_consumos']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Devengados (Penalidades)', $dev['penalidades']]);
+        $this->escribirFilaCsv($handle, ['TOTAL INGRESOS DEVENGADOS (PEN)', $dev['total_devengado']]);
+        $this->escribirFilaCsv($handle, []);
+        $this->escribirFilaCsv($handle, ['Ingresos Percibidos (Efectivo Caja)', $perc['efectivo_caja']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Percibidos (Transferencias Bancarias)', $perc['transferencias_banco']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Percibidos (Tarjetas POS)', $perc['tarjetas_pos']]);
+        $this->escribirFilaCsv($handle, ['Ingresos Percibidos (Pasarelas Neto Reembolsos)', $perc['pasarelas_neto']]);
+        $this->escribirFilaCsv($handle, ['TOTAL INGRESOS PERCIBIDOS (PEN)', $perc['total_percibido']]);
+        $this->escribirFilaCsv($handle, ['BRECHA DE RECAUDACION (DEVENGADO - PERCIBIDO) (PEN)', $perc['brecha_recaudacion']]);
+        $this->escribirFilaCsv($handle, []);
+
+        $this->escribirFilaCsv($handle, ['--- SERIE TEMPORAL DIARIA (OCUPACIÓN, ADR, REVPAR) ---']);
+        $this->escribirFilaCsv($handle, [
+            'Fecha', 'Unidades Fisicas', 'Fuera de Orden (OOO)', 'Vendibles Netas',
+            'Ocupadas Fisicas', 'Vendidas Comerciales', 'Cortesias', 'Ocupacion (%)',
+            'ADR (PEN)', 'RevPAR (PEN)', 'Ingreso Neto Alojamiento (PEN)', 'Auditoria Nocturna'
+        ]);
+        foreach ($dto->obtenerSerieTemporal() as $p) {
+            $this->escribirFilaCsv($handle, [
+                $p->obtenerFecha(),
+                (string) $p->obtenerUnidadesTotales(),
+                (string) $p->obtenerUnidadesOoo(),
+                (string) $p->obtenerUnidadesVendibles(),
+                (string) $p->obtenerUnidadesOcupadas(),
+                (string) $p->obtenerHabitacionesVendidas(),
+                (string) $p->obtenerHabitacionesCortesia(),
+                number_format($p->obtenerOcupacionPorcentaje(), 2, '.', '') . '%',
+                $p->obtenerAdr(),
+                $p->obtenerRevpar(),
+                $p->obtenerIngresoAlojamientoNeto(),
+                $p->esAuditado() ? 'AUDITADO (Cierre Nocturno)' : 'PROYECCION VIVA',
+            ]);
+        }
+
+        $ical = $dto->obtenerResumenIcal();
+        $this->escribirFilaCsv($handle, []);
+        $this->escribirFilaCsv($handle, ['--- SALVAGUARDA DE GOBERNANZA: iCalendar (Bloqueos Externos) ---']);
+        $this->escribirFilaCsv($handle, ['Eventos Activos iCal', (string) ($ical['total_eventos_activos'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Noches Bloqueadas iCal', (string) ($ical['total_noches_bloqueadas'] ?? 0)]);
+        $this->escribirFilaCsv($handle, ['Nota de Gobernanza', $ical['nota_gobernanza'] ?? 'Las noches iCal representan indisponibilidad de calendario externa y no acreditan ingreso comercial hasta su registro en folio.']);
     }
 
     // =========================================================================
