@@ -610,7 +610,21 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - Exportación CSV estructurada en `ReporteServicio::exportarCSV('ANALITICA', ...)` con BOM UTF-8, sanitización anti-fórmulas y bloques estructurados para KPIs, Canales, Resumen Dual, Serie Diaria y Salvaguarda iCal.
     - Cero DDL: 130 tablas relacionales consolidadas, ranura 039 estrictamente libre, `admin-dashboard/` y `SQL/` 100% inalterados.
     - Suite de pruebas: `tests/test_reportes_analitica_1b.php` (71/71 checks PASS).
-    - Estado: Implementada y Validada (82/82 suites globales PASS, 23,527 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `1e623d0ac1438c92eecc0a19010645ef2b6bd275`, 82/82 suites globales PASS, 2,668 checks canónicos, 0 fallos).
+  - **NIGHT-AUDIT-2B:** Automatización, Scheduler CLI, Concurrencia Distribuida y Homologación Alina:
+    - Dominio operativo de cierre diario hotelero y orquestación desatendida (`NightAuditServicio`):
+      - Resolución jerárquica de timezone IANA por propiedad con fallback central `operacion.zona_horaria_predeterminada` (default `America/Lima`).
+      - Regla de elegibilidad temporal estricta: prohibición de cerrar la fecha en curso o fechas futuras ($\text{fecha\_hotelera} < \text{hoy\_local}$, hasta ayer).
+      - Cálculo determinista de fechas debidas pendientes (`obtenerFechasDebidasPropiedad`).
+      - Procesamiento secuencial en estricto orden cronológico ascendente ($F_{\text{inicio}} \to \dots \to F_{\text{fin}}$) con transacciones ACID independientes por fecha y detención inmediata ante fallo para evitar lagunas históricas.
+    - Concurrencia distribuida con exclusión mutua mediante advisory locks pesimistas MySQL (`GET_LOCK('camargo_pms_night_audit_prop_{propiedad_id}', 0)` y `RELEASE_LOCK` en `finally`), aislando colisiones entre scheduler cron y web.
+    - Detección no invasiva de no-shows potenciales durante el cierre: identificación de reservas confirmadas sin check-in, con CERO mutación de estado en reservas, CERO cancelación automática, y registro de advertencias en observaciones y auditoría D-061.
+    - Ejecutor CLI oficial `bin/ejecutar-night-audit.php`: flags `--solo-debidas`, `--propiedad=<ID>`, `--todas`, `--fecha=<YYYY-MM-DD>`, `--quiet`, `--ayuda`, códigos de salida 0, 1, 2, y atribución soberana al actor de sistema `CAMARGO_PMS` (ID 1).
+    - Homologación Alina en `app/Vistas/operaciones/night_audit.php`: erradicación total de `input[type="date"]` adoptando Flatpickr Datepicker (`data-provider="datepicker"`, `basic-date`) y SweetAlert2 (`Swal.fire`), suprimiendo llamadas nativas a `alert()` y `confirm()`.
+    - Cero DDL: 130 tablas relacionales consolidadas, ranura 039 estrictamente libre, `admin-dashboard/` y `SQL/` 100% inalterados.
+    - Suite de pruebas: `tests/test_night_audit_scheduler.php` (46/46 checks PASS).
+    - Fix de determinismo de fixture: ajuste de período simulado a `202611` en `tests/test_suministros_concurrencia.php` (D-112.8) para desacoplar el caso SUM-C01 del mes calendario activo.
+    - Estado: Implementada y Validada localmente (83/83 suites globales PASS, 2,714 checks, 0 fallos). Total consolidado: 29 dominios completados y homologados.
 
 ## Dominio operativo
 

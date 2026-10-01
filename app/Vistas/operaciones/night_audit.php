@@ -106,7 +106,7 @@ declare(strict_types=1);
                             <label class="form-label f-s-12 f-w-600 text-muted">Fecha Hotelera a Cerrar</label>
                             <div class="icon-control position-relative">
                                 <i class="fa-solid fa-calendar-day position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
-                                <input type="date" class="form-control ps-5 f-s-13" id="input-fecha-hotelera" name="fecha_hotelera" value="<?= htmlspecialchars($fecha_sugerida) ?>" required>
+                                <input type="text" class="form-control ps-5 f-s-13 basic-date" id="input-fecha-hotelera" name="fecha_hotelera" data-provider="datepicker" value="<?= htmlspecialchars($fecha_sugerida) ?>" placeholder="YYYY-MM-DD" required>
                             </div>
                         </div>
 
@@ -193,12 +193,28 @@ declare(strict_types=1);
 
 </div>
 
+<!-- Dependencias JS del Módulo -->
+<script src="<?= url_asset('vendor/sweetalert/sweetalert.js') ?>"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const formCierre = document.getElementById('form-night-audit');
     const btnEjecutar = document.getElementById('btn-ejecutar-cierre');
     const selectPropiedad = document.getElementById('select-propiedad');
     const btnRefrescar = document.getElementById('btn-refrescar-historial');
+
+    function notificar(tipo, mensaje, titulo = '') {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: tipo,
+                title: titulo || (tipo === 'success' ? 'Operación exitosa' : 'Atención'),
+                text: mensaje,
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            console.warn(`${titulo ? titulo + ': ' : ''}${mensaje}`);
+        }
+    }
 
     if (formCierre) {
         formCierre.addEventListener('submit', function(e) {
@@ -210,49 +226,77 @@ document.addEventListener('DOMContentLoaded', function() {
             const token = document.querySelector('input[name="_token"]').value;
 
             if (!fechaHotelera) {
-                alert('Debe indicar la fecha hotelera a cerrar.');
+                notificar('warning', 'Debe indicar la fecha hotelera a cerrar.', 'Fecha Requerida');
                 return;
             }
 
-            const confirmacion = confirm(`¿Está seguro de ejecutar la Auditoría Nocturna para la fecha ${fechaHotelera}?\nEsta acción devengará el alojamiento de las estadías activas y congelará las métricas ADR/RevPAR.`);
-            if (!confirmacion) {
-                return;
-            }
+            const realizarCierre = function() {
+                btnEjecutar.disabled = true;
+                btnEjecutar.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Procesando...';
 
-            btnEjecutar.disabled = true;
-            btnEjecutar.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Procesando...';
-
-            fetch('/api/operaciones/night-audit/ejecutar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token
-                },
-                body: JSON.stringify({
-                    _token: token,
-                    propiedad_id: propiedadId,
-                    fecha_hotelera: fechaHotelera,
-                    observaciones: observaciones
+                fetch('/api/operaciones/night-audit/ejecutar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        _token: token,
+                        propiedad_id: propiedadId,
+                        fecha_hotelera: fechaHotelera,
+                        observaciones: observaciones
+                    })
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                btnEjecutar.disabled = false;
-                btnEjecutar.innerHTML = '<i class="fa-solid fa-moon me-1"></i> Cerrar Día';
+                .then(res => res.json())
+                .then(data => {
+                    btnEjecutar.disabled = false;
+                    btnEjecutar.innerHTML = '<i class="fa-solid fa-moon me-1"></i> Cerrar Día';
 
-                if (data.error) {
-                    alert('Error: ' + data.error);
-                } else {
-                    alert(data.mensaje || 'Cierre completado con éxito.');
-                    window.location.reload();
-                }
-            })
-            .catch(err => {
-                btnEjecutar.disabled = false;
-                btnEjecutar.innerHTML = '<i class="fa-solid fa-moon me-1"></i> Cerrar Día';
-                alert('Ocurrió un error inesperado al procesar la auditoría.');
-                console.error(err);
-            });
+                    if (data.error) {
+                        notificar('error', data.error, 'Error en Auditoría Nocturna');
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Cierre Completado',
+                                text: data.mensaje || 'Cierre de fecha hotelera completado con éxito.',
+                                timer: 2000,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#3085d6'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                })
+                .catch(err => {
+                    btnEjecutar.disabled = false;
+                    btnEjecutar.innerHTML = '<i class="fa-solid fa-moon me-1"></i> Cerrar Día';
+                    notificar('error', 'Ocurrió un error inesperado al procesar la auditoría.', 'Error de Comunicación');
+                    console.error(err);
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '¿Ejecutar Auditoría Nocturna?',
+                    text: `¿Está seguro de ejecutar el cierre para la fecha ${fechaHotelera}? Esta acción devengará el alojamiento de las estadías activas y congelará las métricas ADR/RevPAR.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, ejecutar cierre',
+                    cancelButtonText: 'Cancelar'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        realizarCierre();
+                    }
+                });
+            } else {
+                realizarCierre();
+            }
         });
     }
 

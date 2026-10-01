@@ -66,9 +66,16 @@ class NightAuditControlador
         $cierres = $this->nightAuditServicio->listarCierres($propiedadSeleccionadaId, 15);
         $ultimoCierre = $this->nightAuditServicio->obtenerUltimoCierre($propiedadSeleccionadaId);
 
+        $tz = $this->nightAuditServicio->resolverZonaHorariaPropiedad($propiedadSeleccionadaId);
+        $ayer = (new \DateTimeImmutable('now', new \DateTimeZone($tz)))->modify('-1 day')->format('Y-m-d');
+
         $fechaSiguienteSugerida = $ultimoCierre !== null
             ? date('Y-m-d', strtotime($ultimoCierre->obtenerFechaHotelera() . ' +1 day'))
-            : date('Y-m-d');
+            : $ayer;
+
+        if ($fechaSiguienteSugerida > $ayer) {
+            $fechaSiguienteSugerida = $ayer;
+        }
 
         $contenido = $this->vista->renderizar('operaciones/night_audit', [
             'titulo' => 'Auditoría Nocturna — Camargo PMS',
@@ -113,7 +120,7 @@ class NightAuditControlador
             : null;
         $timezone = isset($input['timezone']) && trim((string) $input['timezone']) !== ''
             ? trim((string) $input['timezone'])
-            : 'America/Lima';
+            : null;
 
         if ($propiedadId <= 0 || $fechaHotelera === '') {
             return Respuesta::json(['error' => 'La propiedad y la fecha hotelera son obligatorias.'], 422);
@@ -125,7 +132,9 @@ class NightAuditControlador
                 $fechaHotelera,
                 (int) $usuarioActual->obtenerId(),
                 $observaciones,
-                $timezone
+                $timezone,
+                true,
+                false
             );
 
             return Respuesta::json([

@@ -2096,7 +2096,50 @@ Aprobada en la microfase `REPORTES-1B` como arquitectura vinculante para la capa
    - La base de datos relacional se mantiene estrictamente en **130 tablas**.
    - Ranura de migración `039` estrictamente LIBRE.
    - Directorio de referencia Alina `admin-dashboard/` y directorio `SQL/` 100% inalterados y de solo lectura.
-   - Cobertura de regresión transversal: 82 suites automatizadas (todas en verde, 100% PASS), 23,527 checks superados.
+   - Cobertura de regresión transversal: 82 suites automatizadas (todas en verde, 100% PASS), 2,668 checks canónicos superados.
+
+### D-112 — Automatización, Scheduler y Concurrencia de Auditoría Nocturna (NIGHT-AUDIT-2B)
+
+Aprobada en la microfase `NIGHT-AUDIT-2B` como arquitectura vinculante para la ejecución automatizada, secuencial y desatendida del Cierre Diario Hotelero y Auditoría Nocturna (Night Audit) en Camargo PMS.
+
+1. **Regla de Elegibilidad y Prohibición de Cierre del Día en Curso (D-112.1):**
+   - Una fecha hotelera $F$ solo es elegible para cierre si la fecha local efectiva de la propiedad es estrictamente posterior a $F$ ($\text{fecha\_local} > F$, hasta ayer).
+   - El día hotelero en curso nunca se cierra automáticamente ni de forma prematura bajo ninguna circunstancia.
+   - La zona horaria se resuelve de manera soberana por propiedad (`propiedades.zona_horaria`) con fallback jerárquico al parámetro central preexistente `operacion.zona_horaria_predeterminada` (default `America/Lima`). Se ratifica esta clave canónica como la única autoridad en base de datos (`configuraciones` sembrada en migración 013 y gobernada por D-066); menciones informales como `sistema.timezone` corresponden a sinónimos coloquiales y carecen de existencia física en el esquema.
+
+2. **Concurrencia Distribuida con Advisory Locks MySQL (D-112.2):**
+   - Se establece exclusión mutua distribuida a nivel de base de datos mediante advisory locks pesimistas (`SELECT GET_LOCK('camargo_pms_night_audit_prop_{propiedad_id}', 0)`).
+   - Bloquea cualquier colisión concurrente entre ejecuciones desatendidas por Scheduler/CLI y peticiones operativas manuales desde la interfaz Web.
+   - Liberación garantizada e incondicional mediante `SELECT RELEASE_LOCK(...)` en cláusula `finally`.
+
+3. **Catch-up Cronológico Secuencial y Transaccionalidad Independiente (D-112.3):**
+   - Ante la presencia de múltiples fechas pendientes ($N$ días atrasados), el scheduler procesa la secuencia $F_{\text{inicio}} \to \dots \to F_{\text{fin}}$ en estricto orden cronológico ascendente.
+   - Cada fecha hotelera se ejecuta en una transacción ACID soberana e independiente. Si el cierre de una fecha $F_k$ falla, la secuencia se detiene de inmediato para evitar lagunas históricas no auditadas.
+
+4. **Atribución Soberana a Actor de Sistema (D-112.4):**
+   - Las ejecuciones automáticas o desatendidas vía Scheduler CLI se atribuyen soberanamente al actor estructural `CAMARGO_PMS` (`id = 1`, `tipo = 'SISTEMA'`), preservando el principio fundamental `ACTOR != USUARIO` (D-061).
+
+5. **Detección No Invasiva de No-Shows Potenciales (D-112.5):**
+   - Durante la auditoría de cada fecha hotelera se identifican reservas confirmadas cuya estadía física no se haya iniciado (`fecha_entrada <= F < fecha_salida` sin estadías vinculadas en estado `EN_CURSO` o `FINALIZADA`).
+   - CERO mutación de estado en reservas. CERO cancelación automática en esta fase (preservación contractual estricta).
+   - Se registran advertencias operativas en las observaciones del cierre (`[NO_SHOW_POTENCIAL: RES-XXXXX]`) y en la bitácora transversal de auditoría (`NIGHT_AUDIT_ADVERTENCIA_NO_SHOW`).
+
+6. **Homologación Visual Alina y Ergonomía Web (D-112.6):**
+   - Erradicación absoluta de selectores nativos `input[type="date"]` en la interfaz operativa de Night Audit (`app/Vistas/operaciones/night_audit.php`).
+   - Adopción estándar de Flatpickr Datepicker (`data-provider="datepicker"`, clase `basic-date`) y SweetAlert2 (`Swal.fire`) para diálogos de confirmación, advertencia y éxito.
+
+7. **Invariantes de Esquema, Ranura 039 Libre y Regresión (D-112.7):**
+   - Cero DDL: No se introduce migración en la ranura 039; las estructuras relacionales preexistentes son plenamente suficientes.
+   - La base de datos relacional se mantiene estrictamente en **130 tablas**.
+   - Ranura de migración `039` estrictamente LIBRE (reservada para SUNAT-1).
+   - Directorio de referencia Alina `admin-dashboard/` y directorio `SQL/` 100% inalterados.
+   - Suite de pruebas dedicada `tests/test_night_audit_scheduler.php` (46/46 checks, 100% PASS).
+   - Cobertura de regresión transversal: 83 suites automatizadas (todas en verde, 100% PASS), 2,714 checks canónicos superados.
+
+8. **Fix de Determinismo de Fixture en Pruebas Transversales (D-112.8):**
+   - Se ajusta el período simulado en el caso SUM-C01 de `tests/test_suministros_concurrencia.php` a `202611` (noviembre 2026), homologándolo con el patrón canónico ya empleado en `test_compras_concurrencia.php` y `test_documentos_concurrencia.php`.
+   - Causa raíz: al llegar el reloj del sistema al mes de octubre de 2026 (`2026-10-01`), el fixture de prueba colisionaba con el mes calendario activo, borrando la secuencia operativa de la base de datos y produciendo falsos duplicados en `suministro_liquidaciones` durante ejecuciones consecutivas.
+   - El cambio es 100% en suite de pruebas, no toca código productivo ni tablas de suministros, mantiene estrictas e idénticas todas las aserciones de concurrencia y garantiza el determinismo absoluto de la regresión global sin acoplamiento al mes calendario de ejecución.
 
 ## Pendientes de decisión
 

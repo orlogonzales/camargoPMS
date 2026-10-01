@@ -119,8 +119,8 @@ try {
     // -------------------------------------------------------------------------
     // SUM-C01: Generación atómica y pesimista de folios (FOR UPDATE)
     // -------------------------------------------------------------------------
-    $periodoSim = new DateTimeImmutable('2026-10-15');
-    $pdo->exec("DELETE FROM documento_secuencias WHERE tipo_documento = 'SUMINISTRO_LIQUIDACION' AND periodo_ym = '202610'");
+    $periodoSim = new DateTimeImmutable('2026-11-15');
+    $pdo->exec("DELETE FROM documento_secuencias WHERE tipo_documento = 'SUMINISTRO_LIQUIDACION' AND periodo_ym = '202611'");
 
     $folios = [];
     $pdo->beginTransaction();
@@ -138,8 +138,8 @@ try {
 
     $c01Exito = count($folios) === 5
         && count(array_unique($folios)) === 5
-        && $folios[0] === 'LIQ-SUM-202610-0001'
-        && $folios[4] === 'LIQ-SUM-202610-0005';
+        && $folios[0] === 'LIQ-SUM-202611-0001'
+        && $folios[4] === 'LIQ-SUM-202611-0005';
     verificarConcurrencia('SUM-C01', 'Generación secuencial atómica bajo bloqueo pesimista FOR UPDATE sin colisiones', $c01Exito);
 
     // -------------------------------------------------------------------------

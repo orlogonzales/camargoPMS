@@ -4,6 +4,41 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase NIGHT-AUDIT-2B — Automatización, Scheduler CLI, Concurrencia y Ergonomía Alina
+
+- **Automatización y Scheduler Desatendido (`NightAuditServicio`):**
+  - Implementación de `resolverZonaHorariaPropiedad(?int $propiedadId)`: resolución IANA por propiedad con fallback jerárquico a `operacion.zona_horaria_predeterminada` (default `America/Lima`).
+  - Implementación de `validarFechaCerrable(int $propiedadId, string $fechaHotelera)`: prohibición categórica de cerrar fechas iguales o posteriores a hoy local (solo cerrable hasta ayer).
+  - Implementación de `obtenerFechasDebidasPropiedad(int $propiedadId)`: cálculo determinista de secuencia de fechas pendientes desde el último cierre hasta ayer local.
+  - Implementación de `ejecutarCierresDebidosPropiedad(int $propiedadId, int $actorId, ...)`: ejecución secuencial cronológica de fechas debidas, con transacciones ACID independientes por fecha y detención inmediata ante fallo para evitar lagunas históricas.
+  - Implementación de `ejecutarCierresDebidosTodas(int $actorId, ...)`: barrido global multi-propiedad con recolección de resumen estructurado.
+- **Concurrencia Distribuida con Advisory Locks MySQL:**
+  - Implementación de `adquirirBloqueoPropiedad(int $propiedadId)` mediante `SELECT GET_LOCK('camargo_pms_night_audit_prop_{propiedadId}', 0)`.
+  - Implementación de `liberarBloqueoPropiedad(int $propiedadId)` mediante `SELECT RELEASE_LOCK(...)`.
+  - Exclusión mutua garantizada entre procesos desatendidos Scheduler CLI y peticiones manuales Web, con liberación estricta en cláusulas `finally`.
+- **Detección No Invasiva de No-Shows Potenciales:**
+  - Implementación de `detectarNoShowsPotenciales(int $propiedadId, string $fechaHotelera)`: identifica reservas confirmadas sin check-in en la fecha hotelera.
+  - Invariante contractual: CERO mutación de estado en reservas, CERO cancelación automática.
+  - Registro de advertencias en observaciones de cierre (`[NO_SHOW_POTENCIAL: RES-XXXXX]`) y evento `NIGHT_AUDIT_ADVERTENCIA_NO_SHOW` en auditoría D-061.
+- **Ejecutor CLI y Scheduler (`bin/ejecutar-night-audit.php`):**
+  - Script ejecutor para crontab / scheduler con soporte de flags: `--solo-debidas`, `--propiedad=<ID>`, `--todas`, `--fecha=<YYYY-MM-DD>`, `--quiet`, `--ayuda`.
+  - Códigos de salida estandarizados: 0 = éxito total, 1 = error operacional, 2 = argumentos o parámetros inválidos.
+  - Atribución sistemática al actor estructural `CAMARGO_PMS` (ID 1).
+- **Homologación Visual Alina en Vista Web (`app/Vistas/operaciones/night_audit.php`):**
+  - Erradicación del 100% de `input[type="date"]`.
+  - Adopción de Flatpickr Datepicker (`data-provider="datepicker"`, `basic-date`, placeholder `YYYY-MM-DD`).
+  - Integración de SweetAlert2 (`vendor/sweetalert/sweetalert.js` y `Swal.fire`) eliminando por completo llamadas nativas a `alert()` y `confirm()`.
+- **Controlador Operativo (`NightAuditControlador`):**
+  - Cálculo defensivo de fecha sugerida en `index()` limitando la sugerencia a como máximo la fecha de ayer local.
+  - Preservación de compatibilidad hacia atrás en endpoint HTTP para fixtures de prueba controlados.
+- **Gobernanza y Pruebas:**
+  - Cero DDL: 130 tablas relacionales consolidadas, migración 038 como última aplicada, ranura 039 estrictamente libre.
+  - Suite de pruebas dedicada `tests/test_night_audit_scheduler.php` (46/46 checks, 100% PASS).
+  - Fix de determinismo de fixture en pruebas transversales: ajuste de período simulado a `202611` en `tests/test_suministros_concurrencia.php` (D-112.8) para desacoplar el caso SUM-C01 del mes calendario activo `202610`.
+  - Regresión transversal global: 83 suites ejecutadas (100% PASS), 2,714 checks homologados.
+
+## Baseline oficial 1e623d0 (REPORTES-1B)
+
 ### Microfase REPORTES-1B — Interfaz Alina, ApexCharts, Tablas y Exportación Analítica
 
 - **Superficie HTTP, Enrutamiento y Controlador Gerencial (`ReporteControlador`):**
@@ -28,7 +63,7 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 - **Gobernanza y Pruebas:**
   - Cero DDL: Ranura 039 estrictamente libre; 130 tablas relacionales consolidadas.
   - Suite de pruebas dedicada `tests/test_reportes_analitica_1b.php` (71/71 checks, 100% PASS).
-  - Regresión transversal global: 82 suites ejecutadas (100% PASS), 23,527 checks en verde.
+  - Regresión transversal global: 82 suites ejecutadas (100% PASS), 2,668 checks canónicos superados.
 
 ## Baseline oficial 2483ac2 (REPORTES-1A)
 
