@@ -1422,6 +1422,63 @@ $enrutador->options('/api/v1/perfil', [\CamargoPMS\Controladores\ApiPingControla
     \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
 ]);
 
+// =====================================================================
+// RUTAS DE NEGOCIO API RESTful v1 (WORDPRESS-1D / HEADLESS RESERVAS)
+// =====================================================================
+
+// 1. Disponibilidad soberana de inventario
+$enrutador->get('/api/v1/disponibilidad', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'disponibilidad'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiAutenticacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+    new \CamargoPMS\Intermediarios\ApiScopeIntermediario('disponibilidad.leer'),
+]);
+$enrutador->options('/api/v1/disponibilidad', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'preflight'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
+// 2. Cotización soberana noche a noche (sin bloqueo)
+$enrutador->post('/api/v1/cotizaciones', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'cotizar'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiAutenticacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+    new \CamargoPMS\Intermediarios\ApiScopeIntermediario('cotizacion.crear'),
+]);
+$enrutador->options('/api/v1/cotizaciones', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'preflight'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
+// 3. Creación de reserva comercial en hold (PENDIENTE con bloqueo atómico e Idempotency-Key)
+$enrutador->post('/api/v1/reservas', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'crearReserva'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiAutenticacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+    new \CamargoPMS\Intermediarios\ApiScopeIntermediario('reservas.hold'),
+    \CamargoPMS\Intermediarios\ApiIdempotenciaIntermediario::class,
+]);
+$enrutador->options('/api/v1/reservas', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'preflight'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
+// 4. Consulta pública y segura del estado de una reserva (PII protegida)
+$enrutador->get('/api/v1/reservas/{codigo}', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'consultar'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiAutenticacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiRateLimitIntermediario::class,
+    new \CamargoPMS\Intermediarios\ApiScopeIntermediario('reservas.leer'),
+]);
+$enrutador->options('/api/v1/reservas/{codigo}', [\CamargoPMS\Controladores\ApiReservaControlador::class, 'preflight'], [
+    \CamargoPMS\Intermediarios\ApiCorrelacionIntermediario::class,
+    \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 

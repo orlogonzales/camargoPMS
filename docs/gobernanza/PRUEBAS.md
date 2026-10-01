@@ -322,20 +322,18 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **AIRBNB-ICAL-1D**   | `test_airbnb_ical_scheduler.php` (Secciones 1..15) | 71 | — | 71/71 PASS |
 | **WORDPRESS-1B**    | `test_wordpress_1b.php` (Secciones 1..5) | 75 | — | 75/75 PASS |
 | **WORDPRESS-1C**    | `test_wordpress_1c.php` (Secciones 1..10) | 108 | — | 108/108 PASS |
-| **TOTALES CANÓNICOS**| **76 suites ejecutadas** | **—** | **—** | **2,201 checks PASS (100%)** |
+| **WORDPRESS-1D**    | `test_wordpress_1d.php` (Secciones 1..7) | 95 | — | 95/95 PASS |
+| **TOTALES CANÓNICOS**| **77 suites ejecutadas** | **—** | **—** | **2,290 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (WORDPRESS-1C):**
-    - Suite `test_wordpress_1c.php`: 108 comprobaciones automáticas cubriendo:
-      - Esquema y Migración 037: Creación de tabla `api_idempotencia`, 128 tablas relacionales en total, ranura 038 estrictamente libre, paridad en `SQL/camargo_pms.sql` e inmutabilidad de `admin-dashboard/`.
-      - Modelo y Repositorio de Idempotencia: Inserción atómica con bloqueo temporal, detección de concurrencia simultánea, persistencia de respuesta determinista y eliminación limpia.
-      - Contexto HTTP y RespuestaApi: Envoltorio canónico `{ ok, datos, error, codigo, meta }`, propagación de `X-Correlacion-ID`, inyección de cabeceras CORS y rate limiting.
-      - Intermediario de Correlación: Adopción de cabecera enviada o generación de ID seguro CSPRNG.
-      - Intermediario de CORS: Allowlist de orígenes, respuesta HTTP 204 No Content inmediata ante preflights `OPTIONS` sin exigir token Bearer.
-      - Intermediario de Autenticación Bearer: Validación $O(1)$ por hash SHA-256 de tokens `cpms_live_...`, control de vigencia, revocación y lista blanca de IPs.
-      - Rate Limiting Desacoplado: Ventana deslizante de 60 segundos con exclusión mutua `flock`, emisión de cabeceras `X-RateLimit-*` y HTTP 429 con `Retry-After`.
-      - Control de Granularidad por Scopes: Evaluación estricta de permisos por credencial y respuesta HTTP 403 `ACCESO_DENEGADO`.
-      - Idempotencia Extremo a Extremo: Concurrencia bloqueada (HTTP 409 `OPERACION_EN_CURSO`), replay determinista inmediato (HTTP 200/201 con `X-Cache-Lookup: IDEMPOTENT-REPLAY`), y detección de colisión de cuerpo con misma clave (HTTP 422 `IDEMPOTENCIA_DESAJUSTE_PAYLOAD`).
-      - Endpoints End-to-End: `GET /api/v1/ping` (200), `OPTIONS /api/v1/ping` (204), `GET /api/v1/perfil` (401 sin token, 200 con token), `OPTIONS /api/v1/perfil` (204 sin token), y ruta inexistente `/api/v1/*` (404 JSON estructurado). Cero exposición de secretos o PII.
-    - Suites previas sin regresión: 75 suites históricas ejecutadas y validadas al 100%.
-    - **Total Consolidado de Regresión Activa: 76/76 suites PASS — 2,201/2,201 checks PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (WORDPRESS-1D):**
+    - Suite `test_wordpress_1d.php`: 95 comprobaciones automáticas cubriendo:
+      - Esquema y ranura de migración: 128 tablas relacionales en total, migración 037 registrada, ranura 038 estrictamente libre, `admin-dashboard/` 100% inalterado y `SQL/` inmutable.
+      - Clientes API y credenciales de prueba: autenticación con actor de tipo `INTEGRACION` (D-061: `ACTOR != USUARIO`), scopes granulares y fixture de pruebas.
+      - Endpoint 1 (`GET /api/v1/disponibilidad`): rechazo sin token (HTTP 401), preflight `OPTIONS` (HTTP 204 con CORS), validación de parámetros y fechas (HTTP 422 `PARAMETROS_REQUERIDOS` / `INTERVALO_INVALIDO`), consulta válida (HTTP 200 `DISPONIBILIDAD_CONSULTADA`), cálculo exacto de noches e inventario disponible en tiempo real.
+      - Endpoint 2 (`POST /api/v1/cotizaciones`): rechazo sin token (HTTP 401), rechazo por scope insuficiente (HTTP 403 `ACCESO_DENEGADO`), preflight `OPTIONS` (HTTP 204), cálculo tarifario noche a noche soberano bajo directiva D-069 y `BCMath`, moneda 'PEN', total mayor a cero, validación del token firmado HMAC-SHA256, y **principio inviolable: cero bloqueos en inventario diario**.
+      - Endpoint 3 (`POST /api/v1/reservas`): rechazo sin `Idempotency-Key` (HTTP 400 `IDEMPOTENCIA_REQUERIDA`), rechazo sin scope (HTTP 403), rechazo por token adulterado (HTTP 422 `COTIZACION_INVALIDA`), creación exitosa de hold `PENDIENTE` (HTTP 201 `RESERVA_HOLD_CREADA`), código de reserva único, fecha de expiración (`expira_en`), enmascaramiento de titular, bloqueo atómico en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`), vinculación al actor técnico en `creado_por_actor_id`, replay determinista con `X-Cache-Lookup: IDEMPOTENT-REPLAY`, detección de desajuste de payload con misma clave (HTTP 422 `IDEMPOTENCIA_DESAJUSTE_PAYLOAD`), prevención de doble reserva (HTTP 409 `CONFLICTO_DISPONIBILIDAD`), y preflight `OPTIONS` (HTTP 204).
+      - Endpoint 4 (`GET /api/v1/reservas/{codigo}`): rechazo sin token (HTTP 401), rechazo sin scope (HTTP 403), reserva inexistente (HTTP 404 `RESERVA_NO_ENCONTRADA`), consulta exitosa de reserva (HTTP 200 `RESERVA_RECUPERADA`), y estricta ofuscación de PII (Directiva D-106.3: apellido con inicial `Carlos A.`, correo ofuscado `c***t@camargopms.test`, IDs numéricos de BD ocultos, notas internas no expuestas).
+      - Limpieza defensiva y liberación de datos de prueba: remoción segura de inventario y reservas de prueba.
+    - Suites previas sin regresión: 76 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 77/77 suites PASS — 2,290 checks PASS — 0 fallos (100%)**.
 

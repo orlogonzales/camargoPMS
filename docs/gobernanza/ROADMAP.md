@@ -541,12 +541,17 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - Endpoints técnicos de diagnóstico: `GET /api/v1/ping`, `OPTIONS /api/v1/ping`, `GET /api/v1/perfil`, `OPTIONS /api/v1/perfil`. Cero exposición de secretos o PII.
     - DDL autorizado: Migración `037_api_idempotencia.sql` aplicada (128 tablas relacionales consolidadas, ranura 038 libre).
     - Suite de pruebas: `tests/test_wordpress_1c.php` (108/108 checks PASS).
-    - Estado: Implementada y Validada (76/76 suites globales PASS, 2,201 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `1d7f9d41b2a50015b013b7439900a12601d98b1a`, 76/76 suites globales PASS, 2,201 checks, 0 fallos).
   - **WORDPRESS-1D:** Exposición de Endpoints de Negocio (Disponibilidad + Cotización + Creación de Hold + Consulta de Reserva):
-    - `GET /api/v1/disponibilidad`: consulta pública/técnica de unidades libres con filtro de fechas y tipos.
-    - `POST /api/v1/cotizaciones`: cálculo formal de tarifas noche a noche y emisión de token cotización firmado.
-    - `POST /api/v1/reservas`: hold atómico temporal con bloqueo inmediato de inventario exigiendo `Idempotency-Key`.
-    - `GET /api/v1/reservas/{codigo}`: consulta de estado de reserva para el titular/cliente web.
+    - Controlador `ApiReservaControlador` orquestando las 4 capacidades comerciales delegando estrictamente en autoridades centrales de dominio sin duplicar lógica.
+    - `GET /api/v1/disponibilidad`: consulta en tiempo real de unidades operativas libres con filtros de fechas, propiedad, tipo y capacidad (`huespedes`). Scope `disponibilidad.leer`.
+    - `POST /api/v1/cotizaciones`: cálculo formal de tarifas noche a noche bajo directiva D-069 y BCMath. Emisión de token firmado con HMAC-SHA256 (30 min vigencia). Cero bloqueo de inventario. Scope `cotizacion.crear`.
+    - `POST /api/v1/reservas`: creación de hold comercial atómico en estado `PENDIENTE`. Exige cabecera `Idempotency-Key` (8-128 chars) y scope `reservas.hold`. Bloquea atómicamente noches en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`) con orden determinista (D-067). Asigna actor técnico de auditoría (D-061: `ACTOR != USUARIO`). Replay determinista ante reenvío y HTTP 409 ante colisiones concurrentes.
+    - `GET /api/v1/reservas/{codigo}`: consulta pública segura por código de reserva. Ocultación total de identificadores relacionales y notas internas, enmascarando nombre y datos de contacto (Directiva D-106.3). Scope `reservas.leer`.
+    - Preflights `OPTIONS` con HTTP 204 No Content para todas las rutas.
+    - Cero DDL (128 tablas relacionales preservadas, ranura 038 libre, `admin-dashboard/` 100% inmutable).
+    - Suite de pruebas: `tests/test_wordpress_1d.php` (95/95 checks PASS).
+    - Estado: Implementada y Validada (77/77 suites globales PASS, 2,290 checks, 0 fallos).
 
 ## Dominio operativo
 

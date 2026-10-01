@@ -4,6 +4,24 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase WORDPRESS-1D — Exposición de Endpoints de Negocio (Disponibilidad, Cotizaciones y Reservas Directas)
+
+- **Controlador RESTful `ApiReservaControlador`:**
+  - `GET /api/v1/disponibilidad`: Consulta en tiempo real de ocupación y unidades operativas filtradas por fechas, propiedad, tipo de unidad y capacidad mínima de huéspedes (`huespedes`). Requiere scope `disponibilidad.leer`.
+  - `POST /api/v1/cotizaciones`: Cotización reproducible noche a noche con desglose y total en Soles (PEN) calculados soberanamente por `CotizacionServicio` bajo directiva D-069 y `BCMath`. Emisión de `token_cotizacion` firmado con HMAC-SHA256 y vigencia de 30 minutos. Principio inviolable: la cotización **no bloquea inventario ni escribe en base de datos**. Requiere scope `cotizacion.crear`.
+  - `POST /api/v1/reservas`: Creación de hold comercial en estado `PENDIENTE`. Exige cabecera `Idempotency-Key` (8 a 128 caracteres) y scope `reservas.hold`. Valida e hidrata desde token firmado, asegura titular y cliente 360°, bloquea atómicamente noches en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`) con orden determinista (D-067), y asigna el actor técnico autenticado en `creado_por_actor_id` (D-061). Soporta replay determinista y previene sobreventa con HTTP 409 (`CONFLICTO_DISPONIBILIDAD`).
+  - `GET /api/v1/reservas/{codigo}`: Consulta pública segura del estado de una reserva por su código alfanumérico público. Aplica estricta ofuscación de PII (Directiva D-106.3), ocultando identificadores internos de base de datos (`id`, `persona_titular_id`, `actor_id`) y notas internas, enmascarando nombre (`Carlos A.`), email (`c***z@ejemplo.com`) y teléfono (`***-**-4321`). Requiere scope `reservas.leer`.
+  - Preflights `OPTIONS` para todas las rutas con respuesta inmediata HTTP 204 No Content.
+- **Soporte de Actor Técnico en Servicios de Negocio (`ReservaServicio`):**
+  - Soporte de actor de tipo `INTEGRACION` en `crearReserva()` y `crearReservaDesdeCotizacion()`, preservando la identidad técnica del cliente API en `creado_por_actor_id` y en auditoría transversal (D-061: `ACTOR != USUARIO`).
+- **Gobernanza de Esquema e Invariantes:**
+  - Base de datos relacional inalterada: **128 tablas**.
+  - Ranura de migración `038` estrictamente libre.
+  - Catálogo Alina `admin-dashboard/` 100% intacto y de solo lectura.
+  - Suite de regresión integral: 77 suites / 2,290 checks automatizados (100% PASS).
+
+## Baseline oficial 1d7f9d4 (WORDPRESS-1C)
+
 ### Microfase WORDPRESS-1C — Perímetro HTTP /api/v1 (Infraestructura, Autenticación, CORS, Rate Limit, Idempotencia y Diagnóstico)
 
 - **Perímetro de Seguridad e Intermediarios HTTP para `/api/v1`:**

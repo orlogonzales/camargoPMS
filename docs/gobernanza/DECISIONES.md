@@ -1882,6 +1882,41 @@ Aprobada en la microfase `WORDPRESS-1C` como arquitectura vinculante para la exp
    - Endpoints de negocio (`disponibilidad`, `cotizaciones`, `reservas`) diferidos formalmente a `WORDPRESS-1D`.
    - Regresión transversal: 76 suites automatizadas, 2,201 checks, 0 fallos (100% PASS).
 
+### D-106 — Contrato Headless de Disponibilidad, Cotización y Reserva Directa en /api/v1 (WORDPRESS-1D)
+
+Aprobada en la microfase `WORDPRESS-1D` como arquitectura vinculante para la exposición de endpoints comerciales de Camargo PMS hacia WordPress y aplicaciones web/móviles.
+
+1. **Reutilización Estricta de Autoridades Centrales (D-106.1):**
+   - El controlador `ApiReservaControlador` actúa como traductor de protocolo HTTP; **no implementa ni duplica reglas de negocio de disponibilidad, tarifas ni reservas**.
+   - Delega soberanamente en:
+     - `DisponibilidadServicio`: Consulta física de ocupación e intervalos hoteleros (D-066).
+     - `CotizacionServicio`: Cálculo reproducible noche a noche de tarifas bajo directiva monetaria D-069.
+     - `ReservaServicio`: Transición atómica de hold y bloqueo determinista de inventario (D-067).
+     - `PersonaServicio` y `ClienteServicio`: Identidad natural y perfil 360° del huésped.
+
+2. **Endpoints de Negocio Expuestos (D-106.2):**
+   - `GET /api/v1/disponibilidad`: Consulta de ocupación con filtros de fechas, propiedad, tipo de unidad y capacidad mínima de personas (`huespedes`). Requiere scope `disponibilidad.leer`.
+   - `POST /api/v1/cotizaciones`: Cotización oficial de estancia. **No bloquea inventario** ni inserta registros en la base de datos. Retorna desglose, total en Soles (PEN) y token firmado HMAC-SHA256 con 30 minutos de vigencia. Requiere scope `cotizacion.crear`.
+   - `POST /api/v1/reservas`: Creación de hold comercial en estado `PENDIENTE`. Exige cabecera `Idempotency-Key` (8-128 caracteres) y scope `reservas.hold`. Valida el token criptográfico, asegura al titular y bloquea atómicamente el inventario en `inventario_diario_unidades`. Retorna HTTP 201 Created.
+   - `GET /api/v1/reservas/{codigo}`: Consulta pública segura del estado de una reserva por su código comercial único. Requiere scope `reservas.leer`.
+
+3. **Protección de Privacidad y PII (D-106.3):**
+   - Los endpoints públicos de reserva y consulta **jamás exponen datos privados sensibles ni registros internos de auditoría**:
+     - Nombre de titular enmascarado con formato canónico (ej. `Carlos A.`).
+     - Correo electrónico ofuscado (ej. `c***t@camargopms.test`).
+     - Teléfono enmascarado conservando únicamente los últimos 4 dígitos.
+     - Ocultación total de identificadores numéricos de base de datos (`id`, `persona_titular_id`, `creado_por_actor_id`, `cancelada_por_actor_id`) y notas internas del hotel.
+
+4. **Trazabilidad de Actor Técnico (D-106.4):**
+   - Las reservas creadas vía API registran en `creado_por_actor_id` el identificador técnico del actor de tipo `INTEGRACION` correspondiente a la credencial autenticada (cumplimiento estricto de D-061: `ACTOR != USUARIO`).
+   - El evento queda auditado transversalmente en la tabla `auditoria` bajo la acción `REGISTRAR` del módulo `reservas`.
+
+5. **Invariantes de Gobernanza y Esquema (D-106.5):**
+   - Base de datos relacional inalterada: permanece exactamente en **128 tablas**.
+   - Ranura de migración `038` estrictamente LIBRE (cero DDL no autorizado).
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Regresión transversal: 77 suites automatizadas, 2,290 checks, 0 fallos (100% PASS).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

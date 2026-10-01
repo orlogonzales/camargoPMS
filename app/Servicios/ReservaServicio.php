@@ -228,7 +228,10 @@ class ReservaServicio
         }
 
         // 8. Resolver actor ejecutor (D-061)
-        $actor = $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+        $actor = $datos['actor'] ?? $this->resolverActorEjecutor($ejecutadoPorUsuarioId);
+        if (!$actor instanceof ActorAuditoria && isset($datos['actor_id']) && (int) $datos['actor_id'] > 0) {
+            $actor = (new \CamargoPMS\Repositorios\ActorAuditoriaRepositorio($this->pdo))->buscarPorId((int) $datos['actor_id']);
+        }
         $actorId = $actor?->obtenerId();
 
         // 9. Transacción ACID estricta
@@ -761,6 +764,8 @@ class ReservaServicio
             'origen' => $datosAdicionales['origen'] ?? 'WEB_DIRECTA',
             'duracion_hold_minutos' => $datosAdicionales['duracion_hold_minutos'] ?? 15,
             'observaciones' => $datosAdicionales['observaciones'] ?? "Cotización Soberana: {$idCotizacion}",
+            'actor' => $datosAdicionales['actor'] ?? null,
+            'actor_id' => $datosAdicionales['actor_id'] ?? null,
         ];
 
         return $this->crearReserva($datosReserva, $ejecutadoPorUsuarioId);

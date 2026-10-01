@@ -232,7 +232,163 @@ La ejecución periódica en background se apoya en los programadores nativos del
   - `GET /api/v1/perfil`: Inspección de la identidad técnica autenticada (HTTP 200). Retorna datos del cliente, metadatos de la credencial activa, actor técnico de auditoría y lista de scopes asignados. **Cero exposición de secretos en claro, contraseñas o hashes**.
   - `OPTIONS /api/v1/perfil`: Preflight CORS retornando HTTP 204 sin requerir token Bearer.
 
+### 10. Endpoints de Negocio de Disponibilidad, Cotización y Reservas Directas (WORDPRESS-1D)
+
+Exposición soberana de endpoints comerciales para integración headless con WordPress y canales de venta directa:
+
+- **1. Disponibilidad de Inventario:**
+  - **Ruta:** `GET /api/v1/disponibilidad`
+  - **Scope requerido:** `disponibilidad.leer`
+  - **Parámetros de Consulta (Query Params):**
+    - `fecha_desde` (obligatorio, formato `YYYY-MM-DD`): Inicio del rango hotelero.
+    - `fecha_hasta` (obligatorio, formato `YYYY-MM-DD`): Fin del rango (estricto `fecha_hasta > fecha_desde`).
+    - `propiedad_id` (opcional, entero positivo): Filtra unidades de una propiedad específica.
+    - `tipo_unidad_id` (opcional, entero positivo): Filtra unidades de un tipo específico.
+    - `huespedes` (opcional, entero positivo): Capacidad mínima de personas requerida.
+  - **Comportamiento:** Consulta en tiempo real las unidades operativas y su ocupación en `inventario_diario_unidades`. Retorna catálogo de unidades disponibles sin crear bloqueos.
+  - **Respuesta Exitosa (HTTP 200):**
+    ```json
+    {
+      "ok": true,
+      "datos": {
+        "fecha_desde": "2026-10-10",
+        "fecha_hasta": "2026-10-13",
+        "noches": 3,
+        "total_disponibles": 2,
+        "unidades": [
+          {
+            "id": 1,
+            "propiedad_id": 1,
+            "tipo_unidad_id": 1,
+            "nombre": "Habitación 101",
+            "capacidad_estandar": 2,
+            "capacidad_maxima": 3
+          }
+        ]
+      },
+      "codigo": "DISPONIBILIDAD_CONSULTADA"
+    }
+    ```
+
+- **2. Cotización Soberana de Estancia:**
+  - **Ruta:** `POST /api/v1/cotizaciones`
+  - **Scope requerido:** `cotizacion.crear`
+  - **Cuerpo JSON:**
+    ```json
+    {
+      "unidad_id": 1,
+      "fecha_llegada": "2026-10-10",
+      "fecha_salida": "2026-10-13",
+      "numero_huespedes": 2
+    }
+    ```
+  - **Comportamiento:** Valida disponibilidad soberana en las fechas. Orquesta el cálculo tarifario noche a noche bajo directiva D-069 y `BCMath`. **No bloquea inventario ni escribe en base de datos**. Emite un `token_cotizacion` firmado con HMAC-SHA256 con vigencia de 30 minutos.
+  - **Respuesta Exitosa (HTTP 200):**
+    ```json
+    {
+      "ok": true,
+      "datos": {
+        "cotizacion_id": "COT-101-20261010-ABCD1234",
+        "unidad_id": 1,
+        "fecha_llegada": "2026-10-10",
+        "fecha_salida": "2026-10-13",
+        "noches": 3,
+        "moneda": "PEN",
+        "total": "450.00",
+        "desglose_noches": [
+          { "fecha": "2026-10-10", "tarifa_noche": "150.00" }
+        ],
+        "vigente_hasta": "2026-09-30 23:45:00",
+        "token_cotizacion": "eyJhbGciOi..."
+      },
+      "codigo": "COTIZACION_CALCULADA"
+    }
+    ```
+
+- **3. Creación de Reserva / Hold Comercial:**
+  - **Ruta:** `POST /api/v1/reservas`
+  - **Scope requerido:** `reservas.hold`
+  - **Cabeceras obligatorias:** `Authorization: Bearer <token>`, `Idempotency-Key: <key-uuid-o-hash>` (8 a 128 caracteres).
+  - **Cuerpo JSON:**
+    ```json
+    {
+      "token_cotizacion": "eyJhbGciOi...",
+      "titular": {
+        "nombres": "Carlos",
+        "apellidos": "Alvarez",
+        "email": "carlos.alvarez@ejemplo.com",
+        "telefono": "+51 987654321",
+        "tipo_documento": "DNI",
+        "numero_documento": "44556677"
+      },
+      "duracion_hold_minutos": 15,
+      "observaciones": "Llegada estimada a las 18:00"
+    }
+    ```
+  - **Comportamiento:**
+    - Verifica criptográficamente el `token_cotizacion` (reproducibilidad e integridad).
+    - Resuelve o crea la entidad `personas` y su registro 360° en `clientes`.
+    - Bloquea atómicamente el inventario en `inventario_diario_unidades` (`BLOQUEO_MANUAL`, origen `RESERVA`) con orden determinista de fechas (D-067).
+    - Asigna el actor técnico autenticado en `creado_por_actor_id` (D-061: `ACTOR != USUARIO`).
+    - Crea la reserva en estado `PENDIENTE` con `expira_en = NOW() + INTERVAL 15 MINUTE`.
+    - Replay determinista si se reenvía la misma `Idempotency-Key` (HTTP 201 con `X-Cache-Lookup: IDEMPOTENT-REPLAY`).
+    - Previene sobreventa: si otra transacción tomó el inventario, retorna `HTTP 409 Conflict` (`CONFLICTO_DISPONIBILIDAD`).
+  - **Respuesta Exitosa (HTTP 201 Created):**
+    ```json
+    {
+      "ok": true,
+      "datos": {
+        "codigo_reserva": "RSV-202610-0001",
+        "estado": "PENDIENTE",
+        "unidad_id": 1,
+        "fecha_llegada": "2026-10-10",
+        "fecha_salida": "2026-10-13",
+        "noches": 3,
+        "moneda": "PEN",
+        "total": "450.00",
+        "expira_en": "2026-09-30 23:30:00",
+        "titular": {
+          "nombre_completo": "Carlos A.",
+          "email": "c***z@ejemplo.com"
+        }
+      },
+      "codigo": "RESERVA_HOLD_CREADA"
+    }
+    ```
+
+- **4. Consulta Pública y Segura de Reserva:**
+  - **Ruta:** `GET /api/v1/reservas/{codigo}`
+  - **Scope requerido:** `reservas.leer`
+  - **Comportamiento:** Localiza la reserva por su código alfanumérico público. Aplica estricta ofuscación de PII (Directiva D-106.3): oculta IDs relacionales de base de datos (`id`, `persona_titular_id`, `actor_id`) y notas internas, enmascarando nombre (`Carlos A.`), email (`c***z@ejemplo.com`) y teléfono (`***-**-4321`). Retorna HTTP 404 si el código no existe.
+  - **Respuesta Exitosa (HTTP 200):**
+    ```json
+    {
+      "ok": true,
+      "datos": {
+        "codigo_reserva": "RSV-202610-0001",
+        "estado": "PENDIENTE",
+        "unidad_id": 1,
+        "fecha_llegada": "2026-10-10",
+        "fecha_salida": "2026-10-13",
+        "noches": 3,
+        "moneda": "PEN",
+        "total": "450.00",
+        "expira_en": "2026-09-30 23:30:00",
+        "titular": {
+          "nombre_completo": "Carlos A.",
+          "email": "c***z@ejemplo.com",
+          "telefono": "***-**-4321"
+        }
+      },
+      "codigo": "RESERVA_CONSULTADA"
+    }
+    ```
+
+- **5. Solicitudes Preflight CORS:**
+  - Las 4 rutas soportan el método `OPTIONS` respondiendo `HTTP 204 No Content` con cabeceras completas de CORS sin requerir autenticación Bearer ni `Idempotency-Key`.
+
 ## Evolución
 
 Documentar cada endpoint con entrada, salida, permisos, errores, idempotencia y efectos secundarios. Las pruebas de contrato deben ejecutarse antes de publicar cambios consumidos por terceros.
+
 
