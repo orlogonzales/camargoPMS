@@ -411,6 +411,27 @@ declare(strict_types=1);
                 </div>
             </div>
             <div class="modal-body p-4 bg-light">
+                <!-- Barra de Navegación y Gestión Multi-Folio (FINANCIERO-3C) -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body p-2 d-flex flex-wrap justify-content-between align-items-center gap-2 bg-white b-r-8">
+                        <div class="d-flex align-items-center flex-wrap gap-2" id="contenedor-tabs-multifolio">
+                            <span class="f-s-12 f-w-700 text-secondary me-1 text-uppercase">
+                                <i class="fa-solid fa-layer-group me-1"></i> Folios:
+                            </span>
+                            <ul class="nav nav-pills gap-1 align-items-center mb-0" id="nav-folios-reserva" role="tablist">
+                                <!-- Generado dinámicamente con badges e identificadores Alina -->
+                            </ul>
+                        </div>
+                        <div>
+                            <?php if (!empty($capacidades['puede_movimientos']) || !empty($capacidades['puede_movimiento'])): ?>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-abrir-crear-folio-secundario">
+                                    <i class="fa-solid fa-plus me-1"></i> Nuevo Folio
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Panel de Balance y Estado Financiero -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-2 col-6">
@@ -523,6 +544,34 @@ declare(strict_types=1);
                             </thead>
                             <tbody id="tbody-folio-devoluciones">
                                 <tr><td colspan="6" class="text-center py-3 text-muted">Sin devoluciones registradas.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sección: Historial de Transferencias y Splits entre Folios (FINANCIERO-3C) -->
+                <div class="card border-0 shadow-sm mt-4 mb-0">
+                    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 f-s-13 f-w-700">
+                            <i class="fa-solid fa-arrows-split-up-and-left text-primary me-2"></i> Historial de Transferencias y Splits
+                        </h6>
+                        <span class="badge bg-light-info text-info f-s-11" id="badge-total-transferencias">0 movimientos</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover align-middle f-s-12 mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha / Hora</th>
+                                    <th class="text-center">Operación</th>
+                                    <th>Cargo Trasladado</th>
+                                    <th>Folio Origen</th>
+                                    <th>Folio Destino</th>
+                                    <th class="text-end">Monto Trasladado</th>
+                                    <th>Motivo Justificado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-folio-transferencias">
+                                <tr><td colspan="7" class="text-center py-3 text-muted">Sin transferencias registradas en este folio.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -712,6 +761,163 @@ declare(strict_types=1);
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-danger btn-sm" id="btn-confirmar-devolucion">
                         <i class="fa-solid fa-arrow-rotate-left me-1"></i> Confirmar Devolución
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 8: Aperturar Folio Secundario (FINANCIERO-3C) -->
+<div class="modal fade" id="modal-crear-folio-secundario" tabindex="-1" aria-labelledby="modalCrearSecundarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light py-3 border-bottom">
+                <h5 class="modal-title f-s-16 f-w-700 text-dark" id="modalCrearSecundarioLabel">
+                    <i class="fa-solid fa-layer-group text-primary me-2"></i> Aperturar Folio Secundario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form-crear-folio-secundario" class="app-form app-icon-form" novalidate>
+                <input type="hidden" id="sec-folio-base-id" name="folio_base_id" value="">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 p-3 f-s-12 mb-3 b-r-8">
+                        <i class="fa-solid fa-circle-info me-1"></i> El nuevo folio secundario se creará asociado a la misma cuenta y reserva, permitiendo segregar cargos por empresa, extras o consumos particulares.
+                    </div>
+                    <div class="mb-3">
+                        <label for="sec-etiqueta" class="form-label f-s-12 f-w-600">Etiqueta / Nombre del Folio <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-tag position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="text" class="form-control ps-5" id="sec-etiqueta" name="etiqueta" placeholder="Ej: EMPRESA, EXTRAS, HUÉSPED..." required maxlength="60">
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="f-s-11 text-muted me-1 align-self-center">Sugerencias:</span>
+                            <button type="button" class="badge bg-light-primary text-primary border-0 btn-sugerencia-etiqueta" data-etiqueta="EMPRESA">EMPRESA</button>
+                            <button type="button" class="badge bg-light-primary text-primary border-0 btn-sugerencia-etiqueta" data-etiqueta="EXTRAS">EXTRAS</button>
+                            <button type="button" class="badge bg-light-primary text-primary border-0 btn-sugerencia-etiqueta" data-etiqueta="HUÉSPED">HUÉSPED</button>
+                            <button type="button" class="badge bg-light-primary text-primary border-0 btn-sugerencia-etiqueta" data-etiqueta="CONSUMOS">CONSUMOS</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btn-confirmar-crear-folio-secundario">
+                        <i class="fa-solid fa-check me-1"></i> Aperturar Folio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 9: Transferencia Total de Cargo (FINANCIERO-3C) -->
+<div class="modal fade" id="modal-transferir-cargo" tabindex="-1" aria-labelledby="modalTransferirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light py-3 border-bottom">
+                <h5 class="modal-title f-s-16 f-w-700 text-dark" id="modalTransferirLabel">
+                    <i class="fa-solid fa-arrow-right-arrow-left text-primary me-2"></i> Transferencia Total de Cargo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form-transferir-cargo" class="app-form app-icon-form" novalidate>
+                <input type="hidden" id="transf-folio-origen-id" name="folio_origen_id" value="">
+                <input type="hidden" id="transf-cargo-id" name="cargo_id" value="">
+                <div class="modal-body p-4">
+                    <div class="p-3 b-r-8 mb-3 bg-light border">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="f-s-12 text-muted f-w-600">Cargo:</span>
+                            <span class="f-s-12 f-w-700 text-dark" id="transf-cargo-codigo">CRG-...</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="f-s-12 text-muted f-w-600">Concepto:</span>
+                            <span class="f-s-12 f-w-600 text-dark" id="transf-cargo-concepto">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="f-s-12 text-muted f-w-600">Total a Transferir:</span>
+                            <span class="f-s-14 f-w-700 text-primary" id="transf-cargo-total">S/ 0.00</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transf-folio-destino-id" class="form-label f-s-12 f-w-600">Folio de Destino <span class="text-danger">*</span></label>
+                        <select class="form-select basic-select2" id="transf-folio-destino-id" name="folio_destino_id" data-placeholder="Seleccione el folio de destino..." required>
+                            <option value="">Seleccione el folio de destino...</option>
+                        </select>
+                        <small class="text-muted f-s-11 mt-1 d-block">Solo se listan los folios hermanos activos de la misma cuenta/reserva.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transf-motivo" class="form-label f-s-12 f-w-600">Motivo Justificado de Transferencia <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="transf-motivo" name="motivo" rows="2" placeholder="Explicación operativa del traslado (auditoría obligatoria)..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btn-confirmar-transferencia">
+                        <i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Transferir Cargo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 10: División Parcial de Cargo (Split) (FINANCIERO-3C) -->
+<div class="modal fade" id="modal-split-cargo" tabindex="-1" aria-labelledby="modalSplitLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light py-3 border-bottom">
+                <h5 class="modal-title f-s-16 f-w-700 text-dark" id="modalSplitLabel">
+                    <i class="fa-solid fa-scissors text-warning me-2"></i> División Parcial de Cargo (Split)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form-split-cargo" class="app-form app-icon-form" novalidate>
+                <input type="hidden" id="split-folio-origen-id" name="folio_origen_id" value="">
+                <input type="hidden" id="split-cargo-id" name="cargo_id" value="">
+                <div class="modal-body p-4">
+                    <div class="p-3 b-r-8 mb-3 bg-light border">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="f-s-12 text-muted f-w-600">Cargo Padre:</span>
+                            <span class="f-s-12 f-w-700 text-dark" id="split-cargo-codigo">CRG-...</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="f-s-12 text-muted f-w-600">Concepto:</span>
+                            <span class="f-s-12 f-w-600 text-dark" id="split-cargo-concepto">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="f-s-12 text-muted f-w-600">Total Actual del Cargo:</span>
+                            <span class="f-s-14 f-w-700 text-dark" id="split-cargo-total">S/ 0.00</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="split-folio-destino-id" class="form-label f-s-12 f-w-600">Folio de Destino <span class="text-danger">*</span></label>
+                        <select class="form-select basic-select2" id="split-folio-destino-id" name="folio_destino_id" data-placeholder="Seleccione folio de destino..." required>
+                            <option value="">Seleccione folio de destino...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="split-monto" class="form-label f-s-12 f-w-600">Monto a Trasladar al Destino (PEN) <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-coins position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                            <input type="number" step="0.01" min="0.01" class="form-control ps-5" id="split-monto" name="monto_split" required>
+                        </div>
+                        <small class="text-muted f-s-11 mt-1 d-block">Debe ser menor al total del cargo. El resto permanecerá en el cargo original.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="split-motivo" class="form-label f-s-12 f-w-600">Motivo Justificado de la División <span class="text-danger">*</span></label>
+                        <div class="icon-control position-relative">
+                            <i class="fa-solid fa-comment-dots position-absolute top-0 start-0 mt-3 ms-3"></i>
+                            <textarea class="form-control ps-5" id="split-motivo" name="motivo" rows="2" placeholder="Justificación de la división (ej: separar factura de empresa y consumos del huésped)..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning btn-sm" id="btn-confirmar-split">
+                        <i class="fa-solid fa-scissors me-1"></i> Confirmar División (Split)
                     </button>
                 </div>
             </form>

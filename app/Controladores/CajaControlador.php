@@ -118,7 +118,8 @@ class CajaControlador
             'puede_cobrar' => $this->autorizacionServicio->puede($usuarioActualId, 'caja.cobrar'),
             'puede_aplicar' => $this->autorizacionServicio->puede($usuarioActualId, 'caja.aplicar'),
             'puede_devolver' => $this->autorizacionServicio->puede($usuarioActualId, 'caja.devolver'),
-            'puede_movimiento' => $this->autorizacionServicio->puede($usuarioActualId, 'caja.movimiento'),
+            'puede_movimiento' => $this->autorizacionServicio->puede($usuarioActualId, 'caja.movimientos') || $this->autorizacionServicio->puede($usuarioActualId, 'caja.movimiento'),
+            'puede_movimientos' => $this->autorizacionServicio->puede($usuarioActualId, 'caja.movimientos') || $this->autorizacionServicio->puede($usuarioActualId, 'caja.movimiento'),
         ];
 
         $html = $this->vista->renderizar('caja/index', [

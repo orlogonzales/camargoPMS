@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let folioActualCache = null;
     let sesionActivaCache = null;
     let auxiliaresCache = { cajas: [], metodos: [], bancos: [] };
+    let foliosRelacionadosCache = [];
 
     // =========================================================================
     // Utilidades
@@ -341,10 +342,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 estadoFinanciero = 'SALDO_A_FAVOR';
             }
 
+            const esPrincipal = parseInt(f.es_principal) === 1 || f.es_principal === true;
+            const badgePrincipal = esPrincipal
+                ? '<span class="badge bg-light-primary text-primary f-s-10 me-1">PRINCIPAL</span>'
+                : `<span class="badge bg-light-secondary text-secondary f-s-10 me-1">${escaparHtml(f.etiqueta || 'SECUNDARIO')}</span>`;
+
             html += `
                 <tr>
                     <td>
-                        <span class="f-w-700 text-dark f-s-13">${escaparHtml(f.codigo)}</span>
+                        <div class="d-flex align-items-center mb-1">
+                            ${badgePrincipal}
+                            <span class="f-w-700 text-dark f-s-13">${escaparHtml(f.codigo)}</span>
+                        </div>
                         <div class="f-s-11 text-muted">Folio ID #${f.id}</div>
                     </td>
                     <td>
@@ -423,7 +432,62 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('bal-saldo-disponible').textContent = formatearDinero(f.total_pagos_disponibles);
             document.getElementById('bal-saldo-exigible').textContent = formatearDinero(f.saldo_neto_exigible);
 
-            // Renderizar Cargos
+            // Consultar folios relacionados (hermanos) (FINANCIERO-3C)
+            try {
+                const respRel = await fetch(`/folios/${folioId}/relacionados`);
+                const dataRel = await respRel.json();
+                if (dataRel.ok && Array.isArray(dataRel.datos)) {
+                    foliosRelacionadosCache = dataRel.datos;
+                } else {
+                    foliosRelacionadosCache = [f.folio];
+                }
+            } catch (errRel) {
+                foliosRelacionadosCache = [f.folio];
+            }
+
+            // Renderizar Barra de Tabs Multi-Folio (FINANCIERO-3C)
+            const ulTabs = document.getElementById('nav-folios-reserva');
+            if (ulTabs) {
+                let htmlTabs = '';
+                foliosRelacionadosCache.forEach(rf => {
+                    const esActual = parseInt(rf.id) === parseInt(f.folio.id);
+                    const esPrincipal = parseInt(rf.es_principal) === 1 || rf.es_principal === true;
+                    let badgeHtml = '';
+                    if (esPrincipal) {
+                        badgeHtml = '<i class="fa-solid fa-star text-warning me-1"></i><span class="badge bg-primary me-1">PRINCIPAL</span>';
+                    } else {
+                        badgeHtml = `<span class="badge bg-secondary me-1">${escaparHtml(rf.etiqueta || 'SECUNDARIO')}</span>`;
+                    }
+                    htmlTabs += `
+                        <li class="nav-item" role="presentation">
+                            <button type="button" class="nav-link btn-sm ${esActual ? 'active f-w-700' : ''} btn-switch-folio d-flex align-items-center" data-folio-id="${rf.id}">
+                                ${badgeHtml} <span>${escaparHtml(rf.codigo)}</span>
+                            </button>
+                        </li>
+                    `;
+                });
+                ulTabs.innerHTML = htmlTabs;
+
+                // Listeners de cambio de folio en las pestañas
+                ulTabs.querySelectorAll('.btn-switch-folio').forEach(btn => {
+                    btn.onclick = (e) => {
+                        const targetFolioId = e.currentTarget.dataset.folioId;
+                        if (targetFolioId && parseInt(targetFolioId) !== parseInt(f.folio.id)) {
+                            abrirModalFolioDetalle(targetFolioId);
+                        }
+                    };
+                });
+            }
+
+            // Configurar botón "+ Nuevo Folio"
+            const btnCrearSec = document.getElementById('btn-abrir-crear-folio-secundario');
+            if (btnCrearSec) {
+                btnCrearSec.onclick = () => {
+                    abrirModalCrearFolioSecundario(f.folio.id);
+                };
+            }
+
+            // Renderizar Cargos (FINANCIERO-3C con acciones Transferir y Dividir)
             const tbodyCargos = document.getElementById('tbody-folio-cargos');
             if (f.cargos.length === 0) {
                 tbodyCargos.innerHTML = '<tr><td colspan="9" class="text-center py-3 text-muted">Sin cargos devengados en cuenta.</td></tr>';
@@ -433,21 +497,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pendiente = parseFloat(c.monto_total) - parseFloat(c.monto_aplicado_acumulado);
                     const tieneSaldoPendiente = pendiente > 0.00;
                     const haySaldoAFavor = parseFloat(f.total_pagos_disponibles) > 0.00;
+                    const tieneCobrosAplicados = parseFloat(c.monto_aplicado_acumulado) > 0.00;
 
                     let btnAplicar = '';
                     if (tieneSaldoPendiente && c.estado === 'DEVENGADO' && haySaldoAFavor) {
                         btnAplicar = `
                             <button type="button" class="btn btn-outline-info btn-xs py-0 px-2 btn-aplicar-a-cargo" 
                                     data-cargo-id="${c.id}" data-cargo-codigo="${escaparHtml(c.codigo)}" 
-                                    data-saldo-pendiente="${pendiente.toFixed(2)}">
+                                    data-saldo-pendiente="${pendiente.toFixed(2)}" title="Imputar saldo a favor">
                                 <i class="fa-solid fa-link me-1"></i> Imputar Saldo
                             </button>
                         `;
                     }
 
+                    // Botones de Transferencia y Split (FINANCIERO-3C)
+                    let btnTransferir = `
+                        <button type="button" class="btn btn-outline-primary btn-xs py-0 px-2 btn-transferir-cargo"
+                                data-cargo-id="${c.id}" data-cargo-codigo="${escaparHtml(c.codigo)}"
+                                data-cargo-concepto="${escaparHtml(c.descripcion)}" data-cargo-total="${c.monto_total}"
+                                data-aplicado="${c.monto_aplicado_acumulado}" title="Transferir cargo completo a otro folio">
+                            <i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Transferir
+                        </button>
+                    `;
+
+                    let btnSplit = `
+                        <button type="button" class="btn btn-outline-warning btn-xs py-0 px-2 btn-split-cargo"
+                                data-cargo-id="${c.id}" data-cargo-codigo="${escaparHtml(c.codigo)}"
+                                data-cargo-concepto="${escaparHtml(c.descripcion)}" data-cargo-total="${c.monto_total}"
+                                data-aplicado="${c.monto_aplicado_acumulado}" title="Dividir parcialmente cargo">
+                            <i class="fa-solid fa-scissors me-1"></i> Dividir
+                        </button>
+                    `;
+
                     htmlC += `
                         <tr>
-                            <td><strong class="text-dark">${escaparHtml(c.codigo)}</strong></td>
+                            <td>
+                                <strong class="text-dark">${escaparHtml(c.codigo)}</strong>
+                                ${tieneCobrosAplicados ? '<span class="badge bg-light-info text-info ms-1" title="Cargo con cobros aplicados"><i class="fa-solid fa-lock"></i></span>' : ''}
+                            </td>
                             <td>${escaparHtml(c.descripcion)}</td>
                             <td class="text-center">${escaparHtml(c.cantidad)}</td>
                             <td class="text-end">${formatearDinero(c.precio_unitario)}</td>
@@ -455,7 +542,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td class="text-end text-success">${formatearDinero(c.monto_aplicado_acumulado)}</td>
                             <td class="text-end f-w-700 ${tieneSaldoPendiente ? 'text-danger' : 'text-success'}">${formatearDinero(pendiente)}</td>
                             <td class="text-center">${badgeEstadoCargo(c.estado)}</td>
-                            <td class="text-center">${btnAplicar}</td>
+                            <td class="text-center">
+                                <div class="d-inline-flex gap-1 flex-wrap justify-content-center">
+                                    ${btnAplicar}
+                                    ${btnTransferir}
+                                    ${btnSplit}
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
@@ -523,6 +616,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbodyDev.innerHTML = htmlD;
             }
 
+            // Renderizar Historial de Transferencias y Splits (FINANCIERO-3C)
+            cargarHistorialTransferencias(f.folio.id);
+
             // Configurar botón "Registrar Cobro" del modal
             const btnCobroFolio = document.getElementById('btn-abrir-cobro-folio');
             if (btnCobroFolio) {
@@ -538,6 +634,38 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cargoCod = e.currentTarget.dataset.cargoCodigo;
                     const pendiente = e.currentTarget.dataset.saldoPendiente;
                     abrirModalAplicarPago(cargoId, cargoCod, pendiente, f);
+                };
+            });
+
+            // Configurar botones de transferir cargo (FINANCIERO-3C)
+            document.querySelectorAll('.btn-transferir-cargo').forEach(b => {
+                b.onclick = (e) => {
+                    const aplicado = parseFloat(e.currentTarget.dataset.aplicado) || 0;
+                    if (aplicado > 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Operación no permitida',
+                            text: 'Este cargo tiene cobros aplicados y no puede transferirse ni dividirse. Debe revertirse previamente la aplicación correspondiente.',
+                        });
+                        return;
+                    }
+                    abrirModalTransferirCargo(e.currentTarget.dataset, f);
+                };
+            });
+
+            // Configurar botones de dividir / split cargo (FINANCIERO-3C)
+            document.querySelectorAll('.btn-split-cargo').forEach(b => {
+                b.onclick = (e) => {
+                    const aplicado = parseFloat(e.currentTarget.dataset.aplicado) || 0;
+                    if (aplicado > 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Operación no permitida',
+                            text: 'Este cargo tiene cobros aplicados y no puede transferirse ni dividirse. Debe revertirse previamente la aplicación correspondiente.',
+                        });
+                        return;
+                    }
+                    abrirModalSplitCargo(e.currentTarget.dataset, f);
                 };
             });
 
@@ -560,12 +688,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             });
 
-            const modal = new bootstrap.Modal(document.getElementById('modal-folio-detalle'));
+            const modalEl = document.getElementById('modal-folio-detalle');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
             modal.show();
 
         } catch (err) {
             console.error('Error al abrir detalle de folio:', err);
             Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el estado de cuenta.' });
+        }
+    }
+
+    /**
+     * Carga y renderiza el historial de transferencias y splits de un folio (FINANCIERO-3C).
+     */
+    async function cargarHistorialTransferencias(folioId) {
+        const tbodyTransf = document.getElementById('tbody-folio-transferencias');
+        const badgeCount = document.getElementById('badge-total-transferencias');
+        if (!tbodyTransf) return;
+
+        try {
+            const resp = await fetch(`/folios/${folioId}/transferencias`);
+            const data = await resp.json();
+            if (!data.ok || !Array.isArray(data.datos) || data.datos.length === 0) {
+                tbodyTransf.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin transferencias registradas en este folio.</td></tr>';
+                if (badgeCount) badgeCount.textContent = '0 movimientos';
+                return;
+            }
+
+            const transferencias = data.datos;
+            if (badgeCount) badgeCount.textContent = `${transferencias.length} movimientos`;
+
+            let htmlT = '';
+            transferencias.forEach(t => {
+                const badgeTipo = t.tipo_operacion === 'TOTAL'
+                    ? '<span class="badge bg-light-primary text-primary">TRANSFERENCIA TOTAL</span>'
+                    : '<span class="badge bg-light-warning text-warning">SPLIT PARCIAL</span>';
+                const origTexto = t.folio_origen_codigo || `FOL-#${t.cuenta_folio_origen_id}`;
+                const destTexto = t.folio_destino_codigo || `FOL-#${t.cuenta_folio_destino_id}`;
+                const cargoTexto = t.cargo_origen_id ? `Cargo #${t.cargo_origen_id}` : '-';
+
+                htmlT += `
+                    <tr>
+                        <td>${escaparHtml(t.transferido_en || '-')}</td>
+                        <td class="text-center">${badgeTipo}</td>
+                        <td><strong class="text-dark">${escaparHtml(cargoTexto)}</strong></td>
+                        <td><span class="badge bg-light-secondary text-secondary">${escaparHtml(origTexto)}</span></td>
+                        <td><span class="badge bg-light-info text-info">${escaparHtml(destTexto)}</span></td>
+                        <td class="text-end f-w-700 text-primary">${formatearDinero(t.monto_transferido)}</td>
+                        <td class="text-muted f-s-11">${escaparHtml(t.motivo || '-')}</td>
+                    </tr>
+                `;
+            });
+            tbodyTransf.innerHTML = htmlT;
+        } catch (err) {
+            console.error('Error al cargar historial de transferencias:', err);
+            tbodyTransf.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Sin transferencias registradas en este folio.</td></tr>';
         }
     }
 
@@ -1134,6 +1311,273 @@ document.addEventListener('DOMContentLoaded', () => {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Falla al registrar movimiento de caja.' });
         } finally {
             btn.disabled = false;
+        }
+    });
+
+    // =========================================================================
+    // Aperturar Folio Secundario (FINANCIERO-3C)
+    // =========================================================================
+    function abrirModalCrearFolioSecundario(folioBaseId) {
+        const form = document.getElementById('form-crear-folio-secundario');
+        form?.reset();
+        document.getElementById('sec-folio-base-id').value = folioBaseId;
+
+        // Listeners para las sugerencias de etiqueta
+        document.querySelectorAll('.btn-sugerencia-etiqueta').forEach(btn => {
+            btn.onclick = () => {
+                const inputEtiqueta = document.getElementById('sec-etiqueta');
+                if (inputEtiqueta) inputEtiqueta.value = btn.dataset.etiqueta;
+            };
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('modal-crear-folio-secundario'));
+        modal.show();
+    }
+
+    document.getElementById('form-crear-folio-secundario')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const folioBaseId = document.getElementById('sec-folio-base-id').value;
+        const etiqueta = document.getElementById('sec-etiqueta').value.trim();
+
+        if (!etiqueta) {
+            Swal.fire({ icon: 'warning', title: 'Campo Requerido', text: 'Ingrese la etiqueta para el nuevo folio secundario.' });
+            return;
+        }
+
+        const btnSubmit = document.getElementById('btn-confirmar-crear-folio-secundario');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Aperturando...';
+
+        try {
+            const resp = await fetch(`/folios/${folioBaseId}/secundarios`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ etiqueta: etiqueta, _csrf_token: csrfToken })
+            });
+            const data = await resp.json();
+
+            if (!data.ok) {
+                Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje });
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modal-crear-folio-secundario'))?.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Folio Aperturado',
+                text: data.mensaje,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Asincrónicamente actualizar listado y abrir el nuevo folio secundario
+            await cargarFolios();
+            abrirModalFolioDetalle(data.datos.folio.id);
+
+        } catch (err) {
+            console.error('Error al aperturar folio secundario:', err);
+            Swal.fire({ icon: 'error', title: 'Error Inesperado', text: 'Falla al procesar la apertura de folio.' });
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-check me-1"></i> Aperturar Folio';
+        }
+    });
+
+    // =========================================================================
+    // Transferencia Total de Cargo (FINANCIERO-3C)
+    // =========================================================================
+    function abrirModalTransferirCargo(dataset, f) {
+        const form = document.getElementById('form-transferir-cargo');
+        form?.reset();
+
+        document.getElementById('transf-folio-origen-id').value = f.folio.id;
+        document.getElementById('transf-cargo-id').value = dataset.cargoId;
+        document.getElementById('transf-cargo-codigo').textContent = dataset.cargoCodigo;
+        document.getElementById('transf-cargo-concepto').textContent = dataset.cargoConcepto;
+        document.getElementById('transf-cargo-total').textContent = formatearDinero(dataset.cargoTotal);
+
+        const selDestino = document.getElementById('transf-folio-destino-id');
+        selDestino.innerHTML = '<option value="">Seleccione el folio de destino...</option>';
+
+        const destinosValidos = foliosRelacionadosCache.filter(rf => parseInt(rf.id) !== parseInt(f.folio.id));
+        if (destinosValidos.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin Folios de Destino',
+                text: 'No existen folios secundarios disponibles para recibir la transferencia. Aperture primero un nuevo folio desde el botón "+ Nuevo Folio".'
+            });
+            return;
+        }
+
+        destinosValidos.forEach(rf => {
+            const opt = document.createElement('option');
+            opt.value = rf.id;
+            const esPrin = parseInt(rf.es_principal) === 1 || rf.es_principal === true;
+            opt.textContent = `${rf.codigo} — ${esPrin ? 'PRINCIPAL' : (rf.etiqueta || 'SECUNDARIO')} (ID #${rf.id})`;
+            selDestino.appendChild(opt);
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('modal-transferir-cargo'));
+        modal.show();
+    }
+
+    document.getElementById('form-transferir-cargo')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const folioOrigenId = document.getElementById('transf-folio-origen-id').value;
+        const cargoId = document.getElementById('transf-cargo-id').value;
+        const folioDestinoId = document.getElementById('transf-folio-destino-id').value;
+        const motivo = document.getElementById('transf-motivo').value.trim();
+
+        if (!folioDestinoId || !motivo) {
+            Swal.fire({ icon: 'warning', title: 'Campos Requeridos', text: 'Seleccione el folio destino e ingrese el motivo justificado.' });
+            return;
+        }
+
+        const btnSubmit = document.getElementById('btn-confirmar-transferencia');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Transfiriendo...';
+
+        try {
+            const resp = await fetch(`/folios/${folioOrigenId}/transferir-cargo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    folio_destino_id: parseInt(folioDestinoId),
+                    cargo_id: parseInt(cargoId),
+                    motivo: motivo,
+                    _csrf_token: csrfToken
+                })
+            });
+            const data = await resp.json();
+
+            if (!data.ok) {
+                Swal.fire({ icon: resp.status === 422 ? 'warning' : 'error', title: 'Transferencia Rechazada', text: data.mensaje });
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modal-transferir-cargo'))?.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Cargo Transferido',
+                text: data.mensaje,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Asincrónicamente refrescar datos de folios y estado de cuenta actual
+            await cargarFolios();
+            abrirModalFolioDetalle(folioOrigenId);
+
+        } catch (err) {
+            console.error('Error al transferir cargo:', err);
+            Swal.fire({ icon: 'error', title: 'Error Inesperado', text: 'Falla al procesar la transferencia del cargo.' });
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Transferir Cargo';
+        }
+    });
+
+    // =========================================================================
+    // División Parcial de Cargo (Split) (FINANCIERO-3C)
+    // =========================================================================
+    function abrirModalSplitCargo(dataset, f) {
+        const form = document.getElementById('form-split-cargo');
+        form?.reset();
+
+        document.getElementById('split-folio-origen-id').value = f.folio.id;
+        document.getElementById('split-cargo-id').value = dataset.cargoId;
+        document.getElementById('split-cargo-codigo').textContent = dataset.cargoCodigo;
+        document.getElementById('split-cargo-concepto').textContent = dataset.cargoConcepto;
+        document.getElementById('split-cargo-total').textContent = formatearDinero(dataset.cargoTotal);
+
+        const selDestino = document.getElementById('split-folio-destino-id');
+        selDestino.innerHTML = '<option value="">Seleccione el folio de destino...</option>';
+
+        const destinosValidos = foliosRelacionadosCache.filter(rf => parseInt(rf.id) !== parseInt(f.folio.id));
+        if (destinosValidos.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin Folios de Destino',
+                text: 'No existen folios secundarios disponibles para recibir la división. Aperture primero un nuevo folio desde el botón "+ Nuevo Folio".'
+            });
+            return;
+        }
+
+        destinosValidos.forEach(rf => {
+            const opt = document.createElement('option');
+            opt.value = rf.id;
+            const esPrin = parseInt(rf.es_principal) === 1 || rf.es_principal === true;
+            opt.textContent = `${rf.codigo} — ${esPrin ? 'PRINCIPAL' : (rf.etiqueta || 'SECUNDARIO')} (ID #${rf.id})`;
+            selDestino.appendChild(opt);
+        });
+
+        // Configurar max en split-monto
+        const inputMonto = document.getElementById('split-monto');
+        inputMonto.value = '';
+        inputMonto.setAttribute('max', (parseFloat(dataset.cargoTotal) - 0.01).toFixed(2));
+
+        const modal = new bootstrap.Modal(document.getElementById('modal-split-cargo'));
+        modal.show();
+    }
+
+    document.getElementById('form-split-cargo')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const folioOrigenId = document.getElementById('split-folio-origen-id').value;
+        const cargoId = document.getElementById('split-cargo-id').value;
+        const folioDestinoId = document.getElementById('split-folio-destino-id').value;
+        const montoSplit = document.getElementById('split-monto').value.trim();
+        const motivo = document.getElementById('split-motivo').value.trim();
+
+        if (!folioDestinoId || !montoSplit || parseFloat(montoSplit) <= 0 || !motivo) {
+            Swal.fire({ icon: 'warning', title: 'Campos Requeridos', text: 'Seleccione folio destino, ingrese monto válido a dividir y el motivo justificado.' });
+            return;
+        }
+
+        const btnSubmit = document.getElementById('btn-confirmar-split');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Dividiendo...';
+
+        try {
+            const resp = await fetch(`/folios/${folioOrigenId}/split-cargo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    folio_destino_id: parseInt(folioDestinoId),
+                    cargo_id: parseInt(cargoId),
+                    monto_split: montoSplit,
+                    motivo: motivo,
+                    _csrf_token: csrfToken
+                })
+            });
+            const data = await resp.json();
+
+            if (!data.ok) {
+                Swal.fire({ icon: resp.status === 422 ? 'warning' : 'error', title: 'División Rechazada', text: data.mensaje });
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modal-split-cargo'))?.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Cargo Dividido Exitosamente',
+                text: data.mensaje,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Asincrónicamente refrescar datos de folios y estado de cuenta actual
+            await cargarFolios();
+            abrirModalFolioDetalle(folioOrigenId);
+
+        } catch (err) {
+            console.error('Error al dividir cargo:', err);
+            Swal.fire({ icon: 'error', title: 'Error Inesperado', text: 'Falla al procesar la división del cargo.' });
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-scissors me-1"></i> Confirmar División (Split)';
         }
     });
 

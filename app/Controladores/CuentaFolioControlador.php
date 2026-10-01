@@ -240,6 +240,133 @@ class CuentaFolioControlador
     }
 
     /**
+     * Endpoint POST: Apertura un folio secundario para la cuenta / reserva del folio dado.
+     * Ruta: POST /folios/{id}/secundarios
+     */
+    public function crearSecundario(int|string $id): Respuesta
+    {
+        SesionServicio::iniciarSesionPhp();
+        $usuario = $this->sesionServicio->validarSesionActual();
+        $actorId = $this->resolverActorId($usuario);
+
+        $datos = $this->obtenerCuerpoPeticion();
+
+        if (!$this->validarCsrf($datos)) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => 'Token CSRF inválido o ausente.',
+            ], 403);
+        }
+
+        $folioId = (int) $id;
+        $folioBase = $this->folioRepo->obtenerPorId($folioId);
+        if ($folioBase === null) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => "Folio base ID {$folioId} no encontrado.",
+            ], 404);
+        }
+
+        $reservaId = $folioBase->obtenerReservaId();
+        if ($reservaId === null) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => 'El folio no está asociado a una reserva válida para aperturar un folio secundario.',
+            ], 422);
+        }
+
+        $etiqueta = isset($datos['etiqueta']) ? trim((string) $datos['etiqueta']) : 'FOLIO SECUNDARIO';
+        if ($etiqueta === '') {
+            $etiqueta = 'FOLIO SECUNDARIO';
+        }
+
+        $personaTitularId = isset($datos['persona_titular_id']) && (int) $datos['persona_titular_id'] > 0
+            ? (int) $datos['persona_titular_id']
+            : (int) $folioBase->obtenerPersonaTitularId();
+
+        try {
+            $secundario = $this->cuentaFolioServicio->crearFolioSecundario(
+                $reservaId,
+                $personaTitularId,
+                $etiqueta,
+                $actorId
+            );
+
+            // Trazabilidad D-061
+            try {
+                $this->auditoriaServicio->registrarEvento(
+                    $actorId,
+                    'FOLIO_SECUNDARIO_CREADO',
+                    'cuentas_folios',
+                    (int) $secundario->obtenerId(),
+                    [
+                        'codigo' => $secundario->obtenerCodigo(),
+                        'reserva_id' => $reservaId,
+                        'etiqueta' => $etiqueta,
+                        'persona_titular_id' => $personaTitularId,
+                        'folio_padre_id' => $secundario->obtenerFolioPadreId(),
+                    ]
+                );
+            } catch (Throwable) {
+                // Trazabilidad no impeditiva
+            }
+
+            return Respuesta::json([
+                'ok' => true,
+                'mensaje' => "Folio secundario {$secundario->obtenerCodigo()} aperturado exitosamente.",
+                'datos' => [
+                    'folio' => $secundario->haciaArreglo(),
+                ],
+            ], 201);
+        } catch (CuentaFolioNoEncontradaExcepcion $e) {
+            return Respuesta::json(['ok' => false, 'mensaje' => $e->getMessage()], 404);
+        } catch (EstadoFinancieroInvalidoExcepcion $e) {
+            return Respuesta::json(['ok' => false, 'mensaje' => $e->getMessage()], 422);
+        } catch (Throwable $e) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => 'Error interno al aperturar folio secundario: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Endpoint GET: Retorna los folios relacionados (hermanos) de una misma reserva o cuenta.
+     * Ruta: GET /folios/{id}/relacionados
+     */
+    public function foliosRelacionadosJson(int|string $id): Respuesta
+    {
+        $folioId = (int) $id;
+        $folio = $this->folioRepo->obtenerPorId($folioId);
+        if ($folio === null) {
+            return Respuesta::json(['ok' => false, 'mensaje' => "Folio ID {$folioId} no encontrado"], 404);
+        }
+
+        try {
+            if ($folio->obtenerReservaId() !== null) {
+                $folios = $this->cuentaFolioServicio->obtenerFoliosReserva((int) $folio->obtenerReservaId());
+            } elseif ($folio->obtenerArrendamientoId() !== null) {
+                $folios = $this->folioRepo->listarPorArrendamientoId((int) $folio->obtenerArrendamientoId());
+            } else {
+                $padreId = $folio->obtenerFolioPadreId() ?? $folioId;
+                $padre = $this->folioRepo->obtenerPorId($padreId);
+                $hijos = $this->folioRepo->listarHijos($padreId);
+                $folios = array_values(array_filter(array_merge($padre ? [$padre] : [], $hijos)));
+            }
+
+            return Respuesta::json([
+                'ok' => true,
+                'datos' => array_map(fn($f) => $f->haciaArreglo(), $folios),
+            ], 200);
+        } catch (Throwable $e) {
+            return Respuesta::json([
+                'ok' => false,
+                'mensaje' => 'Error al consultar folios relacionados: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Endpoint GET: Retorna el historial de transferencias vinculadas a un folio.
      * Ruta: GET /folios/{id}/transferencias
      */
@@ -253,9 +380,21 @@ class CuentaFolioControlador
 
         try {
             $transferencias = $this->cuentaFolioServicio->obtenerTransferenciasFolio($folioId);
+            $datos = [];
+            foreach ($transferencias as $t) {
+                $item = $t->haciaArreglo();
+                $folioOrig = $this->folioRepo->obtenerPorId($t->obtenerCuentaFolioOrigenId());
+                $folioDest = $this->folioRepo->obtenerPorId($t->obtenerCuentaFolioDestinoId());
+                $item['folio_origen_codigo'] = $folioOrig ? $folioOrig->obtenerCodigo() : "FOL-{$t->obtenerCuentaFolioOrigenId()}";
+                $item['folio_origen_etiqueta'] = $folioOrig ? $folioOrig->obtenerEtiqueta() : '';
+                $item['folio_destino_codigo'] = $folioDest ? $folioDest->obtenerCodigo() : "FOL-{$t->obtenerCuentaFolioDestinoId()}";
+                $item['folio_destino_etiqueta'] = $folioDest ? $folioDest->obtenerEtiqueta() : '';
+                $datos[] = $item;
+            }
+
             return Respuesta::json([
                 'ok' => true,
-                'datos' => array_map(fn($t) => $t->haciaArreglo(), $transferencias),
+                'datos' => $datos,
             ], 200);
         } catch (Throwable $e) {
             return Respuesta::json(['ok' => false, 'mensaje' => 'Error al obtener transferencias: ' . $e->getMessage()], 500);

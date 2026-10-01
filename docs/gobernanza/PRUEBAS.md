@@ -331,7 +331,8 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **NIGHT-AUDIT-2B**  | `test_night_audit_scheduler.php` (Secciones 1..9) | 46 | â€” | 46/46 PASS |
 | **FINANCIERO-3A**   | `test_multifolio_split_3a.php` (Bloques 1..8) | 38 | — | 38/38 PASS |
 | **FINANCIERO-3B**   | `test_multifolio_split_3b.php` (Bloques 1..8) | 51 | — | 51/51 PASS |
-| **TOTALES CANÓNICOS**| **85 suites ejecutadas** | **—** | **—** | **2,803 checks PASS (100%)** |
+| **FINANCIERO-3C**   | `test_multifolio_split_3c.php` (Bloques 1..18) | 69 | — | 69/69 PASS |
+| **TOTALES CANÓNICOS**| **86 suites ejecutadas** | **—** | **—** | **2,872 checks PASS (100%)** |
 
   - **Consolidado de RegresiÃ³n Transversal Activa (NIGHT-AUDIT-2B):**
     - Suite `test_night_audit_scheduler.php`: 46 comprobaciones automÃ¡ticas cubriendo:
@@ -371,3 +372,21 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - Endpoints HTTP, RBAC y CSRF: rutas protegidas en `public/index.php` con `caja.movimientos` y `caja.ver`, rechazo HTTP 403 ante omisión de token CSRF, envelope JSON normalizado con eventos D-061 (`FOLIO_TRANSFERENCIA_TOTAL`, `FOLIO_SPLIT_PARCIAL`).
     - Suites previas sin regresión: 84 suites históricas ejecutadas y validadas al 100%.
     - **Total Consolidado de Regresión Activa: 85/85 suites PASS — 2,803 checks canónicos PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (FINANCIERO-3C):**
+    - Suite `test_multifolio_split_3c.php`: 69 comprobaciones automáticas cubriendo:
+      - Gobierno de BD y ranura 040: exactamente 131 tablas relacionales, ranura 040 estrictamente LIBRE (Cero DDL en 3C), `admin-dashboard/` 100% inmutable.
+      - Erradicación absoluta de recargas de página (`0 location.reload()` en archivos JS y vistas).
+      - Endpoints HTTP, RBAC y CSRF:
+        - `POST /folios/{id}/secundarios`: protegido por `caja.movimientos` y CSRF; creación de folio secundario vinculado al maestro y auditoría D-061 `FOLIO_CREAR_SECUNDARIO`.
+        - `GET /folios/{id}/relacionados`: protegido por `caja.ver`; listado ordenado de folios hermanos de la reserva/arrendamiento (principal primero, secundarios por ID).
+        - `GET /folios/{id}/transferencias`: protegido por `caja.ver`; enriquecido con metadatos descriptivos de folios de origen y destino (`folio_origen_codigo`, `folio_destino_codigo`, `monto_transferido`, `tipo_operacion`).
+      - Cumplimiento de Decisión D-113: detección proactiva de cargos con cobros aplicados (`monto_aplicado_acumulado > 0`) con bloqueo en frontend y advertencia SweetAlert2 explicativa; confirmación de rechazo backend con HTTP 422 (`CargoConPagosAplicadosExcepcion`).
+      - Integridad de Vistas y Modales Alina:
+        - Contenedor de tabs multi-folio (`#nav-folios-reserva`, `#contenedor-tabs-multifolio`) y botón `+ Nuevo Folio` (`#btn-abrir-crear-folio-secundario`).
+        - Modal 8 `modal-crear-folio-secundario` con chips de sugerencia rápida.
+        - Modal 9 `modal-transferir-cargo` con selector de destino y captura de motivo.
+        - Modal 10 `modal-split-cargo` con cálculo de límite superior y desglose en tiempo real.
+        - Card y tabla "Historial de Transferencias y Splits" (`#tbody-folio-transferencias`, `#badge-total-transferencias`).
+      - Control de permisos en vista: provisión de `'puede_movimientos'` en `CajaControlador::index()`.
+    - Suites previas sin regresión: 85 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 86/86 suites PASS — 2,872 checks canónicos PASS — 0 fallos (100%)**.

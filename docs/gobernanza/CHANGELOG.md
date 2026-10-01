@@ -4,6 +4,34 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase FINANCIERO-3C — Interfaz Operativa Multi-Folio Alina
+
+- **Interfaz y Ergonomía Alina (`app/Vistas/caja/index.php` & `public/assets/js/gestion-caja.js`):**
+  - Navegación asíncrona mediante pestañas de multi-folio (`#nav-folios-reserva`, `#contenedor-tabs-multifolio`) con distintivos visuales (`PRINCIPAL` en verde success / `SECUNDARIO (etiqueta)` en azul info).
+  - Botón de acción rápida `+ Nuevo Folio` (`#btn-abrir-crear-folio-secundario`) con sugerencias rápidas operativas ('Gastos Extras', 'Empresa / Facturación', 'Acompañante', 'Servicios Adicionales').
+  - Pestañas dinámicas: alternancia instantánea entre folios de la reserva sin recargas completas de página (`location.reload()` estrictamente erradicado), con actualización de balance, saldos netos y lista de cargos.
+  - Botones de acción operativa por cargo: `Transferir` y `Dividir` en cargos abiertos/pendientes de cobro.
+  - Bloqueo proactivo en frontend conforme a Decisión D-113: detección inmediata si `monto_aplicado_acumulado > 0`; despliega SweetAlert2 de advertencia indicando que el cargo cuenta con cobros aplicados y debe revertirse la aplicación de pago antes de transferir o dividir, protegiendo las invariantes contables.
+  - Modal 8: `modal-crear-folio-secundario`: creación ágil de folio secundario vía `POST /folios/{id}/secundarios` con refresco automático de tabs y selección inmediata del nuevo folio.
+  - Modal 9: `modal-transferir-cargo`: selector dinámico de folio destino (excluyendo el origen), resumen contable del cargo, captura obligatoria de motivo y mutación vía `POST /folios/{id}/transferir-cargo`.
+  - Modal 10: `modal-split-cargo`: split parcial con límite superior estricto (`max = total - 0.01`), validación decimal en tiempo real, captura de motivo y mutación vía `POST /folios/{id}/split-cargo`.
+  - Card y tabla dedicada "Historial de Transferencias y Splits" (`#tbody-folio-transferencias`, `#badge-total-transferencias`), renderizando código de transferencia, tipo (`TOTAL` / `SPLIT_PARCIAL`), cargo involucrado, folio origen, folio destino, importe transferido y autoría con fecha/hora.
+- **Controlador y Enrutamiento Front Controller (`CuentaFolioControlador`, `CajaControlador`, `public/index.php`):**
+  - Endpoints HTTP protegidos con RBAC y CSRF:
+    - `POST /folios/{id}/secundarios`: creación de folio secundario protegida por `caja.movimientos` y token CSRF con evento de auditoría `FOLIO_CREAR_SECUNDARIO`.
+    - `GET /folios/{id}/relacionados`: consulta de folios hermanos de la reserva protegida por `caja.ver`.
+    - Enriquecimiento de `GET /folios/{id}/transferencias` con metadatos descriptivos (`folio_origen_codigo`, `folio_destino_codigo`, `monto_transferido`, `tipo_operacion`).
+  - Enriquecimiento de variables pasadas a la vista en `CajaControlador::index()` con `'puede_movimientos'` para control granular de acciones.
+- **Gobernanza, Calidad y Regresión:**
+  - Ranura de migración `040` estrictamente LIBRE (Cero DDL en 3C).
+  - Catálogo de base de datos conservado exactamente en 131 tablas relacionales.
+  - Inmutabilidad del catálogo de referencia: `admin-dashboard/` 100% inalterado.
+  - Erradicación absoluta de recargas de página (`0 location.reload()`).
+  - Suite de pruebas dedicada `tests/test_multifolio_split_3c.php`: 69/69 checks PASS (100%).
+  - Regresión transversal global: 86 suites ejecutadas (100% PASS), 2,872 checks canónicos homologados.
+
+## Baseline oficial e8cb7b6 (FINANCIERO-3A + FINANCIERO-3B)
+
 ### Microfase FINANCIERO-3B — Motor Transaccional de Split y Transferencias de Cargos
 
 - **Servicio de Dominio Financiero Transaccional (`CuentaFolioServicio`):**

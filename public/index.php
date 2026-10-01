@@ -1554,6 +1554,12 @@ $enrutador->post('/folios/{id}/transferir-cargo', [\CamargoPMS\Controladores\Cue
 $enrutador->post('/folios/{id}/split-cargo', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'splitCargo'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.movimientos'),
 ]);
+$enrutador->post('/folios/{id}/secundarios', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'crearSecundario'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.movimientos'),
+]);
+$enrutador->get('/folios/{id}/relacionados', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'foliosRelacionadosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
 $enrutador->get('/folios/{id}/transferencias', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'transferenciasJson'], [
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
 ]);
