@@ -4,6 +4,45 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase FINANCIERO-3B — Motor Transaccional de Split y Transferencias de Cargos
+
+- **Servicio de Dominio Financiero Transaccional (`CuentaFolioServicio`):**
+  - Implementación de `transferirCargo(int $folioOrigenId, int $folioDestinoId, int $cargoId, string $motivo, ?int $usuarioAutorizadorId = null, ?int $actorId = null)`:
+    - Adquisición de bloqueos deterministas pesimistas a nivel de fila (`SELECT ... FOR UPDATE`) ordenados numéricamente por ID de folio (`min(id), max(id)`), garantizando exclusión mutua estricta y erradicación matemática de deadlocks en concurrencia (D-113).
+    - Reubicación física y contable del cargo modificando `cuenta_folio_id` al folio de destino, preservando intactos el identificador, código canónico, importes e imputación.
+    - Generación atómica de auditoría contable append-only en `cuenta_folio_transferencias_cargos` con tipo de operación `'TOTAL'`, código generado correlativo y autoría rastreable según D-061.
+  - Implementación de `splitCargo(int $folioOrigenId, int $folioDestinoId, int $cargoPadreId, string $montoSplit, string $motivo, ?int $usuarioAutorizadorId = null, ?int $actorId = null)`:
+    - Validación rigurosa de frontera: `0.00 < montoSplit < totalPadreOriginal`.
+    - Algoritmo de conservación matemática estricta sin deriva decimal:
+      - Desglose proporcional de subtotal e impuesto sobre el importe split respetando al céntimo las tasas de origen.
+      - Remanente del cargo padre en Folio A reducido con `bcsub` exacto: `$subtotalRemanente = bcsub($subtotalOriginal, $subtotalDerivado, 2)`, `$impuestoRemanente = bcsub($impuestoOriginal, $impuestoDerivado, 2)`, `$totalRemanente = bcsub($totalOriginal, $montoSplitNorm, 2)`.
+      - Creación del nuevo cargo derivado (hijo) en Folio Destino con `cargo_padre_id = $cargoPadreId` y concepto enriquecido `(Split)`.
+      - Cumplimiento de invariantes matemáticas: `MONTO ANTES = MONTO ORIGEN DESPUÉS + MONTO DERIVADO`, y `Δ deuda combinada Folio A + Folio Destino = 0.00`.
+    - Registro inmutable en `cuenta_folio_transferencias_cargos` con tipo `'SPLIT_PARCIAL'`.
+  - Invariante financiera inviolable (D-113): Prohibición categórica de transferir o dividir cargos con amortizaciones o cobros aplicados (`monto_aplicado_acumulado > 0` o registros activos en `aplicaciones_pago`), lanzando `CargoConPagosAplicadosExcepcion` (HTTP 422).
+  - Inviolabilidad de Night Audit: Preservación íntegra de devengos históricos en `devengos_alojamiento`, fechas hoteleras y montos contables auditados previamente devengados.
+  - Métodos auxiliares de consulta: `obtenerTransferenciasFolio(int $folioId)` y `obtenerCargosFolio(int $folioId)`.
+- **Capa de Persistencia y Repositorios:**
+  - `CargoCuentaRepositorio`: métodos `transferirDeFolio(int $cargoId, int $folioDestinoId)` y `actualizarMontosSplit(int $cargoId, string $nuevoSubtotal, string $nuevoImpuesto, string $nuevoTotal)`.
+  - `AplicacionPagoRepositorio`: método `contarActivasPorCargo(int $cargoId)` para verificación de invariantes en amortizaciones.
+- **Excepciones de Dominio Específicas:**
+  - `CargoConPagosAplicadosExcepcion`: código HTTP 422, mensaje estructurado con código de cargo y monto amortizado.
+  - `TransferenciaFolioInvalidaExcepcion`: código HTTP 422, lanzada ante transgresión de reglas de negocio en transferencias o splits.
+- **Controlador y Enrutamiento Front Controller (`CuentaFolioControlador` & `public/index.php`):**
+  - Endpoints HTTP protegidos con RBAC y CSRF:
+    - `POST /folios/{id}/transferir-cargo`: mutación protegida por `caja.movimientos` y token CSRF.
+    - `POST /folios/{id}/split-cargo`: mutación protegida por `caja.movimientos` y token CSRF.
+    - `GET /folios/{id}/transferencias`: consulta protegida por `caja.ver`.
+    - `GET /folios/{id}/cargos`: listado de cargos protegido por `caja.ver`.
+    - `GET /folios/{id}/datos`: estado de cuenta JSON estructurado con balance y saldos netos exigibles protegido por `caja.ver`.
+  - Emisión de eventos de auditoría D-061: `FOLIO_TRANSFERENCIA_TOTAL` y `FOLIO_SPLIT_PARCIAL`.
+- **Gobernanza, Calidad y Regresión:**
+  - Ranura de migración `040` estrictamente LIBRE (Cero DDL en 3B).
+  - Catálogo de base de datos conservado exactamente en 131 tablas relacionales.
+  - Inmutabilidad del catálogo de referencia: `admin-dashboard/` 100% inalterado.
+  - Interfaz Alina reservada estrictamente para `FINANCIERO-3C` (Cero UI en 3B).
+  - Suite de pruebas dedicada `tests/test_multifolio_split_3b.php`: 51/51 checks PASS (100%).
+
 ### Microfase FINANCIERO-3A — Base de Datos y Modelo de Dominio Multi-Folio y Split de Cuentas
 
 - **Evolución Relacional y Migración 039 (`SQL/migraciones/039_multifolio_split_cuentas.sql`):**

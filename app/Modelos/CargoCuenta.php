@@ -121,9 +121,19 @@ class CargoCuenta
         return $this->estado === 'DEVENGADO';
     }
 
+    public function estaDevengado(): bool
+    {
+        return $this->esDevengado();
+    }
+
     public function esAnulado(): bool
     {
         return $this->estado === 'ANULADO';
+    }
+
+    public function estaAnulado(): bool
+    {
+        return $this->esAnulado();
     }
 
     /**

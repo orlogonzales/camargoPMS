@@ -1545,6 +1545,25 @@ $enrutador->get('/pagos/webhooks/{id}/payload', [\CamargoPMS\Controladores\PagoC
     new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
 ]);
 
+// =====================================================================
+// RUTAS DE CUENTAS MULTI-FOLIO, SPLIT Y TRANSFERENCIAS (FINANCIERO-3B)
+// =====================================================================
+$enrutador->post('/folios/{id}/transferir-cargo', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'transferirCargo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.movimientos'),
+]);
+$enrutador->post('/folios/{id}/split-cargo', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'splitCargo'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.movimientos'),
+]);
+$enrutador->get('/folios/{id}/transferencias', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'transferenciasJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/folios/{id}/cargos', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'cargosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/folios/{id}/datos', [\CamargoPMS\Controladores\CuentaFolioControlador::class, 'detalleJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 

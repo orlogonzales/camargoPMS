@@ -124,6 +124,42 @@ class CargoCuentaRepositorio
         $stmt->execute(['delta' => $deltaAplicado, 'id' => $cargoId]);
     }
 
+    public function transferirDeFolio(int $cargoId, int $nuevoFolioId): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE cargos_cuenta
+             SET cuenta_folio_id = :folio_id,
+                 actualizado_en = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute(['folio_id' => $nuevoFolioId, 'id' => $cargoId]);
+    }
+
+    public function actualizarMontosSplit(
+        int $cargoId,
+        string $nuevoSubtotal,
+        string $nuevoImpuesto,
+        string $nuevoTotal,
+        string $nuevoPrecioUnitario
+    ): void {
+        $stmt = $this->pdo->prepare(
+            'UPDATE cargos_cuenta
+             SET subtotal = :subtotal,
+                 impuesto_total = :impuesto,
+                 total = :total,
+                 precio_unitario = :precio_unitario,
+                 actualizado_en = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'subtotal' => $nuevoSubtotal,
+            'impuesto' => $nuevoImpuesto,
+            'total' => $nuevoTotal,
+            'precio_unitario' => $nuevoPrecioUnitario,
+            'id' => $cargoId,
+        ]);
+    }
+
     public function actualizarEstado(
         int $cargoId,
         string $nuevoEstado,

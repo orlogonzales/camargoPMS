@@ -74,6 +74,13 @@ class AplicacionPagoRepositorio
         return $resultado;
     }
 
+    public function contarActivasPorCargo(int $cargoId): int
+    {
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM aplicaciones_pago WHERE cargo_id = :cargo_id AND estado = "ACTIVA"');
+        $stmt->execute(['cargo_id' => $cargoId]);
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * Revierte todas las aplicaciones activas vinculadas a un pago y retorna los detalles para desaplicar en los cargos.
      *

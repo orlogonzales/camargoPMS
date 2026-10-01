@@ -329,8 +329,9 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **REPORTES-1A**    | `test_reportes_analitica_1a.php` (Secciones 1..12) | 53 | â€” | 53/53 PASS |
 | **REPORTES-1B**    | `test_reportes_analitica_1b.php` (Secciones 1..8) | 71 | â€” | 71/71 PASS |
 | **NIGHT-AUDIT-2B**  | `test_night_audit_scheduler.php` (Secciones 1..9) | 46 | â€” | 46/46 PASS |
-| **FINANCIERO-3A**   | `test_multifolio_split_3a.php` (Bloques 1..8) | 38 | â€” | 38/38 PASS |
-| **TOTALES CANÓNICOS**| **84 suites ejecutadas** | **—** | **—** | **2,752 checks PASS (100%)** |
+| **FINANCIERO-3A**   | `test_multifolio_split_3a.php` (Bloques 1..8) | 38 | — | 38/38 PASS |
+| **FINANCIERO-3B**   | `test_multifolio_split_3b.php` (Bloques 1..8) | 51 | — | 51/51 PASS |
+| **TOTALES CANÓNICOS**| **85 suites ejecutadas** | **—** | **—** | **2,803 checks PASS (100%)** |
 
   - **Consolidado de RegresiÃ³n Transversal Activa (NIGHT-AUDIT-2B):**
     - Suite `test_night_audit_scheduler.php`: 46 comprobaciones automÃ¡ticas cubriendo:
@@ -358,3 +359,15 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - Integridad del servicio de dominio `CuentaFolioServicio` (`crearFolioSecundario`, `obtenerFoliosReserva`).
     - Suites previas sin regresión: 83 suites históricas ejecutadas y validadas al 100%.
     - **Total Consolidado de Regresión Activa: 84/84 suites PASS — 2,752 checks canónicos PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (FINANCIERO-3B):**
+    - Suite `test_multifolio_split_3b.php`: 51 comprobaciones automáticas cubriendo:
+      - Gobierno de BD y ranura 040: exactamente 131 tablas relacionales, ranura 040 estrictamente LIBRE (Cero DDL en 3B), `admin-dashboard/` 100% inmutable.
+      - Transferencia total exitosa: reubicación física de cargo conservando ID, código e importes; auditoría contable inmutable append-only en `cuenta_folio_transferencias_cargos` con tipo `TOTAL`.
+      - Split parcial exitoso e invariantes matemáticas: conservación estricta `MONTO ANTES = MONTO PADRE DESPUÉS + MONTO DERIVADO`, `Δ deuda combinada Folio A + Folio Destino = 0.00`, conservación exacta de subtotales e impuestos proporcionales sin deriva decimal (`bcsub`). Enlace reflexivo formal vía `cargo_padre_id`.
+      - Invariante inviolable de amortizaciones (D-113): rechazo categórico de transferencia o split ante cargos con `monto_aplicado_acumulado > 0` o registros activos en `aplicaciones_pago` (`CargoConPagosAplicadosExcepcion`, HTTP 422).
+      - Validaciones de rechazo operacional y fronteras: folio origen == folio destino, monto split <= 0.00, monto split >= total del cargo, folio cerrado, cargo no perteneciente al folio origen.
+      - Inviolabilidad de Night Audit: preservación íntegra de devengos históricos en `devengos_alojamiento`, fechas hoteleras y montos auditados sin recálculo.
+      - Concurrencia y atomicidad transaccional: bloqueos deterministas pesimistas ordenados por ID (`min, max`), reversión atómica íntegra (rollback) ante fallos intermedios.
+      - Endpoints HTTP, RBAC y CSRF: rutas protegidas en `public/index.php` con `caja.movimientos` y `caja.ver`, rechazo HTTP 403 ante omisión de token CSRF, envelope JSON normalizado con eventos D-061 (`FOLIO_TRANSFERENCIA_TOTAL`, `FOLIO_SPLIT_PARCIAL`).
+    - Suites previas sin regresión: 84 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 85/85 suites PASS — 2,803 checks canónicos PASS — 0 fallos (100%)**.

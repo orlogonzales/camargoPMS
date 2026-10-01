@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CamargoPMS\Servicios;
 
 use CamargoPMS\Excepciones\CajaNoAbiertaExcepcion;
+use CamargoPMS\Excepciones\CargoConPagosAplicadosExcepcion;
 use CamargoPMS\Excepciones\CargoNoEncontradoExcepcion;
 use CamargoPMS\Excepciones\CuentaFolioNoEncontradaExcepcion;
 use CamargoPMS\Excepciones\DevolucionExcedidaExcepcion;
@@ -13,9 +14,11 @@ use CamargoPMS\Excepciones\MontoInvalidoExcepcion;
 use CamargoPMS\Excepciones\PagoNoEncontradoExcepcion;
 use CamargoPMS\Excepciones\SaldoInsuficienteCargoExcepcion;
 use CamargoPMS\Excepciones\SaldoInsuficientePagoExcepcion;
+use CamargoPMS\Excepciones\TransferenciaFolioInvalidaExcepcion;
 use CamargoPMS\Modelos\AplicacionPago;
 use CamargoPMS\Modelos\CargoCuenta;
 use CamargoPMS\Modelos\CuentaFolio;
+use CamargoPMS\Modelos\CuentaFolioTransferenciaCargo;
 use CamargoPMS\Modelos\DevolucionCuenta;
 use CamargoPMS\Modelos\MovimientoBancario;
 use CamargoPMS\Modelos\MovimientoCaja;
@@ -25,6 +28,7 @@ use CamargoPMS\Repositorios\AplicacionPagoRepositorio;
 use CamargoPMS\Repositorios\CajaRepositorio;
 use CamargoPMS\Repositorios\CargoCuentaRepositorio;
 use CamargoPMS\Repositorios\CuentaFolioRepositorio;
+use CamargoPMS\Repositorios\CuentaFolioTransferenciaRepositorio;
 use CamargoPMS\Repositorios\PagoCuentaRepositorio;
 use CamargoPMS\Repositorios\DevolucionCuentaRepositorio;
 use CamargoPMS\Repositorios\ReservaRepositorio;
@@ -46,6 +50,7 @@ class CuentaFolioServicio
     private ReservaRepositorio $reservaRepo;
     private ServicioContratadoRepositorio $servicioContratadoRepo;
     private ActorAuditoriaRepositorio $actorRepo;
+    private CuentaFolioTransferenciaRepositorio $transferenciaRepo;
 
     public function __construct(private PDO $pdo)
     {
@@ -58,6 +63,7 @@ class CuentaFolioServicio
         $this->reservaRepo = new ReservaRepositorio($pdo);
         $this->servicioContratadoRepo = new ServicioContratadoRepositorio($pdo);
         $this->actorRepo = new ActorAuditoriaRepositorio($pdo);
+        $this->transferenciaRepo = new CuentaFolioTransferenciaRepositorio($pdo);
     }
 
     private function resolverActorId(?int $actorOUsuarioId): int
@@ -778,6 +784,367 @@ class CuentaFolioServicio
     public function listarFolios(array $filtros = []): array
     {
         return $this->folioRepo->listar($filtros);
+    }
+
+    /**
+     * Transfiere la totalidad de un cargo desde un folio origen hacia un folio destino.
+     * La operación es atómica (ACID) y adquiere bloqueos deterministas SELECT ... FOR UPDATE
+     * ordenados por ID de folio para erradicar cualquier posibilidad de deadlock.
+     *
+     * Invariantes financieras vinculantes (D-113):
+     * 1. Queda estrictamente prohibido trasladar cargos con pagos o amortizaciones aplicadas.
+     * 2. Se preserva íntegramente la imputación histórica y devengos de Night Audit.
+     * 3. Se genera un registro inmutable en cuenta_folio_transferencias_cargos.
+     *
+     * @throws TransferenciaFolioInvalidaExcepcion
+     * @throws CuentaFolioNoEncontradaExcepcion
+     * @throws EstadoFinancieroInvalidoExcepcion
+     * @throws CargoNoEncontradoExcepcion
+     * @throws CargoConPagosAplicadosExcepcion
+     */
+    public function transferirCargo(
+        int $folioOrigenId,
+        int $folioDestinoId,
+        int $cargoId,
+        string $motivo,
+        ?int $usuarioAutorizadorId = null,
+        ?int $actorId = null
+    ): CuentaFolioTransferenciaCargo {
+        if ($folioOrigenId === $folioDestinoId) {
+            throw new TransferenciaFolioInvalidaExcepcion('El folio de origen y el folio de destino no pueden ser iguales.');
+        }
+
+        $motivoLimpio = trim($motivo);
+        if ($motivoLimpio === '') {
+            throw new TransferenciaFolioInvalidaExcepcion('El motivo de la transferencia es obligatorio.');
+        }
+
+        $actorIdFinal = $this->resolverActorId($actorId);
+
+        $debeCerrarTx = !$this->pdo->inTransaction();
+        if ($debeCerrarTx) {
+            $this->pdo->beginTransaction();
+        }
+
+        try {
+            // 1. Bloqueo determinista de folios ordenados por ID (prevención de deadlocks)
+            $idMenor = min($folioOrigenId, $folioDestinoId);
+            $idMayor = max($folioOrigenId, $folioDestinoId);
+
+            $folioMenor = $this->folioRepo->obtenerPorId($idMenor, true);
+            $folioMayor = $this->folioRepo->obtenerPorId($idMayor, true);
+
+            $folioOrigen = ($folioOrigenId === $idMenor) ? $folioMenor : $folioMayor;
+            $folioDestino = ($folioDestinoId === $idMenor) ? $folioMenor : $folioMayor;
+
+            if ($folioOrigen === null) {
+                throw new CuentaFolioNoEncontradaExcepcion("Folio de origen ID {$folioOrigenId} inexistente");
+            }
+            if ($folioDestino === null) {
+                throw new CuentaFolioNoEncontradaExcepcion("Folio de destino ID {$folioDestinoId} inexistente");
+            }
+
+            // Validar estado de folios: solo ABIERTA admite movimientos
+            if ($folioOrigen->obtenerEstado() !== 'ABIERTA') {
+                throw new EstadoFinancieroInvalidoExcepcion('CuentaFolio', $folioOrigen->obtenerEstado(), 'TRANSFERIR_CARGO_ORIGEN (Solo ABIERTA)');
+            }
+            if ($folioDestino->obtenerEstado() !== 'ABIERTA') {
+                throw new EstadoFinancieroInvalidoExcepcion('CuentaFolio', $folioDestino->obtenerEstado(), 'TRANSFERIR_CARGO_DESTINO (Solo ABIERTA)');
+            }
+
+            // Validar compatibilidad de monedas
+            if ($folioOrigen->obtenerMonedaCodigo() !== $folioDestino->obtenerMonedaCodigo()) {
+                throw new TransferenciaFolioInvalidaExcepcion(
+                    "Monedas incompatibles: origen ({$folioOrigen->obtenerMonedaCodigo()}) vs destino ({$folioDestino->obtenerMonedaCodigo()})"
+                );
+            }
+
+            // 2. Bloqueo pesimista del cargo
+            $cargo = $this->cargoRepo->obtenerPorId($cargoId, true);
+            if ($cargo === null) {
+                throw new CargoNoEncontradoExcepcion((string) $cargoId);
+            }
+
+            if ($cargo->obtenerCuentaFolioId() !== $folioOrigenId) {
+                throw new TransferenciaFolioInvalidaExcepcion(
+                    "El cargo [{$cargo->obtenerCodigo()}] pertenece al folio ID {$cargo->obtenerCuentaFolioId()}, no al folio origen ID {$folioOrigenId}"
+                );
+            }
+
+            if ($cargo->estaAnulado()) {
+                throw new EstadoFinancieroInvalidoExcepcion('CargoCuenta', 'ANULADO', 'TRANSFERIR_CARGO');
+            }
+
+            // 3. INVARIANTE INVIOLABLE: Cero transferencia si tiene aplicaciones/amortizaciones activas
+            if (bccomp($cargo->obtenerMontoAplicadoAcumulado(), '0.00', 2) > 0) {
+                throw new CargoConPagosAplicadosExcepcion($cargo->obtenerCodigo(), $cargo->obtenerMontoAplicadoAcumulado());
+            }
+
+            $activas = $this->aplicacionRepo->contarActivasPorCargo($cargoId);
+            if ($activas > 0) {
+                throw new CargoConPagosAplicadosExcepcion($cargo->obtenerCodigo(), (string) $activas . ' pagos');
+            }
+
+            // 4. Ejecutar traslado de folio
+            $this->cargoRepo->transferirDeFolio($cargoId, $folioDestinoId);
+
+            // 5. Registrar trazabilidad inmutable append-only
+            $codigoTransferencia = $this->transferenciaRepo->generarSiguienteCodigo();
+            $transferencia = new CuentaFolioTransferenciaCargo(
+                null,
+                $codigoTransferencia,
+                $cargoId,
+                null,
+                $folioOrigenId,
+                $folioDestinoId,
+                $cargo->obtenerTotal(),
+                'TOTAL',
+                $motivoLimpio,
+                $actorIdFinal
+            );
+            $transfId = $this->transferenciaRepo->crear($transferencia);
+
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+
+            $registrada = $this->transferenciaRepo->obtenerPorId($transfId);
+            if ($registrada === null) {
+                throw new TransferenciaFolioInvalidaExcepcion("Error al recuperar registro de auditoría de transferencia ID {$transfId}");
+            }
+
+            return $registrada;
+        } catch (Throwable $e) {
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Divide parcialmente un cargo, conservando el remanente en el folio origen y
+     * creando un nuevo cargo derivado subordinado en el folio destino.
+     * La operación es atómica (ACID) y garantiza matemáticamente:
+     * MONTO ANTES = MONTO ORIGEN DESPUÉS + MONTO DERIVADO
+     * Δ deuda combinada Folio A + Folio B = 0.00
+     *
+     * Invariantes financieras vinculantes (D-113):
+     * 1. Queda estrictamente prohibido dividir cargos con pagos o amortizaciones aplicadas.
+     * 2. El cargo padre conserva la auditoría y devengos de Night Audit.
+     * 3. Se genera un registro inmutable en cuenta_folio_transferencias_cargos.
+     *
+     * @return array{transferencia: CuentaFolioTransferenciaCargo, cargo_padre: CargoCuenta, cargo_derivado: CargoCuenta}
+     *
+     * @throws TransferenciaFolioInvalidaExcepcion
+     * @throws MontoInvalidoExcepcion
+     * @throws CuentaFolioNoEncontradaExcepcion
+     * @throws EstadoFinancieroInvalidoExcepcion
+     * @throws CargoNoEncontradoExcepcion
+     * @throws CargoConPagosAplicadosExcepcion
+     */
+    public function splitCargo(
+        int $folioOrigenId,
+        int $folioDestinoId,
+        int $cargoPadreId,
+        string $montoSplit,
+        string $motivo,
+        ?int $usuarioAutorizadorId = null,
+        ?int $actorId = null
+    ): array {
+        if ($folioOrigenId === $folioDestinoId) {
+            throw new TransferenciaFolioInvalidaExcepcion('El folio de origen y el folio de destino no pueden ser iguales.');
+        }
+
+        $motivoLimpio = trim($motivo);
+        if ($motivoLimpio === '') {
+            throw new TransferenciaFolioInvalidaExcepcion('El motivo de la división (split) es obligatorio.');
+        }
+
+        if (!is_numeric($montoSplit) || bccomp($montoSplit, '0.00', 2) <= 0) {
+            throw new MontoInvalidoExcepcion('monto_split', $montoSplit);
+        }
+        $montoSplitNorm = bcadd($montoSplit, '0.00', 2);
+
+        $actorIdFinal = $this->resolverActorId($actorId);
+
+        $debeCerrarTx = !$this->pdo->inTransaction();
+        if ($debeCerrarTx) {
+            $this->pdo->beginTransaction();
+        }
+
+        try {
+            // 1. Bloqueo determinista de folios ordenados por ID
+            $idMenor = min($folioOrigenId, $folioDestinoId);
+            $idMayor = max($folioOrigenId, $folioDestinoId);
+
+            $folioMenor = $this->folioRepo->obtenerPorId($idMenor, true);
+            $folioMayor = $this->folioRepo->obtenerPorId($idMayor, true);
+
+            $folioOrigen = ($folioOrigenId === $idMenor) ? $folioMenor : $folioMayor;
+            $folioDestino = ($folioDestinoId === $idMenor) ? $folioMenor : $folioMayor;
+
+            if ($folioOrigen === null) {
+                throw new CuentaFolioNoEncontradaExcepcion("Folio de origen ID {$folioOrigenId} inexistente");
+            }
+            if ($folioDestino === null) {
+                throw new CuentaFolioNoEncontradaExcepcion("Folio de destino ID {$folioDestinoId} inexistente");
+            }
+
+            if ($folioOrigen->obtenerEstado() !== 'ABIERTA') {
+                throw new EstadoFinancieroInvalidoExcepcion('CuentaFolio', $folioOrigen->obtenerEstado(), 'SPLIT_CARGO_ORIGEN (Solo ABIERTA)');
+            }
+            if ($folioDestino->obtenerEstado() !== 'ABIERTA') {
+                throw new EstadoFinancieroInvalidoExcepcion('CuentaFolio', $folioDestino->obtenerEstado(), 'SPLIT_CARGO_DESTINO (Solo ABIERTA)');
+            }
+
+            if ($folioOrigen->obtenerMonedaCodigo() !== $folioDestino->obtenerMonedaCodigo()) {
+                throw new TransferenciaFolioInvalidaExcepcion(
+                    "Monedas incompatibles: origen ({$folioOrigen->obtenerMonedaCodigo()}) vs destino ({$folioDestino->obtenerMonedaCodigo()})"
+                );
+            }
+
+            // 2. Bloqueo pesimista del cargo padre
+            $cargoPadre = $this->cargoRepo->obtenerPorId($cargoPadreId, true);
+            if ($cargoPadre === null) {
+                throw new CargoNoEncontradoExcepcion((string) $cargoPadreId);
+            }
+
+            if ($cargoPadre->obtenerCuentaFolioId() !== $folioOrigenId) {
+                throw new TransferenciaFolioInvalidaExcepcion(
+                    "El cargo [{$cargoPadre->obtenerCodigo()}] pertenece al folio ID {$cargoPadre->obtenerCuentaFolioId()}, no al folio origen ID {$folioOrigenId}"
+                );
+            }
+
+            if ($cargoPadre->estaAnulado()) {
+                throw new EstadoFinancieroInvalidoExcepcion('CargoCuenta', 'ANULADO', 'SPLIT_CARGO');
+            }
+
+            // 3. INVARIANTE INVIOLABLE: Cero split si tiene aplicaciones/amortizaciones activas
+            if (bccomp($cargoPadre->obtenerMontoAplicadoAcumulado(), '0.00', 2) > 0) {
+                throw new CargoConPagosAplicadosExcepcion($cargoPadre->obtenerCodigo(), $cargoPadre->obtenerMontoAplicadoAcumulado());
+            }
+
+            $activas = $this->aplicacionRepo->contarActivasPorCargo($cargoPadreId);
+            if ($activas > 0) {
+                throw new CargoConPagosAplicadosExcepcion($cargoPadre->obtenerCodigo(), (string) $activas . ' pagos');
+            }
+
+            // 4. Validar que el monto split sea estrictamente menor al total disponible
+            $totalPadreOriginal = $cargoPadre->obtenerTotal();
+            if (bccomp($montoSplitNorm, $totalPadreOriginal, 2) >= 0) {
+                throw new TransferenciaFolioInvalidaExcepcion(
+                    "El monto de división ({$montoSplitNorm}) debe ser estrictamente menor al total del cargo ({$totalPadreOriginal}). Para transferir la totalidad use transferirCargo."
+                );
+            }
+
+            // 5. Cómputo matemático proporcional y exacto con conservación estricta
+            $remanenteTotalPadre = bcsub($totalPadreOriginal, $montoSplitNorm, 2);
+
+            $subtotalPadreOriginal = $cargoPadre->obtenerSubtotal();
+            $impuestoPadreOriginal = $cargoPadre->obtenerImpuestoTotal();
+
+            $ratio = (float) $montoSplitNorm / (float) $totalPadreOriginal;
+            $subtotalDerivado = number_format(round(((float) $subtotalPadreOriginal) * $ratio, 2), 2, '.', '');
+            $impuestoDerivado = bcsub($montoSplitNorm, $subtotalDerivado, 2);
+
+            $subtotalRemanente = bcsub($subtotalPadreOriginal, $subtotalDerivado, 2);
+            $impuestoRemanente = bcsub($impuestoPadreOriginal, $impuestoDerivado, 2);
+
+            // Ajuste de precio unitario del remanente
+            $precioUnitarioRemanente = (bccomp($cargoPadre->obtenerCantidad(), '1.00', 2) === 0)
+                ? $subtotalRemanente
+                : number_format(((float) $subtotalRemanente) / ((float) $cargoPadre->obtenerCantidad()), 2, '.', '');
+
+            // 6. Mutación del cargo original en folio origen
+            $this->cargoRepo->actualizarMontosSplit(
+                $cargoPadreId,
+                $subtotalRemanente,
+                $impuestoRemanente,
+                $remanenteTotalPadre,
+                $precioUnitarioRemanente
+            );
+
+            // 7. Creación del cargo derivado en folio destino
+            $codigoCargoHijo = $this->cargoRepo->generarSiguienteCodigo();
+            $cargoHijo = new CargoCuenta(
+                null,
+                $codigoCargoHijo,
+                $folioDestinoId,
+                $cargoPadre->obtenerOrigenTipo(),
+                $cargoPadre->obtenerOrigenId(),
+                $cargoPadre->obtenerEstadiaId(),
+                $cargoPadre->obtenerConcepto() . ' (Split)',
+                '1.00',
+                $subtotalDerivado,
+                $subtotalDerivado,
+                $impuestoDerivado,
+                $montoSplitNorm,
+                '0.00',
+                $cargoPadre->obtenerMonedaCodigo(),
+                $cargoPadre->obtenerEstado(),
+                null,
+                null,
+                null,
+                $cargoPadre->obtenerDevengadoEn(),
+                $actorIdFinal,
+                null,
+                null,
+                $cargoPadreId
+            );
+            $cargoHijoId = $this->cargoRepo->crear($cargoHijo);
+
+            // 8. Registro de auditoría append-only
+            $codigoTransferencia = $this->transferenciaRepo->generarSiguienteCodigo();
+            $transferencia = new CuentaFolioTransferenciaCargo(
+                null,
+                $codigoTransferencia,
+                $cargoPadreId,
+                $cargoHijoId,
+                $folioOrigenId,
+                $folioDestinoId,
+                $montoSplitNorm,
+                'SPLIT_PARCIAL',
+                $motivoLimpio,
+                $actorIdFinal
+            );
+            $transfId = $this->transferenciaRepo->crear($transferencia);
+
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+
+            $transferenciaRegistrada = $this->transferenciaRepo->obtenerPorId($transfId);
+            $padreActualizado = $this->cargoRepo->obtenerPorId($cargoPadreId);
+            $hijoCreado = $this->cargoRepo->obtenerPorId($cargoHijoId);
+
+            return [
+                'transferencia' => $transferenciaRegistrada,
+                'cargo_padre' => $padreActualizado,
+                'cargo_derivado' => $hijoCreado,
+            ];
+        } catch (Throwable $e) {
+            if ($debeCerrarTx && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @return array<CuentaFolioTransferenciaCargo>
+     */
+    public function obtenerTransferenciasFolio(int $folioId): array
+    {
+        return $this->transferenciaRepo->listarPorFolio($folioId);
+    }
+
+    /**
+     * @return array<CargoCuenta>
+     */
+    public function obtenerCargosFolio(int $folioId, ?string $estado = null): array
+    {
+        return $this->cargoRepo->listarPorFolio($folioId, $estado);
     }
 }
 
