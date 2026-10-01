@@ -181,4 +181,22 @@ class PagoWebhookEventoRepositorio
             'error' => mb_substr($error, 0, 500),
         ]);
     }
+
+    /**
+     * Busca todos los eventos webhook vinculados a una transacción de pasarela.
+     *
+     * @param int $transaccionId
+     * @return PagoWebhookEvento[]
+     */
+    public function buscarPorTransaccionId(int $transaccionId): array
+    {
+        $sql = 'SELECT * FROM pagos_webhooks_eventos 
+                WHERE transaccion_pasarela_id = :tx_id 
+                ORDER BY id DESC';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['tx_id' => $transaccionId]);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(static fn(array $f) => PagoWebhookEvento::desdeArray($f), $filas);
+    }
 }

@@ -567,9 +567,18 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - `POST /api/v1/pagos/intenciones`: creación segura de intenciones vinculadas a reservas en hold (`PENDIENTE`). Validación de vigencia de hold, soberanía monetaria (ignora montos arbitrarios del cliente), emisión de `llave_publica` de checkout y código de transacción. Protección: Bearer Token, scope `reservas.hold`, Rate Limit y cabecera obligatoria `Idempotency-Key` (soporte de replay determinista y detección de desajustes de payload con HTTP 422).
     - `POST /api/v1/webhooks/pagos/culqi`: canal server-to-server directo sin Bearer de cliente ni idempotencia HTTP genérica. Procesa eventos de forma asíncrona reconociendo pagos aprobados, deduplicando reintentos con HTTP 200 OK (`reintento: true`), aislando pagos tardíos con hold expirado en cuarentena administrativa (`DISCREPANCIA_HOLD_EXPIRADO`, `cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`, reserva `EXPIRADA`), y señalizando discrepancias de monto.
     - Preflights CORS `OPTIONS` con HTTP 204 No Content para ambos endpoints.
-    - Cero DDL: 130 tablas relacionales en BD, migración 038 como última aplicada, ranura 039 estrictamente libre.
-    - Suite de pruebas: `tests/test_pagos_1c.php` (75/75 checks PASS).
-    - Estado: Implementada y Validada (79/79 suites globales PASS, 2,455 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `4e2897c6ff1c6879137d09f7efe5c3ac9a6761b0`, 79/79 suites globales PASS, 2,455 checks, 0 fallos).
+  - **PAGOS-1D:** Monitor de Pasarelas, Conciliación Administrativa y Reembolsos Alina:
+    - Módulo administrativo de monitor y conciliación bajo `/pagos` y `/pagos/transacciones/{id}`.
+    - Monitor con 4 KPIs en tiempo real (`.equal-card`), selector de rango Flatpickr (`data-provider="rangepicker"`, `data-target-inicio`, `data-target-fin`; CERO `input[type="date"]`), filtros combinables y tabla de datos estandarizada (`.table.table-bordered.table-striped.table-hover.align-middle`).
+    - Ficha de detalle con desglose financiero inmutable, datos de contacto del pagador (Zero-Trust), enlaces a reserva y folio, timeline cronológico nativo Alina (`.app-side-timeline`), y tabla de webhooks recibidos.
+    - Panel lateral Offcanvas (`.offcanvas.offcanvas-end` `#offcanvas-webhook-payload`) para inspección segura de payloads de webhooks con saneamiento estricto de credenciales y secretos.
+    - Modal centrado Alina (`.modal-dialog-centered` `#modal-reembolso`) para ejecución de reembolsos (totales o parciales) con confirmación SweetAlert2, transacción ACID pesimista (`SELECT ... FOR UPDATE`), precisión exacta `BCMath`, y atribución al actor humano ejecutor (`ACTOR != USUARIO`).
+    - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: Pagos tardíos (`DISCREPANCIA_HOLD_EXPIRADO`) permanecen en estricta cuarentena administrativa sin folio (`cuenta_folio_id = NULL`), sin pago contable (`pago_cuenta_id = NULL`) y con la reserva `EXPIRADA`. Prohibición absoluta de reasignación a nueva reserva en esta fase; únicamente se permite registro de notas y observaciones de seguimiento administrativo vía `POST /pagos/transacciones/{id}/conciliar`.
+    - Integración frontend nativa en `public/assets/js/camargo-pagos.js` con Vanilla JS, Fetch API, SweetAlert2 y cero dependencias de jQuery AJAX.
+    - Cero DDL: 130 tablas relacionales consolidadas, migración 038 como última aplicada, ranura 039 estrictamente libre, `admin-dashboard/` 100% inalterado.
+    - Suite de pruebas: `tests/test_pagos_1d.php` (90/90 checks PASS).
+    - Estado: Implementada y Validada (80/80 suites globales PASS, 2,545 checks, 0 fallos).
 
 ## Dominio operativo
 

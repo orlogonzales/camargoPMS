@@ -1989,6 +1989,48 @@ Aprobada en la microfase `PAGOS-1C` como arquitectura contractual vinculante par
    - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
    - Cobertura de regresión transversal: 79 suites automatizadas, checks en verde (100% PASS).
 
+### D-109 — Monitor Operativo de Pasarelas, Conciliación y Reembolsos Alina (PAGOS-1D)
+
+Aprobada en la microfase `PAGOS-1D` como arquitectura vinculante para la interfaz administrativa de gestión, auditoría, conciliación y reembolsos de pasarelas de pago en Camargo PMS.
+
+1. **Diseño de Interfaz Alina y Cero jQuery CRUD (D-109.1):**
+   - Implementación estricta bajo el Design System Alina sobre la base canónica de `blank.html`:
+     - Tarjetas métricas `.equal-card.shadow-sm.border-0.b-r-20` con 4 KPIs en tiempo real (Volumen cobrado aprobado, Transacciones en conciliación/alertas, Monto total reembolsado y Total de transacciones).
+     - Tabla operacional responsiva con bordes sólidos y filas cebradas (`.table.table-bordered.table-striped.table-hover.align-middle`).
+     - Badges semánticos Alina (`.badge.bg-light-success`, `.bg-light-danger`, `.bg-light-warning`, `.bg-light-primary`, `.bg-light-info`) con iconos Font Awesome 6.
+     - Selector de fechas obligatorio mediante Flatpickr Range Picker con atributo `data-provider="rangepicker"` y vinculación bidireccional a campos canónicos (`data-target-inicio`, `data-target-fin`). Prohibición absoluta de `input[type="date"]`.
+     - Trazabilidad y ciclo de vida en detalle mediante la estructura nativa Alina `.app-side-timeline` con nodos `.side-timeline-section`, `.side-timeline-icon` y `.timeline-content`.
+     - Inspección técnica de payloads de webhook mediante Offcanvas nativo lateral (`.offcanvas.offcanvas-end` `#offcanvas-webhook-payload`).
+     - Cuadro de diálogo modal centrado (`.modal-dialog-centered` `#modal-reembolso`) para solicitudes de reembolso con confirmación destructiva SweetAlert2 (`Swal.fire`).
+     - Controlador frontend propio en Vanilla JS (`public/assets/js/camargo-pagos.js`) con Fetch API nativo y JSON asíncrono. Prohibición estricta de jQuery AJAX y de bibliotecas ajenas.
+
+2. **Gobernanza Inviolable del Invariante C1/C2 (Pagos Tardíos) (D-109.2):**
+   - Los pagos recibidos de forma tardía tras expirar la ventana preventiva de reserva (Hold) son clasificados taxativamente como `DISCREPANCIA_HOLD_EXPIRADO`.
+   - Se mantiene la prohibición absoluta de reasignar automáticamente o manualmente fondos a una nueva reserva hotelera en esta fase: el dinero permanece en estricta cuarentena operativa y contable, la reserva original vinculada permanece en estado inmutable `EXPIRADA`, las habitaciones e inventario quedan libres y desvinculadas, y no se genera folio contable ni asiento contable ficticio.
+   - Las únicas acciones administrativas autorizadas en la interfaz son:
+     a) Conservar la transacción en cuarentena.
+     b) Emitir una instrucción de reembolso total o parcial hacia la pasarela externa.
+     c) Registrar una observación o nota de seguimiento administrativo en la bitácora inmutable de auditoría (`auditoria`), sin mutar el inventario ni reactivar reservas caducas.
+
+3. **Arquitectura de Reembolsos Soberanos con Precisión BCMath (D-109.3):**
+   - Toda solicitud de reembolso (total o parcial) se valida en el backend bajo bloqueo pesimista ACID (`SELECT ... FOR UPDATE`), liberando el cerrojo de BD antes de la invocación de red a la pasarela externa.
+   - El saldo reembolsable se calcula soberanamente con precisión de punto fijo mediante BCMath (`bcsub($montoCobrado, $montoReembolsado, 2)`).
+   - Se valida taxativamente que la transacción esté en estado `APROBADO`, que el monto no supere el saldo disponible, y que se suministre una justificación formal de al menos 10 caracteres.
+   - Tras la confirmación de la pasarela externa, el estado de reembolso transiciona deterministamente a `REEMBOLSADO_PARCIAL` o `REEMBOLSADO_TOTAL`.
+   - Toda operación de reembolso o conciliación es atribuida a un Actor Humano (`actor_id` correspondiente al usuario administrativo autenticado), preservando el principio `ACTOR != USUARIO`.
+
+4. **Seguridad Zero-Trust y Protección de Secretos (D-109.4):**
+   - El offcanvas de inspección técnica de webhooks y el visor JSON de metadatos sanitizan previamente el payload (`SanitizadorAuditoria`), excluyendo u ofuscando llaves privadas, secrets de webhook, firmas HMAC y campos de tarjetas bancarias.
+   - El almacenamiento físico original en la base de datos (`payload_raw` en `pagos_webhooks_eventos`) permanece inalterado para garantizar integridad forense.
+   - Cero exposición de datos sensibles de medios de pago: la interfaz solo expone marca, últimos 4 dígitos y banco emisor. Cero PAN y cero CVV.
+
+5. **Invariantes de Esquema y Gobernanza (D-109.5):**
+   - Cero DDL: No se introduce migración en la ranura 039.
+   - El total de tablas relacionales permanece estrictamente en **130**.
+   - Ranura de migración `039` estrictamente LIBRE.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
+   - Cobertura de regresión transversal: 80 suites automatizadas (todas en verde, 100% PASS).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

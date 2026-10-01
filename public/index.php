@@ -1506,6 +1506,31 @@ $enrutador->options('/api/v1/webhooks/pagos/culqi', [\CamargoPMS\Controladores\A
     \CamargoPMS\Intermediarios\ApiCorsIntermediario::class,
 ]);
 
+// =====================================================================
+// RUTAS ADMINISTRATIVAS DE PAGOS Y PASARELAS ALINA (PAGOS-1D)
+// =====================================================================
+$enrutador->get('/pagos', [\CamargoPMS\Controladores\PagoControlador::class, 'index'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/pagos/datos', [\CamargoPMS\Controladores\PagoControlador::class, 'datosJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/pagos/transacciones/{id}', [\CamargoPMS\Controladores\PagoControlador::class, 'detalle'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->get('/pagos/transacciones/{id}/datos', [\CamargoPMS\Controladores\PagoControlador::class, 'detalleJson'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+$enrutador->post('/pagos/transacciones/{id}/reembolsar', [\CamargoPMS\Controladores\PagoControlador::class, 'reembolsar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.devolver'),
+]);
+$enrutador->post('/pagos/transacciones/{id}/conciliar', [\CamargoPMS\Controladores\PagoControlador::class, 'conciliar'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.cobrar'),
+]);
+$enrutador->get('/pagos/webhooks/{id}/payload', [\CamargoPMS\Controladores\PagoControlador::class, 'webhookPayload'], [
+    new \CamargoPMS\Intermediarios\AutorizacionIntermediario('caja.ver'),
+]);
+
 $enrutador->definir404([\CamargoPMS\Controladores\PanelControlador::class, 'paginaNoEncontrada']);
 
 

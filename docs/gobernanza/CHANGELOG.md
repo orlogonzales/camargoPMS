@@ -4,6 +4,39 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase PAGOS-1D — Implementación de Monitor, Conciliación y Reembolsos Alina
+
+- **Monitor Principal de Pasarelas (`GET /pagos` y `GET /pagos/datos`):**
+  - Implementación del panel de supervisión en tiempo real bajo Alina Design System (`app/Vistas/pagos/index.php`).
+  - 4 KPIs operativos (`.equal-card.shadow-sm.border-0.b-r-20`): Cobros aprobados, Transacciones en conciliación/alertas C1, Monto total reembolsado y Total de transacciones procesadas.
+  - Formulario de filtros dinámicos con selector de fechas Flatpickr Range Picker obligatorio (`data-provider="rangepicker"`, `data-target-inicio`, `data-target-fin`), eliminando 100% de `input[type="date"]`.
+  - Tabla Alina homologada (`.table.table-bordered.table-striped.table-hover.align-middle`) con badges semánticos (`bg-light-*`), acciones operativas y paginación asíncrona.
+- **Ficha Integral de Detalle y Trazabilidad (`GET /pagos/transacciones/{id}`):**
+  - Vista completa (`app/Vistas/pagos/detalle.php`) con desglose financiero exacto, vínculo a reserva hotelera y cuenta folio contable.
+  - Tarjeta de datos de pagador y medio de pago bajo estándar Zero-Trust (marca, últimos 4 dígitos y banco; cero PAN/CVV).
+  - Trazabilidad y ciclo de vida visualizado mediante la línea de tiempo nativa Alina (`.app-side-timeline` con nodos `.side-timeline-section`, `.side-timeline-icon` y `.timeline-content`).
+  - Tabla de notificaciones webhook asociadas con apertura de Offcanvas.
+- **Inspección Técnica de Webhooks mediante Offcanvas Alina (`GET /pagos/webhooks/{id}/payload`):**
+  - Drawer lateral derecho (`.offcanvas.offcanvas-end` `#offcanvas-webhook-payload`) para inspeccionar metadatos de entrega (proveedor, evento, HTTP status, IP de origen) y payload JSON estructurado.
+  - Sanitización en tiempo real (`SanitizadorAuditoria`): ofuscación estricta de llaves privadas, secrets de webhook, firmas HMAC y campos de tarjeta sin corromper el `payload_raw` en base de datos.
+- **Gestión de Reembolsos Soberanos con Precisión BCMath (`POST /pagos/transacciones/{id}/reembolsar`):**
+  - Diálogo modal centrado (`.modal-dialog-centered` `#modal-reembolso`) con selector de reembolso Total / Parcial y confirmación SweetAlert2 (`Swal.fire`).
+  - Validación transaccional con bloqueo pesimista ACID (`SELECT ... FOR UPDATE`), precondición de estado `APROBADO`, monto <= saldo disponible y motivo justificado >= 10 caracteres.
+  - Deducción de saldo con precisión de punto fijo (`BCMath`), transición automática a `REEMBOLSADO_PARCIAL` o `REEMBOLSADO_TOTAL`, y atribución obligatoria a Actor Humano autenticado (`ACTOR != USUARIO`).
+- **Gobernanza Inviolable del Invariante C1/C2 (Pagos Tardíos):**
+  - Banners de advertencia prominentes (`alert-light-danger`) ante transacciones con hold expirado (`DISCREPANCIA_HOLD_EXPIRADO`).
+  - Prohibición absoluta de reasignación a nueva reserva: los fondos permanecen en cuarentena contable sin folio espurio (`cuenta_folio_id = NULL`), sin pago de cuenta contable (`pago_cuenta_id = NULL`), y con la reserva intacta en `EXPIRADA`.
+  - Acción autorizada de conciliación (`POST /pagos/transacciones/{id}/conciliar`): registro de observaciones administrativas en bitácora inmutable de auditoría (`auditoria`), sin mutar inventario ni reactivar reservas caducas.
+- **Controlador Frontend Soberano (`public/assets/js/camargo-pagos.js`):**
+  - Vanilla JS puro (0 jQuery AJAX), Fetch API nativo y JSON asíncrono para filtros, KPIs, modales y offcanvas.
+- **Gobernanza y Pruebas:**
+  - Cero DDL: Base de datos congelada en exactamente 130 tablas; slot 039 estrictamente libre.
+  - Directorio `admin-dashboard/` 100% inmutable y de solo lectura.
+  - Suite de pruebas dedicada `tests/test_pagos_1d.php` (90/90 checks, 100% PASS).
+  - Regresión transversal completa: 80 suites de prueba automatizadas (100% PASS).
+
+## Baseline oficial 4e2897c (PAGOS-1C)
+
 ### Microfase PAGOS-1C — Superficie HTTP de Pagos + Webhook Culqi
 
 - **Superficie HTTP de Pagos (`ApiPagoControlador`):**

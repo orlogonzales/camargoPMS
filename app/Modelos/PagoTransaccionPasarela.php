@@ -212,6 +212,91 @@ class PagoTransaccionPasarela
         return $this->estaAprobado() && in_array($this->estadoReembolso, [self::ESTADO_REEMBOLSO_NO_APLICA, self::ESTADO_REEMBOLSO_FALLIDO, self::ESTADO_REEMBOLSO_PARCIAL], true);
     }
 
+    public function obtenerSaldoReembolsable(): string
+    {
+        if (!$this->estaAprobado() || $this->montoCobrado === null) {
+            return '0.00';
+        }
+        $saldo = bcsub($this->montoCobrado, $this->montoReembolsado, 2);
+        return bccomp($saldo, '0.00', 2) > 0 ? $saldo : '0.00';
+    }
+
+    public function obtenerMoneda(): string
+    {
+        return $this->monedaCodigo;
+    }
+
+    public function obtenerTransaccionIdExterno(): ?string
+    {
+        return $this->proveedorTransaccionId;
+    }
+
+    public function obtenerOrdenIdExterno(): ?string
+    {
+        return $this->proveedorOrdenId;
+    }
+
+    public function obtenerSubtipoDiscrepancia(): ?string
+    {
+        return str_starts_with($this->estadoConciliacion, 'DISCREPANCIA_') ? $this->estadoConciliacion : null;
+    }
+
+    public function obtenerPagadorNombre(): ?string
+    {
+        return $this->metadatosProveedor['pagador_nombre']
+            ?? $this->metadatosProveedor['client_name']
+            ?? $this->metadatosProveedor['nombre']
+            ?? null;
+    }
+
+    public function obtenerPagadorEmail(): ?string
+    {
+        return $this->metadatosProveedor['pagador_email']
+            ?? $this->metadatosProveedor['email']
+            ?? $this->metadatosProveedor['client_email']
+            ?? null;
+    }
+
+    public function obtenerPagadorTelefono(): ?string
+    {
+        return $this->metadatosProveedor['pagador_telefono']
+            ?? $this->metadatosProveedor['phone']
+            ?? $this->metadatosProveedor['telefono']
+            ?? null;
+    }
+
+    public function obtenerPagadorNumeroDocumento(): ?string
+    {
+        return $this->metadatosProveedor['pagador_documento']
+            ?? $this->metadatosProveedor['document']
+            ?? $this->metadatosProveedor['dni']
+            ?? null;
+    }
+
+    public function obtenerTarjetaMarca(): ?string
+    {
+        return $this->metadatosProveedor['tarjeta_marca']
+            ?? $this->metadatosProveedor['brand']
+            ?? $this->metadatosProveedor['card_brand']
+            ?? null;
+    }
+
+    public function obtenerTarjetaUltimos4(): ?string
+    {
+        return $this->metadatosProveedor['tarjeta_ultimos4']
+            ?? $this->metadatosProveedor['last4']
+            ?? $this->metadatosProveedor['card_last4']
+            ?? null;
+    }
+
+    public function obtenerTarjetaBanco(): ?string
+    {
+        return $this->metadatosProveedor['tarjeta_banco']
+            ?? $this->metadatosProveedor['bank']
+            ?? $this->metadatosProveedor['issuer']
+            ?? null;
+    }
+
     public function aArray(): array
     {
         return [

@@ -101,6 +101,11 @@ class PagoWebhookEvento
         return $this->recibidoEn;
     }
 
+    public function obtenerCreadoEn(): ?string
+    {
+        return $this->recibidoEn;
+    }
+
     public function obtenerProcesadoEn(): ?string
     {
         return $this->procesadoEn;
