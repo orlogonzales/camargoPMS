@@ -2141,6 +2141,40 @@ Aprobada en la microfase `NIGHT-AUDIT-2B` como arquitectura vinculante para la e
    - Causa raíz: al llegar el reloj del sistema al mes de octubre de 2026 (`2026-10-01`), el fixture de prueba colisionaba con el mes calendario activo, borrando la secuencia operativa de la base de datos y produciendo falsos duplicados en `suministro_liquidaciones` durante ejecuciones consecutivas.
    - El cambio es 100% en suite de pruebas, no toca código productivo ni tablas de suministros, mantiene estrictas e idénticas todas las aserciones de concurrencia y garantiza el determinismo absoluto de la regresión global sin acoplamiento al mes calendario de ejecución.
 
+### D-113 — Cuentas Multi-Folio 1:N, Split de Cargos y Modelo Relacional Soberano (FINANCIERO-3A)
+
+Aprobada en la microfase `FINANCIERO-3A` como arquitectura vinculante para la coexistencia de múltiples folios contables por reserva o arrendamiento, soporte de split parcial/total de cargos y registro de auditoría append-only en Camargo PMS.
+
+1. **Evolución Relacional a Cardinalidad 1:N con Folio Maestro Único (D-113.1):**
+   - Se suprime la unicidad 1:1 estricta `uq_cuentas_folios_reserva` en `cuentas_folios` para permitir $N$ folios secundarios asociados a una misma reserva o arrendamiento.
+   - Todo folio secundario debe estar formalmente vinculado a su Folio Maestro mediante `folio_padre_id` (`ON DELETE RESTRICT ON UPDATE RESTRICT`).
+   - Se garantiza matemáticamente en el motor MySQL 8.4 LTS como máximo un único Folio Maestro activo (`es_principal = 1`) por reserva o arrendamiento mediante columnas virtuales generadas e índices únicos:
+     - `folio_principal_reserva_idx` AS `(IF(es_principal = 1 AND estado != 'CANCELADO', reserva_id, NULL))`
+     - `folio_principal_arrendamiento_idx` AS `(IF(es_principal = 1 AND estado != 'CANCELADO', arrendamiento_id, NULL))`
+     - `uq_ctaf_folio_principal_reserva` y `uq_ctaf_folio_principal_arrendamiento`.
+
+2. **Split de Cargos y Trazabilidad Jerárquica en `cargos_cuenta` (D-113.2):**
+   - Se incorpora la columna `cargo_padre_id BIGINT UNSIGNED NULL` con clave foránea `fk_cargo_padre` referenciando `cargos_cuenta(id)` (`ON DELETE RESTRICT ON UPDATE RESTRICT`).
+   - En una división parcial de cargo, el cargo original reduce su importe por el monto transferido y el nuevo cargo creado en el folio destino referencia al cargo original como su padre, preservando el histórico y la causalidad financiera.
+
+3. **Auditoría Append-Only de Transferencias (`cuenta_folio_transferencias_cargos`) (D-113.3):**
+   - Toda operación de traslado o split de cargos se asienta en la nueva tabla inmutable `cuenta_folio_transferencias_cargos` (`id`, `codigo_transferencia UNIQUE`, `cuenta_folio_origen_id`, `cuenta_folio_destino_id`, `cargo_origen_id`, `cargo_destino_id`, `tipo_operacion`, `monto_transferido`, `moneda`, `motivo`, `autorizado_por_usuario_id`, `creado_por_actor_id`, `creado_en`).
+   - Claves foráneas con `ON DELETE RESTRICT ON UPDATE RESTRICT` para garantizar inviolabilidad contable.
+   - Restricciones CHECK: `chk_trc_folios_distintos` (origen $\neq$ destino) y `chk_trc_monto_positivo` (monto > 0.00).
+
+4. **Invariantes Financieras Vinculantes (D-113.4):**
+   - **Contrato 1 (Inviolabilidad de Cargos con Cobro Aplicado):** Queda terminantemente prohibido trasladar o dividir un cargo que posea amortizaciones o pagos aplicados (`monto_aplicado_acumulado > 0.00`) sin revertir formalmente la aplicación previa en tesorería.
+   - **Contrato 2 (Preservación del Hecho Económico en Night Audit):** Los cargos devengados por auditoría nocturna conservan estrictamente su fecha contable y su concepto original; no mutan su naturaleza contable al ser reasignados de folio.
+   - **Contrato 3 (Reasignación de Titularidad Fiscal):** Cada folio secundario puede ser asignado a un cliente o titular específico (`persona_id` / `empresa_id`), permitiendo facturación electrónica independiente (SUNAT-1) por cuenta dividida.
+
+5. **Compatibilidad Histórica Absoluta y Cero Regresión (D-113.5):**
+   - Los 2,600 folios preexistentes permanecen como folios principales (`es_principal = 1`, `etiqueta = 'FOLIO PRINCIPAL'`, `folio_padre_id = NULL`).
+   - Total de tablas relacionales evoluciona a exactamente **131 tablas**.
+   - Migración `039_multifolio_split_cuentas.sql` formalmente consumida.
+   - Ranura de migración `040` estrictamente LIBRE para `SUNAT-1` y posteriores.
+   - Suite dedicada `tests/test_multifolio_split_3a.php` (38/38 PASS).
+   - Regresión transversal canónica: 84 suites automatizadas (100% PASS, 0 fallos).
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

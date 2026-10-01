@@ -3668,14 +3668,23 @@ CREATE TABLE IF NOT EXISTS `sesiones_caja` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Turnos de trabajo y arqueos de gaveta de efectivo';
 
 -- ----------------------------------------------------------------------------
--- 33. Folios Financieros / Cuentas de Reserva o Arrendamiento (FINANCIERO-2 / ARRENDAMIENTOS-1)
+-- 33. Folios Financieros / Cuentas de Reserva o Arrendamiento (FINANCIERO-2 / ARRENDAMIENTOS-1 / FINANCIERO-3A)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `cuentas_folios` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `codigo` VARCHAR(30) NOT NULL COMMENT 'Formato FOL-YYYYMMDD-XXXX',
-    `reserva_id` BIGINT UNSIGNED NULL COMMENT '1:1 con la reserva raíz comercial (NULL si es arrendamiento)',
-    `arrendamiento_id` BIGINT UNSIGNED NULL COMMENT '1:1 con el arrendamiento patrimonial (NULL si es reserva)',
+    `reserva_id` BIGINT UNSIGNED NULL COMMENT 'Reserva comercial vinculada (NULL si es arrendamiento)',
+    `arrendamiento_id` BIGINT UNSIGNED NULL COMMENT 'Arrendamiento patrimonial vinculado (NULL si es reserva)',
     `persona_titular_id` BIGINT UNSIGNED NOT NULL COMMENT 'Titular principal de la cuenta',
+    `es_principal` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '1 = folio maestro/principal, 0 = secundario',
+    `etiqueta` VARCHAR(100) NOT NULL DEFAULT 'FOLIO PRINCIPAL' COMMENT 'Etiqueta descriptiva del folio (ej. FOLIO PRINCIPAL, EXTRAS HUÉSPED, EMPRESA)',
+    `folio_padre_id` BIGINT UNSIGNED NULL COMMENT 'Puntero al folio maestro si es secundario',
+    `folio_principal_reserva_idx` BIGINT UNSIGNED GENERATED ALWAYS AS (
+        IF(`es_principal` = 1 AND `estado` != 'ANULADA', `reserva_id`, NULL)
+    ) VIRTUAL,
+    `folio_principal_arrendamiento_idx` BIGINT UNSIGNED GENERATED ALWAYS AS (
+        IF(`es_principal` = 1 AND `estado` != 'ANULADA', `arrendamiento_id`, NULL)
+    ) VIRTUAL,
     `moneda_codigo` VARCHAR(3) NOT NULL DEFAULT 'PEN',
     `estado` ENUM('ABIERTA', 'CONGELADA', 'CERRADA', 'ANULADA') NOT NULL DEFAULT 'ABIERTA',
     `creado_por_actor_id` BIGINT UNSIGNED NOT NULL,
@@ -3684,6 +3693,7 @@ CREATE TABLE IF NOT EXISTS `cuentas_folios` (
     CONSTRAINT `fk_ctaf_reserva` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `fk_ctaf_arrendamiento` FOREIGN KEY (`arrendamiento_id`) REFERENCES `arrendamientos` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `fk_ctaf_persona_titular` FOREIGN KEY (`persona_titular_id`) REFERENCES `personas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_ctaf_folio_padre` FOREIGN KEY (`folio_padre_id`) REFERENCES `cuentas_folios` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_ctaf_actor_creador` FOREIGN KEY (`creado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `chk_ctaf_codigo_no_vacio` CHECK (`codigo` <> ''),
     CONSTRAINT `chk_ctaf_sujeto_exclusivo` CHECK (
@@ -3691,11 +3701,14 @@ CREATE TABLE IF NOT EXISTS `cuentas_folios` (
         (`reserva_id` IS NULL AND `arrendamiento_id` IS NOT NULL)
     ),
     UNIQUE KEY `uq_cuentas_folios_codigo` (`codigo`),
-    UNIQUE KEY `uq_cuentas_folios_reserva` (`reserva_id`),
-    UNIQUE KEY `uq_cuentas_folios_arrendamiento` (`arrendamiento_id`),
+    UNIQUE KEY `uq_ctaf_folio_principal_reserva` (`folio_principal_reserva_idx`),
+    UNIQUE KEY `uq_ctaf_folio_principal_arrendamiento` (`folio_principal_arrendamiento_idx`),
     INDEX `idx_ctaf_estado` (`estado`),
-    INDEX `idx_ctaf_titular` (`persona_titular_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Contenedor financiero consolidado de la reserva comercial o contrato de arrendamiento';
+    INDEX `idx_ctaf_titular` (`persona_titular_id`),
+    INDEX `idx_ctaf_reserva` (`reserva_id`),
+    INDEX `idx_ctaf_arrendamiento` (`arrendamiento_id`),
+    INDEX `idx_ctaf_folio_padre` (`folio_padre_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Contenedor financiero consolidado de la reserva comercial o contrato de arrendamiento (soporte multi-folio 1:N)';
 
 -- ----------------------------------------------------------------------------
 -- 34. Cargos a la Cuenta (FINANCIERO-2 / ARRENDAMIENTOS-1)
@@ -3704,6 +3717,7 @@ CREATE TABLE IF NOT EXISTS `cargos_cuenta` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `codigo` VARCHAR(30) NOT NULL COMMENT 'Formato CRG-YYYYMMDD-XXXX',
     `cuenta_folio_id` BIGINT UNSIGNED NOT NULL,
+    `cargo_padre_id` BIGINT UNSIGNED NULL COMMENT 'Puntero al cargo original si fue producto de un split parcial',
     `origen_tipo` ENUM('ALOJAMIENTO_NOCHES', 'SERVICIO_CONTRATADO', 'PENALIDAD', 'AJUSTE_MANUAL', 'RENTA_ARRENDAMIENTO', 'DEPOSITO_GARANTIA', 'SUMINISTRO_CONSUMO', 'SUMINISTRO_CUOTA_FIJA', 'AJUSTE_SUMINISTRO') NOT NULL,
     `origen_id` BIGINT UNSIGNED NULL COMMENT 'ID de reserva_unidades o servicios_contratados',
     `estadia_id` BIGINT UNSIGNED NULL COMMENT 'Habitación física que consumió (NULL si es preventa o general)',
@@ -3724,6 +3738,7 @@ CREATE TABLE IF NOT EXISTS `cargos_cuenta` (
     `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_crgc_cuenta_folio` FOREIGN KEY (`cuenta_folio_id`) REFERENCES `cuentas_folios` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT `fk_crgc_cargo_padre` FOREIGN KEY (`cargo_padre_id`) REFERENCES `cargos_cuenta` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT `fk_crgc_estadia` FOREIGN KEY (`estadia_id`) REFERENCES `estadias` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_crgc_actor_creador` FOREIGN KEY (`creado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_crgc_actor_anulador` FOREIGN KEY (`anulado_por_actor_id`) REFERENCES `actores` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -3733,7 +3748,8 @@ CREATE TABLE IF NOT EXISTS `cargos_cuenta` (
     UNIQUE KEY `uq_cargos_cuenta_codigo` (`codigo`),
     INDEX `idx_crgc_folio_estado` (`cuenta_folio_id`, `estado`),
     INDEX `idx_crgc_origen` (`origen_tipo`, `origen_id`),
-    INDEX `idx_crgc_estadia` (`estadia_id`)
+    INDEX `idx_crgc_estadia` (`estadia_id`),
+    INDEX `idx_crgc_cargo_padre` (`cargo_padre_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Obligaciones y consumos devengados o provisionales en el folio';
 
 -- ----------------------------------------------------------------------------
@@ -3830,7 +3846,39 @@ CREATE TABLE IF NOT EXISTS `devoluciones_cuenta` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Reembolsos reales entregados o transferidos al huésped';
 
 -- ----------------------------------------------------------------------------
--- 38. Libro Mayor de Movimientos de Caja Física (FINANCIERO-2)
+-- 38. Trazabilidad e Historial Inmutable de Transferencias y Splits de Cargos (FINANCIERO-3A)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cuenta_folio_transferencias_cargos` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `codigo` VARCHAR(30) NOT NULL COMMENT 'Formato canónico TRC-YYYYMMDD-XXXX',
+    `cargo_origen_id` BIGINT UNSIGNED NOT NULL COMMENT 'Cargo original en el folio origen',
+    `cargo_destino_id` BIGINT UNSIGNED NULL COMMENT 'Nuevo cargo en folio destino si fue split parcial (o NULL si fue transferencia total del mismo cargo)',
+    `cuenta_folio_origen_id` BIGINT UNSIGNED NOT NULL COMMENT 'Folio desde donde se transfiere',
+    `cuenta_folio_destino_id` BIGINT UNSIGNED NOT NULL COMMENT 'Folio hacia donde se transfiere',
+    `monto_transferido` DECIMAL(15,2) NOT NULL COMMENT 'Monto transferido en la moneda del folio',
+    `tipo_operacion` ENUM('TOTAL', 'SPLIT_PARCIAL') NOT NULL DEFAULT 'TOTAL' COMMENT 'Tipo de traslado contable',
+    `motivo` VARCHAR(255) NOT NULL COMMENT 'Justificación obligatoria de la transferencia',
+    `actor_id` BIGINT UNSIGNED NOT NULL COMMENT 'Actor responsable de la operación (D-061)',
+    `transferido_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Instante UTC de la transferencia',
+    CONSTRAINT `fk_trc_cargo_origen` FOREIGN KEY (`cargo_origen_id`) REFERENCES `cargos_cuenta` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_trc_cargo_destino` FOREIGN KEY (`cargo_destino_id`) REFERENCES `cargos_cuenta` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+    CONSTRAINT `fk_trc_folio_origen` FOREIGN KEY (`cuenta_folio_origen_id`) REFERENCES `cuentas_folios` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_trc_folio_destino` FOREIGN KEY (`cuenta_folio_destino_id`) REFERENCES `cuentas_folios` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_trc_actor` FOREIGN KEY (`actor_id`) REFERENCES `actores` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `chk_trc_codigo_no_vacio` CHECK (`codigo` <> ''),
+    CONSTRAINT `chk_trc_motivo_no_vacio` CHECK (`motivo` <> ''),
+    CONSTRAINT `chk_trc_monto_positivo` CHECK (`monto_transferido` > 0),
+    CONSTRAINT `chk_trc_folios_distintos` CHECK (`cuenta_folio_origen_id` <> `cuenta_folio_destino_id`),
+    UNIQUE KEY `uq_trc_codigo` (`codigo`),
+    INDEX `idx_trc_cargo_origen` (`cargo_origen_id`),
+    INDEX `idx_trc_cargo_destino` (`cargo_destino_id`),
+    INDEX `idx_trc_folio_origen` (`cuenta_folio_origen_id`),
+    INDEX `idx_trc_folio_destino` (`cuenta_folio_destino_id`),
+    INDEX `idx_trc_transferido_en` (`transferido_en`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Trazabilidad e historial inmutable de transferencias y splits de cargos entre folios';
+
+-- ----------------------------------------------------------------------------
+-- 39. Libro Mayor de Movimientos de Caja Física (FINANCIERO-2)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `movimientos_caja` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

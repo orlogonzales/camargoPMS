@@ -4,6 +4,37 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase FINANCIERO-3A — Base de Datos y Modelo de Dominio Multi-Folio y Split de Cuentas
+
+- **Evolución Relacional y Migración 039 (`SQL/migraciones/039_multifolio_split_cuentas.sql`):**
+  - Consumo legítimo de la ranura de migración 039.
+  - Eliminación de la restricción de clave única 1:1 `uq_cuentas_folios_reserva` en `cuentas_folios` para admitir cardinalidad 1:N por reserva/arrendamiento.
+  - Adición de columnas `es_principal TINYINT(1)`, `etiqueta VARCHAR(100)` y `folio_padre_id BIGINT UNSIGNED` con clave foránea reflexiva `fk_ctaf_folio_padre` (`ON DELETE RESTRICT ON UPDATE RESTRICT`).
+  - Columnas virtuales generadas en MySQL 8.4 LTS (`folio_principal_reserva_idx`, `folio_principal_arrendamiento_idx`) con índices únicos `uq_ctaf_folio_principal_reserva` y `uq_ctaf_folio_principal_arrendamiento`, garantizando a nivel de motor máximo un único folio principal activo por reserva o arrendamiento (rechazo físico error 1062 en duplicados).
+  - Adición de columna `cargo_padre_id BIGINT UNSIGNED NULL` en `cargos_cuenta` con clave foránea reflexiva `fk_cargo_padre` (`ON DELETE RESTRICT ON UPDATE RESTRICT`) para trazabilidad de splits parciales.
+  - Creación de la tabla append-only `cuenta_folio_transferencias_cargos` (elevando el catálogo a 131 tablas relacionales) con restricciones CHECK `chk_trc_folios_distintos` y `chk_trc_monto_positivo`, y claves foráneas restrictivas para auditoría contable inmutable.
+  - Sincronización íntegra del consolidado canónico `SQL/camargo_pms.sql`.
+  - Preservación del 100% de los 2,600 folios históricos preexistentes como folios maestros (`es_principal = 1`, `etiqueta = 'FOLIO PRINCIPAL'`, `folio_padre_id = NULL`).
+- **Modelos de Dominio:**
+  - `CuentaFolio`: soporte de propiedades `esPrincipal`, `etiqueta`, `folioPadreId`, método `esMaestro()`.
+  - `CargoCuenta`: soporte de propiedad `cargoPadreId`, métodos `esCargoHijo()`, `obtenerCargoPadreId()`.
+  - `CuentaFolioTransferenciaCargo`: nueva entidad de dominio para trazabilidad de transferencias y splits.
+- **Capa de Persistencia y Repositorios:**
+  - `CuentaFolioRepositorio`: persistencia de folios secundarios, consultas `obtenerPrincipalPorReservaId()`, `listarPorReservaId()`, `listarHijos()`, preservando compatibilidad retroactiva en `obtenerPorReservaId()`.
+  - `CargoCuentaRepositorio`: persistencia de `cargo_padre_id`, método `listarHijos()`.
+  - `CuentaFolioTransferenciaRepositorio`: nuevo repositorio con inserción atómica y consultas de auditoría `listarPorFolio()`, `listarPorCargo()`, `obtenerPorCodigo()`.
+- **Servicio de Dominio (`CuentaFolioServicio`):**
+  - Métodos `crearFolioSecundario()`, `obtenerFoliosReserva()`, `obtenerFolioPrincipalReserva()`.
+  - Garantía de folio maestro en `crearOAsegurarFolioReserva()`.
+- **Gobernanza y Pruebas:**
+  - Adopción de Decisión **D-113**.
+  - Catálogo de base de datos consolidado en **131 tablas relacionales**.
+  - Ranura de migración `040` estrictamente LIBRE.
+  - Suite de pruebas dedicada `tests/test_multifolio_split_3a.php` (38/38 checks, 100% PASS).
+  - Regresión transversal canónica: 84 suites automatizadas ejecutadas (100% PASS), 2,752 checks canónicos homologados.
+
+## Baseline oficial 1f6e0bf (NIGHT-AUDIT-2B)
+
 ### Microfase NIGHT-AUDIT-2B — Automatización, Scheduler CLI, Concurrencia y Ergonomía Alina
 
 - **Automatización y Scheduler Desatendido (`NightAuditServicio`):**

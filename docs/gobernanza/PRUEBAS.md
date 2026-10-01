@@ -329,7 +329,8 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **REPORTES-1A**    | `test_reportes_analitica_1a.php` (Secciones 1..12) | 53 | â€” | 53/53 PASS |
 | **REPORTES-1B**    | `test_reportes_analitica_1b.php` (Secciones 1..8) | 71 | â€” | 71/71 PASS |
 | **NIGHT-AUDIT-2B**  | `test_night_audit_scheduler.php` (Secciones 1..9) | 46 | â€” | 46/46 PASS |
-| **TOTALES CANÓNICOS**| **83 suites ejecutadas** | **—** | **—** | **2,714 checks PASS (100%)** |
+| **FINANCIERO-3A**   | `test_multifolio_split_3a.php` (Bloques 1..8) | 38 | â€” | 38/38 PASS |
+| **TOTALES CANÓNICOS**| **84 suites ejecutadas** | **—** | **—** | **2,752 checks PASS (100%)** |
 
   - **Consolidado de RegresiÃ³n Transversal Activa (NIGHT-AUDIT-2B):**
     - Suite `test_night_audit_scheduler.php`: 46 comprobaciones automÃ¡ticas cubriendo:
@@ -344,4 +345,16 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - PreservaciÃ³n estricta de base de datos: 130 tablas relacionales exactas, migraciÃ³n 038 como Ãºltima aplicada, ranura 039 estrictamente libre (CERO DDL).
     - Fix de determinismo de fixture: ajuste de período simulado a `202611` en `tests/test_suministros_concurrencia.php` (D-112.8) para desacoplar el caso SUM-C01 del mes calendario activo.
     - Suites previas sin regresión: 82 suites históricas ejecutadas y validadas al 100%.
-    - **Total Consolidado de Regresión Activa: 83/83 suites PASS — 2,714 checks canónicos PASS — 0 fallos (100%)**.
+    - **Total Consolidado de Regresión Activa en NIGHT-AUDIT-2B: 83/83 suites PASS — 2,714 checks canónicos PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (FINANCIERO-3A):**
+    - Suite `test_multifolio_split_3a.php`: 38 comprobaciones automáticas cubriendo:
+      - Estructura de base de datos y ranura 039: 131 tablas relacionales, existencia de `cuenta_folio_transferencias_cargos`, columnas virtuales y reflexivas en `cuentas_folios` y `cargos_cuenta`.
+      - Preservación íntegra de 2,600 folios históricos como principales (`es_principal = 1`, `etiqueta = 'FOLIO PRINCIPAL'`).
+      - Unicidad del folio maestro activo garantizada en InnoDB (error 1062 en duplicados).
+      - Creación y vinculación de folios secundarios 1:N por reserva/arrendamiento.
+      - Métodos de consulta y compatibilidad retroactiva en repositorio y servicio (`obtenerPorReservaId`, `obtenerPrincipalPorReservaId`, `listarPorReservaId`, `listarHijos`).
+      - Soporte de split de cargos padre/hijo en `cargos_cuenta` y repositorio.
+      - Restricciones CHECK y persistencia append-only en `cuenta_folio_transferencias_cargos`.
+      - Integridad del servicio de dominio `CuentaFolioServicio` (`crearFolioSecundario`, `obtenerFoliosReserva`).
+    - Suites previas sin regresión: 83 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 84/84 suites PASS — 2,752 checks canónicos PASS — 0 fallos (100%)**.

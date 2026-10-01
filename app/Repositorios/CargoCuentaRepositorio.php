@@ -20,11 +20,11 @@ class CargoCuentaRepositorio
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO cargos_cuenta (
-                codigo, cuenta_folio_id, origen_tipo, origen_id, estadia_id, concepto,
+                codigo, cuenta_folio_id, cargo_padre_id, origen_tipo, origen_id, estadia_id, concepto,
                 cantidad, precio_unitario, subtotal, impuesto_total, total, monto_aplicado_acumulado,
                 moneda_codigo, estado, devengado_en, creado_por_actor_id, creado_en
             ) VALUES (
-                :codigo, :cuenta_folio_id, :origen_tipo, :origen_id, :estadia_id, :concepto,
+                :codigo, :cuenta_folio_id, :cargo_padre_id, :origen_tipo, :origen_id, :estadia_id, :concepto,
                 :cantidad, :precio_unitario, :subtotal, :impuesto_total, :total, :monto_aplicado_acumulado,
                 :moneda_codigo, :estado, :devengado_en, :creado_por_actor_id, NOW()
             )'
@@ -32,6 +32,7 @@ class CargoCuentaRepositorio
         $stmt->execute([
             'codigo' => $cargo->obtenerCodigo(),
             'cuenta_folio_id' => $cargo->obtenerCuentaFolioId(),
+            'cargo_padre_id' => $cargo->obtenerCargoPadreId(),
             'origen_tipo' => $cargo->obtenerOrigenTipo(),
             'origen_id' => $cargo->obtenerOrigenId(),
             'estadia_id' => $cargo->obtenerEstadiaId(),
@@ -48,6 +49,20 @@ class CargoCuentaRepositorio
             'creado_por_actor_id' => $cargo->obtenerCreadoPorActorId(),
         ]);
         return (int) $this->pdo->lastInsertId();
+    }
+
+    /**
+     * @return array<CargoCuenta>
+     */
+    public function listarHijos(int $cargoPadreId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM cargos_cuenta WHERE cargo_padre_id = :padre_id ORDER BY id ASC');
+        $stmt->execute(['padre_id' => $cargoPadreId]);
+        $resultado = [];
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $resultado[] = CargoCuenta::desdeArreglo($fila);
+        }
+        return $resultado;
     }
 
     public function obtenerPorId(int $id, bool $bloquear = false): ?CargoCuenta

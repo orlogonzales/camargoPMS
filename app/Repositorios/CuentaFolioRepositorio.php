@@ -20,9 +20,13 @@ class CuentaFolioRepositorio
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO cuentas_folios (
-                codigo, reserva_id, arrendamiento_id, persona_titular_id, moneda_codigo, estado, creado_por_actor_id, creado_en
+                codigo, reserva_id, arrendamiento_id, persona_titular_id,
+                es_principal, etiqueta, folio_padre_id,
+                moneda_codigo, estado, creado_por_actor_id, creado_en
             ) VALUES (
-                :codigo, :reserva_id, :arrendamiento_id, :persona_titular_id, :moneda_codigo, :estado, :creado_por_actor_id, NOW()
+                :codigo, :reserva_id, :arrendamiento_id, :persona_titular_id,
+                :es_principal, :etiqueta, :folio_padre_id,
+                :moneda_codigo, :estado, :creado_por_actor_id, NOW()
             )'
         );
         $stmt->execute([
@@ -30,6 +34,9 @@ class CuentaFolioRepositorio
             'reserva_id' => $folio->obtenerReservaId(),
             'arrendamiento_id' => $folio->obtenerArrendamientoId(),
             'persona_titular_id' => $folio->obtenerPersonaTitularId(),
+            'es_principal' => $folio->esPrincipal() ? 1 : 0,
+            'etiqueta' => $folio->obtenerEtiqueta(),
+            'folio_padre_id' => $folio->obtenerFolioPadreId(),
             'moneda_codigo' => $folio->obtenerMonedaCodigo(),
             'estado' => $folio->obtenerEstado(),
             'creado_por_actor_id' => $folio->obtenerCreadoPorActorId(),
@@ -48,20 +55,80 @@ class CuentaFolioRepositorio
 
     public function obtenerPorReservaId(int $reservaId, bool $bloquear = false): ?CuentaFolio
     {
-        $sql = 'SELECT * FROM cuentas_folios WHERE reserva_id = :reserva_id LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
+        $sql = 'SELECT * FROM cuentas_folios WHERE reserva_id = :reserva_id ORDER BY es_principal DESC, id ASC LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['reserva_id' => $reservaId]);
         $fila = $stmt->fetch(PDO::FETCH_ASSOC);
         return $fila ? CuentaFolio::desdeArreglo($fila) : null;
     }
 
+    public function obtenerPrincipalPorReservaId(int $reservaId, bool $bloquear = false): ?CuentaFolio
+    {
+        $sql = 'SELECT * FROM cuentas_folios WHERE reserva_id = :reserva_id AND es_principal = 1 AND estado != "ANULADA" LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['reserva_id' => $reservaId]);
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila ? CuentaFolio::desdeArreglo($fila) : null;
+    }
+
+    /**
+     * @return array<CuentaFolio>
+     */
+    public function listarPorReservaId(int $reservaId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM cuentas_folios WHERE reserva_id = :reserva_id ORDER BY es_principal DESC, id ASC');
+        $stmt->execute(['reserva_id' => $reservaId]);
+        $resultado = [];
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $resultado[] = CuentaFolio::desdeArreglo($fila);
+        }
+        return $resultado;
+    }
+
     public function obtenerPorArrendamientoId(int $arrendamientoId, bool $bloquear = false): ?CuentaFolio
     {
-        $sql = 'SELECT * FROM cuentas_folios WHERE arrendamiento_id = :arrendamiento_id LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
+        $sql = 'SELECT * FROM cuentas_folios WHERE arrendamiento_id = :arrendamiento_id ORDER BY es_principal DESC, id ASC LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['arrendamiento_id' => $arrendamientoId]);
         $fila = $stmt->fetch(PDO::FETCH_ASSOC);
         return $fila ? CuentaFolio::desdeArreglo($fila) : null;
+    }
+
+    public function obtenerPrincipalPorArrendamientoId(int $arrendamientoId, bool $bloquear = false): ?CuentaFolio
+    {
+        $sql = 'SELECT * FROM cuentas_folios WHERE arrendamiento_id = :arrendamiento_id AND es_principal = 1 AND estado != "ANULADA" LIMIT 1' . ($bloquear ? ' FOR UPDATE' : '');
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['arrendamiento_id' => $arrendamientoId]);
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila ? CuentaFolio::desdeArreglo($fila) : null;
+    }
+
+    /**
+     * @return array<CuentaFolio>
+     */
+    public function listarPorArrendamientoId(int $arrendamientoId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM cuentas_folios WHERE arrendamiento_id = :arrendamiento_id ORDER BY es_principal DESC, id ASC');
+        $stmt->execute(['arrendamiento_id' => $arrendamientoId]);
+        $resultado = [];
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $resultado[] = CuentaFolio::desdeArreglo($fila);
+        }
+        return $resultado;
+    }
+
+    /**
+     * @return array<CuentaFolio>
+     */
+    public function listarHijos(int $folioPadreId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM cuentas_folios WHERE folio_padre_id = :padre_id ORDER BY id ASC');
+        $stmt->execute(['padre_id' => $folioPadreId]);
+        $resultado = [];
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $resultado[] = CuentaFolio::desdeArreglo($fila);
+        }
+        return $resultado;
     }
 
     public function obtenerPorCodigo(string $codigo, bool $bloquear = false): ?CuentaFolio

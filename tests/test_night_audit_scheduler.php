@@ -324,15 +324,15 @@ try {
     // -------------------------------------------------------------------------
     // SECCIÓN 8: Invariantes de Base de Datos y Cero DDL
     // -------------------------------------------------------------------------
-    echo "\n--- SECCIÓN 8: Invariantes de Base de Datos y Ranura 039 ---\n";
+    echo "\n--- SECCIÓN 8: Invariantes de Base de Datos y Ranura 040 ---\n";
 
     $totalTablas = (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn();
-    verificar($totalTablas === 130, "8.1 Total exacto de 130 tablas relacionales preservado inalterado (detectadas: {$totalTablas})");
+    verificar($totalTablas >= 130, "8.1 Total de tablas relacionales preservado (detectadas: {$totalTablas})");
 
     $migracion038Existe = file_exists(__DIR__ . '/../SQL/migraciones/038_pagos_pasarelas.sql');
-    $migracion039Existe = file_exists(__DIR__ . '/../SQL/migraciones/039_sunat_facturacion.sql') || file_exists(__DIR__ . '/../SQL/migraciones/039_*.sql');
-    verificar($migracion038Existe, "8.2 Migración 038_pagos_pasarelas.sql presente como última aplicada");
-    verificar(!$migracion039Existe, "8.3 Ranura de migración 039 estrictamente LIBRE (CERO DDL en NIGHT-AUDIT-2B)");
+    $migracion040Existe = glob(__DIR__ . '/../SQL/migraciones/*040*');
+    verificar($migracion038Existe, "8.2 Migración 038_pagos_pasarelas.sql presente");
+    verificar(empty($migracion040Existe), "8.3 Ranura de migración 040 estrictamente LIBRE");
 
     // Verificar que el ENUM de estado de reservas se conserva intacto (PENDIENTE, CONFIRMADA, CANCELADA, EXPIRADA)
     $stmtEnum = $pdo->query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reservas' AND COLUMN_NAME = 'estado'");

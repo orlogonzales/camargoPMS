@@ -19,7 +19,10 @@ class CuentaFolio
         private int $creadoPorActorId,
         private ?int $arrendamientoId = null,
         private ?string $creadoEn = null,
-        private ?string $actualizadoEn = null
+        private ?string $actualizadoEn = null,
+        private bool $esPrincipal = true,
+        private string $etiqueta = 'FOLIO PRINCIPAL',
+        private ?int $folioPadreId = null
     ) {
     }
 
@@ -56,6 +59,21 @@ class CuentaFolio
     public function obtenerPersonaTitularId(): int
     {
         return $this->personaTitularId;
+    }
+
+    public function esPrincipal(): bool
+    {
+        return $this->esPrincipal;
+    }
+
+    public function obtenerEtiqueta(): string
+    {
+        return $this->etiqueta;
+    }
+
+    public function obtenerFolioPadreId(): ?int
+    {
+        return $this->folioPadreId;
     }
 
     public function obtenerMonedaCodigo(): string
@@ -114,6 +132,9 @@ class CuentaFolio
             'reserva_id' => $this->reservaId,
             'arrendamiento_id' => $this->arrendamientoId,
             'persona_titular_id' => $this->personaTitularId,
+            'es_principal' => $this->esPrincipal ? 1 : 0,
+            'etiqueta' => $this->etiqueta,
+            'folio_padre_id' => $this->folioPadreId,
             'moneda_codigo' => $this->monedaCodigo,
             'estado' => $this->estado,
             'creado_por_actor_id' => $this->creadoPorActorId,
@@ -137,7 +158,10 @@ class CuentaFolio
             (int) ($datos['creado_por_actor_id'] ?? 0),
             isset($datos['arrendamiento_id']) && $datos['arrendamiento_id'] !== null ? (int) $datos['arrendamiento_id'] : null,
             isset($datos['creado_en']) ? (string) $datos['creado_en'] : null,
-            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null
+            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null,
+            isset($datos['es_principal']) ? (bool) $datos['es_principal'] : true,
+            (string) ($datos['etiqueta'] ?? 'FOLIO PRINCIPAL'),
+            isset($datos['folio_padre_id']) && $datos['folio_padre_id'] !== null ? (int) $datos['folio_padre_id'] : null
         );
     }
 }

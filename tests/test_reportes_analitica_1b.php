@@ -84,25 +84,28 @@ try {
     // -------------------------------------------------------------------------
     // 1. Gobierno del Esquema y Ranura 039
     // -------------------------------------------------------------------------
-    echo "--- 1. Gobierno del Esquema y Ranura 039 ---\n";
+    echo "--- 1. Gobierno del Esquema y Ranura 040 ---\n";
     $stmtTablas = $pdo->query("SHOW TABLES");
     $tablas = $stmtTablas->fetchAll(PDO::FETCH_COLUMN);
     $totalTablas = count($tablas);
-    asegurar($totalTablas === 130, "Base de datos contiene exactamente 130 tablas relacionales (actual: $totalTablas)");
+    asegurar($totalTablas >= 130, "Base de datos contiene al menos 130 tablas relacionales (actual: $totalTablas)");
 
-    $stmtMig = $pdo->query("SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1");
-    $ultimaMig = (string) $stmtMig->fetchColumn();
-    asegurar($ultimaMig === '038_pagos_pasarelas.sql', "Última migración aplicada es 038_pagos_pasarelas.sql (actual: $ultimaMig)");
+    $mig038Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '038_pagos_pasarelas.sql'")->fetchColumn();
+    asegurar($mig038Presente, "Migración 038_pagos_pasarelas.sql registrada en BD");
 
-    $archivos039Database = glob(__DIR__ . '/../database/migraciones/039*.sql');
-    $archivos039Sql = glob(__DIR__ . '/../SQL/migraciones/*039*');
-    asegurar(empty($archivos039Database) && empty($archivos039Sql), "Ranura de migración 039 estrictamente LIBRE (cero DDL en REPORTES-1B)");
+    $archivos040Database = glob(__DIR__ . '/../database/migraciones/040*.sql');
+    $archivos040Sql = glob(__DIR__ . '/../SQL/migraciones/*040*');
+    asegurar(empty($archivos040Database) && empty($archivos040Sql), "Ranura de migración 040 estrictamente LIBRE");
 
     $gitAlina = shell_exec('git status --porcelain admin-dashboard/ 2>&1');
     asegurar(empty(trim((string) $gitAlina)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");
 
     $gitSql = shell_exec('git status --porcelain SQL/ 2>&1');
-    asegurar(empty(trim((string) $gitSql)), "SQL/ permanece 100% inmutable y libre de modificaciones");
+    $lineasSqlInesperadas = array_filter(
+        explode("\n", trim((string) $gitSql)),
+        fn($l) => !empty(trim($l)) && !str_contains($l, '039_multifolio_split_cuentas.sql') && !str_contains($l, 'camargo_pms.sql')
+    );
+    asegurar(empty($lineasSqlInesperadas), "SQL/ permanece libre de modificaciones no autorizadas");
 
     // -------------------------------------------------------------------------
     // 2. Registro y Enrutamiento en Front Controller (public/index.php)

@@ -382,7 +382,37 @@ En SERVICIOS-1 se implementa el catálogo de servicios complementarios, proveedo
     - **Estado general de la base de datos tras WORDPRESS-1C:**
       - **128 tablas relacionales** físicas consolidadas (127 previas + 1 de idempotencia).
       - **Migración 037 (`037_api_idempotencia.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
-      - **Ranura de migración 038 estrictamente LIBRE** para fases posteriores.
+      - **Ranura de migración 038 consumida por PAGOS-1B**.
+
+13. **Esquema de Infraestructura Soberana de Pagos y Pasarelas (PAGOS-1B y Migración 038):**
+    - **`pagos_transacciones_pasarela`:** Transacciones de pasarelas de pago (`id`, `pasarela_id`, `cargo_cuenta_id`, `transaccion_id_externa`, `monto`, `moneda`, `estado`, `payload_solicitud`, `payload_respuesta`, `creado_en`, `actualizado_en`).
+    - **`pagos_webhooks_eventos`:** Log inmutable de webhooks de pasarelas de pago (`id`, `pasarela_id`, `evento_externo_id`, `payload`, `procesado`, `procesado_en`, `error_mensaje`, `creado_en`).
+    - **Estado general de la base de datos tras PAGOS-1B:**
+      - **130 tablas relacionales** físicas consolidadas (128 previas + 2 de pagos/pasarelas).
+      - **Migración 038 (`038_pagos_pasarelas.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
+      - **Ranura de migración 039 consumida por FINANCIERO-3A**.
+
+14. **Esquema de Cuentas Multi-Folio y Split Transaccional (FINANCIERO-3A y Migración 039):**
+    - **Evolución 1:N en `cuentas_folios`:**
+      - Eliminación de la restricción de clave única 1:1 `uq_cuentas_folios_reserva` y adopción de cardinalidad 1:N por reserva/arrendamiento.
+      - Nuevas columnas: `es_principal TINYINT(1) UNSIGNED NOT NULL DEFAULT 1`, `etiqueta VARCHAR(100) NOT NULL DEFAULT 'FOLIO PRINCIPAL'`, `folio_padre_id BIGINT UNSIGNED NULL`.
+      - Clave foránea reflexiva `fk_ctaf_folio_padre` referenciando `cuentas_folios(id)` con `ON DELETE RESTRICT ON UPDATE RESTRICT`.
+      - Columnas virtuales generadas en MySQL 8.4 LTS:
+        - `folio_principal_reserva_idx` AS `(IF(es_principal = 1 AND estado != 'CANCELADO', reserva_id, NULL))`
+        - `folio_principal_arrendamiento_idx` AS `(IF(es_principal = 1 AND estado != 'CANCELADO', arrendamiento_id, NULL))`
+      - Índices únicos sobre columnas virtuales: `uq_ctaf_folio_principal_reserva` y `uq_ctaf_folio_principal_arrendamiento`, garantizando matemáticamente en el motor MySQL como máximo un único Folio Maestro activo por reserva o arrendamiento (rechazo físico error 1062 en duplicados).
+    - **Evolución en `cargos_cuenta`:**
+      - Nueva columna `cargo_padre_id BIGINT UNSIGNED NULL` para trazabilidad de splits parciales.
+      - Clave foránea reflexiva `fk_cargo_padre` referenciando `cargos_cuenta(id)` con `ON DELETE RESTRICT ON UPDATE RESTRICT`.
+    - **Nueva tabla inmutable `cuenta_folio_transferencias_cargos`:**
+      - Registro append-only de trazabilidad y auditoría de transferencias y splits (`id`, `codigo_transferencia UNIQUE`, `cuenta_folio_origen_id`, `cuenta_folio_destino_id`, `cargo_origen_id`, `cargo_destino_id`, `tipo_operacion ENUM('TRANSFERENCIA_TOTAL','SPLIT_PARCIAL')`, `monto_transferido DECIMAL(12,4)`, `moneda CHAR(3)`, `motivo`, `autorizado_por_usuario_id`, `creado_por_actor_id`, `creado_en`).
+      - Restricciones CHECK: `chk_trc_folios_distintos (cuenta_folio_origen_id != cuenta_folio_destino_id)` y `chk_trc_monto_positivo (monto_transferido > 0.00)`.
+    - **Compatibilidad histórica absoluta:**
+      - Los 2,600 folios preexistentes conservan su condición de folio maestro (`es_principal = 1`, `etiqueta = 'FOLIO PRINCIPAL'`, `folio_padre_id = NULL`).
+    - **Estado general de la base de datos tras FINANCIERO-3A:**
+      - **131 tablas relacionales** físicas consolidadas (130 previas + 1 de transferencias).
+      - **Migración 039 (`039_multifolio_split_cuentas.sql`) aplicada** con paridad absoluta en `SQL/camargo_pms.sql`.
+      - **Ranura de migración 040 estrictamente LIBRE** para `SUNAT-1` y fases posteriores.
 
 
 

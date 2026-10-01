@@ -118,6 +118,62 @@ class CuentaFolioServicio
         return $this->folioRepo->obtenerPorReservaId($reservaId);
     }
 
+    public function obtenerFolioPrincipalReserva(int $reservaId): ?CuentaFolio
+    {
+        return $this->folioRepo->obtenerPrincipalPorReservaId($reservaId);
+    }
+
+    /**
+     * @return array<CuentaFolio>
+     */
+    public function obtenerFoliosReserva(int $reservaId): array
+    {
+        return $this->folioRepo->listarPorReservaId($reservaId);
+    }
+
+    public function crearFolioSecundario(
+        int $reservaId,
+        int $personaTitularId,
+        string $etiqueta = 'FOLIO SECUNDARIO',
+        ?int $actorId = null
+    ): CuentaFolio {
+        $actorIdFinal = $this->resolverActorId($actorId);
+
+        $folioPrincipal = $this->folioRepo->obtenerPrincipalPorReservaId($reservaId);
+        if ($folioPrincipal === null) {
+            throw new CuentaFolioNoEncontradaExcepcion("No existe un folio principal activo para la reserva ID {$reservaId}");
+        }
+
+        if ($folioPrincipal->estaCerrada() || $folioPrincipal->estaAnulada()) {
+            throw new EstadoFinancieroInvalidoExcepcion("No se puede aperturar un folio secundario si el folio principal está {$folioPrincipal->obtenerEstado()}");
+        }
+
+        $codigo = $this->folioRepo->generarSiguienteCodigo();
+        $nuevoFolio = new CuentaFolio(
+            null,
+            $codigo,
+            $reservaId,
+            $personaTitularId,
+            $folioPrincipal->obtenerMonedaCodigo(),
+            'ABIERTA',
+            $actorIdFinal,
+            null,
+            null,
+            null,
+            false,
+            trim($etiqueta) !== '' ? trim($etiqueta) : 'FOLIO SECUNDARIO',
+            $folioPrincipal->obtenerId()
+        );
+
+        $id = $this->folioRepo->crear($nuevoFolio);
+        $creado = $this->folioRepo->obtenerPorId($id);
+        if ($creado === null) {
+            throw new CuentaFolioNoEncontradaExcepcion("Error al recuperar el folio secundario recién creado ID {$id}");
+        }
+
+        return $creado;
+    }
+
     public function obtenerFolioPorId(int $folioId): ?CuentaFolio
     {
         return $this->folioRepo->obtenerPorId($folioId);

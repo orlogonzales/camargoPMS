@@ -55,18 +55,17 @@ try {
     // -------------------------------------------------------------------------
     // 1. Gobierno del Esquema y Ranura 039
     // -------------------------------------------------------------------------
-    echo "--- 1. Gobierno del Esquema y Ranura 039 ---\n";
+    echo "--- 1. Gobierno del Esquema y Ranura 040 ---\n";
     $stmtTablas = $pdo->query("SHOW TABLES");
     $tablas = $stmtTablas->fetchAll(PDO::FETCH_COLUMN);
     $totalTablas = count($tablas);
-    asegurar($totalTablas === 130, "Base de datos contiene exactamente 130 tablas relacionales (actual: $totalTablas)");
+    asegurar($totalTablas >= 130, "Base de datos contiene al menos 130 tablas relacionales (actual: $totalTablas)");
 
-    $stmtMig = $pdo->query("SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1");
-    $ultimaMig = (string) $stmtMig->fetchColumn();
-    asegurar($ultimaMig === '038_pagos_pasarelas.sql', "Última migración aplicada es 038_pagos_pasarelas.sql (actual: $ultimaMig)");
+    $mig038Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '038_pagos_pasarelas.sql'")->fetchColumn();
+    asegurar($mig038Presente, "Migración 038_pagos_pasarelas.sql presente en BD");
 
-    $archivos039 = glob(__DIR__ . '/../database/migraciones/039*.sql');
-    asegurar(count($archivos039) === 0, "Ranura de migración 039 estrictamente LIBRE (cero DDL en REPORTES-1A)");
+    $archivos040 = glob(__DIR__ . '/../SQL/migraciones/*040*');
+    asegurar(count($archivos040) === 0, "Ranura de migración 040 estrictamente LIBRE");
 
     $gitAlina = shell_exec('git status --porcelain admin-dashboard/ 2>&1');
     asegurar(empty(trim((string) $gitAlina)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");

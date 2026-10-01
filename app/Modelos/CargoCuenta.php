@@ -31,7 +31,8 @@ class CargoCuenta
         private ?string $devengadoEn,
         private int $creadoPorActorId,
         private ?string $creadoEn = null,
-        private ?string $actualizadoEn = null
+        private ?string $actualizadoEn = null,
+        private ?int $cargoPadreId = null
     ) {
     }
 
@@ -167,6 +168,16 @@ class CargoCuenta
         return $this->creadoEn;
     }
 
+    public function obtenerCargoPadreId(): ?int
+    {
+        return $this->cargoPadreId;
+    }
+
+    public function esCargoHijo(): bool
+    {
+        return $this->cargoPadreId !== null;
+    }
+
     public function obtenerActualizadoEn(): ?string
     {
         return $this->actualizadoEn;
@@ -181,6 +192,7 @@ class CargoCuenta
             'id' => $this->id,
             'codigo' => $this->codigo,
             'cuenta_folio_id' => $this->cuentaFolioId,
+            'cargo_padre_id' => $this->cargoPadreId,
             'origen_tipo' => $this->origenTipo,
             'origen_id' => $this->origenId,
             'estadia_id' => $this->estadiaId,
@@ -231,7 +243,8 @@ class CargoCuenta
             isset($datos['devengado_en']) ? (string) $datos['devengado_en'] : null,
             (int) ($datos['creado_por_actor_id'] ?? 0),
             isset($datos['creado_en']) ? (string) $datos['creado_en'] : null,
-            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null
+            isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null,
+            isset($datos['cargo_padre_id']) && $datos['cargo_padre_id'] !== null ? (int) $datos['cargo_padre_id'] : null
         );
     }
 }

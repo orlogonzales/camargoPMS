@@ -102,8 +102,8 @@ try {
     $mig037Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '037_api_idempotencia.sql'")->fetchColumn();
     assertCheck($mig037Presente, "Migración 037_api_idempotencia.sql registrada en tabla 'migraciones'");
 
-    $mig039 = glob(dirname(__DIR__) . '/SQL/migraciones/*039*');
-    assertCheck(empty($mig039), "Ranura de migración 039 estrictamente LIBRE (cero DDL no autorizado)");
+    $mig040 = glob(dirname(__DIR__) . '/SQL/migraciones/*040*');
+    assertCheck(empty($mig040), "Ranura de migración 040 estrictamente LIBRE (cero DDL no autorizado)");
 
     // Inmutabilidad de admin-dashboard/ y SQL consolidado
     $gitAlina = shell_exec('git status --porcelain admin-dashboard/');
