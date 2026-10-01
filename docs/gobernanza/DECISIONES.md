@@ -2031,6 +2031,38 @@ Aprobada en la microfase `PAGOS-1D` como arquitectura vinculante para la interfa
    - Directorio de referencia Alina `admin-dashboard/` 100% inmutable y de solo lectura.
    - Cobertura de regresión transversal: 80 suites automatizadas (todas en verde, 100% PASS).
 
+### D-110 — Autoridad Analítica Backend, Fórmulas Soberanas y Rendimiento por Canal (REPORTES-1A)
+
+Aprobada en la microfase `REPORTES-1A` como base y autoridad soberana de cálculo para el módulo de analítica, indicadores hoteleros (Ocupación, ADR, RevPAR, TRevPAR), métricas por canal y segregación contable.
+
+1. **Principio de Autoridad Canónica del Cierre Nocturno (D-110.1):**
+   - La tabla `cierres_hoteleros` (Night Audit según D-090) constituye la fuente canónica de verdad inmutable para toda fecha hotelera cerrada. El motor analítico de `ReporteServicio` respeta sus valores históricos congelados (unidades totales, OOO, vendibles, cuartos vendidos, cortesías, ADR y RevPAR), marcando el punto temporal con `es_auditado = true`.
+   - Para fechas en curso o sin cierre ejecutado, el motor proyecta en tiempo real desde el libro diario de devengos (`devengos_alojamiento`), y en su defecto desde órdenes de mantenimiento (`mantenimiento_ordenes` con `requiere_bloqueo = 1`) y estadías activas, declarando de forma explícita el flag `es_auditado = false`.
+
+2. **Aislamiento de Cortesías del Denominador de ADR y Preservación de USALI (D-110.2):**
+   - El indicador ADR (Average Daily Rate) se calcula exclusivamente como $\text{ADR} = \dfrac{\text{Ingreso Alojamiento Neto}}{\text{Habitaciones Vendidas Comerciales}}$ con exclusión taxativa de pernoctaciones de cortesía (`es_cortesia = 1` o `importe_neto = 0.00`) para salvaguardar la pureza del precio medio comercial y evitar la dilución artificial del valor de inventario.
+   - La ocupación física total contempla todas las unidades ocupadas ($U_{\text{ocupadas}} = U_{\text{vendidas}} + U_{\text{cortesia}}$).
+   - Se preserva la identidad matemática hotelera USALI: $\text{RevPAR} = \text{ADR} \times \left(\dfrac{\text{Habitaciones Vendidas}}{\text{Unidades Vendibles}}\right)$.
+   - Prevención absoluta de división por cero en todos los denominadores cuando las unidades vendibles o vendidas sean cero.
+
+3. **Segregación Estricta de Métricas Devengadas vs Percibidas (D-110.3):**
+   - Se prohíbe la unificación o mezcla de devengo y cobranza en un único KPI financiero ambiguo.
+   - **Ingresos Devengados (Accrual Accounting):** Alojamiento devengado en el periodo, cargos por servicios extras contratados, arrendamientos devengados, consumos de suministros y penalidades.
+   - **Ingresos Percibidos (Cash Accounting / Tesorería):** Cobros en efectivo de caja, transferencias bancarias conciliadas, cobros con tarjeta POS y transacciones de pasarela netas de reembolsos.
+   - Se expone la `brecha_recaudacion` determinista ($\text{Total Devengado} - \text{Total Percibido}$) calculada con precisión de punto fijo `BCMath` en escala de 2 decimales.
+
+4. **Salvaguarda Inviolable de Canales iCalendar Externos (D-110.4):**
+   - Los bloqueos de calendario importados desde feeds iCal (Airbnb, Booking.com, VRBO, etc.) son tratados estrictamente como retiros de disponibilidad operativa, no como producción de ingresos demostrables en el PMS (`es_produccion_demostrable = false`).
+   - Se reportan de manera segregada en `noches_bloqueadas_ical` y eventos de bloqueo, con atribución de ingresos en `0.00` PEN y nota explícita de gobernanza para evitar falsos reportes de facturación hotelera.
+   - Las reservas procedentes de canales soberanos (`DIRECTO` y `WEB` de WordPress) se auditan como producción comercial demostrable, con cómputo de métricas por canal: cuota de noches %, cuota de ingresos %, ADR medio, estadía promedio (ALOS), Lead Time promedio y tasa de cancelación.
+
+5. **Gobernanza del Esquema, Ranura 039 Libre y Regresión (D-110.5):**
+   - Cero DDL en la microfase REPORTES-1A: las estructuras de datos preexistentes son plenamente suficientes.
+   - La base de datos relacional se mantiene estrictamente en **130 tablas**.
+   - Ranura de migración `039` estrictamente LIBRE.
+   - Directorio de referencia Alina `admin-dashboard/` 100% inalterado y de solo lectura.
+   - Cobertura de regresión transversal: 81 suites automatizadas (todas en verde, 100% PASS), 2,597 checks superados.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

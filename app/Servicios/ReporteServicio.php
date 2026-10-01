@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace CamargoPMS\Servicios;
 
 use CamargoPMS\Excepciones\ValidacionExcepcion;
+use CamargoPMS\Modelos\PuntoSerieTemporalDTO;
+use CamargoPMS\Modelos\RendimientoCanalDTO;
 use CamargoPMS\Modelos\ReporteAgingDTO;
+use CamargoPMS\Modelos\ReporteAnaliticaDTO;
 use CamargoPMS\Modelos\ReporteDiarioDTO;
 use CamargoPMS\Modelos\ReporteFlujoCajaDTO;
 use CamargoPMS\Repositorios\ReporteRepositorio;
 use CamargoPMS\Servicios\Documentos\GeneradorPdf;
+use DateInterval;
+use DatePeriod;
 use DateTimeImmutable;
 
 /**
@@ -1435,6 +1440,385 @@ class ReporteServicio
         return 'MAS_90';
     }
 
+    // =========================================================================
+    // 5. ANALÍTICA DE PERIODOS Y RENDIMIENTO POR CANAL (REPORTES-1A)
+    // =========================================================================
+
+    /**
+     * Genera el Reporte Analítico Integral y Rendimiento por Canal para un rango de fechas.
+     * Gobernanza: D-069, D-087, D-090, REPORTES-1A.
+     *
+     * @param string $fechaDesde YYYY-MM-DD
+     * @param string $fechaHasta YYYY-MM-DD
+     * @param int|null $propiedadId Filtrar por propiedad o consolidado general
+     */
+    public function generarReporteAnalitico(
+        string $fechaDesde,
+        string $fechaHasta,
+        ?int $propiedadId = null
+    ): ReporteAnaliticaDTO {
+        $this->validarRangoFechas($fechaDesde, $fechaHasta);
+
+        // 1. Resolver información de la propiedad
+        $propiedadNombre = null;
+        $unidades = $this->reporteRepo->obtenerUnidadesInventario($propiedadId);
+        $unidadesTotales = count($unidades);
+        $unidadesIds = array_column($unidades, 'id');
+
+        if ($propiedadId !== null && !empty($unidades)) {
+            $propiedadNombre = (string) ($unidades[0]['propiedad_nombre'] ?? null);
+        }
+
+        // 2. Obtener datos masivos en lote (Batch O(1)) para el intervalo
+        $cierres = $this->reporteRepo->obtenerCierresEnRango($fechaDesde, $fechaHasta, $propiedadId);
+        $devengos = $this->reporteRepo->obtenerDevengosEnRango($fechaDesde, $fechaHasta, $propiedadId);
+        $ordenesBloqueo = $this->reporteRepo->obtenerMantenimientoBloqueanteEnRango($fechaDesde, $fechaHasta, $propiedadId);
+        $estadiasActivas = $this->reporteRepo->obtenerEstadiasActivasEnRango($fechaDesde, $fechaHasta, $propiedadId);
+        $arrendamientos = $this->reporteRepo->obtenerArrendamientosEnRango($fechaDesde, $fechaHasta, $propiedadId);
+
+        // 3. Iterar día a día para construir la serie temporal
+        $dtInicio = new DateTimeImmutable($fechaDesde);
+        $dtFin = new DateTimeImmutable($fechaHasta);
+        $periodo = new DatePeriod($dtInicio, new DateInterval('P1D'), $dtFin->modify('+1 day'));
+
+        $totalDias = 0;
+        $puntosSerie = [];
+
+        $totalNochesDisponibles = 0;
+        $totalNochesOcupadas = 0;
+        $totalHabitacionesVendidas = 0;
+        $totalHabitacionesCortesia = 0;
+        $totalUnidadesOoo = 0;
+        $totalIngresoAlojamientoNeto = '0.00';
+        $totalIngresoAlojamientoBruto = '0.00';
+
+        foreach ($periodo as $dt) {
+            $dia = $dt->format('Y-m-d');
+            $totalDias++;
+
+            if (isset($cierres[$dia])) {
+                // Caso A: Cierre Hotelero Auditado (Night Audit) es la autoridad canónica indiscutible
+                $cierre = $cierres[$dia];
+                $uTotales = (int) $cierre['unidades_totales'];
+                $uOoo = (int) $cierre['unidades_ooo'];
+                $uVendibles = (int) $cierre['unidades_vendibles'];
+                $habVendidas = (int) $cierre['habitaciones_vendidas'];
+                $habCortesia = (int) $cierre['habitaciones_cortesia'];
+                $uOcupadas = $habVendidas + $habCortesia;
+                $ocupPorc = (float) $cierre['ocupacion_porcentaje'];
+                $adr = (string) $cierre['adr'];
+                $revpar = (string) $cierre['revpar'];
+                $ingNeto = (string) $cierre['ingreso_alojamiento_neto'];
+                $ingBruto = (string) $cierre['ingreso_alojamiento_total'];
+                $esAuditado = true;
+            } elseif (isset($devengos[$dia])) {
+                // Caso B: Fecha con Devengos Activos en el libro diario (en curso o sin cierre ejecutado)
+                $dev = $devengos[$dia];
+                // Calcular OOO para este día
+                $bloqueosDia = array_filter($ordenesBloqueo, static function ($o) use ($dia) {
+                    return $o['fecha_bloqueo_inicio'] <= $dia && $o['fecha_bloqueo_fin'] > $dia;
+                });
+                $uOooIds = array_intersect(array_unique(array_column($bloqueosDia, 'unidad_id')), $unidadesIds);
+                $uOoo = count($uOooIds);
+                $uTotales = $unidadesTotales;
+                $uVendibles = max(0, $uTotales - $uOoo);
+                $habVendidas = (int) $dev['habitaciones_vendidas'];
+                $habCortesia = (int) $dev['habitaciones_cortesia'];
+                $uOcupadas = $habVendidas + $habCortesia;
+                $ingNeto = (string) $dev['ingreso_alojamiento_neto'];
+                $ingBruto = (string) $dev['ingreso_alojamiento_total'];
+
+                $ocupPorc = $uVendibles > 0 ? round(($uOcupadas / $uVendibles) * 100, 2) : 0.00;
+                $adr = $habVendidas > 0 ? bcdiv($ingNeto, (string) $habVendidas, 2) : '0.00';
+                $revpar = $uVendibles > 0 ? bcdiv($ingNeto, (string) $uVendibles, 2) : '0.00';
+                $esAuditado = false;
+            } else {
+                // Caso C: Fecha sin devengos registrados (pre-cutover o proyecciones operativas)
+                $bloqueosDia = array_filter($ordenesBloqueo, static function ($o) use ($dia) {
+                    return $o['fecha_bloqueo_inicio'] <= $dia && $o['fecha_bloqueo_fin'] > $dia;
+                });
+                $uOooIds = array_intersect(array_unique(array_column($bloqueosDia, 'unidad_id')), $unidadesIds);
+                $uOoo = count($uOooIds);
+                $uTotales = $unidadesTotales;
+                $uVendibles = max(0, $uTotales - $uOoo);
+
+                // Ocupación estimada por estadías en curso y arrendamientos
+                $estadiasDia = array_filter($estadiasActivas, static function ($e) use ($dia) {
+                    return $e['fecha_entrada'] <= $dia && $e['fecha_salida_prevista'] > $dia;
+                });
+                $arrendDia = array_filter($arrendamientos, static function ($a) use ($dia) {
+                    return $a['fecha_inicio'] <= $dia && $a['fecha_fin'] >= $dia;
+                });
+                $ocupadasIds = array_unique(array_merge(
+                    array_column($estadiasDia, 'unidad_id'),
+                    array_column($arrendDia, 'unidad_id')
+                ));
+                $uOcupadas = count(array_intersect($ocupadasIds, $unidadesIds));
+
+                $habVendidas = 0;
+                $habCortesia = 0;
+                $ingNeto = '0.00';
+                $ingBruto = '0.00';
+                $adr = '0.00';
+                $revpar = '0.00';
+                $ocupPorc = $uVendibles > 0 ? round(($uOcupadas / $uVendibles) * 100, 2) : 0.00;
+                $esAuditado = false;
+            }
+
+            // Acumular en agregados globales del periodo
+            $totalNochesDisponibles += $uVendibles;
+            $totalNochesOcupadas += $uOcupadas;
+            $totalHabitacionesVendidas += $habVendidas;
+            $totalHabitacionesCortesia += $habCortesia;
+            $totalUnidadesOoo += $uOoo;
+            $totalIngresoAlojamientoNeto = bcadd($totalIngresoAlojamientoNeto, $ingNeto, 2);
+            $totalIngresoAlojamientoBruto = bcadd($totalIngresoAlojamientoBruto, $ingBruto, 2);
+
+            $puntosSerie[] = new PuntoSerieTemporalDTO(
+                fecha: $dia,
+                unidadesTotales: $uTotales,
+                unidadesOoo: $uOoo,
+                unidadesVendibles: $uVendibles,
+                unidadesOcupadas: $uOcupadas,
+                habitacionesVendidas: $habVendidas,
+                habitacionesCortesia: $habCortesia,
+                ocupacionPorcentaje: $ocupPorc,
+                adr: $adr,
+                revpar: $revpar,
+                ingresoAlojamientoNeto: $ingNeto,
+                esAuditado: $esAuditado
+            );
+        }
+
+        // 4. Calcular KPIs Consolidados del Periodo
+        $ocupacionMediaPorcentaje = $totalNochesDisponibles > 0
+            ? round(($totalNochesOcupadas / $totalNochesDisponibles) * 100, 2)
+            : 0.00;
+
+        $adrPromedio = $totalHabitacionesVendidas > 0
+            ? bcdiv($totalIngresoAlojamientoNeto, (string) $totalHabitacionesVendidas, 2)
+            : '0.00';
+
+        $revparPromedio = $totalNochesDisponibles > 0
+            ? bcdiv($totalIngresoAlojamientoNeto, (string) $totalNochesDisponibles, 2)
+            : '0.00';
+
+        // 5. Desglose de Ingresos Devengados (Accrual)
+        $cargosEnRango = $this->reporteRepo->obtenerDesgloseCargosEnRango($fechaDesde, $fechaHasta, $propiedadId);
+        $cargosMapeados = [];
+        $totalDevengado = '0.00';
+
+        foreach ($cargosEnRango as $c) {
+            $tipo = (string) $c['origen_tipo'];
+            $totalMonto = (string) $c['total'];
+            $cargosMapeados[$tipo] = $totalMonto;
+            $totalDevengado = bcadd($totalDevengado, $totalMonto, 2);
+        }
+
+        $desgloseIngresosDevengados = [
+            'alojamiento_neto' => $totalIngresoAlojamientoNeto,
+            'alojamiento_impuestos' => bcsub($totalIngresoAlojamientoBruto, $totalIngresoAlojamientoNeto, 2),
+            'alojamiento_total' => $totalIngresoAlojamientoBruto,
+            'alojamiento_cargos_registrados' => $cargosMapeados['ALOJAMIENTO_NOCHES'] ?? '0.00',
+            'servicios_extras' => $cargosMapeados['SERVICIO_CONTRATADO'] ?? '0.00',
+            'arrendamientos' => $cargosMapeados['RENTA_ARRENDAMIENTO'] ?? '0.00',
+            'suministros_consumos' => bcadd($cargosMapeados['SUMINISTRO_CONSUMO'] ?? '0.00', $cargosMapeados['SUMINISTRO_CUOTA_FIJA'] ?? '0.00', 2),
+            'penalidades' => $cargosMapeados['PENALIDAD'] ?? '0.00',
+            'ajustes_manuales' => $cargosMapeados['AJUSTE_MANUAL'] ?? '0.00',
+            'total_devengado' => $totalDevengado,
+        ];
+
+        // TRevPAR: Ingresos devengados totales / Noches vendibles disponibles
+        $trevparPromedio = $totalNochesDisponibles > 0
+            ? bcdiv($totalDevengado, (string) $totalNochesDisponibles, 2)
+            : '0.00';
+
+        // 6. Desglose de Ingresos Percibidos (Cash Accounting / Tesorería)
+        $cobrosEnRango = $this->reporteRepo->obtenerDesgloseCobrosEnRango($fechaDesde, $fechaHasta, $propiedadId);
+        $metricasPasarelas = $this->reporteRepo->obtenerMetricasPasarelasEnRango($fechaDesde, $fechaHasta, $propiedadId);
+
+        $cobrosMapeados = [];
+        $totalPercibido = '0.00';
+
+        foreach ($cobrosEnRango as $cobro) {
+            $metodo = (string) $cobro['metodo_codigo'];
+            $monto = (string) $cobro['monto_total'];
+            $cobrosMapeados[$metodo] = $monto;
+            $totalPercibido = bcadd($totalPercibido, $monto, 2);
+        }
+
+        $montoPasarelaNeto = bcsub((string) $metricasPasarelas['monto_cobrado'], (string) $metricasPasarelas['monto_reembolsado'], 2);
+
+        $desgloseIngresosPercibidos = [
+            'efectivo_caja' => $cobrosMapeados['EFECTIVO'] ?? '0.00',
+            'transferencias_banco' => $cobrosMapeados['TRANSFERENCIA'] ?? '0.00',
+            'tarjetas_pos' => $cobrosMapeados['TARJETA_CREDITO'] ?? ($cobrosMapeados['TARJETA_DEBITO'] ?? '0.00'),
+            'pasarelas_neto' => $montoPasarelaNeto,
+            'pasarelas_cobrado' => (string) $metricasPasarelas['monto_cobrado'],
+            'pasarelas_reembolsado' => (string) $metricasPasarelas['monto_reembolsado'],
+            'total_percibido' => $totalPercibido,
+            'brecha_recaudacion' => bcsub($totalDevengado, $totalPercibido, 2),
+        ];
+
+        // 7. Rendimiento por Canal: Producción Comercial Demostrable vs iCal
+        $reservasCanales = $this->reporteRepo->obtenerRendimientoCanalesReservas($fechaDesde, $fechaHasta, $propiedadId);
+        $bloqueosIcal = $this->reporteRepo->obtenerBloqueosIcalCanalesEnRango($fechaDesde, $fechaHasta, $propiedadId);
+
+        // Sumas globales para cuotas relativas (% share)
+        $granTotalNochesComerciales = 0;
+        $granTotalIngresosComerciales = '0.00';
+
+        foreach ($reservasCanales as $rc) {
+            $granTotalNochesComerciales += (int) $rc['noches_totales'];
+            $granTotalIngresosComerciales = bcadd($granTotalIngresosComerciales, (string) $rc['ingresos_totales'], 2);
+        }
+
+        $canalesDTO = [];
+
+        // Mapeo de canales comerciales soberanos
+        foreach ($reservasCanales as $rc) {
+            $canal = strtoupper((string) $rc['canal']);
+            $origen = strtoupper((string) $rc['origen']);
+            $resTotales = (int) $rc['total_reservas'];
+            $resConf = (int) $rc['reservas_confirmadas'];
+            $resCanc = (int) $rc['reservas_canceladas'];
+            $noches = (int) $rc['noches_totales'];
+            $ingresos = (string) $rc['ingresos_totales'];
+            $alos = (float) $rc['alos'];
+            $leadTime = (float) $rc['lead_time_medio'];
+
+            $codigo = "{$canal}_{$origen}";
+            $nombre = $this->obtenerNombreAmigableCanal($canal, $origen);
+            $tipo = ($canal === 'WEB') ? RendimientoCanalDTO::TIPO_COMERCIAL_WEB : RendimientoCanalDTO::TIPO_COMERCIAL_DIRECTO;
+            $badge = ($canal === 'WEB') ? 'bg-light-success' : 'bg-light-primary';
+
+            $cuotaNoches = $granTotalNochesComerciales > 0
+                ? round(($noches / $granTotalNochesComerciales) * 100, 2)
+                : 0.00;
+
+            $cuotaIngresos = bccomp($granTotalIngresosComerciales, '0.00', 2) > 0
+                ? round(((float) $ingresos / (float) $granTotalIngresosComerciales) * 100, 2)
+                : 0.00;
+
+            $adrMedio = $noches > 0 ? bcdiv($ingresos, (string) $noches, 2) : '0.00';
+            $tasaCanc = $resTotales > 0 ? round(($resCanc / $resTotales) * 100, 2) : 0.00;
+
+            $canalesDTO[] = new RendimientoCanalDTO(
+                codigoCanal: $codigo,
+                nombreCanal: $nombre,
+                tipoCanal: $tipo,
+                reservasTotales: $resTotales,
+                reservasConfirmadas: $resConf,
+                reservasCanceladas: $resCanc,
+                nochesVendidas: $noches,
+                cuotaNochesPorcentaje: $cuotaNoches,
+                ingresosTotales: $ingresos,
+                cuotaIngresosPorcentaje: $cuotaIngresos,
+                adrMedio: $adrMedio,
+                alosNoches: $alos,
+                leadTimeDias: $leadTime,
+                tasaCancelacionPorcentaje: $tasaCanc,
+                nochesBloqueadasIcal: 0,
+                esProduccionDemostrable: true,
+                colorBadge: $badge
+            );
+        }
+
+        // Mapeo de canales iCalendar externos (Airbnb, Booking, VRBO, etc.)
+        // PRINCIPIO VINCULANTE: Bloqueos iCal NO son ingresos demostrables ni reservas comerciales
+        $totalNochesBloqueadasIcal = 0;
+        $totalEventosIcal = 0;
+
+        foreach ($bloqueosIcal as $bi) {
+            $codigo = (string) $bi['canal_codigo'];
+            $nombre = (string) $bi['canal_nombre'];
+            $badge = (string) ($bi['color_badge'] ?? 'bg-light-secondary');
+            $nochesIcal = (int) $bi['noches_bloqueadas_total'];
+            $eventos = (int) $bi['total_bloqueos'];
+
+            $totalNochesBloqueadasIcal += $nochesIcal;
+            $totalEventosIcal += $eventos;
+
+            $canalesDTO[] = new RendimientoCanalDTO(
+                codigoCanal: "ICAL_{$codigo}",
+                nombreCanal: "{$nombre} (iCal Feed)",
+                tipoCanal: RendimientoCanalDTO::TIPO_EXTERNO_ICAL,
+                reservasTotales: $eventos,
+                reservasConfirmadas: $eventos,
+                reservasCanceladas: 0,
+                nochesVendidas: 0,
+                cuotaNochesPorcentaje: 0.00,
+                ingresosTotales: '0.00',
+                cuotaIngresosPorcentaje: 0.00,
+                adrMedio: '0.00',
+                alosNoches: $eventos > 0 ? round($nochesIcal / $eventos, 1) : 0.0,
+                leadTimeDias: 0.0,
+                tasaCancelacionPorcentaje: 0.00,
+                nochesBloqueadasIcal: $nochesIcal,
+                esProduccionDemostrable: false,
+                colorBadge: $badge
+            );
+        }
+
+        $resumenIcal = [
+            'total_canales_activos' => count($bloqueosIcal),
+            'total_eventos_activos' => $totalEventosIcal,
+            'total_noches_bloqueadas' => $totalNochesBloqueadasIcal,
+            'nota_gobernanza' => 'Las noches iCal representan indisponibilidad de calendario externa y no acreditan ingreso comercial hasta su registro en folio.',
+        ];
+
+        $resumenKpis = [
+            'total_dias' => $totalDias,
+            'unidades_fisicas_totales' => $unidadesTotales,
+            'noches_disponibles_totales' => $totalNochesDisponibles,
+            'noches_ocupadas_totales' => $totalNochesOcupadas,
+            'ocupacion_media_porcentaje' => $ocupacionMediaPorcentaje,
+            'ingreso_alojamiento_neto' => $totalIngresoAlojamientoNeto,
+            'ingreso_alojamiento_total' => $totalIngresoAlojamientoBruto,
+            'adr_promedio' => $adrPromedio,
+            'revpar_promedio' => $revparPromedio,
+            'trevpar_promedio' => $trevparPromedio,
+            'habitaciones_vendidas_totales' => $totalHabitacionesVendidas,
+            'habitaciones_cortesia_totales' => $totalHabitacionesCortesia,
+            'unidades_ooo_totales' => $totalUnidadesOoo,
+        ];
+
+        return new ReporteAnaliticaDTO(
+            fechaDesde: $fechaDesde,
+            fechaHasta: $fechaHasta,
+            propiedadId: $propiedadId,
+            propiedadNombre: $propiedadNombre,
+            totalDias: $totalDias,
+            resumenKpis: $resumenKpis,
+            desgloseIngresosDevengados: $desgloseIngresosDevengados,
+            desgloseIngresosPercibidos: $desgloseIngresosPercibidos,
+            rendimientoCanales: $canalesDTO,
+            resumenIcal: $resumenIcal,
+            serieTemporal: $puntosSerie,
+            monedaCodigo: 'PEN'
+        );
+    }
+
+    private function obtenerNombreAmigableCanal(string $canal, string $origen): string
+    {
+        if ($canal === 'PMS' && $origen === 'DIRECTO') {
+            return 'Recepción / Mostrador (PMS)';
+        }
+        if ($canal === 'WEB' && $origen === 'WEB_DIRECTA') {
+            return 'Venta Directa Online (WordPress / Motor Web)';
+        }
+        if ($canal === 'WEB') {
+            return 'Canal Web Directo';
+        }
+        if ($canal === 'APP') {
+            return 'Aplicación Móvil';
+        }
+        if ($canal === 'OTA') {
+            return 'Agencia de Viajes Online (OTA)';
+        }
+        return "{$canal} — {$origen}";
+    }
+
     private function validarFecha(string $fecha, string $campo): void
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !strtotime($fecha)) {
@@ -1452,3 +1836,4 @@ class ReporteServicio
         }
     }
 }
+

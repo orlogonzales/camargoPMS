@@ -578,7 +578,21 @@ Implementación de la infraestructura soberana de sincronización bilateral mult
     - Integración frontend nativa en `public/assets/js/camargo-pagos.js` con Vanilla JS, Fetch API, SweetAlert2 y cero dependencias de jQuery AJAX.
     - Cero DDL: 130 tablas relacionales consolidadas, migración 038 como última aplicada, ranura 039 estrictamente libre, `admin-dashboard/` 100% inalterado.
     - Suite de pruebas: `tests/test_pagos_1d.php` (90/90 checks PASS).
-    - Estado: Implementada y Validada (80/80 suites globales PASS, 2,545 checks, 0 fallos).
+    - Estado: homologada y publicada (micro-baseline oficial `c66ebf8e5aaa7b433fc7c490db5d7b61997409d6`, 80/80 suites globales PASS, 2,545 checks, 0 fallos).
+  - **REPORTES-1A:** Autoridad Analítica Backend, Fórmulas Soberanas y Rendimiento por Canal:
+    - Modelos y DTOs tipados inmutables: `RendimientoCanalDTO`, `PuntoSerieTemporalDTO`, `ReporteAnaliticaDTO`.
+    - Repositorio analítico `ReporteRepositorio`: consultas agregadas de corte en rango (`obtenerCierresEnRango`, `obtenerDevengosEnRango`, `obtenerMantenimientoBloqueanteEnRango`, `obtenerEstadiasActivasEnRango`, `obtenerArrendamientosEnRango`, `obtenerRendimientoCanalesReservas`, `obtenerBloqueosIcalCanalesEnRango`, `obtenerDesgloseCargosEnRango`, `obtenerDesgloseCobrosEnRango`, `obtenerMetricasPasarelasEnRango`).
+    - Orquestador y servicio soberano `ReporteServicio::generarReporteAnalitico`:
+      - Autoridad canónica indiscutible del Cierre Nocturno (Night Audit según D-090). Las fechas cerradas respetan íntegramente sus valores históricos congelados y declaran `es_auditado = true`.
+      - Aislamiento estricto de pernoctaciones de cortesía del denominador de ADR (D-090.5), preservando la identidad hotelera USALI: $\text{RevPAR} = \text{ADR} \times (\text{Habitaciones Vendidas} / \text{Unidades Vendibles})$.
+      - Deducción de Fuera de Orden (OOO) mediante órdenes de mantenimiento con `requiere_bloqueo = 1`.
+      - Segregación dual estricta de métricas: Devengado (Accrual) vs Percibido (Cash/Tesorería) con cómputo de la brecha de recaudación en `BCMath`.
+      - Salvaguarda inviolable de canales iCalendar externos (Airbnb, Booking.com, VRBO): cero ingresos comerciales asignados, `es_produccion_demostrable = false`, y segregación en `noches_bloqueadas_ical`.
+      - Métricas comerciales demostrables para canales directos y Web WordPress: cuota de noches %, cuota de ingresos %, ADR medio, estadía promedio (ALOS), Lead Time y tasa de cancelación.
+    - Cero DDL: Base de datos consolidada en 130 tablas relacionales, ranura 039 estrictamente libre.
+    - `admin-dashboard/` y `SQL/` 100% inalterados.
+    - Suite de pruebas: `tests/test_reportes_analitica_1a.php` (53/53 checks PASS).
+    - Estado: Implementada y Validada (81/81 suites globales PASS, 2,597 checks, 0 fallos).
 
 ## Dominio operativo
 

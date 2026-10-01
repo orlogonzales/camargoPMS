@@ -4,6 +4,36 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase REPORTES-1A — Autoridad Analítica Backend, Fórmulas Soberanas y Rendimiento por Canal
+
+- **Modelos y DTOs Tipados de Analítica e Indicadores:**
+  - `RendimientoCanalDTO`: DTO inmutable para rendimiento comercial y de canales externos. Captura métricas de producción demostrable vs iCal, reservas confirmadas/canceladas, noches vendidas, cuota de noches %, cuota de ingresos %, ADR medio, ALOS, Lead Time, tasa de cancelación y badges Alina.
+  - `PuntoSerieTemporalDTO`: DTO inmutable para agregación de series diarias continuas. Captura unidades totales, OOO, vendibles netas, ocupadas, vendidas, cortesías, tasa de ocupación %, ADR, RevPAR, ingreso neto y flag de autoridad `es_auditado`.
+  - `ReporteAnaliticaDTO`: DTO agregado de consolidación de rango. Agrupa metadatos del periodo, KPIs consolidados, series temporales, matriz de rendimiento por canal, resumen de salvaguarda iCal y desglose dual estricto (Devengado vs Percibido).
+- **Consultas Agregadas de Alto Desempeño en Repositorio (`ReporteRepositorio`):**
+  - `obtenerCierresEnRango`: Indexación por fecha hotelera de snapshots auditados de Night Audit (`cierres_hoteleros`).
+  - `obtenerDevengosEnRango`: Agregación de devengos diarios de alojamiento en el libro diario (`devengos_alojamiento`) con aislamiento de cortesías y distinción de importes netos, impuestos y totales.
+  - `obtenerMantenimientoBloqueanteEnRango`: Extracción y filtrado de órdenes de mantenimiento correctivo/preventivo bloqueantes (`requiere_bloqueo = 1`) para deducción estricta de Fuera de Orden (OOO).
+  - `obtenerEstadiasActivasEnRango` y `obtenerArrendamientosEnRango`: Proyecciones de ocupación física operacional para fechas sin devengos.
+  - `obtenerRendimientoCanalesReservas`: Agrupación y cálculo soberano de volumen, ingresos, ALOS y Lead Time por canal comercial (`DIRECTO`, `WEB`).
+  - `obtenerBloqueosIcalCanalesEnRango`: Auditoría de eventos y noches bloqueadas procedentes de feeds iCal (`eventos_ical_externos`), garantizando cero ingresos comerciales ficticios.
+  - `obtenerDesgloseCargosEnRango` y `obtenerDesgloseCobrosEnRango`: Agrupación por tipo de cargo (Accrual) y por método de cobranza (Cash Accounting).
+  - `obtenerMetricasPasarelasEnRango`: Consolidación neta de transacciones pasarela aprobadas descontando reembolsos ejecutados.
+- **Motor Analítico Soberano en Servicio (`ReporteServicio::generarReporteAnalitico`):**
+  - **Autoridad Canónica de Auditoría Nocturna (Night Audit):** Respeto incondicional de los valores congelados de `cierres_hoteleros` (D-090). Las fechas cerradas se marcan con `es_auditado = true`.
+  - **Aislamiento de Cortesías y Cumplimiento USALI (D-090.5):** El cálculo de ADR divide el ingreso neto exclusivamente entre habitaciones vendidas comerciales ($U_{\text{vendidas}}$ con $\text{neto} > 0$), excluyendo taxativamente pernoctaciones de cortesía. Las unidades ocupadas físicas integran vendidas más cortesías. Se preserva deterministamente $\text{RevPAR} = \text{ADR} \times (\text{Vendidas} / \text{Vendibles})$.
+  - **Deducción de Fuera de Orden (OOO):** Las órdenes de mantenimiento con `requiere_bloqueo = 1` reducen las unidades vendibles disponibles ($\text{Vendibles} = \text{Totales} - \text{OOO}$), evitando penalizar el RevPAR con habitaciones inhabilitadas.
+  - **Segregación Dual Estricta (Devengado vs Percibido):** Prohibición de unificación contable. Se calculan por separado los ingresos devengados (alojamiento, servicios, rentas, penalidades) y los ingresos percibidos (caja, bancos, POS, pasarelas netas), reportando la `brecha_recaudacion` exacta con `BCMath`.
+  - **Salvaguarda Inviolable de Canales iCalendar:** Los eventos de bloqueo de feeds externos (Airbnb, Booking.com, VRBO) se reportan con `es_produccion_demostrable = false`, cero ingresos asignados y advertencia explícita de gobernanza.
+  - **Prevención de División por Cero:** Manejo defensivo en todos los cocientes cuando las habitaciones vendidas o unidades vendibles son 0.
+- **Gobernanza y Pruebas:**
+  - Cero DDL: No se introduce migración; ranura 039 estrictamente libre. 130 tablas relacionales consolidadas.
+  - Inmutabilidad total de `admin-dashboard/` y `SQL/`.
+  - Suite de pruebas dedicada `tests/test_reportes_analitica_1a.php` (53/53 checks, 100% PASS).
+  - Regresión transversal global: 81 suites ejecutadas (100% PASS), 2,597 checks en verde.
+
+## Baseline oficial c66ebf8 (PAGOS-1D)
+
 ### Microfase PAGOS-1D — Implementación de Monitor, Conciliación y Reembolsos Alina
 
 - **Monitor Principal de Pasarelas (`GET /pagos` y `GET /pagos/datos`):**

@@ -326,21 +326,22 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **PAGOS-1B**        | `test_pagos_1b.php` (Secciones 1..7) | 90 | — | 90/90 PASS |
 | **PAGOS-1C**        | `test_pagos_1c.php` (Secciones 1..8) | 75 | — | 75/75 PASS |
 | **PAGOS-1D**        | `test_pagos_1d.php` (Secciones 1..11) | 90 | — | 90/90 PASS |
-| **TOTALES CANÓNICOS**| **80 suites ejecutadas** | **—** | **—** | **2,545 checks PASS (100%)** |
+| **REPORTES-1A**    | `test_reportes_analitica_1a.php` (Secciones 1..12) | 53 | — | 53/53 PASS |
+| **TOTALES CANÓNICOS**| **81 suites ejecutadas** | **—** | **—** | **2,597 checks PASS (100%)** |
 
-  - **Consolidado de Regresión Transversal Activa (PAGOS-1D):**
-    - Suite `test_pagos_1d.php`: 90 comprobaciones automáticas cubriendo:
-      - Gobierno del esquema y ranura de migración: 130 tablas relacionales consolidadas, migración 038 registrada como última, ranura 039 estrictamente libre, `admin-dashboard/` 100% inalterado.
-      - Rutas y controladores: 7 rutas registradas (`GET /pagos`, `GET /pagos/datos`, `GET /pagos/transacciones/{id}`, `GET /pagos/transacciones/{id}/datos`, `POST /pagos/transacciones/{id}/reembolsar`, `POST /pagos/transacciones/{id}/conciliar`, `GET /pagos/webhooks/{id}/payload`).
-      - Autenticación, sesión y RBAC: protección con intermediarios `SesionValidaIntermediario` y `PermisoIntermediario` (`caja.ver`, `caja.cobrar`, `caja.devolver`).
-      - Monitor y filtros: repositorio con búsqueda textual, filtros por proveedor, estado de conciliación, cálculo de saldo reembolsable, y agregaciones de 4 KPIs (`monto_aprobado`, `monto_reembolsado`, `discrepancias_hold_expirado`, `pendientes_conciliacion`).
-      - Validación CSRF en endpoints mutantes (`reembolsar`, `conciliar`).
-      - Validación de reembolsos del lado servidor: rechazo de transacciones inexistentes, pendientes, motivos insuficientes (< 10 chars), importes inválidos o superiores al saldo disponible.
-      - Ejecución de reembolsos totales y parciales: transaccionalidad ACID pesimista (`FOR UPDATE`), mitigación de fallas de pasarela, precisión monetaria exacta `BCMath`, transiciones automáticas (`REEMBOLSADO_PARCIAL`, `REEMBOLSADO_TOTAL`), y rechazo de sobre-reembolsos con saldo 0.
-      - **Invariante Hotelero Inviolable de Pagos Tardíos (C1/C2)**: preservación estricta de cuarentena administrativa (`cuenta_folio_id = NULL`, `pago_cuenta_id = NULL`, reserva `EXPIRADA`). Prohibición de reasignación a nueva reserva; registro seguro de notas y observaciones de seguimiento administrativo con auditoría D-061.
-      - Inspección Zero-Trust de Webhooks: enmascaramiento estricto de secretos y credenciales en payloads de visualización pública sin alterar `payload_raw` forense en base de datos.
-      - Maquetación e Interfaz Alina: tarjetas KPI `.equal-card`, selector de rango Flatpickr (`data-provider="rangepicker"`, `data-target-inicio`, `data-target-fin`; CERO `input[type="date"]`), tabla estandarizada `.table.table-bordered.table-striped.table-hover.align-middle`, timeline nativo `.app-side-timeline`, offcanvas drawer y modal centrado Alina.
-      - Limpieza defensiva de fixtures de prueba completada.
-    - Suites previas sin regresión: 79 suites históricas ejecutadas y validadas al 100%.
-    - **Total Consolidado de Regresión Activa: 80/80 suites PASS — 2,545 checks PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (REPORTES-1A):**
+    - Suite `test_reportes_analitica_1a.php`: 53 comprobaciones automáticas cubriendo:
+      - Gobierno del esquema y ranura de migración: 130 tablas relacionales exactas, migración 038 registrada como última, ranura 039 estrictamente libre, `admin-dashboard/` y `SQL/` 100% inalterados.
+      - Integridad y serialización de modelos DTOs: `RendimientoCanalDTO`, `PuntoSerieTemporalDTO`, `ReporteAnaliticaDTO`.
+      - Validación defensiva de entradas: detección de formatos de fecha inválidos y rechazo de rangos invertidos (`desde > hasta`) con `ValidacionExcepcion`.
+      - Prevención absoluta de división por cero en Ocupación, ADR, RevPAR y TRevPAR cuando las unidades vendidas o vendibles son cero.
+      - Autoridad canónica de Cierres Hoteleros Auditados (`cierres_hoteleros` de Night Audit según D-090) con congelamiento inmutable de métricas y marcado de `es_auditado = true`.
+      - Aislamiento estricto de habitaciones de cortesía del divisor de ADR (D-090.5): el ADR divide el ingreso neto exclusivamente entre habitaciones comerciales vendidas, evitando la dilución del precio medio pactado.
+      - Deducción soberana de Fuera de Orden (OOO): solo las órdenes de mantenimiento con `requiere_bloqueo = 1` reducen las unidades vendibles disponibles.
+      - Consistencia matemática hotelera USALI: $\text{RevPAR} = \text{ADR} \times (\text{Habitaciones Vendidas} / \text{Unidades Vendibles})$.
+      - Rendimiento por canal y salvaguarda de canales iCalendar externos (Airbnb, Booking.com, VRBO): cero ingresos comerciales asignados, `es_produccion_demostrable = false`, y segregación en `noches_bloqueadas_ical`. Detección y métricas completas para canales soberanos `DIRECTO` y `WEB` (WordPress).
+      - Segregación dual estricta de ingresos: Devengados (Accrual) vs Percibidos (Cash/Tesorería) con cálculo de la brecha de recaudación en `BCMath`.
+      - Limpieza defensiva de fixtures de prueba completada sin residuos en base de datos.
+    - Suites previas sin regresión: 80 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 81/81 suites PASS — 2,597 checks PASS — 0 fallos (100%)**.
 

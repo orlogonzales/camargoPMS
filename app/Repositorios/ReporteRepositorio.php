@@ -535,4 +535,302 @@ class ReporteRepositorio
             'estadias_devengadas' => 0,
         ];
     }
+
+    // =========================================================================
+    // 5. ANALÍTICA DE PERIODOS Y RENDIMIENTO POR CANAL (REPORTES-1A)
+    // =========================================================================
+
+    /**
+     * Obtiene los cierres hoteleros auditados que caen en un rango de fechas.
+     *
+     * @return array<string, array<string, mixed>> Indexado por fecha_hotelera
+     */
+    public function obtenerCierresEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT * FROM cierres_hoteleros
+                WHERE fecha_hotelera >= :desde AND fecha_hotelera <= :hasta
+                  AND estado = "CERRADO"';
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+        $sql .= ' ORDER BY fecha_hotelera ASC, id ASC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $resultado = [];
+        foreach ($filas as $f) {
+            $resultado[$f['fecha_hotelera']] = $f;
+        }
+        return $resultado;
+    }
+
+    /**
+     * Obtiene la agregación de devengos diarios de alojamiento agrupados por fecha hotelera.
+     *
+     * @return array<string, array<string, mixed>> Indexado por fecha_hotelera
+     */
+    public function obtenerDevengosEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT fecha_hotelera,
+                       COUNT(DISTINCT CASE WHEN es_cortesia = 0 AND importe_neto > 0 THEN unidad_id END) AS habitaciones_vendidas,
+                       COUNT(DISTINCT CASE WHEN es_cortesia = 1 OR importe_neto = 0 THEN unidad_id END) AS habitaciones_cortesia,
+                       COALESCE(SUM(importe_neto), 0.00) AS ingreso_alojamiento_neto,
+                       COALESCE(SUM(impuesto_monto), 0.00) AS ingreso_alojamiento_impuestos,
+                       COALESCE(SUM(importe_total), 0.00) AS ingreso_alojamiento_total,
+                       COUNT(DISTINCT estadia_id) AS estadias_devengadas
+                FROM devengos_alojamiento
+                WHERE fecha_hotelera >= :desde AND fecha_hotelera <= :hasta
+                  AND estado = "DEVENGADO"';
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+        $sql .= ' GROUP BY fecha_hotelera ORDER BY fecha_hotelera ASC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $resultado = [];
+        foreach ($filas as $f) {
+            $resultado[$f['fecha_hotelera']] = $f;
+        }
+        return $resultado;
+    }
+
+    /**
+     * Obtiene las órdenes de mantenimiento con bloqueo que intersectan el rango de fechas.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerMantenimientoBloqueanteEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT mo.id, mo.codigo, mo.unidad_id, mo.propiedad_id,
+                       mo.fecha_bloqueo_inicio, mo.fecha_bloqueo_fin, mo.estado
+                FROM mantenimiento_ordenes mo
+                WHERE mo.requiere_bloqueo = 1
+                  AND mo.estado IN ("PROGRAMADA", "EN_PROCESO")
+                  AND mo.fecha_bloqueo_inicio <= :hasta
+                  AND mo.fecha_bloqueo_fin >= :desde';
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND mo.propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene las estadías activas y arrendamientos que intersectan el rango de fechas.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerEstadiasActivasEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT e.id, e.unidad_id, e.fecha_entrada, e.fecha_salida_prevista,
+                       u.propiedad_id
+                FROM estadias e
+                JOIN unidades u ON u.id = e.unidad_id
+                WHERE e.estado = "EN_CURSO"
+                  AND e.fecha_entrada <= :hasta
+                  AND e.fecha_salida_prevista >= :desde';
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND u.propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene arrendamientos vigentes que intersectan el rango de fechas.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerArrendamientosEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT a.id, a.unidad_id, a.fecha_inicio, a.fecha_fin, u.propiedad_id
+                FROM arrendamientos a
+                JOIN unidades u ON u.id = a.unidad_id
+                WHERE a.estado = "VIGENTE"
+                  AND a.fecha_inicio <= :hasta
+                  AND a.fecha_fin >= :desde';
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND u.propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene métricas comerciales agrupadas por canal y origen de reserva.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerRendimientoCanalesReservas(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT r.canal,
+                       r.origen,
+                       COUNT(DISTINCT r.id) AS total_reservas,
+                       COUNT(DISTINCT CASE WHEN r.estado = "CONFIRMADA" THEN r.id END) AS reservas_confirmadas,
+                       COUNT(DISTINCT CASE WHEN r.estado = "CANCELADA" THEN r.id END) AS reservas_canceladas,
+                       COALESCE(SUM(r.noches), 0) AS noches_totales,
+                       COALESCE(SUM(r.total), 0.00) AS ingresos_totales,
+                       COALESCE(AVG(r.noches), 0.0) AS alos,
+                       COALESCE(AVG(GREATEST(0, DATEDIFF(r.fecha_entrada, r.creado_en))), 0.0) AS lead_time_medio
+                FROM reservas r';
+
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' JOIN reserva_unidades ru ON ru.reserva_id = r.id
+                      JOIN unidades u ON u.id = ru.unidad_id
+                      WHERE u.propiedad_id = :propiedad_id
+                        AND r.fecha_entrada <= :hasta AND r.fecha_salida >= :desde';
+            $params['propiedad_id'] = $propiedadId;
+        } else {
+            $sql .= ' WHERE r.fecha_entrada <= :hasta AND r.fecha_salida >= :desde';
+        }
+
+        $sql .= ' GROUP BY r.canal, r.origen ORDER BY ingresos_totales DESC, total_reservas DESC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene noches y eventos bloqueados por canales iCalendar externos (Airbnb, Booking, VRBO, etc.).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerBloqueosIcalCanalesEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT cd.id AS canal_id,
+                       cd.codigo AS canal_codigo,
+                       cd.nombre AS canal_nombre,
+                       cd.color_badge,
+                       COUNT(DISTINCT e.id) AS total_bloqueos,
+                       COALESCE(SUM(e.noches), 0) AS noches_bloqueadas_total
+                FROM eventos_ical_externos e
+                JOIN conexiones_ical ci ON ci.id = e.conexion_ical_id
+                JOIN canales_distribucion cd ON cd.id = ci.canal_id
+                JOIN unidades u ON u.id = ci.unidad_id
+                WHERE e.estado_evento = "ACTIVO"
+                  AND e.estado_bloqueo IN ("APLICADO", "APLICADO_CON_SOLAPAMIENTO")
+                  AND e.fecha_inicio <= :hasta AND e.fecha_fin >= :desde';
+
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' AND u.propiedad_id = :propiedad_id';
+            $params['propiedad_id'] = $propiedadId;
+        }
+        $sql .= ' GROUP BY cd.id ORDER BY cd.id ASC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene el desglose de ingresos devengados por tipo de cargo en cuentas folios.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerDesgloseCargosEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT cc.origen_tipo,
+                       COUNT(cc.id) AS total_cargos,
+                       COALESCE(SUM(cc.subtotal), 0.00) AS subtotal,
+                       COALESCE(SUM(cc.impuesto_total), 0.00) AS impuesto_total,
+                       COALESCE(SUM(cc.total), 0.00) AS total
+                FROM cargos_cuenta cc
+                JOIN cuentas_folios cf ON cf.id = cc.cuenta_folio_id';
+
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+
+        if ($propiedadId !== null && $propiedadId > 0) {
+            $sql .= ' LEFT JOIN reservas r ON r.id = cf.reserva_id
+                      LEFT JOIN reserva_unidades ru ON ru.reserva_id = r.id
+                      LEFT JOIN unidades u ON u.id = ru.unidad_id
+                      WHERE (u.propiedad_id = :propiedad_id OR u.propiedad_id IS NULL)
+                        AND cc.estado = "DEVENGADO"
+                        AND DATE(cc.devengado_en) >= :desde AND DATE(cc.devengado_en) <= :hasta';
+            $params['propiedad_id'] = $propiedadId;
+        } else {
+            $sql .= ' WHERE cc.estado = "DEVENGADO"
+                        AND DATE(cc.devengado_en) >= :desde AND DATE(cc.devengado_en) <= :hasta';
+        }
+
+        $sql .= ' GROUP BY cc.origen_tipo ORDER BY total DESC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene el desglose de ingresos cobrados en tesorería por método de pago.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function obtenerDesgloseCobrosEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT mp.codigo AS metodo_codigo,
+                       mp.nombre AS metodo_nombre,
+                       COUNT(pc.id) AS total_cobros,
+                       COALESCE(SUM(pc.monto_total), 0.00) AS monto_total
+                FROM pagos_cuenta pc
+                JOIN metodos_pago mp ON mp.id = pc.metodo_pago_id
+                WHERE pc.estado = "CONFIRMADO"
+                  AND DATE(pc.creado_en) >= :desde AND DATE(pc.creado_en) <= :hasta';
+
+        $params = ['desde' => $desde, 'hasta' => $hasta];
+        $sql .= ' GROUP BY mp.id ORDER BY monto_total DESC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene las métricas netas de pasarelas de pago para el periodo.
+     *
+     * @return array<string, mixed>
+     */
+    public function obtenerMetricasPasarelasEnRango(string $desde, string $hasta, ?int $propiedadId = null): array
+    {
+        $sql = 'SELECT COALESCE(SUM(COALESCE(monto_cobrado, monto_esperado)), 0.00) AS monto_cobrado,
+                       COALESCE(SUM(monto_reembolsado), 0.00) AS monto_reembolsado,
+                       COUNT(*) AS total_transacciones
+                FROM pagos_transacciones_pasarela
+                WHERE estado_pago = "APROBADO"
+                  AND DATE(creado_en) >= :desde AND DATE(creado_en) <= :hasta';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['desde' => $desde, 'hasta' => $hasta]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: [
+            'monto_cobrado' => '0.00',
+            'monto_reembolsado' => '0.00',
+            'total_transacciones' => 0,
+        ];
+    }
 }
+
