@@ -120,8 +120,8 @@ try {
     $totalTablas = (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn();
     verificar($totalTablas >= 131, "Total de tablas relacionales en MySQL es al menos 131 (actual: {$totalTablas})");
 
-    $migraciones041 = glob(dirname(__DIR__) . '/SQL/migraciones/*041*');
-    verificar(empty($migraciones041), "Ranura de migración 041 estrictamente LIBRE (Cero DDL no autorizado)");
+    $migraciones042 = glob(dirname(__DIR__) . '/SQL/migraciones/*042*');
+    verificar(empty($migraciones042), "Ranura de migración 042 estrictamente LIBRE (Cero DDL no autorizado)");
 
     $mig039Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '039_multifolio_split_cuentas.sql'")->fetchColumn();
     verificar($mig039Presente, "Migración 039_multifolio_split_cuentas.sql registrada en el sistema");
@@ -132,7 +132,7 @@ try {
     $diffSql = shell_exec('git status --porcelain SQL/');
     $lineasSqlInesperadas = array_filter(
         explode("\n", trim((string) $diffSql)),
-        fn($l) => !empty(trim($l)) && !str_contains($l, '040_cpe_esquema_fiscal.sql') && !str_contains($l, 'camargo_pms.sql')
+        fn($l) => !empty(trim($l)) && !str_contains($l, '040_cpe_esquema_fiscal.sql') && !str_contains($l, '041_cpe_credito_hospedaje_hardening.sql') && !str_contains($l, 'camargo_pms.sql')
     );
     verificar(empty($lineasSqlInesperadas), "Directorio SQL/ limpio y sin DDL no autorizados");
 

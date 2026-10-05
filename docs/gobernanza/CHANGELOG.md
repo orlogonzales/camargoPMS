@@ -4,6 +4,44 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase SUNAT-1D-B2 — Hardening Fiscal de Esquema, Dominio y Persistencia (D-116)
+
+- **Evolución Relacional Soberana y Migración 041 (`SQL/migraciones/041_cpe_credito_hospedaje_hardening.sql` & `SQL/camargo_pms.sql`):**
+  - Consumo formal de la ranura de migración 041 para resolver los gaps fiscales detectados en la auditoría SUNAT-1D (crédito/cuotas y beneficio de hospedaje DL 919).
+  - Creación de 2 nuevas tablas relacionales soberanas:
+    1. `cpe_cuotas`: Colección fiscal 1:N para comprobantes a crédito con `cpe_id`, `numero_cuota`, `codigo_cuota`, `monto_cuota`, `fecha_vencimiento` y restricción UNIQUE compuesta `uq_cpe_cuota_numero (cpe_id, numero_cuota)`. Clave foránea `fk_cpe_cuotas_cpe` con `ON DELETE RESTRICT`.
+    2. `cpe_hospedajes`: Snapshot fiscal 1:N inmutable T0 para huéspedes no domiciliados y beneficio de exportación de hospedaje (D.L. 919 / Ley 28980). Ontológicamente independiente del receptor comercial del comprobante (permite Receptor Empresa != Huésped Turista). Contiene `numero_orden`, `huesped_nombres_apellidos`, `huesped_tipo_documento` (Catálogo 06/55), `huesped_numero_documento`, `pais_emision_pasaporte` (ISO 3166-1 alpha-2), `pais_residencia`, `fecha_ingreso_pais`, `fecha_checkin`, `fecha_checkout`, `dias_permanencia`, `tam_virtual_numero`. Restricciones CHECK en motor: `chk_cpe_hosp_dias_max (dias_permanencia <= 60)` y `chk_cpe_hosp_fechas (fecha_checkout >= fecha_checkin)`. Restricciones UNIQUE compuestas: `uq_cpe_hospedaje_orden (cpe_id, numero_orden)` y `uq_cpe_hospedaje_cpe_id (cpe_id, id)`. Clave foránea `fk_cpe_hospedajes_cpe` con `ON DELETE RESTRICT`.
+  - Evolución no destructiva de `cpe_comprobantes`: incorporación de columnas `forma_pago` (`enum('CONTADO','CREDITO') NOT NULL DEFAULT 'CONTADO'`) y `monto_neto_pendiente` (`DECIMAL(15,2) NULL`).
+  - Evolución no destructiva de `cpe_lineas`: incorporación de `cpe_hospedaje_id` (`BIGINT UNSIGNED NULL`) y `fecha_consumo` (`DATE NULL`), respaldadas por la clave foránea compuesta cross-CPE física `fk_cpe_lineas_hospedaje_cross (cpe_id, cpe_hospedaje_id) REFERENCES cpe_hospedajes(cpe_id, id) ON DELETE RESTRICT`.
+  - Sincronización canónica idéntica en `SQL/camargo_pms.sql` (Sección 43).
+  - Total de tablas relacionales en MySQL evoluciona justificadamente de 139 a exactamente **141 tablas relacionales**.
+  - Inmutabilidad histórica de `040_cpe_esquema_fiscal.sql` estrictamente preservada (0 bytes / 0 diffs).
+  - Ranura de migración 042 estrictamente LIBRE (cero archivos coincidentes).
+  - Cero tipos `FLOAT`/`DOUBLE`: precisión absoluta en `DECIMAL`.
+  - Cero credenciales o secretos en base de datos.
+- **Capa de Dominio y Modelos Soberanos (`app/Modelos/CPE/`):**
+  - Implementación de modelo de dominio `CpeCuota`: cálculo determinista de código de cuota (`Cuota001`, `Cuota002`), serialización bidireccional (`haciaArreglo`, `desdeArreglo`), validaciones de número positivo y monto positivo.
+  - Implementación de modelo de dominio `CpeHospedajeFiscal`: validaciones de permanencia máxima de 60 días, orden cronológico de fechas, códigos de país ISO de 2 caracteres, y normalización canónica de Catálogo 55 / Catálogo 06 (mapeo de `'PAS'` / `'PASAPORTE'` al código oficial `'7'`).
+  - Extensión de `CpeLinea`: soporte de `cpeHospedajeId`, `fechaConsumo`, método `esBeneficioHospedaje()` para detección de tipo de afectación 40 (Exportación de Servicios - Hospedaje).
+  - Extensión del agregado raíz `CpeComprobante`: gestión soberana de `formaPago`, `montoNetoPendiente`, colecciones tipadas de `cuotas` y `hospedajes` fiscales.
+- **Repositorios y Servicios con Invariantes y Aritmética BCMath (`app/Repositorios/CPE/` & `app/Servicios/CPE/`):**
+  - `CpeComprobanteRepositorio`: soporte transaccional para persistencia atómica y rehidratación íntegra de colecciones de cuotas y hospedajes fiscales; resolución y auto-enlace transparente de líneas de beneficio de hospedaje cuando existe un único hospedaje fiscal en el agregado.
+  - `CpeCorrelativoServicio`:
+    - Invariante CONTADO: Exigencia estricta de lista de cuotas vacía y monto neto pendiente nulo. Ante inconsistencias se lanza `ValidacionFiscalExcepcion`.
+    - Invariante CRÉDITO: Exigencia de al menos una cuota, monto neto pendiente estrictamente positivo, y comprobación aritmética exacta de cuadre entre la suma de cuotas y el monto neto pendiente mediante `BCMath` (`bccomp === 0`).
+    - Invariante Temporal DL 919: Verificación de que la `fecha_consumo` de las líneas de hospedaje se encuentre acotada dentro del intervalo `[fecha_checkin, fecha_checkout]`.
+    - Defensa de Servicio Cross-CPE: Comprobación preventiva en software de que las líneas asociadas a un hospedaje pertenezcan unívocamente al mismo `cpe_id`.
+- **Gobernanza, Calidad y Regresión Global:**
+  - Suite especializada `tests/test_sunat_cpe_1d_b2.php`: 95/95 checks PASS (100%).
+  - Suite estructural `tests/test_sunat_cpe_1c1.php`: 125/125 checks PASS (100%).
+  - Suite de dominio y correlativos `tests/test_sunat_cpe_1c2.php`: 77/77 checks PASS (100%).
+  - Sincronización y actualización de 21 suites de regresión hacia ranura 042 libre.
+  - Regresión transversal canónica global: **89/89 suites ejecutadas (100% PASS), 3,170 checks certificados, 0 fallos**.
+  - Catálogo Alina `admin-dashboard/` 100% inalterado y limpio.
+  - STOP ABSOLUTO rigurosamente respetado (cero `git add`, cero `git commit`, cero `git push`).
+
+## Baseline oficial 3514a49 (SUNAT-1C2)
+
 ### Microfase SUNAT-1C2 — Dominio CPE Soberano, Repositorios y Motor de Correlativos Concurrente (D-115)
 
 - **Capa de Dominio y Modelos Soberanos CPE (`app/Modelos/CPE/` & `app/Excepciones/`):**

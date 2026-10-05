@@ -2272,6 +2272,42 @@ Aprobada en la microfase `SUNAT-1C2` como arquitectura y modelo de dominio vincu
    - Suite `tests/test_sunat_cpe_1c1.php` preservada (125/125 checks, 100% PASS).
    - Regresión transversal canónica global: 88 suites automatizadas (100% PASS, 0 fallos), **3,075 checks canónicos superados**.
 
+### D-116 — Hardening Fiscal de Esquema, Dominio y Persistencia (SUNAT-1D-B2)
+
+Aprobada en la microfase `SUNAT-1D-B2` como arquitectura, modelo relacional y de dominio vinculante para la resolución de los gaps fiscales de crédito/cuotas y beneficio de hospedaje DL 919 (Ley 28980 / Catálogo 55) en Camargo PMS.
+
+1. **Hardening Relacional y Resolución de Gaps Fiscales (D-116.1):**
+   - Se consume formalmente la ranura de migración 041 (`SQL/migraciones/041_cpe_credito_hospedaje_hardening.sql`) y se sincroniza idénticamente `SQL/camargo_pms.sql` (Sección 43).
+   - Se crean 2 tablas relacionales soberanas:
+     - `cpe_cuotas`: Colección fiscal 1:N para comprobantes a crédito con clave foránea `fk_cpe_cuotas_cpe` (`ON DELETE RESTRICT`) y unicidad compuesta `uq_cpe_cuota_numero (cpe_id, numero_cuota)`.
+     - `cpe_hospedajes`: Snapshot fiscal 1:N inmutable T0 para huéspedes no domiciliados con clave foránea `fk_cpe_hospedajes_cpe` (`ON DELETE RESTRICT`), restricciones CHECK `chk_cpe_hosp_dias_max (dias_permanencia <= 60)` y `chk_cpe_hosp_fechas (fecha_checkout >= fecha_checkin)`, y unicidades compuestas `uq_cpe_hospedaje_orden (cpe_id, numero_orden)` y `uq_cpe_hospedaje_cpe_id (cpe_id, id)`.
+   - Se amplía `cpe_comprobantes` con `forma_pago` (`enum('CONTADO','CREDITO') NOT NULL DEFAULT 'CONTADO'`) y `monto_neto_pendiente` (`DECIMAL(15,2) NULL`).
+   - Se amplía `cpe_lineas` con `cpe_hospedaje_id` y `fecha_consumo` (`DATE NULL`), respaldadas por la clave foránea física compuesta cross-CPE `fk_cpe_lineas_hospedaje_cross (cpe_id, cpe_hospedaje_id) REFERENCES cpe_hospedajes(cpe_id, id) ON DELETE RESTRICT`.
+
+2. **Separación Ontológica Soberana: Receptor Fiscal $\neq$ Huésped Fiscal DL 919 (D-116.2):**
+   - Se formaliza que el receptor legal del comprobante de pago comercial (ej. Agencia de Viajes o Empresa con RUC) no debe confundirse ontológicamente con el huésped turista no domiciliado que goza de la exoneración del IGV según el D.L. 919.
+   - El modelo normalizado 1:N de `cpe_hospedajes` permite múltiples huéspedes por comprobante y desacopla la titularidad fiscal del comprobante respecto a los beneficiarios de hospedaje.
+
+3. **Precisión Financiera Arbitraria y Dominio Tipado (D-116.3):**
+   - Prohibición absoluta de tipos `float`/`double`: cantidades, montos y cuotas se modelan en `string` y se calculan con `BCMath`.
+   - Implementación de `CpeCuota` y `CpeHospedajeFiscal` en `app/Modelos/CPE/`.
+   - Normalización de documentos de identidad de huéspedes: Catálogo 55 / Catálogo 06 (mapeo transparente de `'PAS'` / `'PASAPORTE'` al código oficial `'7'`).
+
+4. **Invariantes de Dominio y Blindaje Cross-CPE (D-116.4):**
+   - Invariante CONTADO: Lista de cuotas vacía y monto neto pendiente `NULL`.
+   - Invariante CRÉDITO: Al menos una cuota, monto neto pendiente positivo y suma exacta de cuotas igual a `monto_neto_pendiente` validada mediante `BCMath` (`bccomp === 0`).
+   - Invariante Temporal DL 919: `fecha_consumo` de cada línea de hospedaje obligatoriamente acotada a `[fecha_checkin, fecha_checkout]`.
+   - Blindaje Cross-CPE: Protección en dos capas: validación lógica en `CpeCorrelativoServicio` y restricción física compuesta en InnoDB (`fk_cpe_lineas_hospedaje_cross`), impidiendo vincular líneas de un CPE a hospedajes de otro comprobante.
+
+5. **Invariantes de Esquema, Ranura 042 Libre y Regresión (D-116.5):**
+   - Catálogo relacional evoluciona justificadamente de 139 a exactamente **141 tablas relacionales**.
+   - Migración `040_cpe_esquema_fiscal.sql` 100% inmutable.
+   - Ranura de migración `042` estrictamente LIBRE (cero archivos 042).
+   - Catálogo Alina `admin-dashboard/` 100% inalterado y limpio.
+   - Suite especializada `tests/test_sunat_cpe_1d_b2.php` (84/84 checks PASS, 100%).
+   - Suites `tests/test_sunat_cpe_1c1.php` (125/125) y `tests/test_sunat_cpe_1c2.php` (77/77) en 100% PASS.
+   - Regresión transversal canónica global: **89/89 suites ejecutadas (100% PASS), 3,159 checks certificados, 0 fallos**.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

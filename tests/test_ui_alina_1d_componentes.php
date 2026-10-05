@@ -341,10 +341,10 @@ afirmar(
     $fallos, $totalCasos, $casosPasados
 );
 
-$archivosMigracion041 = glob(dirname(__DIR__) . '/SQL/migraciones/*041*');
+$archivosMigracion042 = glob(dirname(__DIR__) . '/SQL/migraciones/*042*');
 afirmar(
-    empty($archivosMigracion041),
-    "Slot de migración 041 estrictamente LIBRE en SQL/migraciones/ (0 archivos 041)",
+    empty($archivosMigracion042),
+    "Slot de migración 042 estrictamente LIBRE en SQL/migraciones/ (0 archivos 042)",
     $fallos, $totalCasos, $casosPasados
 );
 

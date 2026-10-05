@@ -29,6 +29,8 @@ class CpeLinea
         private string $tasaIgv = '18.00',
         private string $montoIgv = '0.00',
         private string $totalLinea = '0.00',
+        private ?int $cpeHospedajeId = null,
+        private ?string $fechaConsumo = null,
         private ?string $creadoEn = null,
         private array $cargosAtribuidos = []
     ) {
@@ -124,6 +126,41 @@ class CpeLinea
         return $this->totalLinea;
     }
 
+    public function obtenerCpeHospedajeId(): ?int
+    {
+        return $this->cpeHospedajeId;
+    }
+
+    public function fijarCpeHospedajeId(?int $cpeHospedajeId): void
+    {
+        $this->cpeHospedajeId = $cpeHospedajeId;
+    }
+
+    public function establecerCpeHospedajeId(?int $cpeHospedajeId): void
+    {
+        $this->fijarCpeHospedajeId($cpeHospedajeId);
+    }
+
+    public function obtenerFechaConsumo(): ?string
+    {
+        return $this->fechaConsumo;
+    }
+
+    public function fijarFechaConsumo(?string $fechaConsumo): void
+    {
+        $this->fechaConsumo = $fechaConsumo;
+    }
+
+    public function establecerFechaConsumo(?string $fechaConsumo): void
+    {
+        $this->fijarFechaConsumo($fechaConsumo);
+    }
+
+    public function esBeneficioHospedaje(): bool
+    {
+        return $this->tipoAfectacionIgv === '40';
+    }
+
     public function obtenerCreadoEn(): ?string
     {
         return $this->creadoEn;
@@ -153,6 +190,7 @@ class CpeLinea
         return [
             'id' => $this->id,
             'cpe_id' => $this->cpeId,
+            'cpe_hospedaje_id' => $this->cpeHospedajeId,
             'numero_orden' => $this->numeroOrden,
             'codigo_producto_interno' => $this->codigoProductoInterno,
             'codigo_producto_sunat' => $this->codigoProductoSunat,
@@ -167,6 +205,7 @@ class CpeLinea
             'tasa_igv' => $this->tasaIgv,
             'monto_igv' => $this->montoIgv,
             'total_linea' => $this->totalLinea,
+            'fecha_consumo' => $this->fechaConsumo,
             'creado_en' => $this->creadoEn,
             'cargos_atribuidos' => $this->cargosAtribuidos,
         ];
@@ -194,6 +233,8 @@ class CpeLinea
             (string) ($datos['tasa_igv'] ?? '18.00'),
             (string) ($datos['monto_igv'] ?? '0.00'),
             (string) ($datos['total_linea'] ?? '0.00'),
+            isset($datos['cpe_hospedaje_id']) && $datos['cpe_hospedaje_id'] !== null ? (int) $datos['cpe_hospedaje_id'] : null,
+            isset($datos['fecha_consumo']) && $datos['fecha_consumo'] !== null ? (string) $datos['fecha_consumo'] : null,
             isset($datos['creado_en']) ? (string) $datos['creado_en'] : null,
             (array) ($datos['cargos_atribuidos'] ?? [])
         );

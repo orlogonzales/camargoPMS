@@ -93,9 +93,9 @@ try {
     $mig038Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '038_pagos_pasarelas.sql'")->fetchColumn();
     asegurar($mig038Presente, "Migración 038_pagos_pasarelas.sql registrada en BD");
 
-    $archivos041Database = glob(__DIR__ . '/../database/migraciones/041*.sql');
-    $archivos041Sql = glob(__DIR__ . '/../SQL/migraciones/*041*');
-    asegurar(empty($archivos041Database) && empty($archivos041Sql), "Ranura de migración 041 estrictamente LIBRE");
+    $archivos042Database = glob(__DIR__ . '/../database/migraciones/042*.sql');
+    $archivos042Sql = glob(__DIR__ . '/../SQL/migraciones/*042*');
+    asegurar(empty($archivos042Database) && empty($archivos042Sql), "Ranura de migración 042 estrictamente LIBRE");
 
     $gitAlina = shell_exec('git status --porcelain admin-dashboard/ 2>&1');
     asegurar(empty(trim((string) $gitAlina)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");
@@ -103,7 +103,7 @@ try {
     $gitSql = shell_exec('git status --porcelain SQL/ 2>&1');
     $lineasSqlInesperadas = array_filter(
         explode("\n", trim((string) $gitSql)),
-        fn($l) => !empty(trim($l)) && !str_contains($l, '039_multifolio_split_cuentas.sql') && !str_contains($l, '040_cpe_esquema_fiscal.sql') && !str_contains($l, 'camargo_pms.sql')
+        fn($l) => !empty(trim($l)) && !str_contains($l, '039_multifolio_split_cuentas.sql') && !str_contains($l, '040_cpe_esquema_fiscal.sql') && !str_contains($l, '041_cpe_credito_hospedaje_hardening.sql') && !str_contains($l, 'camargo_pms.sql')
     );
     asegurar(empty($lineasSqlInesperadas), "SQL/ permanece libre de modificaciones no autorizadas");
 

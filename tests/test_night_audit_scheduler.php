@@ -330,9 +330,9 @@ try {
     verificar($totalTablas >= 130, "8.1 Total de tablas relacionales preservado (detectadas: {$totalTablas})");
 
     $migracion038Existe = file_exists(__DIR__ . '/../SQL/migraciones/038_pagos_pasarelas.sql');
-    $migracion041Existe = glob(__DIR__ . '/../SQL/migraciones/*041*');
+    $migracion042Existe = glob(__DIR__ . '/../SQL/migraciones/*042*');
     verificar($migracion038Existe, "8.2 Migración 038_pagos_pasarelas.sql presente");
-    verificar(empty($migracion041Existe), "8.3 Ranura de migración 041 estrictamente LIBRE");
+    verificar(empty($migracion042Existe), "8.3 Ranura de migración 042 estrictamente LIBRE");
 
     // Verificar que el ENUM de estado de reservas se conserva intacto (PENDIENTE, CONFIRMADA, CANCELADA, EXPIRADA)
     $stmtEnum = $pdo->query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reservas' AND COLUMN_NAME = 'estado'");

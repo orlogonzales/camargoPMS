@@ -416,8 +416,8 @@ assertCheck($totalTablas >= 122, "Base de datos contiene al menos 122 tablas rel
 $mig035Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '035_canales_ical.sql'")->fetchColumn();
 assertCheck($mig035Presente, "Migración 035_canales_ical.sql registrada en BD");
 
-$migracion041Existe = file_exists(RUTA_RAIZ . '/SQL/migraciones/041_*.sql') || glob(RUTA_RAIZ . '/SQL/migraciones/041*.sql');
-assertCheck(!$migracion041Existe, "Ranura 041 permanece estrictamente LIBRE (Cero DDL no autorizado)");
+$migracion042Existe = file_exists(RUTA_RAIZ . '/SQL/migraciones/042_*.sql') || glob(RUTA_RAIZ . '/SQL/migraciones/042*.sql');
+assertCheck(!$migracion042Existe, "Ranura 042 permanece estrictamente LIBRE (Cero DDL no autorizado)");
 
 $adminDashboardModificado = false;
 $outputGit = [];

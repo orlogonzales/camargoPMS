@@ -64,8 +64,8 @@ try {
     $mig038Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '038_pagos_pasarelas.sql'")->fetchColumn();
     asegurar($mig038Presente, "Migración 038_pagos_pasarelas.sql presente en BD");
 
-    $archivos041 = glob(__DIR__ . '/../SQL/migraciones/*041*');
-    asegurar(count($archivos041) === 0, "Ranura de migración 041 estrictamente LIBRE");
+    $archivos042 = glob(__DIR__ . '/../SQL/migraciones/*042*');
+    asegurar(count($archivos042) === 0, "Ranura de migración 042 estrictamente LIBRE");
 
     $gitAlina = shell_exec('git status --porcelain admin-dashboard/ 2>&1');
     asegurar(empty(trim((string) $gitAlina)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");

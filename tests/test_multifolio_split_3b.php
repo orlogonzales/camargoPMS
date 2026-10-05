@@ -105,8 +105,8 @@ try {
     $totalTablas = (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn();
     verificar($totalTablas >= 131, "Total de tablas relacionales en MySQL es al menos 131 (actual: {$totalTablas})");
 
-    $migraciones041 = glob(dirname(__DIR__) . '/SQL/migraciones/*041*');
-    verificar(empty($migraciones041), "Ranura de migración 041 estrictamente LIBRE (Cero DDL no autorizado)");
+    $migraciones042 = glob(dirname(__DIR__) . '/SQL/migraciones/*042*');
+    verificar(empty($migraciones042), "Ranura de migración 042 estrictamente LIBRE (Cero DDL no autorizado)");
 
     $diffAdmin = shell_exec('git status --porcelain admin-dashboard/');
     verificar(empty(trim((string) $diffAdmin)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");

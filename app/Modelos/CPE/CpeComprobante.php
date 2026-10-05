@@ -85,7 +85,13 @@ class CpeComprobante
 
         // Colecciones hijas del agregado
         private array $lineas = [],
-        private array $documentosRelacionados = []
+        private array $documentosRelacionados = [],
+
+        // Atributos de Schema Hardening (Migración 041)
+        private string $formaPago = 'CONTADO',
+        private ?string $montoNetoPendiente = null,
+        private array $cuotas = [],
+        private array $hospedajes = []
     ) {
     }
 
@@ -448,6 +454,41 @@ class CpeComprobante
         return $this->fechaVencimiento;
     }
 
+    public function fijarFechaVencimiento(?string $fechaVencimiento): void
+    {
+        $this->fechaVencimiento = $fechaVencimiento;
+    }
+
+    public function obtenerFormaPago(): string
+    {
+        return $this->formaPago;
+    }
+
+    public function fijarFormaPago(string $formaPago): void
+    {
+        $this->formaPago = strtoupper(trim($formaPago));
+    }
+
+    public function esCredito(): bool
+    {
+        return $this->formaPago === 'CREDITO';
+    }
+
+    public function esContado(): bool
+    {
+        return $this->formaPago === 'CONTADO';
+    }
+
+    public function obtenerMontoNetoPendiente(): ?string
+    {
+        return $this->montoNetoPendiente;
+    }
+
+    public function fijarMontoNetoPendiente(?string $montoNetoPendiente): void
+    {
+        $this->montoNetoPendiente = $montoNetoPendiente;
+    }
+
     public function obtenerCreadoPorUsuarioId(): int
     {
         return $this->creadoPorUsuarioId;
@@ -505,6 +546,88 @@ class CpeComprobante
     public function fijarDocumentosRelacionados(array $documentosRelacionados): void
     {
         $this->documentosRelacionados = $documentosRelacionados;
+    }
+
+    /**
+     * @return CpeCuota[]
+     */
+    public function obtenerCuotas(): array
+    {
+        return $this->cuotas;
+    }
+
+    /**
+     * @param CpeCuota[] $cuotas
+     */
+    public function fijarCuotas(array $cuotas): void
+    {
+        $this->cuotas = $cuotas;
+    }
+
+    public function agregarCuota(CpeCuota $cuota): void
+    {
+        $this->cuotas[] = $cuota;
+    }
+
+    /**
+     * @return CpeHospedajeFiscal[]
+     */
+    public function obtenerHospedajes(): array
+    {
+        return $this->hospedajes;
+    }
+
+    /**
+     * @param CpeHospedajeFiscal[] $hospedajes
+     */
+    public function fijarHospedajes(array $hospedajes): void
+    {
+        $this->hospedajes = $hospedajes;
+    }
+
+    public function agregarHospedaje(CpeHospedajeFiscal $hospedaje): void
+    {
+        $this->hospedajes[] = $hospedaje;
+    }
+
+    public function fijarClaveIdempotencia(string $clave): void
+    {
+        $this->claveIdempotencia = $clave;
+    }
+
+    public function establecerClaveIdempotencia(string $clave): void
+    {
+        $this->fijarClaveIdempotencia($clave);
+    }
+
+    public function establecerFormaPago(string $formaPago): void
+    {
+        $this->fijarFormaPago($formaPago);
+    }
+
+    public function establecerMontoNetoPendiente(?string $montoNetoPendiente): void
+    {
+        $this->fijarMontoNetoPendiente($montoNetoPendiente);
+    }
+
+    public function establecerFechaVencimiento(?string $fechaVencimiento): void
+    {
+        $this->fijarFechaVencimiento($fechaVencimiento);
+    }
+
+    public function establecerCuotas(array $cuotas): void
+    {
+        $this->fijarCuotas($cuotas);
+    }
+
+    public function establecerHospedajes(array $hospedajes): void
+    {
+        $this->fijarHospedajes($hospedajes);
+    }
+
+    public function establecerLineas(array $lineas): void
+    {
+        $this->fijarLineas($lineas);
     }
 
     // --- Métodos de Ayuda Semántica ---
@@ -593,12 +716,16 @@ class CpeComprobante
 
             'fecha_emision' => $this->fechaEmision,
             'fecha_vencimiento' => $this->fechaVencimiento,
+            'forma_pago' => $this->formaPago,
+            'monto_neto_pendiente' => $this->montoNetoPendiente,
             'creado_por_usuario_id' => $this->creadoPorUsuarioId,
             'creado_en' => $this->creadoEn,
             'actualizado_en' => $this->actualizadoEn,
 
             'lineas' => array_map(static fn (CpeLinea $l): array => $l->haciaArreglo(), $this->lineas),
             'documentos_relacionados' => array_map(static fn (CpeDocumentoRelacionado $d): array => $d->haciaArreglo(), $this->documentosRelacionados),
+            'cuotas' => array_map(static fn (CpeCuota $c): array => $c->aArreglo(), $this->cuotas),
+            'hospedajes' => array_map(static fn (CpeHospedajeFiscal $h): array => $h->aArreglo(), $this->hospedajes),
         ];
     }
 
@@ -606,9 +733,16 @@ class CpeComprobante
      * @param array<string, mixed> $datos
      * @param CpeLinea[] $lineas
      * @param CpeDocumentoRelacionado[] $documentosRelacionados
+     * @param CpeCuota[] $cuotas
+     * @param CpeHospedajeFiscal[] $hospedajes
      */
-    public static function desdeArreglo(array $datos, array $lineas = [], array $documentosRelacionados = []): self
-    {
+    public static function desdeArreglo(
+        array $datos,
+        array $lineas = [],
+        array $documentosRelacionados = [],
+        array $cuotas = [],
+        array $hospedajes = []
+    ): self {
         return new self(
             isset($datos['id']) ? (int) $datos['id'] : null,
             (int) ($datos['emisor_establecimiento_id'] ?? 0),
@@ -673,7 +807,12 @@ class CpeComprobante
             isset($datos['actualizado_en']) ? (string) $datos['actualizado_en'] : null,
 
             $lineas,
-            $documentosRelacionados
+            $documentosRelacionados,
+
+            (string) ($datos['forma_pago'] ?? 'CONTADO'),
+            isset($datos['monto_neto_pendiente']) && $datos['monto_neto_pendiente'] !== null ? (string) $datos['monto_neto_pendiente'] : null,
+            $cuotas,
+            $hospedajes
         );
     }
 }

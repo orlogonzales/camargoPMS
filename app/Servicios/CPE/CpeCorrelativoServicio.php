@@ -20,9 +20,7 @@ use Throwable;
 
 /**
  * Servicio soberano para la asignación concurrente y determinista de numeración correlativa fiscal SUNAT.
- * Implementa el protocolo anti-colisión estricto (Ajustes Vinculantes C2-01 y C2-02):
- * - Revalidación de idempotencia en sección crítica bajo bloqueo pesimista de serie.
- * - Respeto irrestricto de la propiedad de transacciones externas ($debeCerrarTx).
+ * Implementa el protocolo anti-colisión estricto y la validación de reglas de Schema Hardening (R.S. 193-2020 y D.L. 919).
  */
 class CpeCorrelativoServicio
 {
@@ -43,7 +41,7 @@ class CpeCorrelativoServicio
 
     /**
      * Asigna el correlativo fiscal de forma segura y atómica, persistiendo el agregado del CPE.
-     * Asigna correlativos crecientes concurrency-safe e idempotentes en ambientes de alta concurrencia (continuidad absoluta sin huecos no garantizada).
+     * Valida integralmente las reglas fiscales de Crédito (R.S. 193-2020) y Beneficio de Hospedaje (D.L. 919).
      *
      * @throws EstablecimientoNoEncontradoExcepcion Si el establecimiento no existe.
      * @throws SerieFiscalNoEncontradaExcepcion Si la serie no existe.
@@ -69,7 +67,10 @@ class CpeCorrelativoServicio
                 throw new ValidacionFiscalExcepcion('La clave de idempotencia no puede ser una cadena vacía.');
             }
 
-            // 2. Pre-check 1: Idempotencia rápida fuera de contención de bloqueo
+            // 2. Validación de Invariantes Fiscales de Dominio (Crédito, Cuotas, Hospedaje DL 919, Cross-CPE)
+            $this->validarReglasFiscalesHardening($comprobante);
+
+            // 3. Pre-check 1: Idempotencia rápida fuera de contención de bloqueo
             $existentePrevio = $this->comprobanteRepo->buscarPorIdempotencia($estabId, $claveIdempotencia);
             if ($existentePrevio !== null) {
                 if ($debeCerrarTx && $this->pdo->inTransaction()) {
@@ -78,7 +79,7 @@ class CpeCorrelativoServicio
                 return $existentePrevio;
             }
 
-            // 3. Validación de Establecimiento Emisor
+            // 4. Validación de Establecimiento Emisor
             $estab = $this->establecimientoRepo->obtenerPorId($estabId);
             if ($estab === null) {
                 throw new EstablecimientoNoEncontradoExcepcion(
@@ -91,7 +92,7 @@ class CpeCorrelativoServicio
                 );
             }
 
-            // 4. Adquisición del bloqueo pesimista de fila (SELECT ... FOR UPDATE) sobre cpe_series
+            // 5. Adquisición del bloqueo pesimista de fila (SELECT ... FOR UPDATE) sobre cpe_series
             $serieId = $comprobante->obtenerSerieId();
             $serie = $this->serieRepo->obtenerPorId($serieId, true);
 
@@ -111,16 +112,14 @@ class CpeCorrelativoServicio
                 );
             }
 
-            // 5. Cross-Validation vinculante: Serie debe pertenecer al Establecimiento Emisor
+            // 6. Cross-Validation vinculante: Serie debe pertenecer al Establecimiento Emisor
             if ($serie->obtenerEmisorEstablecimientoId() !== $estabId) {
                 throw new EstablecimientoSerieIncompatibleExcepcion(
                     "La serie '{$serie->obtenerSerie()}' pertenece al establecimiento ID {$serie->obtenerEmisorEstablecimientoId()}, pero el comprobante declara establecimiento ID {$estabId}."
                 );
             }
 
-            // 6. Ajuste Vinculante C2-01: Revalidación autoritativa de idempotencia DENTRO de la sección crítica
-            // Si otra petición concurrente avanzó y emitió con esta misma clave mientras esperábamos el lock,
-            // la encontramos aquí sin incrementar el correlativo ni generar huecos en la serie.
+            // 7. Ajuste Vinculante C2-01: Revalidación autoritativa de idempotencia DENTRO de la sección crítica
             $existenteEnSeccionCritica = $this->comprobanteRepo->buscarPorIdempotencia($estabId, $claveIdempotencia);
             if ($existenteEnSeccionCritica !== null) {
                 if ($debeCerrarTx && $this->pdo->inTransaction()) {
@@ -129,11 +128,11 @@ class CpeCorrelativoServicio
                 return $existenteEnSeccionCritica;
             }
 
-            // 7. Cálculo atómico del siguiente correlativo e incremento de la serie
+            // 8. Cálculo atómico del siguiente correlativo e incremento de la serie
             $siguienteCorrelativo = $serie->obtenerUltimoCorrelativo() + 1;
             $this->serieRepo->incrementarCorrelativo($serieId, $siguienteCorrelativo);
 
-            // 8. Asignación del correlativo, folio canónico, estado y auditoría al agregado
+            // 9. Asignación del correlativo, folio canónico, estado y auditoría al agregado
             $folioCompleto = $serie->formatearFolio($siguienteCorrelativo);
             $comprobante->asignarCorrelativo($siguienteCorrelativo, $folioCompleto);
             $comprobante->fijarEstadoGeneracion('EMITIDO');
@@ -143,7 +142,7 @@ class CpeCorrelativoServicio
                 $comprobante->fijarFechaEmision(date('Y-m-d H:i:s'));
             }
 
-            // 9. Persistencia atómica del agregado CPE completo
+            // 10. Persistencia atómica del agregado CPE completo (incluyendo cuotas, hospedajes y líneas)
             try {
                 $cpeId = $this->comprobanteRepo->guardar($comprobante);
             } catch (PDOException $pe) {
@@ -165,7 +164,7 @@ class CpeCorrelativoServicio
                 throw $pe;
             }
 
-            // 10. Si este servicio inició la transacción, la consolida
+            // 11. Si este servicio inició la transacción, la consolida
             if ($debeCerrarTx) {
                 $this->pdo->commit();
             }
@@ -178,6 +177,138 @@ class CpeCorrelativoServicio
                 $this->pdo->rollBack();
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Valida integralmente las reglas e invariantes fiscales de Schema Hardening (Crédito, Cuotas y Hospedaje DL 919).
+     *
+     * @throws ValidacionFiscalExcepcion Si se viola alguna invariante fiscal.
+     */
+    private function validarReglasFiscalesHardening(CpeComprobante $comprobante): void
+    {
+        $formaPago = $comprobante->obtenerFormaPago();
+        if (!in_array($formaPago, ['CONTADO', 'CREDITO'], true)) {
+            throw new ValidacionFiscalExcepcion("Forma de pago '{$formaPago}' no válida. Valores permitidos: CONTADO, CREDITO.");
+        }
+
+        // Reglas para CONTADO
+        if ($formaPago === 'CONTADO') {
+            if (count($comprobante->obtenerCuotas()) > 0) {
+                throw new ValidacionFiscalExcepcion('Un comprobante con forma de pago CONTADO no puede tener cuotas fiscales asociadas.');
+            }
+            $montoPendiente = $comprobante->obtenerMontoNetoPendiente();
+            if ($montoPendiente !== null && bccomp($montoPendiente, '0.00', 2) > 0) {
+                throw new ValidacionFiscalExcepcion("Un comprobante con forma de pago CONTADO no puede declarar un monto neto pendiente positivo ({$montoPendiente}).");
+            }
+        }
+
+        // Reglas para CRÉDITO
+        if ($formaPago === 'CREDITO') {
+            $cuotas = $comprobante->obtenerCuotas();
+            if (empty($cuotas)) {
+                throw new ValidacionFiscalExcepcion('Un comprobante con forma de pago CREDITO debe incluir al menos una cuota fiscal.');
+            }
+            $montoPendiente = $comprobante->obtenerMontoNetoPendiente();
+            if ($montoPendiente === null || bccomp($montoPendiente, '0.00', 2) <= 0) {
+                throw new ValidacionFiscalExcepcion('Un comprobante con forma de pago CREDITO debe declarar un monto neto pendiente estrictamente positivo.');
+            }
+
+            $sumaCuotas = '0.00';
+            $numerosVistos = [];
+            foreach ($cuotas as $cuota) {
+                $num = $cuota->obtenerNumeroCuota();
+                if (isset($numerosVistos[$num])) {
+                    throw new ValidacionFiscalExcepcion("Número de cuota {$num} duplicado en el comprobante.");
+                }
+                $numerosVistos[$num] = true;
+                $sumaCuotas = bcadd($sumaCuotas, $cuota->obtenerMonto(), 2);
+            }
+
+            if (bccomp($sumaCuotas, $montoPendiente, 2) !== 0) {
+                throw new ValidacionFiscalExcepcion(
+                    "La suma de las cuotas ({$sumaCuotas}) no coincide con el monto neto pendiente ({$montoPendiente})."
+                );
+            }
+        }
+
+        // Reglas para Régimen de Hospedaje No Domiciliado (DL 919 / Catálogo 55)
+        if ($comprobante->esExportacionHospedaje()) {
+            $hospedajes = $comprobante->obtenerHospedajes();
+            if (empty($hospedajes)) {
+                throw new ValidacionFiscalExcepcion('Un comprobante con beneficio de hospedaje DL 919 debe contener al menos un registro de huésped fiscal.');
+            }
+
+            $hospedajesPorOrden = [];
+            foreach ($hospedajes as $h) {
+                $orden = $h->obtenerNumeroOrden();
+                if (isset($hospedajesPorOrden[$orden])) {
+                    throw new ValidacionFiscalExcepcion("Número de orden {$orden} duplicado en huéspedes fiscales del comprobante.");
+                }
+                $hospedajesPorOrden[$orden] = $h;
+            }
+
+            // Validar que las fechas de consumo de líneas conexas estén dentro del rango de estancia
+            foreach ($comprobante->obtenerLineas() as $linea) {
+                $fechaConsumo = $linea->obtenerFechaConsumo();
+                $hospedajeId = $linea->obtenerCpeHospedajeId();
+
+                if ($fechaConsumo !== null) {
+                    $hospedajeAsociado = null;
+                    if ($hospedajeId !== null) {
+                        foreach ($hospedajes as $h) {
+                            if ($h->obtenerId() === $hospedajeId || ($h->obtenerId() === null && $h->obtenerNumeroOrden() === $hospedajeId)) {
+                                $hospedajeAsociado = $h;
+                                break;
+                            }
+                        }
+                    }
+                    if ($hospedajeAsociado === null && count($hospedajes) === 1) {
+                        $hospedajeAsociado = reset($hospedajes);
+                    }
+
+                    if ($hospedajeAsociado !== null) {
+                        $checkin = $hospedajeAsociado->obtenerFechaCheckin();
+                        $checkout = $hospedajeAsociado->obtenerFechaCheckout();
+
+                        if ($fechaConsumo < $checkin) {
+                            throw new ValidacionFiscalExcepcion(
+                                "La fecha de consumo '{$fechaConsumo}' no puede ser anterior al check-in '{$checkin}' del huésped."
+                            );
+                        }
+                        if ($fechaConsumo > $checkout) {
+                            throw new ValidacionFiscalExcepcion(
+                                "La fecha de consumo '{$fechaConsumo}' no puede ser posterior al check-out '{$checkout}' del huésped."
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        // Defensa contra cross-CPE a nivel de servicio
+        foreach ($comprobante->obtenerLineas() as $linea) {
+            $hospId = $linea->obtenerCpeHospedajeId();
+            if ($hospId !== null) {
+                $esOrdenInterno = false;
+                foreach ($comprobante->obtenerHospedajes() as $h) {
+                    if ($h->obtenerId() === null && $h->obtenerNumeroOrden() === $hospId) {
+                        $esOrdenInterno = true;
+                        break;
+                    }
+                }
+                if ($esOrdenInterno) {
+                    continue;
+                }
+                $stmtCheck = $this->pdo->prepare('SELECT cpe_id FROM cpe_hospedajes WHERE id = :id');
+                $stmtCheck->execute(['id' => $hospId]);
+                $rowHosp = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                if ($rowHosp && (int) $rowHosp['cpe_id'] !== $comprobante->obtenerId()) {
+                    throw new ValidacionFiscalExcepcion(
+                        "Violación de integridad cross-CPE: la línea hace referencia al hospedaje ID {$hospId} perteneciente a otro comprobante (CPE ID {$rowHosp['cpe_id']})."
+                    );
+                }
+            }
         }
     }
 
@@ -212,5 +343,16 @@ class CpeCorrelativoServicio
     public function buscarComprobantePorIdempotencia(int $establecimientoId, string $claveIdempotencia): ?CpeComprobante
     {
         return $this->comprobanteRepo->buscarPorIdempotencia($establecimientoId, $claveIdempotencia);
+    }
+
+    /**
+     * Alias semántico para emitir un comprobante o asignar su correlativo fiscal.
+     */
+    public function asignarCorrelativoYEmitir(
+        CpeComprobante $comprobante,
+        int $usuarioId = 1,
+        ?string $claveIdempotencia = null
+    ): CpeComprobante {
+        return $this->emitirBorradorOAsignarCorrelativo($comprobante, $usuarioId, $claveIdempotencia);
     }
 }

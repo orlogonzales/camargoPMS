@@ -1,19 +1,21 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
 namespace CamargoPMS\Repositorios\CPE;
 
 use CamargoPMS\Modelos\CPE\CpeComprobante;
+use CamargoPMS\Modelos\CPE\CpeCuota;
 use CamargoPMS\Modelos\CPE\CpeDocumentoRelacionado;
+use CamargoPMS\Modelos\CPE\CpeHospedajeFiscal;
 use CamargoPMS\Modelos\CPE\CpeLinea;
 use PDO;
 use PDOException;
 
 /**
  * Repositorio del agregado raíz de Comprobantes de Pago Electrónicos (CPE).
- * Persiste y reconstruye comprobantes, líneas tributarias y documentos vinculados.
- * No gestiona transacciones de forma autónoma (principio vincualente: quien abre la transacción la cierra).
+ * Persiste y reconstruye comprobantes, cuotas de crédito, hospedajes fiscales, líneas y documentos vinculados.
+ * No gestiona transacciones de forma autónoma (principio vinculante: quien abre la transacción la cierra).
  */
 class CpeComprobanteRepositorio
 {
@@ -22,7 +24,7 @@ class CpeComprobanteRepositorio
     }
 
     /**
-     * Guarda el agregado completo (comprobante, líneas, atribuciones de cargos y documentos relacionados).
+     * Guarda el agregado completo (comprobante, cuotas, hospedajes, líneas, atribuciones de cargos y documentos relacionados).
      * Debe invocarse dentro del contexto transaccional coordinado por el servicio de dominio.
      *
      * @throws PDOException Si ocurre un error de persistencia o colisión de unicidad.
@@ -44,7 +46,8 @@ class CpeComprobanteRepositorio
                 total_igv, total_descuentos, total_venta,
                 estado_generacion, estado_transmision, estado_fiscal_sunat, estado_rectificacion,
                 codigo_hash_cpe, hash_xml_sha256, hash_pdf_sha256, ruta_archivo_xml, ruta_archivo_pdf,
-                fecha_emision, fecha_vencimiento, creado_por_usuario_id, creado_en, actualizado_en
+                fecha_emision, fecha_vencimiento, forma_pago, monto_neto_pendiente,
+                creado_por_usuario_id, creado_en, actualizado_en
             ) VALUES (
                 :emisor_establecimiento_id, :serie_id, :cuenta_folio_id, :tipo_comprobante,
                 :serie, :correlativo, :codigo_folio_completo, :clave_idempotencia,
@@ -59,7 +62,8 @@ class CpeComprobanteRepositorio
                 :total_igv, :total_descuentos, :total_venta,
                 :estado_generacion, :estado_transmision, :estado_fiscal_sunat, :estado_rectificacion,
                 :codigo_hash_cpe, :hash_xml_sha256, :hash_pdf_sha256, :ruta_archivo_xml, :ruta_archivo_pdf,
-                :fecha_emision, :fecha_vencimiento, :creado_por_usuario_id, NOW(), NOW()
+                :fecha_emision, :fecha_vencimiento, :forma_pago, :monto_neto_pendiente,
+                :creado_por_usuario_id, NOW(), NOW()
             )'
         );
 
@@ -114,24 +118,81 @@ class CpeComprobanteRepositorio
             'ruta_archivo_pdf' => $cpe->obtenerRutaArchivoPdf(),
             'fecha_emision' => $cpe->obtenerFechaEmision() ?? date('Y-m-d H:i:s'),
             'fecha_vencimiento' => $cpe->obtenerFechaVencimiento(),
+            'forma_pago' => $cpe->obtenerFormaPago(),
+            'monto_neto_pendiente' => $cpe->obtenerMontoNetoPendiente(),
             'creado_por_usuario_id' => $cpe->obtenerCreadoPorUsuarioId(),
         ]);
 
         $cpeId = (int) $this->pdo->lastInsertId();
         $cpe->fijarId($cpeId);
 
-        // Guardar líneas fiscales asociadas
+        // Guardar snapshots de hospedajes fiscales T0 (DL 919 / Catálogo 55)
+        // Se persisten antes que las líneas para permitir que cpe_lineas.cpe_hospedaje_id las referencie
+        $stmtHospedaje = $this->pdo->prepare(
+            'INSERT INTO cpe_hospedajes (
+                cpe_id, numero_orden, nombres_apellidos, tipo_documento, numero_documento,
+                pais_emision_pasaporte, pais_residencia, fecha_ingreso_pais, fecha_checkin,
+                fecha_checkout, dias_permanencia, tam_virtual_numero, creado_en
+            ) VALUES (
+                :cpe_id, :numero_orden, :nombres_apellidos, :tipo_documento, :numero_documento,
+                :pais_emision_pasaporte, :pais_residencia, :fecha_ingreso_pais, :fecha_checkin,
+                :fecha_checkout, :dias_permanencia, :tam_virtual_numero, NOW()
+            )'
+        );
+
+        foreach ($cpe->obtenerHospedajes() as $hospedaje) {
+            $hospedaje->fijarCpeId($cpeId);
+            $stmtHospedaje->execute([
+                'cpe_id' => $cpeId,
+                'numero_orden' => $hospedaje->obtenerNumeroOrden(),
+                'nombres_apellidos' => $hospedaje->obtenerNombresApellidos(),
+                'tipo_documento' => $hospedaje->obtenerTipoDocumento(),
+                'numero_documento' => $hospedaje->obtenerNumeroDocumento(),
+                'pais_emision_pasaporte' => $hospedaje->obtenerPaisEmisionPasaporte(),
+                'pais_residencia' => $hospedaje->obtenerPaisResidencia(),
+                'fecha_ingreso_pais' => $hospedaje->obtenerFechaIngresoPais(),
+                'fecha_checkin' => $hospedaje->obtenerFechaCheckin(),
+                'fecha_checkout' => $hospedaje->obtenerFechaCheckout(),
+                'dias_permanencia' => $hospedaje->obtenerDiasPermanencia(),
+                'tam_virtual_numero' => $hospedaje->obtenerTamVirtualNumero(),
+            ]);
+            $hospedajeId = (int) $this->pdo->lastInsertId();
+            $hospedaje->fijarId($hospedajeId);
+        }
+
+        // Guardar calendario fiscal de cuotas (R.S. 193-2020)
+        $stmtCuota = $this->pdo->prepare(
+            'INSERT INTO cpe_cuotas (
+                cpe_id, numero_cuota, monto, fecha_vencimiento, creado_en
+            ) VALUES (
+                :cpe_id, :numero_cuota, :monto, :fecha_vencimiento, NOW()
+            )'
+        );
+
+        foreach ($cpe->obtenerCuotas() as $cuota) {
+            $cuota->fijarCpeId($cpeId);
+            $stmtCuota->execute([
+                'cpe_id' => $cpeId,
+                'numero_cuota' => $cuota->obtenerNumeroCuota(),
+                'monto' => $cuota->obtenerMonto(),
+                'fecha_vencimiento' => $cuota->obtenerFechaVencimiento(),
+            ]);
+            $cuotaId = (int) $this->pdo->lastInsertId();
+            $cuota->fijarId($cuotaId);
+        }
+
+        // Guardar líneas fiscales asociadas (con cpe_hospedaje_id y fecha_consumo)
         $stmtLinea = $this->pdo->prepare(
             'INSERT INTO cpe_lineas (
-                cpe_id, numero_orden, codigo_producto_interno, codigo_producto_sunat,
+                cpe_id, cpe_hospedaje_id, numero_orden, codigo_producto_interno, codigo_producto_sunat,
                 descripcion, unidad_medida, cantidad, valor_unitario, precio_unitario,
                 descuento_monto, base_imponible, tipo_afectacion_igv, tasa_igv,
-                monto_igv, total_linea, creado_en
+                monto_igv, total_linea, fecha_consumo, creado_en
             ) VALUES (
-                :cpe_id, :numero_orden, :codigo_producto_interno, :codigo_producto_sunat,
+                :cpe_id, :cpe_hospedaje_id, :numero_orden, :codigo_producto_interno, :codigo_producto_sunat,
                 :descripcion, :unidad_medida, :cantidad, :valor_unitario, :precio_unitario,
                 :descuento_monto, :base_imponible, :tipo_afectacion_igv, :tasa_igv,
-                :monto_igv, :total_linea, NOW()
+                :monto_igv, :total_linea, :fecha_consumo, NOW()
             )'
         );
 
@@ -143,10 +204,34 @@ class CpeComprobanteRepositorio
             )'
         );
 
+        $hospedajes = $cpe->obtenerHospedajes();
+        $hospedajesPorOrden = [];
+        foreach ($hospedajes as $h) {
+            $hospedajesPorOrden[$h->obtenerNumeroOrden()] = $h->obtenerId();
+        }
+
         foreach ($cpe->obtenerLineas() as $linea) {
             $linea->fijarCpeId($cpeId);
+            $hospId = $linea->obtenerCpeHospedajeId();
+            if ($hospId === null && count($hospedajes) === 1) {
+                $hospId = $hospedajes[0]->obtenerId();
+                $linea->establecerCpeHospedajeId($hospId);
+            } elseif ($hospId !== null) {
+                $idRealEncontrado = false;
+                foreach ($hospedajes as $h) {
+                    if ($h->obtenerId() === $hospId) {
+                        $idRealEncontrado = true;
+                        break;
+                    }
+                }
+                if (!$idRealEncontrado && isset($hospedajesPorOrden[$hospId])) {
+                    $hospId = $hospedajesPorOrden[$hospId];
+                    $linea->establecerCpeHospedajeId($hospId);
+                }
+            }
             $stmtLinea->execute([
                 'cpe_id' => $cpeId,
+                'cpe_hospedaje_id' => $hospId,
                 'numero_orden' => $linea->obtenerNumeroOrden(),
                 'codigo_producto_interno' => $linea->obtenerCodigoProductoInterno(),
                 'codigo_producto_sunat' => $linea->obtenerCodigoProductoSunat(),
@@ -161,6 +246,7 @@ class CpeComprobanteRepositorio
                 'tasa_igv' => $linea->obtenerTasaIgv(),
                 'monto_igv' => $linea->obtenerMontoIgv(),
                 'total_linea' => $linea->obtenerTotalLinea(),
+                'fecha_consumo' => $linea->obtenerFechaConsumo(),
             ]);
 
             $lineaId = (int) $this->pdo->lastInsertId();
@@ -212,7 +298,7 @@ class CpeComprobanteRepositorio
     }
 
     /**
-     * Obtiene el agregado completo de un CPE por su ID primario, reconstruyendo líneas y relaciones.
+     * Obtiene el agregado completo de un CPE por su ID primario, reconstruyendo líneas, cuotas, hospedajes y relaciones.
      */
     public function obtenerPorId(int $id): ?CpeComprobante
     {
@@ -260,7 +346,27 @@ class CpeComprobanteRepositorio
             $documentosRelacionados[] = CpeDocumentoRelacionado::desdeArreglo($fdr);
         }
 
-        return CpeComprobante::desdeArreglo($filaCpe, $lineas, $documentosRelacionados);
+        // Cargar cuotas fiscales de crédito
+        $stmtCuotas = $this->pdo->prepare('SELECT * FROM cpe_cuotas WHERE cpe_id = :cpe_id ORDER BY numero_cuota ASC');
+        $stmtCuotas->execute(['cpe_id' => $id]);
+        $filasCuotas = $stmtCuotas->fetchAll(PDO::FETCH_ASSOC);
+
+        $cuotas = [];
+        foreach ($filasCuotas as $fc) {
+            $cuotas[] = CpeCuota::desdeArreglo($fc);
+        }
+
+        // Cargar snapshots de hospedajes fiscales DL 919
+        $stmtHospedajes = $this->pdo->prepare('SELECT * FROM cpe_hospedajes WHERE cpe_id = :cpe_id ORDER BY numero_orden ASC');
+        $stmtHospedajes->execute(['cpe_id' => $id]);
+        $filasHospedajes = $stmtHospedajes->fetchAll(PDO::FETCH_ASSOC);
+
+        $hospedajes = [];
+        foreach ($filasHospedajes as $fh) {
+            $hospedajes[] = CpeHospedajeFiscal::desdeArreglo($fh);
+        }
+
+        return CpeComprobante::desdeArreglo($filaCpe, $lineas, $documentosRelacionados, $cuotas, $hospedajes);
     }
 
     /**

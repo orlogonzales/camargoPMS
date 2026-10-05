@@ -426,3 +426,21 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - Gobernanza e invariantes de base de datos: 139 tablas físicas consolidadas, migración 040 inmutable, ranura 041 estrictamente LIBRE y catálogo `admin-dashboard/` 100% inalterado.
     - Suites previas sin regresión: 87 suites históricas ejecutadas y validadas al 100%.
     - **Total Consolidado de Regresión Activa: 88/88 suites PASS — 3,075 checks canónicos PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (SUNAT-1D-B2):**
+    - Suite `test_sunat_cpe_1d_b2.php`: 95 comprobaciones automáticas cubriendo:
+      - Gobierno de BD y ranura 041 consumida: exactamente 141 tablas relacionales (139 previas + 2 nuevas: `cpe_cuotas` y `cpe_hospedajes`).
+      - Inmutabilidad estricta de `040_cpe_esquema_fiscal.sql` (0 diffs).
+      - Ranura 042 estrictamente LIBRE en disco y catálogo.
+      - Sincronización canónica idéntica en `SQL/camargo_pms.sql` (Sección 43).
+      - Catálogo `admin-dashboard/` 100% inalterado y limpio.
+      - Integridad estructural y restricciones físicas de migración 041 (tablas InnoDB, columnas `forma_pago`, `monto_neto_pendiente`, `cpe_hospedaje_id`, `fecha_consumo`, FKs con `ON DELETE RESTRICT`, UNIQUE compuestas `uq_cpe_cuota_numero`, `uq_cpe_hospedaje_orden`, `uq_cpe_hospedaje_cpe_id`, ausencia absoluta de `FLOAT`/`DOUBLE`).
+      - Modelos de dominio soberanos (`CpeCuota`, `CpeHospedajeFiscal`, extensiones en `CpeLinea` y `CpeComprobante`) con tipado estricto, aritmética `BCMath`, cero tipos flotantes y serialización bidireccional.
+      - Emisión CONTADO: validación de lista de cuotas vacía y monto neto pendiente nulo; rechazo de cuotas o montos positivos con `ValidacionFiscalExcepcion`.
+      - Emisión CRÉDITO: exigencia de cuotas y monto pendiente positivo; validación matemática de cuadre de cuotas con `monto_neto_pendiente` (`bccomp === 0`); rehidratación íntegra de multicuota preservando orden y montos exactos.
+      - Régimen de Hospedaje a No Domiciliados (DL 919 / Ley 28980 / Catálogo 55): emisión con separación ontológica (`Receptor != Huésped`); normalización de Catálogo 06 ('7' Pasaporte); verificación de `dias_permanencia <= 60`, fechas check-in / check-out, enlace a líneas y `fecha_consumo`.
+      - Restricciones de dominio y motor para DL 919 (casos negativos): rechazo de `fecha_consumo` fuera del intervalo de hospedaje; rechazo por motor InnoDB de CHECKs `chk_cpe_hosp_dias_max`, `chk_cpe_hosp_fechas` y UNIQUEs compuestas.
+      - Protección física y lógica Cross-CPE: rechazo en software mediante `CpeCorrelativoServicio` y rechazo físico en InnoDB mediante clave foránea compuesta `fk_cpe_lineas_hospedaje_cross (cpe_id, cpe_hospedaje_id) REFERENCES cpe_hospedajes(cpe_id, id)`.
+      - Auditoría de seguridad: cero credenciales o secretos en base de datos.
+      - Limpieza defensiva transaccional: 0 residuos en BD tras la ejecución.
+    - Sincronización y actualización de 21 suites históricas hacia ranura 042 libre.
+    - **Total Consolidado de Regresión Activa: 89/89 suites PASS — 3,170 checks canónicos PASS — 0 fallos (100%)**.

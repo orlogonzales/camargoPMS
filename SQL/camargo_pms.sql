@@ -7234,6 +7234,8 @@ CREATE TABLE IF NOT EXISTS `cpe_comprobantes` (
     -- Fechas, Usuario y Auditoría
     `fecha_emision` DATETIME NOT NULL COMMENT 'Fecha y hora oficial de emisión del comprobante',
     `fecha_vencimiento` DATE NULL COMMENT 'Fecha de vencimiento para operaciones al crédito',
+    `forma_pago` ENUM('CONTADO', 'CREDITO') NOT NULL DEFAULT 'CONTADO' COMMENT 'Modalidad de pago comercial según R.S. 193-2020',
+    `monto_neto_pendiente` DECIMAL(15,2) NULL COMMENT 'Monto neto pendiente de cobro para operaciones a crédito',
     `creado_por_usuario_id` BIGINT UNSIGNED NOT NULL COMMENT 'Usuario del PMS responsable de la emisión',
     `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `actualizado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -7243,6 +7245,7 @@ CREATE TABLE IF NOT EXISTS `cpe_comprobantes` (
     CONSTRAINT `fk_cpe_folio` FOREIGN KEY (`cuenta_folio_id`) REFERENCES `cuentas_folios` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `fk_cpe_usuario` FOREIGN KEY (`creado_por_usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `chk_cpe_correlativo_positivo` CHECK (`correlativo` > 0),
+    CONSTRAINT `chk_cpe_monto_pendiente_no_neg` CHECK (`monto_neto_pendiente` IS NULL OR `monto_neto_pendiente` >= 0.00),
     CONSTRAINT `chk_cpe_total_no_negativo` CHECK (`total_venta` >= 0.00),
     UNIQUE KEY `uq_cpe_numero_fiscal` (`emisor_establecimiento_id`, `tipo_comprobante`, `serie`, `correlativo`),
     UNIQUE KEY `uq_cpe_idempotencia` (`emisor_establecimiento_id`, `clave_idempotencia`),
@@ -7252,10 +7255,53 @@ CREATE TABLE IF NOT EXISTS `cpe_comprobantes` (
     INDEX `idx_cpe_estados` (`estado_generacion`, `estado_transmision`, `estado_fiscal_sunat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Agregado raíz de Comprobantes de Pago Electrónicos (Facturas, Boletas, Notas)';
 
+-- Calendario Fiscal T0 de Cuotas de Crédito (R.S. 193-2020)
+CREATE TABLE IF NOT EXISTS `cpe_cuotas` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `cpe_id` BIGINT UNSIGNED NOT NULL COMMENT 'FK hacia cpe_comprobantes',
+    `numero_cuota` INT UNSIGNED NOT NULL COMMENT 'Secuencia ordinal de la cuota (1..N)',
+    `monto` DECIMAL(15,2) NOT NULL COMMENT 'Importe exigible de la cuota',
+    `fecha_vencimiento` DATE NOT NULL COMMENT 'Fecha límite exigible de pago de la cuota',
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_cpe_cuota_numero` (`cpe_id`, `numero_cuota`),
+    INDEX `idx_cpe_cuotas_vencimiento` (`fecha_vencimiento`),
+    CONSTRAINT `fk_cpe_cuotas_cpe` FOREIGN KEY (`cpe_id`) REFERENCES `cpe_comprobantes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `chk_cpe_cuota_num_pos` CHECK (`numero_cuota` > 0),
+    CONSTRAINT `chk_cpe_cuota_monto_pos` CHECK (`monto` > 0.00)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Calendario fiscal T0 inmutable de cuotas para ventas al crédito (R.S. 193-2020)';
+
+-- Snapshot T0 de Huéspedes y Estancias con Beneficio DL 919 (Catálogo 55)
+CREATE TABLE IF NOT EXISTS `cpe_hospedajes` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `cpe_id` BIGINT UNSIGNED NOT NULL COMMENT 'FK hacia cpe_comprobantes',
+    `numero_orden` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Secuencia ordinal del huésped/estancia (1..N)',
+    `nombres_apellidos` VARCHAR(200) NOT NULL COMMENT '4007: Nombres y apellidos completos del huésped no domiciliado',
+    `tipo_documento` CHAR(1) NOT NULL COMMENT '4008: Catálogo 06 SUNAT (7=Pasaporte, 4=Carnet Extranjería)',
+    `numero_documento` VARCHAR(30) NOT NULL COMMENT '4009: Número de pasaporte o documento de identidad',
+    `pais_emision_pasaporte` CHAR(2) NOT NULL COMMENT '4000: Código ISO 3166-1 alfa-2 del país emisor del pasaporte',
+    `pais_residencia` CHAR(2) NOT NULL COMMENT '4001: Código ISO 3166-1 alfa-2 del país de residencia habitual',
+    `fecha_ingreso_pais` DATE NOT NULL COMMENT '4002: Fecha de ingreso al país acreditada (TAM / sello)',
+    `fecha_checkin` DATE NOT NULL COMMENT '4003: Fecha de inicio de la estancia en el establecimiento',
+    `fecha_checkout` DATE NOT NULL COMMENT '4004: Fecha de finalización de la estancia en el establecimiento',
+    `dias_permanencia` SMALLINT UNSIGNED NOT NULL COMMENT '4005: Días acumulados de permanencia en el país (<= 60)',
+    `tam_virtual_numero` VARCHAR(50) DEFAULT NULL COMMENT 'Número de TAM Virtual o registro migratorio',
+    `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_cpe_hospedaje_cpe_id` (`cpe_id`, `id`),
+    UNIQUE KEY `uq_cpe_hospedaje_orden` (`cpe_id`, `numero_orden`),
+    INDEX `idx_cpe_hosp_doc` (`tipo_documento`, `numero_documento`),
+    CONSTRAINT `fk_cpe_hospedajes_cpe` FOREIGN KEY (`cpe_id`) REFERENCES `cpe_comprobantes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `chk_cpe_hosp_orden_pos` CHECK (`numero_orden` > 0),
+    CONSTRAINT `chk_cpe_hosp_dias_max` CHECK (`dias_permanencia` > 0 AND `dias_permanencia` <= 60),
+    CONSTRAINT `chk_cpe_hosp_fechas` CHECK (`fecha_checkout` >= `fecha_checkin`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Snapshot T0 inmutable de huéspedes y estancias con beneficio DL 919 (Catálogo 55)';
+
 -- Detalle de Ítems y Líneas Fiscales
 CREATE TABLE IF NOT EXISTS `cpe_lineas` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `cpe_id` BIGINT UNSIGNED NOT NULL COMMENT 'FK hacia comprobante contenedor',
+    `cpe_hospedaje_id` BIGINT UNSIGNED DEFAULT NULL COMMENT 'FK compuesta hacia cpe_hospedajes(cpe_id, id) para atribución DL 919',
     `numero_orden` INT UNSIGNED NOT NULL COMMENT 'Secuencia ordinal de la línea (1..N)',
     `codigo_producto_interno` VARCHAR(50) NULL COMMENT 'Código de producto o servicio en catálogo PMS',
     `codigo_producto_sunat` VARCHAR(50) NULL COMMENT 'Código de producto/servicio según catálogo UNSPSC SUNAT',
@@ -7270,12 +7316,15 @@ CREATE TABLE IF NOT EXISTS `cpe_lineas` (
     `tasa_igv` DECIMAL(5,2) NOT NULL DEFAULT 18.00 COMMENT 'Porcentaje de IGV aplicado (18.00%)',
     `monto_igv` DECIMAL(15,2) NOT NULL DEFAULT 0.00 COMMENT 'Importe de IGV calculado',
     `total_linea` DECIMAL(15,2) NOT NULL COMMENT 'Importe total de la línea',
+    `fecha_consumo` DATE DEFAULT NULL COMMENT '4006: Fecha de consumo para servicios de alimentación y conexos',
     `creado_en` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_cpe_lineas_cpe` FOREIGN KEY (`cpe_id`) REFERENCES `cpe_comprobantes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT `fk_cpe_lineas_hospedaje_cross` FOREIGN KEY (`cpe_id`, `cpe_hospedaje_id`) REFERENCES `cpe_hospedajes` (`cpe_id`, `id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `chk_cpe_linea_cant_pos` CHECK (`cantidad` > 0),
     CONSTRAINT `chk_cpe_linea_tot_no_neg` CHECK (`total_linea` >= 0.00),
     UNIQUE KEY `uq_cpe_linea_orden` (`cpe_id`, `numero_orden`),
-    INDEX `idx_cpe_linea_afectacion` (`tipo_afectacion_igv`)
+    INDEX `idx_cpe_linea_afectacion` (`tipo_afectacion_igv`),
+    INDEX `idx_cpe_lineas_cpe_hospedaje` (`cpe_id`, `cpe_hospedaje_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Detalle tributario inmutable de líneas de bienes y servicios documentados';
 
 -- Trazabilidad M:N entre Líneas Fiscales y Cargos Operativos del PMS
