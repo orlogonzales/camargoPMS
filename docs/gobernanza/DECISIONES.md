@@ -2225,6 +2225,53 @@ Aprobada en la microfase `SUNAT-1C1` como arquitectura y modelo relacional vincu
    - Suite de pruebas dedicada `tests/test_sunat_cpe_1c1.php` (125/125 PASS, 100%).
    - Regresión transversal canónica global: 87 suites ejecutadas (100% PASS).
 
+### D-115 — Dominio Soberano CPE, Repositorios y Motor de Correlativos Concurrente (SUNAT-1C2)
+
+Aprobada en la microfase `SUNAT-1C2` como arquitectura y modelo de dominio vinculante para la capa de software PHP de Comprobantes de Pago Electrónicos (CPE) de SUNAT, repositorios relacionales desacoplados y asignación transaccional concurrente de correlativos en Camargo PMS.
+
+1. **Modelado de Dominio y Agregado Raíz Soberano (D-115.1):**
+   - Se rechaza el antipatrón de crear 8 clases Active Record mecánicas 1:1 con la base de datos. Se diferencian rigurosamente los modelos de dominio respecto a las tablas de soporte y persistencia técnica.
+   - **Agregado Raíz Soberano (`CpeComprobante`):** Encapsula el ciclo de vida fiscal, invariantes contables, snapshots T0 de emisor y receptor, régimen de hospedaje a no domiciliados (DL 919), cuatro ejes ortogonales de estado y colecciones hijas de líneas y documentos relacionados.
+   - **Snapshots Fiscales T0:** Constituyen un **contrato formal de dominio y aplicación**. La aplicación congela inmutablemente los datos legales en el momento exacto de emisión para garantizar que mutaciones futuras en clientes, empresas o propiedades no alteren retroactivamente comprobantes emitidos. No se sobredeclara enforcement físico en base de datos al no existir triggers o bloqueos DDL que impidan físicamente toda mutación a bajo nivel.
+   - **Entidades Internas y Estructurales:** `CpeLinea` (bienes/servicios con afectación IGV y trazabilidad hacia cargos de cuenta), `CpeDocumentoRelacionado` (sustento legal y motivos para notas de crédito/débito), `CpeSerie` (catálogo y secuencias) y `CpeEstablecimiento` (parámetros tributarios de anexos emisores).
+   - Las tablas técnicas `cpe_envios` y `cpe_respuestas` permanecen como persistencia histórica/append-only para los futuros adaptadores de transporte SOAP/CDR, sin sobrecargar el modelo de dominio.
+
+2. **Precisión Financiera Arbitraria y Tipado Estricto (D-115.2):**
+   - Prohibición absoluta de tipos `float` o `double` en modelos, entidades y cálculos.
+   - Todas las bases imponibles, montos de IGV, descuentos, totales y cantidades se modelan y procesan como cadenas de texto (`string`) con escala fija de 2 decimales para dinero y 4 decimales para cantidades/valores unitarios, empleando aritmética de precisión arbitraria mediante la extensión PHP `BCMath` (`bcadd`, `bcsub`, `bcmul`, `bcdiv`, `bccomp`).
+
+3. **Repositorios Desacoplados y Principio de Propiedad Transaccional (D-115.3):**
+   - Repositorios implementados con `PDO` inyectado: `CpeSerieRepositorio`, `CpeEstablecimientoRepositorio` y `CpeComprobanteRepositorio`.
+   - **Regla vinculante:** Los repositorios encapsulan exclusivamente consultas preparadas y mapeo relacional; **jamás ejecutan `beginTransaction()`, `commit()` ni `rollBack()` de forma autónoma**.
+   - `CpeSerieRepositorio` soporta bloqueo pesimista condicional mediante parámetro explícito `$bloquear = false` (`SELECT ... FOR UPDATE`).
+   - `CpeComprobanteRepositorio::guardar()` persiste atómicamente el agregado completo (cabecera, líneas, atribución M:N a cargos de cuenta y documentos relacionados) delegando la coordinación transaccional a la capa de servicio.
+
+4. **Motor de Correlativos y Ajustes Vinculantes de Concurrencia (D-115.4):**
+   - Implementado en `CpeCorrelativoServicio::emitirBorradorOAsignarCorrelativo()`.
+   - **Contrato Canónico de Correlativos:**
+     - Correlativo inicial: 1 por serie.
+     - Asignación: `concurrency-safe` mediante bloqueo pesimista de fila `SELECT ... FOR UPDATE` sobre `cpe_series`.
+     - Unicidad: estrictamente garantizada dentro del ámbito fiscal (`emisor_establecimiento_id`, `tipo_comprobante`, `serie`, `correlativo`).
+     - Orden: creciente por serie.
+     - Autoridad: `cpe_series.ultimo_correlativo`.
+     - **Continuidad absoluta sin huecos: NO GARANTIZADA.**
+   - **Ajuste Vinculante C2-01 (Idempotencia en Sección Crítica):** Protocolo de doble comprobación de idempotencia:
+     1. Pre-check rápido fuera de contención de bloqueo.
+     2. Revalidación autoritativa DENTRO de la sección crítica, inmediatamente después de adquirir el bloqueo pesimista de la serie y antes de incrementar la secuencia. Si otra petición concurrente avanzó y emitió con la misma clave mientras se aguardaba el lock, el servicio no incrementa la serie, libera la transacción y retorna el comprobante existente.
+   - **Ajuste Vinculante C2-02 (Propiedad de Transacciones):** Se aplica el patrón `$debeCerrarTx = !$this->pdo->inTransaction()`. Si el servicio es invocado dentro de una transacción ya abierta por un servicio superior, **no ejecuta `commit()` ni `rollBack()`** sobre esa transacción ajena ("quien abre la transacción es quien la cierra").
+   - **Cross-Validation Vinculante (Establecimiento vs Serie):** Se valida formalmente que `serie.emisor_establecimiento_id === comprobante.emisor_establecimiento_id`. Ante cualquier discrepancia se aborta la operación y se lanza `EstablecimientoSerieIncompatibleExcepcion`.
+   - **Defensa Específica ante Error 1062:** El manejo de colisiones por inserción concurrente está estrictamente acotado a la restricción `uq_cpe_idempotencia`, impidiendo que violaciones de claves foráneas, otros índices UNIQUE (`uq_cpe_numero_fiscal`, `uq_cpe_linea_orden`) o restricciones CHECK sean enmascaradas como replay idempotente.
+
+5. **Invariantes de Esquema, Ranura 041 Libre y Regresión (D-115.5):**
+   - Cero DDL en SUNAT-1C2: No se alteran ni agregan tablas físicas.
+   - La migración `040_cpe_esquema_fiscal.sql` permanece históricamente inmutable.
+   - Ranura de migración `041` estrictamente LIBRE.
+   - Catálogo relacional permanece exactamente en **139 tablas físicas consolidadas**.
+   - Catálogo Alina `admin-dashboard/` y directorio `SQL/` 100% inalterados.
+   - Suite especializada `tests/test_sunat_cpe_1c2.php` (77/77 checks, 100% PASS) y helper de concurrencia CLI `tests/helpers/cpe_concurrency_worker.php`.
+   - Suite `tests/test_sunat_cpe_1c1.php` preservada (125/125 checks, 100% PASS).
+   - Regresión transversal canónica global: 88 suites automatizadas (100% PASS, 0 fallos), **3,075 checks canónicos superados**.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

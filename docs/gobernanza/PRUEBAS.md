@@ -409,4 +409,20 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - Inmutabilidad estricta del catálogo de referencia: `admin-dashboard/` 100% inalterado.
       - Pruebas transaccionales de colisión multiempresa y unicidad compuesta (Casos A a H: anexo multiempresa, anexo duplicado, series por establecimiento, duplicado de serie, folios inter-emisor, unicidad de número fiscal, rechazo de idempotencia duplicada y confirmación de rollback total con cero residuos en base de datos).
     - Suites previas sin regresión: 86 suites históricas ejecutadas y sincronizadas al 100% hacia ranura 041 libre.
-    - **Total Consolidado de Regresión Activa: 87/87 suites PASS — 2,998 checks canónicos PASS — 0 fallos (100%)**.
+    - **Total Consolidado de Regresión Activa en SUNAT-1C1: 87/87 suites PASS — 2,998 checks canónicos PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (SUNAT-1C2):**
+    - Suite `test_sunat_cpe_1c2.php`: 77 comprobaciones automáticas cubriendo:
+      - Autoloading PSR-4, modelos de dominio (`CpeComprobante`, `CpeSerie`, `CpeEstablecimiento`, `CpeLinea`, `CpeDocumentoRelacionado`) y jerarquía de 9 excepciones tipadas derivadas de `CpeExcepcion`.
+      - Precisión financiera arbitraria: tipado en `string` y aritmética `BCMath` con cero tipos `float`/`double`.
+      - Repositorios desacoplados con `PDO` inyectado (`CpeSerieRepositorio`, `CpeEstablecimientoRepositorio`, `CpeComprobanteRepositorio`) con cero transacciones autónomas y consultas preparadas reales.
+      - Asignación inicial de correlativos `concurrency-safe` desde 1 (folio `F001-00000001`) y avance creciente hacia 2 (`F001-00000002`) sin garantía de continuidad absoluta sin huecos.
+      - Ajuste Vinculante C2-01: Revalidación autoritativa de idempotencia en sección crítica bajo lock pesimista de serie (`SELECT ... FOR UPDATE`), garantizando replay determinista sin avance de correlativo ni registros duplicados.
+      - Cross-Validation vinculante: Rechazo estricto con `EstablecimientoSerieIncompatibleExcepcion` ante series pertenecientes a otro establecimiento emisor.
+      - Ajuste Vinculante C2-02: Propiedad de transacciones externas (`$debeCerrarTx`); el servicio no ejecuta `commit` ni `rollBack` sobre transacciones iniciadas por capas superiores, permitiendo reversión integral o consolidación externa.
+      - Aislamiento multiempresa: Coexistencia pacífica y emisión independiente de la serie homónima `F001` entre empresas distintas sin cruce de secuencias.
+      - Concurrencia real con contención pesimista: Verificación de `SQLSTATE[HY000]: 1205 Lock wait timeout exceeded` mediante conexión independiente bajo `innodb_lock_wait_timeout=1`.
+      - Concurrencia real con subprocesos CLI paralelos (`tests/helpers/cpe_concurrency_worker.php`): Asignación atómica simultánea de correlativos crecientes `[1, 2]` y resolución pacífica con clave de idempotencia compartida (consumo único de correlativo).
+      - Limpieza defensiva transaccional: Cero residuos en base de datos tras la ejecución (0 CPEs, 0 series, 0 empresas de prueba).
+      - Gobernanza e invariantes de base de datos: 139 tablas físicas consolidadas, migración 040 inmutable, ranura 041 estrictamente LIBRE y catálogo `admin-dashboard/` 100% inalterado.
+    - Suites previas sin regresión: 87 suites históricas ejecutadas y validadas al 100%.
+    - **Total Consolidado de Regresión Activa: 88/88 suites PASS — 3,075 checks canónicos PASS — 0 fallos (100%)**.

@@ -4,6 +4,59 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase SUNAT-1C2 — Dominio CPE Soberano, Repositorios y Motor de Correlativos Concurrente (D-115)
+
+- **Capa de Dominio y Modelos Soberanos CPE (`app/Modelos/CPE/` & `app/Excepciones/`):**
+  - Implementación de 5 modelos de dominio sin acoplamiento a Active Record ni dependencias de framework: `CpeComprobante`, `CpeSerie`, `CpeEstablecimiento`, `CpeLinea`, `CpeDocumentoRelacionado`.
+  - Agregado raíz `CpeComprobante`: gestión soberana de cabecera fiscal, snapshots inmutables de emisor/receptor, desglose tributario exacto, líneas de detalle, documentos relacionados y atribución M:N a cargos de cuenta (`cargosIds`).
+  - Jerarquía formal de 9 excepciones de dominio tipadas derivadas de `CpeExcepcion`:
+    - `CpeExcepcion` (base)
+    - `EstablecimientoNoEncontradoExcepcion`
+    - `EstablecimientoSerieIncompatibleExcepcion`
+    - `SerieFiscalNoEncontradaExcepcion`
+    - `SerieFiscalInactivaExcepcion`
+    - `SerieTipoIncompatibleExcepcion`
+    - `ConflictoCorrelativoExcepcion`
+    - `ValidacionFiscalExcepcion`
+    - `ComprobanteNoEncontradoExcepcion`
+  - Precisión financiera absoluta: prohibición de tipos `float`/`double`. Modelado en cadenas de texto (`string`) con aritmética de precisión arbitraria mediante `BCMath` (`bcadd`, `bcsub`, `bcmul`, `bcdiv`, `bccomp`).
+
+- **Repositorios Desacoplados y Principio de Propiedad Transaccional (`app/Repositorios/CPE/`):**
+  - Implementación de 3 repositorios especializados con inyección de `PDO`:
+    - `CpeEstablecimientoRepositorio`: Búsqueda de establecimientos por ID y resolución multiempresa por `(empresa_id, codigo_anexo)`.
+    - `CpeSerieRepositorio`: Búsqueda de series fiscales por ID y por clave compuesta `(establecimiento_id, tipo_comprobante, serie)`. Soporte de bloqueo pesimista condicional `SELECT ... FOR UPDATE` mediante parámetro explícito `$bloquear = true`.
+    - `CpeComprobanteRepositorio`: Persistencia atómica del agregado completo (`cpe_comprobantes`, `cpe_lineas`, `cpe_linea_cargos`, `cpe_documentos_relacionados`), hidratación completa y búsqueda determinista por ID, clave de idempotencia `(emisor_ruc, clave_idempotencia)` y número fiscal `(emisor_establecimiento_id, tipo_comprobante, serie, correlativo)`.
+  - Regla arquitectónica vinculante: Los repositorios encapsulan consultas preparadas y mapeo relacional; jamás gestionan transacciones (`beginTransaction`, `commit`, `rollBack`).
+
+- **Motor Transaccional de Correlativos y Concurrencia (`app/Servicios/CPE/CpeCorrelativoServicio.php`):**
+  - Implementación de `CpeCorrelativoServicio::emitirBorradorOAsignarCorrelativo()`:
+    - **Contrato Canónico de Correlativos:**
+      - Correlativo inicial = 1 por serie fiscal.
+      - Asignación concurrency-safe mediante bloqueo pesimista de fila `SELECT ... FOR UPDATE` sobre `cpe_series`.
+      - Unicidad estrictamente garantizada dentro del ámbito fiscal (`emisor_establecimiento_id`, `tipo_comprobante`, `serie`, `correlativo`).
+      - Orden creciente por serie fiscal.
+      - Autoridad exclusiva en `cpe_series.ultimo_correlativo`.
+      - Continuidad absoluta sin huecos: NO GARANTIZADA.
+    - **Ajuste Vinculante C2-01 (Idempotencia en Sección Crítica):** Protocolo de doble comprobación de idempotencia:
+      1. Pre-check rápido fuera del lock.
+      2. Revalidación autoritativa DENTRO de la sección crítica, inmediatamente después de adquirir el bloqueo pesimista de la serie y antes de incrementar la secuencia. Si otra petición concurrente avanzó y emitió con la misma clave mientras se esperaba el lock, el servicio no incrementa la serie, revierte su transacción local y retorna el comprobante existente.
+    - **Ajuste Vinculante C2-02 (Propiedad de Transacciones):** Patrón `$debeCerrarTx = !$this->pdo->inTransaction()`. Si el servicio es invocado dentro de una transacción ya abierta por un servicio superior, no ejecuta `commit` ni `rollBack` sobre la transacción ajena ("quien abre la transacción es quien la cierra").
+    - **Cross-Validation Vinculante (Establecimiento vs Serie):** Validación estricta `serie.emisor_establecimiento_id === comprobante.emisor_establecimiento_id`. Ante discrepancias, se aborta y se lanza `EstablecimientoSerieIncompatibleExcepcion`.
+    - **Defensa Específica ante Error 1062:** Captura aislada a la restricción `uq_cpe_idempotencia` con reintento de lectura determinista post-rollback, impidiendo enmascarar violaciones de FK, CHECK o duplicados de folio fiscal.
+
+- **Gobernanza, Calidad y Regresión:**
+  - Cero DDL en SUNAT-1C2 (0 cambios en esquema físico).
+  - Migración `040_cpe_esquema_fiscal.sql` y `SQL/camargo_pms.sql` 100% inmutables.
+  - Ranura de migración `041` estrictamente LIBRE.
+  - Catálogo de base de datos conservado exactamente en 139 tablas relacionales.
+  - Inmutabilidad absoluta del catálogo Alina: `admin-dashboard/` 100% inalterado.
+  - Suite de pruebas de dominio y concurrencia `tests/test_sunat_cpe_1c2.php`: 77/77 checks PASS (100%).
+  - Helper de concurrencia CLI multiproceso: `tests/helpers/cpe_concurrency_worker.php`.
+  - Suite estructural previa `tests/test_sunat_cpe_1c1.php`: 125/125 checks PASS (100%).
+  - Regresión transversal canónica global: 88/88 suites ejecutadas (100% PASS), 3,075 checks canónicos homologados, 0 fallos.
+
+## Baseline oficial ce5f0e5 (SUNAT-1C1 / SUNAT-1C1-C3)
+
 ### Microfase SUNAT-1C1 — Migración 040 y Persistencia Estructural del Dominio CPE (SUNAT)
 
 - **Evolución Relacional Soberana y Migración 040 (`SQL/migraciones/040_cpe_esquema_fiscal.sql`):**
@@ -35,6 +88,8 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
   - Fortalecimiento de pruebas en `SUNAT-1C1-C3`: enriquecimiento de `tests/test_sunat_cpe_1c1.php` con validación de secuencia exacta de columnas (`SEQ_IN_INDEX`) en Bloque 5 y pruebas transaccionales de colisión multiempresa en Bloque 13 (Casos A a H: anexos multiempresa, series por establecimiento, folios inter-emisor, rechazos de duplicados e idempotencia, con rollback total y 0 residuos en base de datos).
   - Corrección de fe de erratas en documentación técnica (`BASE-DATOS.md` y `DECISIONES.md`) explicitando la composición multiempresa de los índices UNIQUE.
   - Homologación formal del commit `e66b430` como baseline canónico publicado tras subsanación y verificación integral.
+
+## Baseline oficial 4cba439 (FINANCIERO-3C)
 
 ### Microfase FINANCIERO-3C — Interfaz Operativa Multi-Folio Alina
 
