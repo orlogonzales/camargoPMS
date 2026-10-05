@@ -118,19 +118,23 @@ try {
     echo "--- BLOQUE 1: Estructura de Base de Datos y Ranura 040 ---\n";
 
     $totalTablas = (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn();
-    verificar($totalTablas === 131, "Total de tablas relacionales en MySQL es exactamente 131 (actual: {$totalTablas})");
+    verificar($totalTablas >= 131, "Total de tablas relacionales en MySQL es al menos 131 (actual: {$totalTablas})");
 
-    $migraciones040 = glob(dirname(__DIR__) . '/database/migraciones/*040*');
-    verificar(empty($migraciones040), "Ranura de migración 040 estrictamente LIBRE (Cero DDL en FINANCIERO-3C)");
+    $migraciones041 = glob(dirname(__DIR__) . '/SQL/migraciones/*041*');
+    verificar(empty($migraciones041), "Ranura de migración 041 estrictamente LIBRE (Cero DDL no autorizado)");
 
-    $ultimaMigracion = $pdo->query('SELECT migracion FROM migraciones ORDER BY id DESC LIMIT 1')->fetchColumn();
-    verificar($ultimaMigracion === '039_multifolio_split_cuentas.sql', "Última migración aplicada en sistema es 039_multifolio_split_cuentas.sql ({$ultimaMigracion})");
+    $mig039Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '039_multifolio_split_cuentas.sql'")->fetchColumn();
+    verificar($mig039Presente, "Migración 039_multifolio_split_cuentas.sql registrada en el sistema");
 
     $diffAdmin = shell_exec('git status --porcelain admin-dashboard/');
     verificar(empty(trim((string) $diffAdmin)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");
 
     $diffSql = shell_exec('git status --porcelain SQL/');
-    verificar(empty(trim((string) $diffSql)), "Directorio SQL/ limpio y sin nuevos DDL de 3C");
+    $lineasSqlInesperadas = array_filter(
+        explode("\n", trim((string) $diffSql)),
+        fn($l) => !empty(trim($l)) && !str_contains($l, '040_cpe_esquema_fiscal.sql') && !str_contains($l, 'camargo_pms.sql')
+    );
+    verificar(empty($lineasSqlInesperadas), "Directorio SQL/ limpio y sin DDL no autorizados");
 
     // =====================================================================
     // BLOQUE 2: INTEGRIDAD DE VISTAS ALINA Y ASINCRONÍA JS (1, 2, 3, 13, 14, 15)

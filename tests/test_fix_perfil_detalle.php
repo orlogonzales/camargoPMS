@@ -132,8 +132,8 @@ assertCheck(count($tables) >= 118, "Base de datos cuenta con al menos 118 tablas
 $mig034 = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
 assertCheck($mig034, "Migración 034_agregar_foto_personas.sql presente en BD");
 
-$m040 = glob(dirname(__DIR__) . '/SQL/migraciones/*040*');
-assertCheck(empty($m040), "Ranura de migración 040 estrictamente LIBRE en SQL/migraciones/ (cero DDL no autorizado)");
+$m041 = glob(dirname(__DIR__) . '/SQL/migraciones/*041*');
+assertCheck(empty($m041), "Ranura de migración 041 estrictamente LIBRE en SQL/migraciones/ (cero DDL no autorizado)");
 
 $gitStatusAlina = shell_exec('git status --porcelain admin-dashboard/');
 assertCheck(empty(trim((string)$gitStatusAlina)), "admin-dashboard/ permanece 100% inmutable y libre de modificaciones");

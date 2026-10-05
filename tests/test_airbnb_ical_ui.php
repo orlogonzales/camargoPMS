@@ -519,8 +519,8 @@ assertCheck($tablasCount >= 122, "Base de datos contiene al menos 122 tablas rel
 $mig035Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '035_canales_ical.sql'")->fetchColumn();
 assertCheck($mig035Presente, "Migración 035_canales_ical.sql ejecutada en BD");
 
-$mig040 = glob(dirname(__DIR__) . '/SQL/migraciones/040*.sql');
-assertCheck(empty($mig040), "Ranura 040 permanece estrictamente LIBRE (Cero DDL no autorizado)");
+$mig041 = glob(dirname(__DIR__) . '/SQL/migraciones/041*.sql');
+assertCheck(empty($mig041), "Ranura 041 permanece estrictamente LIBRE (Cero DDL no autorizado)");
 
 // 12.5 Catálogo Alina intacto
 $diffAdmin = shell_exec('git status --porcelain admin-dashboard/');

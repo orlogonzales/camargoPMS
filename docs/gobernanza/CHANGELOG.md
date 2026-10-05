@@ -4,6 +4,32 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
 
 ## Sin publicar
 
+### Microfase SUNAT-1C1 — Migración 040 y Persistencia Estructural del Dominio CPE (SUNAT)
+
+- **Evolución Relacional Soberana y Migración 040 (`SQL/migraciones/040_cpe_esquema_fiscal.sql`):**
+  - Consumo formal de la ranura de migración 040.
+  - Creación de 8 tablas relacionales soberanas dedicadas a la facturación electrónica:
+    1. `cpe_establecimientos_configuracion`: Mapeo de establecimientos SUNAT por propiedad con código anexo de 4 dígitos y unicidad formal.
+    2. `cpe_series`: Catálogo de series alfanuméricas con prefijos regulados (F, B, FC/FD, BC/BD) y control transaccional del último correlativo (`FOR UPDATE`).
+    3. `cpe_comprobantes`: Agregado soberano de comprobantes con snapshots inmutables T0 de Emisor y Receptor, desglose tributario, soporte para Régimen de Hospedaje a No Domiciliados (DL 919 / Ley 28980), 4 ejes ortogonales de estado (`estado_generacion`, `estado_transmision`, `estado_fiscal_sunat`, `estado_rectificacion`), unicidad de número fiscal y clave de idempotencia.
+    4. `cpe_lineas`: Detalle fiscal inmutable ítem por ítem con tipado `DECIMAL` exacto, afectación IGV y valores positivos.
+    5. `cpe_linea_cargos`: Trazabilidad relacional N:M desacoplada entre líneas de CPE y `cargos_cuenta` del PMS.
+    6. `cpe_documentos_relacionados`: Vínculos relacionales para notas de crédito/débito y anticipos con restricción anti-autorreferencia.
+    7. `cpe_envios`: Registro append-only de intentos de transmisión a SUNAT/SEE con telemetría y hash SHA-256 de solicitud.
+    8. `cpe_respuestas`: Registro append-only de constancias oficiales, CDRs, códigos SUNAT y observaciones JSON.
+  - Consolidación canónica en `SQL/camargo_pms.sql` (Sección 43).
+  - Verificación de paridad 100% en instalación limpia aislada (139 tablas en esquema migrado vs 139 tablas en esquema consolidado, 0 diferencias).
+  - Restricciones referenciales `ON DELETE RESTRICT` en todas las claves foráneas fiscales.
+  - Cero campos `FLOAT` o `DOUBLE`: precisión financiera absoluta en `DECIMAL`.
+  - Cero credenciales o secretos en base de datos (claves SOL, certificados y contraseñas permanecen en `.env`/vault).
+- **Gobernanza, Calidad y Regresión:**
+  - Ranura de migración `041` estrictamente LIBRE en disco y en catálogo.
+  - Catálogo de base de datos ampliado de forma justificada de 131 a **139 tablas relacionales**.
+  - Inmutabilidad absoluta del catálogo de referencia: `admin-dashboard/` 100% inalterado.
+  - Suite de pruebas estructurales dedicada `tests/test_sunat_cpe_1c1.php`: 109/109 checks PASS (100%).
+  - Actualización y sincronización de 22 suites de regresión hacia ranura 041 libre.
+  - Regresión transversal canónica global: 87 suites ejecutadas, 2,982 checks PASS, 0 fallos (100%).
+
 ### Microfase FINANCIERO-3C — Interfaz Operativa Multi-Folio Alina
 
 - **Interfaz y Ergonomía Alina (`app/Vistas/caja/index.php` & `public/assets/js/gestion-caja.js`):**

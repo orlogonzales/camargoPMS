@@ -2175,6 +2175,56 @@ Aprobada en la microfase `FINANCIERO-3A` como arquitectura vinculante para la co
    - Suite dedicada `tests/test_multifolio_split_3a.php` (38/38 PASS).
    - Regresión transversal canónica: 84 suites automatizadas (100% PASS, 0 fallos).
 
+### D-114 — Modelo Relacional Soberano de Comprobantes de Pago Electrónicos (CPE / SUNAT) y Persistencia Estructural (SUNAT-1C1)
+
+Aprobada en la microfase `SUNAT-1C1` como arquitectura y modelo relacional vinculante para la persistencia estructural del dominio de Comprobantes de Pago Electrónicos (CPE) de SUNAT en Camargo PMS.
+
+1. **Axiomas de Arquitectura y Separación Ontológica Soberana (D-114.1):**
+   - $\text{DOCUMENTO INTERNO} \neq \text{COMPROBANTE ELECTRÓNICO (CPE)}$.
+   - $\text{FOLIO DE CUENTA} \neq \text{CPE}$: Un folio agrupa transacciones operativas y financieras internas; un CPE es un agregado fiscal soberano inmutable emitido bajo la normativa de SUNAT.
+   - $\text{CARGO} \neq \text{LÍNEA DE CPE}$: Una línea fiscal de CPE puede consolidar o desglosar cargos de cuenta; la relación se modela desacoplada mediante la tabla asociativa `cpe_linea_cargos`.
+   - $\text{RECIBO INTERNO DE PAGO} \neq \text{CPE SUNAT}$: El recibo de tesorería acredita recaudación interna; el comprobante electrónico acredita un hecho imponible formal ante la administración tributaria.
+   - Las entidades financieras internas preexistentes (`cargos_cuenta`, `cuentas_folios`, `recibos`, `pagos`) no se deforman ni se acoplan indebidamente a las estructuras normativas de SUNAT.
+
+2. **Modelo Relacional de 8 Tablas Soberanas (D-114.2):**
+   - Se adopta la arquitectura relacional de 8 tablas soberanas:
+     1. `cpe_establecimientos_configuracion`: Configuración fiscal de anexos SUNAT vinculados a propiedades.
+     2. `cpe_series`: Catálogo de series alfanuméricas con prefijos regulados (F, B, FC/FD, BC/BD) y secuencias transaccionales.
+     3. `cpe_comprobantes`: Agregado soberano de comprobantes de pago electrónicos.
+     4. `cpe_lineas`: Detalle fiscal inmutable ítem por ítem.
+     5. `cpe_linea_cargos`: Trazabilidad relacional N:M desacoplada entre líneas fiscales y cargos de cuenta del PMS.
+     6. `cpe_documentos_relacionados`: Vínculos documentales para notas de crédito/débito y comprobantes de anticipo.
+     7. `cpe_envios`: Registro append-only de intentos de transmisión a SUNAT/SEE con telemetría.
+     8. `cpe_respuestas`: Registro append-only de constancias oficiales, CDRs y observaciones SUNAT.
+   - Separación formal 1:0..N entre intentos de envío y respuestas/CDR.
+   - Relación N:M en documentos relacionados con restricción CHECK anti-autorreferencia (`chk_cpe_dr_no_autoreferencia`) y motivo no vacío (`chk_cpe_dr_motivo_no_vacio`).
+
+3. **Snapshots Inmutables T0 de Emisor y Receptor (D-114.3):**
+   - Cada CPE congela en su propia cabecera la totalidad de datos fiscales del emisor y receptor al momento de emisión.
+   - Modificaciones posteriores a propiedades, empresas, clientes o personas no alteran retroactivamente los comprobantes emitidos.
+   - Soporte formal para el Régimen de Hospedaje a Sujetos No Domiciliados (DL 919 / Ley 28980) con columnas de tarjeta de ingreso, permanencia $\le 60$ días y leyenda tributaria obligatoria.
+
+4. **Ortogonalidad de Estados y Secuencia Transaccional de Correlativos (D-114.4):**
+   - Se desacoplan 4 ejes de estado ortogonales en `cpe_comprobantes`:
+     - `estado_generacion`: `BORRADOR`, `EMITIDO`.
+     - `estado_transmision`: `NO_INICIADO`, `EN_PROCESO`, `TRANSMITIDO`, `FALLO_CONEXION`.
+     - `estado_fiscal_sunat`: `PENDIENTE_ENVIO`, `ACEPTADO`, `ACEPTADO_OBSERVADO`, `RECHAZADO`, `BAJA_ACEPTADA`, `EXCEPCION_SISTEMA`.
+     - `estado_rectificacion`: `ORIGINAL`, `RECTIFICADO_PARCIAL`, `ANULADO_TOTAL`.
+   - Los correlativos se asignan de forma transaccional determinista con bloqueo pesimista `SELECT ... FOR UPDATE` sobre `cpe_series`, garantizando serie de 4 caracteres, unicidad de número fiscal y correlatividad desde 1.
+
+5. **Seguridad Estructural y Cero Credenciales en Base de Datos (D-114.5):**
+   - Cero columnas de contraseñas, claves SOL, certificados digitales o secretos en base de datos. Las credenciales residen en `.env` / almacén seguro.
+   - Cero columnas `FLOAT` o `DOUBLE`: precisión financiera absoluta en `DECIMAL` (escala 2 y 4).
+   - Integridad referencial con `ON DELETE RESTRICT` en todas las claves foráneas fiscales.
+
+6. **Evolución Controlada de Esquema, Ranura 041 Libre y Regresión (D-114.6):**
+   - Consumo legítimo de la migración `040_cpe_esquema_fiscal.sql`.
+   - Total de tablas relacionales consolidadas evoluciona exactamente de 131 a **139 tablas relacionales**.
+   - Paridad canónica al 100% en `SQL/camargo_pms.sql` (Sección 43) y verificación en base de datos aislada limpia.
+   - Ranura de migración `041` estrictamente LIBRE para `SUNAT-1C2` y siguientes.
+   - Suite de pruebas dedicada `tests/test_sunat_cpe_1c1.php` (109/109 PASS, 100%).
+   - Regresión transversal canónica global: 87 suites ejecutadas (100% PASS), 2,982 checks superados.
+
 ## Pendientes de decisión
 
 | ID | Tema | Momento límite | Estado |

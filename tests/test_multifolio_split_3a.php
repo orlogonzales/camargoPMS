@@ -62,7 +62,7 @@ echo "====================================================================\n\n";
 echo "--- BLOQUE 1: Estructura de Base de Datos y Ranura 039 ---\n";
 
 $tablas = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-verificar("Total de tablas relacionales en MySQL es exactamente 131", count($tablas) === 131);
+verificar("Total de tablas relacionales en MySQL es al menos 131", count($tablas) >= 131);
 verificar("Tabla 'cuenta_folio_transferencias_cargos' existe en el motor", in_array('cuenta_folio_transferencias_cargos', $tablas, true));
 
 $stmtMig = $pdo->prepare("SELECT COUNT(*) FROM migraciones WHERE migracion = '039_multifolio_split_cuentas.sql'");

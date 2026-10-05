@@ -109,8 +109,8 @@ try {
     $mig038Presente = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '038_pagos_pasarelas.sql'")->fetchColumn();
     assertCheck($mig038Presente, "Migración 038_pagos_pasarelas.sql registrada en tabla 'migraciones'");
 
-    $mig040 = glob(dirname(__DIR__) . '/SQL/migraciones/*040*');
-    assertCheck(empty($mig040), "Ranura de migración 040 estrictamente LIBRE (cero DDL no autorizado)");
+    $mig041 = glob(dirname(__DIR__) . '/SQL/migraciones/*041*');
+    assertCheck(empty($mig041), "Ranura de migración 041 estrictamente LIBRE (cero DDL no autorizado)");
 
     // Inmutabilidad de admin-dashboard/
     $gitAlina = shell_exec('git status --porcelain admin-dashboard/');

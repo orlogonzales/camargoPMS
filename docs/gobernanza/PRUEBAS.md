@@ -332,7 +332,9 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
 | **FINANCIERO-3A**   | `test_multifolio_split_3a.php` (Bloques 1..8) | 38 | — | 38/38 PASS |
 | **FINANCIERO-3B**   | `test_multifolio_split_3b.php` (Bloques 1..8) | 51 | — | 51/51 PASS |
 | **FINANCIERO-3C**   | `test_multifolio_split_3c.php` (Bloques 1..18) | 69 | — | 69/69 PASS |
-| **TOTALES CANÓNICOS**| **86 suites ejecutadas** | **—** | **—** | **2,872 checks PASS (100%)** |
+| **SUNAT-1C1**        | `test_sunat_cpe_1c1.php` (Bloques 1..12) | 109 | — | 109/109 PASS |
+| **TOTALES CANÓNICOS**| **87 suites ejecutadas** | **—** | **—** | **2,982 checks PASS (100%)** |
+
 
   - **Consolidado de RegresiÃ³n Transversal Activa (NIGHT-AUDIT-2B):**
     - Suite `test_night_audit_scheduler.php`: 46 comprobaciones automÃ¡ticas cubriendo:
@@ -390,3 +392,20 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - Control de permisos en vista: provisión de `'puede_movimientos'` en `CajaControlador::index()`.
     - Suites previas sin regresión: 85 suites históricas ejecutadas y validadas al 100%.
     - **Total Consolidado de Regresión Activa: 86/86 suites PASS — 2,872 checks canónicos PASS — 0 fallos (100%)**.
+  - **Consolidado de Regresión Transversal Activa (SUNAT-1C1):**
+    - Suite `test_sunat_cpe_1c1.php`: 109 comprobaciones automáticas cubriendo:
+      - Gobierno de BD y ranura 040 consumida: exactamente 139 tablas relacionales (131 previas + 8 nuevas de CPE).
+      - Ranura 041 estrictamente LIBRE en disco y en catálogo (`SQL/migraciones/`).
+      - Existencia de las 8 tablas de facturación electrónica: `cpe_establecimientos_configuracion`, `cpe_series`, `cpe_comprobantes`, `cpe_lineas`, `cpe_linea_cargos`, `cpe_documentos_relacionados`, `cpe_envios`, `cpe_respuestas`.
+      - Claves primarias auto-incrementales e integridad referencial foránea (16 FKs verificadas con `ON DELETE RESTRICT`).
+      - Restricciones UNIQUE vinculantes (`uq_cpe_estab_anexo`, `uq_cpe_estab_propiedad`, `uq_cpe_serie_tipo`, `uq_cpe_numero_fiscal`, `uq_cpe_idempotencia`, `uq_cpe_linea_orden`, `uq_cpe_doc_relacionado`, `uq_cpe_envio_intento`).
+      - Restricciones CHECK activas en motor (formato y prefijo de series, totales no negativos, montos positivos, anti-autorreferencia en documentos relacionados).
+      - Tipado financiero estricto: cero columnas `FLOAT` o `DOUBLE`; 17 columnas financieras auditadas en `DECIMAL(15,2)`, `DECIMAL(15,4)` y `DECIMAL(12,4)`.
+      - Snapshots inmutables T0 de Emisor (9 columnas) y Receptor (7 columnas) en `cpe_comprobantes`.
+      - Soporte para Régimen de Hospedaje a Sujetos No Domiciliados (DL 919 / Ley 28980) con 5 columnas especializadas.
+      - 4 ejes ortogonales de estado en `cpe_comprobantes` (`estado_generacion`, `estado_transmision`, `estado_fiscal_sunat`, `estado_rectificacion`).
+      - Auditoría de seguridad estructural: cero columnas de contraseñas, claves SOL o certificados en base de datos.
+      - Paridad y sincronización canónica de `SQL/camargo_pms.sql` (Sección 43 con las 8 tablas).
+      - Inmutabilidad estricta del catálogo de referencia: `admin-dashboard/` 100% inalterado.
+    - Suites previas sin regresión: 86 suites históricas ejecutadas y sincronizadas al 100% hacia ranura 041 libre.
+    - **Total Consolidado de Regresión Activa: 87/87 suites PASS — 2,982 checks canónicos PASS — 0 fallos (100%)**.

@@ -280,10 +280,10 @@ test_afirmar(
     "BD-01: Total de tablas relacionales se mantiene (actual: " . count($tables) . ")"
 );
 
-$slot040 = glob(__DIR__ . '/../SQL/migraciones/*040*');
+$slot041 = glob(__DIR__ . '/../SQL/migraciones/*041*');
 test_afirmar(
-    empty($slot040),
-    "BD-02: Ranura de migración 040 permanece estrictamente LIBRE (cero DDL no autorizado)"
+    empty($slot041),
+    "BD-02: Ranura de migración 041 permanece estrictamente LIBRE (cero DDL no autorizado)"
 );
 
 $mig034 = (bool) $pdo->query("SELECT 1 FROM migraciones WHERE migracion = '034_agregar_foto_personas.sql'")->fetchColumn();
