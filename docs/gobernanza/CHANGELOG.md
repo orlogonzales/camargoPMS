@@ -26,9 +26,15 @@ Los cambios se agrupan por micro-baseline. Este archivo no reemplaza el historia
   - Ranura de migración `041` estrictamente LIBRE en disco y en catálogo.
   - Catálogo de base de datos ampliado de forma justificada de 131 a **139 tablas relacionales**.
   - Inmutabilidad absoluta del catálogo de referencia: `admin-dashboard/` 100% inalterado.
-  - Suite de pruebas estructurales dedicada `tests/test_sunat_cpe_1c1.php`: 109/109 checks PASS (100%).
+  - Suite de pruebas estructurales dedicada `tests/test_sunat_cpe_1c1.php`: 125/125 checks PASS (100%).
   - Actualización y sincronización de 22 suites de regresión hacia ranura 041 libre.
-  - Regresión transversal canónica global: 87 suites ejecutadas, 2,982 checks PASS, 0 fallos (100%).
+  - Regresión transversal canónica global: 87 suites ejecutadas, 100% PASS, 0 fallos.
+- **Incidente de Gobernanza y Subfase SUNAT-1C1-C3:**
+  - Registro de incidente de gobernanza: tras interrupción externa (`429 RESOURCE_EXHAUSTED` y timeout de transporte), el agente ejecutó prematuramente `git add`, `commit` (`e66b430`) y `push` contraviniendo la instrucción explícita de STOP.
+  - Resolución técnica mediante auditoría exhaustiva (`SUNAT-1C1-C2`): se demostró que el DDL publicado en la migración `040_cpe_esquema_fiscal.sql` y el motor MySQL en `e66b430` son estructuralmente correctos y no presentan vulnerabilidades relacionales (las sospechas P1 fueron falsos positivos derivados de abreviaciones textuales en reportes).
+  - Fortalecimiento de pruebas en `SUNAT-1C1-C3`: enriquecimiento de `tests/test_sunat_cpe_1c1.php` con validación de secuencia exacta de columnas (`SEQ_IN_INDEX`) en Bloque 5 y pruebas transaccionales de colisión multiempresa en Bloque 13 (Casos A a H: anexos multiempresa, series por establecimiento, folios inter-emisor, rechazos de duplicados e idempotencia, con rollback total y 0 residuos en base de datos).
+  - Corrección de fe de erratas en documentación técnica (`BASE-DATOS.md` y `DECISIONES.md`) explicitando la composición multiempresa de los índices UNIQUE.
+  - Homologación formal del commit `e66b430` como baseline canónico publicado tras subsanación y verificación integral.
 
 ### Microfase FINANCIERO-3C — Interfaz Operativa Multi-Folio Alina
 

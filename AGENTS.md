@@ -114,6 +114,12 @@ PRECHECK → análisis → propuesta → implementación limitada → pruebas
 4. Informar archivos modificados, riesgos y asuntos pendientes.
 5. Crear micro-baseline únicamente con autorización y working tree controlado.
 
+## Resiliencia ante interrupciones y fallos externos
+
+- Ante cualquier interrupción técnica (errores 429 `RESOURCE_EXHAUSTED`, caídas de red, timeouts o reinicios de sesión), el agente debe reanudar verificando primero el estado real del entorno y del repositorio (`git status`, `git log`, diff) y los objetivos pendientes de la fase.
+- Una reactivación o mensaje genérico de continuación (como "continuar") NUNCA autoriza saltarse compuertas de gobernanza ni ejecutar `git add`, `git commit` o `git push` no aprobados.
+- Todo STOP o compuerta de validación previa permanece estrictamente vigente tras cualquier interrupción externa.
+
 ## Prohibiciones
 
 - No desarrollar módulos fuera de la fase aprobada.
@@ -124,3 +130,4 @@ PRECHECK → análisis → propuesta → implementación limitada → pruebas
 - No copiar indiscriminadamente todos los assets o demos.
 - No inventar requisitos de dominio; registrar la decisión pendiente.
 - No ocultar fallos de pruebas, migraciones o consola para cerrar una fase.
+- No ejecutar `git add`, `git commit` o `git push` sin autorización explícita de micro-baseline, especialmente tras reanudaciones o errores de transporte.

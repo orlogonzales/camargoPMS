@@ -393,12 +393,12 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
     - Suites previas sin regresión: 85 suites históricas ejecutadas y validadas al 100%.
     - **Total Consolidado de Regresión Activa: 86/86 suites PASS — 2,872 checks canónicos PASS — 0 fallos (100%)**.
   - **Consolidado de Regresión Transversal Activa (SUNAT-1C1):**
-    - Suite `test_sunat_cpe_1c1.php`: 109 comprobaciones automáticas cubriendo:
+    - Suite `test_sunat_cpe_1c1.php`: 125 comprobaciones automáticas cubriendo:
       - Gobierno de BD y ranura 040 consumida: exactamente 139 tablas relacionales (131 previas + 8 nuevas de CPE).
       - Ranura 041 estrictamente LIBRE en disco y en catálogo (`SQL/migraciones/`).
       - Existencia de las 8 tablas de facturación electrónica: `cpe_establecimientos_configuracion`, `cpe_series`, `cpe_comprobantes`, `cpe_lineas`, `cpe_linea_cargos`, `cpe_documentos_relacionados`, `cpe_envios`, `cpe_respuestas`.
       - Claves primarias auto-incrementales e integridad referencial foránea (16 FKs verificadas con `ON DELETE RESTRICT`).
-      - Restricciones UNIQUE vinculantes (`uq_cpe_estab_anexo`, `uq_cpe_estab_propiedad`, `uq_cpe_serie_tipo`, `uq_cpe_numero_fiscal`, `uq_cpe_idempotencia`, `uq_cpe_linea_orden`, `uq_cpe_doc_relacionado`, `uq_cpe_envio_intento`).
+      - Restricciones UNIQUE vinculantes y composición exacta de columnas `SEQ_IN_INDEX` (`uq_cpe_estab_anexo`, `uq_cpe_estab_propiedad`, `uq_cpe_serie_tipo`, `uq_cpe_numero_fiscal`, `uq_cpe_idempotencia`, `uq_cpe_linea_orden`, `uq_cpe_doc_relacionado`, `uq_cpe_envio_intento`).
       - Restricciones CHECK activas en motor (formato y prefijo de series, totales no negativos, montos positivos, anti-autorreferencia en documentos relacionados).
       - Tipado financiero estricto: cero columnas `FLOAT` o `DOUBLE`; 17 columnas financieras auditadas en `DECIMAL(15,2)`, `DECIMAL(15,4)` y `DECIMAL(12,4)`.
       - Snapshots inmutables T0 de Emisor (9 columnas) y Receptor (7 columnas) en `cpe_comprobantes`.
@@ -407,5 +407,6 @@ El framework concreto de pruebas PHP/JS y las herramientas de navegador siguen p
       - Auditoría de seguridad estructural: cero columnas de contraseñas, claves SOL o certificados en base de datos.
       - Paridad y sincronización canónica de `SQL/camargo_pms.sql` (Sección 43 con las 8 tablas).
       - Inmutabilidad estricta del catálogo de referencia: `admin-dashboard/` 100% inalterado.
+      - Pruebas transaccionales de colisión multiempresa y unicidad compuesta (Casos A a H: anexo multiempresa, anexo duplicado, series por establecimiento, duplicado de serie, folios inter-emisor, unicidad de número fiscal, rechazo de idempotencia duplicada y confirmación de rollback total con cero residuos en base de datos).
     - Suites previas sin regresión: 86 suites históricas ejecutadas y sincronizadas al 100% hacia ranura 041 libre.
-    - **Total Consolidado de Regresión Activa: 87/87 suites PASS — 2,982 checks canónicos PASS — 0 fallos (100%)**.
+    - **Total Consolidado de Regresión Activa: 87/87 suites PASS — 2,998 checks canónicos PASS — 0 fallos (100%)**.

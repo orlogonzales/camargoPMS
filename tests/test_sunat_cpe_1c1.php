@@ -23,6 +23,7 @@ declare(strict_types=1);
  * 15. Auditoría de seguridad estructural: ausencia absoluta de credenciales o secretos en BD.
  * 16. Sincronización y paridad del esquema consolidado SQL/camargo_pms.sql.
  * 17. Inmutabilidad estricta del catálogo de referencia admin-dashboard/.
+ * 18. Pruebas transaccionales de colisión multiempresa y unicidad compuesta (Casos A a H).
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -167,21 +168,36 @@ foreach ($fksEsperadas as [$tablaOrigen, $columnaOrigen, $tablaDestino, $columna
 }
 
 // --------------------------------------------------------------------
-// BLOQUE 5: Restricciones UNIQUE Vinculantes
+// BLOQUE 5: Restricciones UNIQUE Vinculantes y Composición Exacta
 // --------------------------------------------------------------------
-echo "\n--- BLOQUE 5: Restricciones UNIQUE Vinculantes ---\n";
+echo "\n--- BLOQUE 5: Restricciones UNIQUE Vinculantes y Composición Exacta ---\n";
 
-$uniquesEsperados = [
-    'cpe_establecimientos_configuracion' => ['uq_cpe_estab_anexo', 'uq_cpe_estab_propiedad'],
-    'cpe_series' => ['uq_cpe_serie_tipo'],
-    'cpe_comprobantes' => ['uq_cpe_numero_fiscal', 'uq_cpe_idempotencia'],
-    'cpe_lineas' => ['uq_cpe_linea_orden'],
-    'cpe_documentos_relacionados' => ['uq_cpe_doc_relacionado'],
-    'cpe_envios' => ['uq_cpe_envio_intento']
+$uniquesConColumnas = [
+    'cpe_establecimientos_configuracion' => [
+        'uq_cpe_estab_anexo' => ['empresa_id', 'codigo_establecimiento_sunat'],
+        'uq_cpe_estab_propiedad' => ['propiedad_id']
+    ],
+    'cpe_series' => [
+        'uq_cpe_serie_tipo' => ['emisor_establecimiento_id', 'tipo_comprobante', 'serie']
+    ],
+    'cpe_comprobantes' => [
+        'uq_cpe_numero_fiscal' => ['emisor_establecimiento_id', 'tipo_comprobante', 'serie', 'correlativo'],
+        'uq_cpe_idempotencia' => ['emisor_establecimiento_id', 'clave_idempotencia']
+    ],
+    'cpe_lineas' => [
+        'uq_cpe_linea_orden' => ['cpe_id', 'numero_orden']
+    ],
+    'cpe_documentos_relacionados' => [
+        'uq_cpe_doc_relacionado' => ['cpe_id', 'tipo_documento_relacionado', 'serie_relacionada', 'correlativo_relacionado', 'codigo_tipo_relacion']
+    ],
+    'cpe_envios' => [
+        'uq_cpe_envio_intento' => ['cpe_id', 'numero_intento']
+    ]
 ];
 
-foreach ($uniquesEsperados as $tabla => $indices) {
-    foreach ($indices as $indice) {
+foreach ($uniquesConColumnas as $tabla => $indices) {
+    foreach ($indices as $indice => $columnasEsperadas) {
+        // 1. Existencia del constraint UNIQUE en catálogo
         $stmt = $pdo->prepare("
             SELECT COUNT(*)
             FROM information_schema.table_constraints
@@ -193,6 +209,26 @@ foreach ($uniquesEsperados as $tabla => $indices) {
         $stmt->execute([':tabla' => $tabla, ':indice' => $indice]);
         $existe = (int) $stmt->fetchColumn();
         verificar("Restricción UNIQUE '{$indice}' presente en tabla '{$tabla}'", $existe === 1);
+
+        // 2. Composición y secuencia exacta de columnas (SEQ_IN_INDEX)
+        $stmtCols = $pdo->prepare("
+            SELECT COLUMN_NAME
+            FROM information_schema.statistics
+            WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = :tabla
+                AND INDEX_NAME = :indice
+                AND NON_UNIQUE = 0
+            ORDER BY SEQ_IN_INDEX ASC
+        ");
+        $stmtCols->execute([':tabla' => $tabla, ':indice' => $indice]);
+        $columnasReales = $stmtCols->fetchAll(PDO::FETCH_COLUMN);
+
+        $colsEsperadasStr = implode(', ', $columnasEsperadas);
+        $colsRealesStr = implode(', ', $columnasReales);
+        verificar(
+            "Composición y orden de UNIQUE '{$indice}' en '{$tabla}' es exactamente ({$colsEsperadasStr}) [detectado: ({$colsRealesStr})]",
+            $columnasReales === $columnasEsperadas
+        );
     }
 }
 
@@ -423,6 +459,197 @@ echo "\n--- BLOQUE 12: Inmutabilidad de admin-dashboard/ ---\n";
 
 $gitAlina = trim((string) shell_exec('git status --porcelain admin-dashboard/'));
 verificar("admin-dashboard/ permanece 100% inmutable y libre de modificaciones", empty($gitAlina));
+
+// --------------------------------------------------------------------
+// BLOQUE 13: Pruebas Transaccionales de Colisión Multiempresa y Unicidad Compuesta
+// --------------------------------------------------------------------
+echo "\n--- BLOQUE 13: Pruebas Transaccionales de Colisión Multiempresa y Unicidad Compuesta ---\n";
+
+$uidTest = substr(bin2hex(random_bytes(4)), 0, 6);
+$usuarioIdTest = (int) $pdo->query('SELECT id FROM usuarios LIMIT 1')->fetchColumn();
+$tipoDocRucTest = (int) $pdo->query("SELECT id FROM tipos_documento WHERE codigo IN ('RUC', 'DNI') LIMIT 1")->fetchColumn();
+if ($tipoDocRucTest === 0) {
+    $tipoDocRucTest = 1;
+}
+
+$pdo->beginTransaction();
+try {
+    // Preparar Empresas A y B
+    $stmtEmp = $pdo->prepare("
+        INSERT INTO empresas (codigo, tipo_documento_id, numero_documento, razon_social, direccion_fiscal, pais_id)
+        VALUES (:codigo, :tipo_doc, :num_doc, :razon, 'Direccion Test', 1)
+    ");
+
+    $stmtEmp->execute([
+        ':codigo' => "TEST_EMP_A_{$uidTest}",
+        ':tipo_doc' => $tipoDocRucTest,
+        ':num_doc' => "90{$uidTest}001",
+        ':razon' => "Empresa Test A {$uidTest} SAC"
+    ]);
+    $empresaAId = (int) $pdo->lastInsertId();
+
+    $stmtEmp->execute([
+        ':codigo' => "TEST_EMP_B_{$uidTest}",
+        ':tipo_doc' => $tipoDocRucTest,
+        ':num_doc' => "90{$uidTest}002",
+        ':razon' => "Empresa Test B {$uidTest} SAC"
+    ]);
+    $empresaBId = (int) $pdo->lastInsertId();
+
+    // CASO A: Multiempresa permite anexo '0000' simultáneamente en Empresa A y Empresa B
+    $stmtEstab = $pdo->prepare("
+        INSERT INTO cpe_establecimientos_configuracion
+        (empresa_id, codigo_establecimiento_sunat, razon_social_snapshot, direccion_fiscal, ubigeo, departamento, provincia, distrito)
+        VALUES (:emp_id, '0000', :razon, 'Av. Test', '150101', 'LIMA', 'LIMA', 'LIMA')
+    ");
+
+    $stmtEstab->execute([':emp_id' => $empresaAId, ':razon' => "Empresa Test A {$uidTest} SAC"]);
+    $estabAId = (int) $pdo->lastInsertId();
+
+    $stmtEstab->execute([':emp_id' => $empresaBId, ':razon' => "Empresa Test B {$uidTest} SAC"]);
+    $estabBId = (int) $pdo->lastInsertId();
+
+    verificar(
+        "Caso A: Anexo '0000' admitido en Empresa A y Empresa B simultáneamente (estabA={$estabAId}, estabB={$estabBId})",
+        $estabAId > 0 && $estabBId > 0 && $estabAId !== $estabBId
+    );
+
+    // CASO B: Misma Empresa A rechaza anexo '0000' duplicado por uq_cpe_estab_anexo
+    $casoBRechazado = false;
+    try {
+        $stmtEstab->execute([':emp_id' => $empresaAId, ':razon' => "Duplicado A"]);
+    } catch (PDOException $e) {
+        if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'uq_cpe_estab_anexo')) {
+            $casoBRechazado = true;
+        }
+    }
+    verificar("Caso B: Misma empresa rechaza anexo '0000' duplicado por uq_cpe_estab_anexo (SQLSTATE 23000)", $casoBRechazado);
+
+    // CASO C: Establecimientos distintos permiten registrar serie 'F001' para 'FACTURA' de forma independiente
+    $stmtSerie = $pdo->prepare("
+        INSERT INTO cpe_series
+        (emisor_establecimiento_id, tipo_comprobante, serie, prefijo_tipo)
+        VALUES (:estab_id, 'FACTURA', 'F001', 'F')
+    ");
+
+    $stmtSerie->execute([':estab_id' => $estabAId]);
+    $serieAId = (int) $pdo->lastInsertId();
+
+    $stmtSerie->execute([':estab_id' => $estabBId]);
+    $serieBId = (int) $pdo->lastInsertId();
+
+    verificar(
+        "Caso C: Serie 'F001' para 'FACTURA' admitida independientemente en Estab A y Estab B (serieA={$serieAId}, serieB={$serieBId})",
+        $serieAId > 0 && $serieBId > 0 && $serieAId !== $serieBId
+    );
+
+    // CASO D: Mismo Establecimiento A rechaza serie 'F001' duplicada para 'FACTURA' por uq_cpe_serie_tipo
+    $casoDRechazado = false;
+    try {
+        $stmtSerie->execute([':estab_id' => $estabAId]);
+    } catch (PDOException $e) {
+        if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'uq_cpe_serie_tipo')) {
+            $casoDRechazado = true;
+        }
+    }
+    verificar("Caso D: Mismo establecimiento rechaza serie 'F001' duplicada para 'FACTURA' por uq_cpe_serie_tipo (SQLSTATE 23000)", $casoDRechazado);
+
+    // CASO E: Establecimientos distintos permiten emitir 'F001-00000001' (mismo número fiscal entre emisores distintos)
+    $stmtCpe = $pdo->prepare("
+        INSERT INTO cpe_comprobantes
+        (emisor_establecimiento_id, serie_id, tipo_comprobante, serie, correlativo, codigo_folio_completo, clave_idempotencia,
+         emisor_ruc, emisor_razon_social, emisor_direccion_fiscal, emisor_ubigeo, emisor_departamento, emisor_provincia, emisor_distrito,
+         receptor_tipo_documento, receptor_numero_documento, receptor_razon_social, total_venta, fecha_emision, creado_por_usuario_id)
+        VALUES
+        (:estab_id, :serie_id, 'FACTURA', 'F001', :correlativo, :folio, :idemp,
+         :ruc, :razon, 'Av. Test', '150101', 'LIMA', 'LIMA', 'LIMA',
+         '6', '20123456789', 'CLIENTE TEST', 118.00, NOW(), :usr_id)
+    ");
+
+    $stmtCpe->execute([
+        ':estab_id' => $estabAId,
+        ':serie_id' => $serieAId,
+        ':correlativo' => 1,
+        ':folio' => 'F001-00000001',
+        ':idemp' => "IDEMP_A_{$uidTest}",
+        ':ruc' => "90{$uidTest}001",
+        ':razon' => "Empresa A {$uidTest}",
+        ':usr_id' => $usuarioIdTest
+    ]);
+    $cpeAId = (int) $pdo->lastInsertId();
+
+    $stmtCpe->execute([
+        ':estab_id' => $estabBId,
+        ':serie_id' => $serieBId,
+        ':correlativo' => 1,
+        ':folio' => 'F001-00000001',
+        ':idemp' => "IDEMP_B_{$uidTest}",
+        ':ruc' => "90{$uidTest}002",
+        ':razon' => "Empresa B {$uidTest}",
+        ':usr_id' => $usuarioIdTest
+    ]);
+    $cpeBId = (int) $pdo->lastInsertId();
+
+    verificar(
+        "Caso E: 'F001-00000001' emitido en Estab A y Estab B sin colisión inter-emisor (cpeA={$cpeAId}, cpeB={$cpeBId})",
+        $cpeAId > 0 && $cpeBId > 0 && $cpeAId !== $cpeBId
+    );
+
+    // CASO F: Mismo Establecimiento A rechaza 'F001-00000001' duplicado por uq_cpe_numero_fiscal
+    $casoFRechazado = false;
+    try {
+        $stmtCpe->execute([
+            ':estab_id' => $estabAId,
+            ':serie_id' => $serieAId,
+            ':correlativo' => 1,
+            ':folio' => 'F001-00000001',
+            ':idemp' => "IDEMP_A_DIFF_{$uidTest}",
+            ':ruc' => "90{$uidTest}001",
+            ':razon' => "Empresa A {$uidTest}",
+            ':usr_id' => $usuarioIdTest
+        ]);
+    } catch (PDOException $e) {
+        if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'uq_cpe_numero_fiscal')) {
+            $casoFRechazado = true;
+        }
+    }
+    verificar("Caso F: Mismo establecimiento rechaza 'F001-00000001' duplicado por uq_cpe_numero_fiscal (SQLSTATE 23000)", $casoFRechazado);
+
+    // CASO G: Mismo Establecimiento A rechaza clave_idempotencia duplicada por uq_cpe_idempotencia
+    $casoGRechazado = false;
+    try {
+        $stmtCpe->execute([
+            ':estab_id' => $estabAId,
+            ':serie_id' => $serieAId,
+            ':correlativo' => 2, // correlativo distinto para aislar uq_cpe_idempotencia
+            ':folio' => 'F001-00000002',
+            ':idemp' => "IDEMP_A_{$uidTest}", // clave duplicada con el cpeA previo
+            ':ruc' => "90{$uidTest}001",
+            ':razon' => "Empresa A {$uidTest}",
+            ':usr_id' => $usuarioIdTest
+        ]);
+    } catch (PDOException $e) {
+        if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'uq_cpe_idempotencia')) {
+            $casoGRechazado = true;
+        }
+    }
+    verificar("Caso G: Mismo establecimiento rechaza clave de idempotencia duplicada por uq_cpe_idempotencia (SQLSTATE 23000)", $casoGRechazado);
+
+} finally {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+}
+
+// CASO H: Verificación de cero residuos tras rollback
+$residuosEmpresas = (int) $pdo->query("SELECT COUNT(*) FROM empresas WHERE codigo LIKE 'TEST_EMP_%'")->fetchColumn();
+$residuosEstabs = (int) $pdo->query("SELECT COUNT(*) FROM cpe_establecimientos_configuracion WHERE codigo_establecimiento_sunat = '0000' AND razon_social_snapshot LIKE 'Empresa Test%'")->fetchColumn();
+$residuosCpes = (int) $pdo->query("SELECT COUNT(*) FROM cpe_comprobantes WHERE clave_idempotencia LIKE 'IDEMP_%'")->fetchColumn();
+
+verificar(
+    "Caso H: Transacción revertida con éxito total — Cero residuos en BD (empresas: {$residuosEmpresas}, estabs: {$residuosEstabs}, cpes: {$residuosCpes})",
+    $residuosEmpresas === 0 && $residuosEstabs === 0 && $residuosCpes === 0
+);
 
 // --------------------------------------------------------------------
 // RESUMEN FINAL

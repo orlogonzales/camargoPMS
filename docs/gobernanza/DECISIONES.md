@@ -2188,13 +2188,13 @@ Aprobada en la microfase `SUNAT-1C1` como arquitectura y modelo relacional vincu
 
 2. **Modelo Relacional de 8 Tablas Soberanas (D-114.2):**
    - Se adopta la arquitectura relacional de 8 tablas soberanas:
-     1. `cpe_establecimientos_configuracion`: Configuración fiscal de anexos SUNAT vinculados a propiedades.
-     2. `cpe_series`: Catálogo de series alfanuméricas con prefijos regulados (F, B, FC/FD, BC/BD) y secuencias transaccionales.
-     3. `cpe_comprobantes`: Agregado soberano de comprobantes de pago electrónicos.
-     4. `cpe_lineas`: Detalle fiscal inmutable ítem por ítem.
+     1. `cpe_establecimientos_configuracion`: Configuración fiscal de anexos SUNAT vinculados a propiedades con unicidad compuesta multiempresa `uq_cpe_estab_anexo (empresa_id, codigo_establecimiento_sunat)`.
+     2. `cpe_series`: Catálogo de series alfanuméricas con prefijos regulados (F, B, FC/FD, BC/BD) y secuencias transaccionales acotadas por establecimiento emisor `uq_cpe_serie_tipo (emisor_establecimiento_id, tipo_comprobante, serie)`.
+     3. `cpe_comprobantes`: Agregado soberano de comprobantes de pago electrónicos con unicidad fiscal por emisor `uq_cpe_numero_fiscal (emisor_establecimiento_id, tipo_comprobante, serie, correlativo)` e idempotencia por emisor `uq_cpe_idempotencia (emisor_establecimiento_id, clave_idempotencia)`.
+     4. `cpe_lineas`: Detalle fiscal inmutable ítem por ítem con unicidad `uq_cpe_linea_orden (cpe_id, numero_orden)`.
      5. `cpe_linea_cargos`: Trazabilidad relacional N:M desacoplada entre líneas fiscales y cargos de cuenta del PMS.
-     6. `cpe_documentos_relacionados`: Vínculos documentales para notas de crédito/débito y comprobantes de anticipo.
-     7. `cpe_envios`: Registro append-only de intentos de transmisión a SUNAT/SEE con telemetría.
+     6. `cpe_documentos_relacionados`: Vínculos documentales para notas de crédito/débito y comprobantes de anticipo con unicidad `uq_cpe_doc_relacionado (cpe_id, tipo_documento_relacionado, serie_relacionada, correlativo_relacionado, codigo_tipo_relacion)`.
+     7. `cpe_envios`: Registro append-only de intentos de transmisión a SUNAT/SEE con telemetría y unicidad `uq_cpe_envio_intento (cpe_id, numero_intento)`.
      8. `cpe_respuestas`: Registro append-only de constancias oficiales, CDRs y observaciones SUNAT.
    - Separación formal 1:0..N entre intentos de envío y respuestas/CDR.
    - Relación N:M en documentos relacionados con restricción CHECK anti-autorreferencia (`chk_cpe_dr_no_autoreferencia`) y motivo no vacío (`chk_cpe_dr_motivo_no_vacio`).
@@ -2222,8 +2222,8 @@ Aprobada en la microfase `SUNAT-1C1` como arquitectura y modelo relacional vincu
    - Total de tablas relacionales consolidadas evoluciona exactamente de 131 a **139 tablas relacionales**.
    - Paridad canónica al 100% en `SQL/camargo_pms.sql` (Sección 43) y verificación en base de datos aislada limpia.
    - Ranura de migración `041` estrictamente LIBRE para `SUNAT-1C2` y siguientes.
-   - Suite de pruebas dedicada `tests/test_sunat_cpe_1c1.php` (109/109 PASS, 100%).
-   - Regresión transversal canónica global: 87 suites ejecutadas (100% PASS), 2,982 checks superados.
+   - Suite de pruebas dedicada `tests/test_sunat_cpe_1c1.php` (125/125 PASS, 100%).
+   - Regresión transversal canónica global: 87 suites ejecutadas (100% PASS).
 
 ## Pendientes de decisión
 
