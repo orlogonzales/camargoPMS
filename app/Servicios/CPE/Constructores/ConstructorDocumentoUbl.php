@@ -202,13 +202,13 @@ class ConstructorDocumentoUbl
         $address = $this->dom->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:RegistrationAddress');
         $legal->appendChild($address);
 
-        $addrCode = $this->agregarCbc($address, 'cbc:AddressTypeCode', $rep->emisorCodigoEstablecimiento);
-        $addrCode->setAttribute('listAgencyName', 'PE:SUNAT');
-        $addrCode->setAttribute('listName', 'Establecimientos anexos');
-
         if ($rep->emisorUbigeo !== null) {
             $this->agregarCbc($address, 'cbc:ID', $rep->emisorUbigeo);
         }
+
+        $addrCode = $this->agregarCbc($address, 'cbc:AddressTypeCode', $rep->emisorCodigoEstablecimiento);
+        $addrCode->setAttribute('listAgencyName', 'PE:SUNAT');
+        $addrCode->setAttribute('listName', 'Establecimientos anexos');
 
         if ($rep->emisorDireccionFiscal !== null) {
             $line = $this->dom->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:AddressLine');
@@ -253,13 +253,13 @@ class ConstructorDocumentoUbl
             $address = $this->dom->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:RegistrationAddress');
             $legal->appendChild($address);
 
-            $line = $this->dom->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:AddressLine');
-            $address->appendChild($line);
-            $this->agregarCbc($line, 'cbc:Line', $rep->receptorDireccionFiscal);
-
             if ($rep->receptorUbigeo !== null) {
                 $this->agregarCbc($address, 'cbc:ID', $rep->receptorUbigeo);
             }
+
+            $line = $this->dom->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:AddressLine');
+            $address->appendChild($line);
+            $this->agregarCbc($line, 'cbc:Line', $rep->receptorDireccionFiscal);
 
             $country = $this->dom->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:Country');
             $address->appendChild($country);

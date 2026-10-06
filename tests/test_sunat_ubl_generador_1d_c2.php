@@ -56,6 +56,7 @@ declare(strict_types=1);
  * 44. Ausencia estricta de firma digital (ds:Signature, SignatureValue, DigestValue, X509Certificate).
  * 45. Ausencia de credenciales reales, claves privadas o certificados en código.
  * 46. Funcionamiento 100% offline sin acceso a red.
+ * 47. Estructura canónica OASIS UBL 2.1: Orden relativo estricto de elementos en cac:RegistrationAddress (AddressType).
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -1190,6 +1191,70 @@ verificar('45 NO CREDENCIALES: Cero secretos, certificados o endpoints hardcodea
 
 // 46. Prueba de NO RED: Todo se ejecuta localmente en memoria
 verificar('46 NO RED: El generador funciona enteramente en memoria y sin llamadas de red', true);
+
+// 47. Estructura canónica OASIS UBL 2.1: Orden relativo de elementos en cac:RegistrationAddress (AddressType)
+$dom1 = new DOMDocument();
+$dom1->loadXML($xml1);
+$xpath1 = new DOMXPath($dom1);
+$xpath1->registerNamespace('cac', ConstantesUbl::XMLNS_CAC);
+$xpath1->registerNamespace('cbc', ConstantesUbl::XMLNS_CBC);
+
+/**
+ * Verifica que los elementos hijos de un nodo sigan el orden estricto de una lista de nombres de tag.
+ * @param DOMNode $parent Nodo padre a auditar
+ * @param string[] $orderedTags Nombres de tag esperados en orden relativo
+ * @return bool True si los tags presentes conservan el orden relativo estricto
+ */
+function verificarOrdenRelativoHijos(DOMNode $parent, array $orderedTags): bool {
+    $positions = [];
+    foreach ($parent->childNodes as $child) {
+        if ($child->nodeType === XML_ELEMENT_NODE) {
+            $name = $child->nodeName;
+            $pos = array_search($name, $orderedTags, true);
+            if ($pos !== false) {
+                $positions[] = $pos;
+            }
+        }
+    }
+    for ($i = 0; $i < count($positions) - 1; $i++) {
+        if ($positions[$i] >= $positions[$i + 1]) {
+            return false;
+        }
+    }
+    return count($positions) >= 2;
+}
+
+$supplierAddr = $xpath1->query('//cac:AccountingSupplierParty//cac:RegistrationAddress')->item(0);
+$customerAddr = $xpath1->query('//cac:AccountingCustomerParty//cac:RegistrationAddress')->item(0);
+
+$expectedOrderSupplier = ['cbc:ID', 'cbc:AddressTypeCode', 'cac:AddressLine', 'cac:Country'];
+$expectedOrderCustomer = ['cbc:ID', 'cac:AddressLine', 'cac:Country'];
+
+verificar(
+    '47 Emisor cac:RegistrationAddress: cbc:ID precede a cbc:AddressTypeCode y cac:AddressLine (AddressType)',
+    $supplierAddr !== null && verificarOrdenRelativoHijos($supplierAddr, $expectedOrderSupplier)
+);
+verificar(
+    '47 Receptor cac:RegistrationAddress: cbc:ID precede a cac:AddressLine (AddressType)',
+    $customerAddr !== null && verificarOrdenRelativoHijos($customerAddr, $expectedOrderCustomer)
+);
+
+// Detección de regresión: Inversión deliberada es detectada
+$fakeBadSupplier = $dom1->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:RegistrationAddress');
+$fakeBadSupplier->appendChild($dom1->createElementNS(ConstantesUbl::XMLNS_CBC, 'cbc:AddressTypeCode', '0000'));
+$fakeBadSupplier->appendChild($dom1->createElementNS(ConstantesUbl::XMLNS_CBC, 'cbc:ID', '080101'));
+verificar(
+    '47 Detección de regresión: AddressTypeCode antes de ID es detectado como inválido',
+    !verificarOrdenRelativoHijos($fakeBadSupplier, $expectedOrderSupplier)
+);
+
+$fakeBadCustomer = $dom1->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:RegistrationAddress');
+$fakeBadCustomer->appendChild($dom1->createElementNS(ConstantesUbl::XMLNS_CAC, 'cac:AddressLine'));
+$fakeBadCustomer->appendChild($dom1->createElementNS(ConstantesUbl::XMLNS_CBC, 'cbc:ID', '150122'));
+verificar(
+    '47 Detección de regresión: AddressLine antes de ID es detectado como inválido',
+    !verificarOrdenRelativoHijos($fakeBadCustomer, $expectedOrderCustomer)
+);
 
 echo "\n====================================================\n";
 echo "RESULTADO SUITE SUNAT-1D-C2:\n";
